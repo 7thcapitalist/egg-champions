@@ -8,3 +8,6 @@ __pycache__/
 # works on a fresh clone; rojo does not create its output directory.
 games/*/build/*
 !games/*/build/.gitkeep
+
+# Scratch folder for generated images and exports, not part of the build.
+Claude outputs/

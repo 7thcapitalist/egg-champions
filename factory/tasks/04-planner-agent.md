@@ -6,7 +6,9 @@ list of build tasks, so no person writes task briefs.
 
 ## Build
 1. `.claude/agents/planner.md`. The planner:
-   - Reads `spec.md`, `config/`, `tuning/`, and the existing `src/`.
+   - Reads `spec.md`, `config/`, `tuning/`, the existing `src/`, and the
+     `design/` folder when it exists (`design/ui/README.md` and the mockups
+     are the approved look and screen layout; UI tasks must follow them).
    - Writes one brief per task to `games/<game>/tasks/NN-short-name.md` in the
      same format as `01-project-skeleton.md`: Goal, Build, Done when, Out of scope.
    - Writes `games/<game>/tasks/index.json`: for each task its `id`, `title`,
@@ -42,7 +44,8 @@ list of build tasks, so no person writes task briefs.
 - [ ] The coverage table shows every spec section mapped to at least one task:
       clicking and coins, saving, eggs and hatching with variants, team of 3,
       pet index, rebirth, gym battles with all six specials, worlds and
-      unlocking, UI, game passes, analytics events.
+      unlocking, UI, game passes, analytics events, and every effect listed in
+      `design/eggs-and-effects.md`.
 - [ ] `python factory/tools/gate.py games/egg-champions planned` exits 0.
 - [ ] `python factory/tools/state.py next games/egg-champions` prints `built`.
 - [ ] Committed and pushed.

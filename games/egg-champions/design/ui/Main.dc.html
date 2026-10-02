@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Main screen</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; box-sizing: border-box; position: relative; overflow: hidden; background: #7FB6D6; font-family: Barlow, sans-serif; color: #F2F4F8">
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 300px; background: #5E9A5A"></div>
+  <div style="position: absolute; left: 50%; top: 300px; transform: translateX(-50%); width: 360px; text-align: center; color: #12161F; font-size: 17px; font-weight: 500">3D world view. Clicking anywhere on the screen earns coins.</div>
+  <div style="position: absolute; left: 700px; top: 220px; font-family: 'Barlow Condensed', sans-serif; font-size: 40px; font-weight: 700; color: #12161F">+12</div>
+  <div style="position: absolute; left: 520px; top: 420px; font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; color: #12161F">+12</div>
+
+  <div style="position: absolute; left: 0; right: 0; top: 0; height: 64px; box-sizing: border-box; background: #12161F; border-bottom: 1px solid #2A3242; display: flex; align-items: center; justify-content: space-between; padding: 0 24px">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 22px; height: 22px; border-radius: 11px; background: #E8B33A"></div>
+      <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 700">1,250</div>
+      <div style="font-size: 15px; color: #E8B33A; font-weight: 600; margin-left: 8px">+12 PER CLICK</div>
+    </div>
+    <div style="text-align: center">
+      <div style="font-size: 12px; color: #9BA6BA; font-weight: 600; letter-spacing: 2px">WORLD 1</div>
+      <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: 1px">GREEN MEADOW</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 20px">
+      <div style="font-size: 15px; font-weight: 600; letter-spacing: 1px">REBIRTHS <span style="color: #E8B33A">0</span></div>
+      <div style="display: flex; gap: 6px; align-items: center">
+        <div style="font-size: 15px; font-weight: 600; letter-spacing: 1px">BADGES</div>
+        <div style="width: 20px; height: 20px; border: 2px solid #5A6478; box-sizing: border-box; transform: rotate(45deg)"></div>
+        <div style="width: 20px; height: 20px; border: 2px solid #5A6478; box-sizing: border-box; transform: rotate(45deg); margin-left: 6px"></div>
+        <div style="width: 20px; height: 20px; border: 2px solid #5A6478; box-sizing: border-box; transform: rotate(45deg); margin-left: 6px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 24px; top: 96px; width: 132px; display: flex; flex-direction: column; gap: 6px">
+    <button style="height: 46px; border: 1px solid #2A3242; border-radius: 6px; background: #12161F; color: #F2F4F8; font-size: 15px; font-weight: 600; letter-spacing: 1.5px">EGGS</button>
+    <button style="height: 46px; border: 1px solid #2A3242; border-radius: 6px; background: #12161F; color: #F2F4F8; font-size: 15px; font-weight: 600; letter-spacing: 1.5px">PETS</button>
+    <button style="height: 46px; border: 1px solid #2A3242; border-radius: 6px; background: #12161F; color: #F2F4F8; font-size: 15px; font-weight: 600; letter-spacing: 1.5px">INDEX</button>
+    <button style="height: 46px; border: 1px solid #2A3242; border-radius: 6px; background: #12161F; color: #F2F4F8; font-size: 15px; font-weight: 600; letter-spacing: 1.5px">REBIRTH</button>
+    <button style="height: 46px; border: 1px solid #E8B33A; border-radius: 6px; background: #12161F; color: #E8B33A; font-size: 15px; font-weight: 600; letter-spacing: 1.5px">SHOP</button>
+  </div>
+
+  <div style="position: absolute; right: 24px; top: 96px; width: 270px; box-sizing: border-box; background: #12161F; border: 1px solid #2A3242; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 12px; color: #9BA6BA; font-weight: 600; letter-spacing: 2px">NEXT GOAL</div>
+    <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: 1px">GREEN MEADOW GYM</div>
+    <div style="font-size: 15px; color: #9BA6BA">Leader uses Grass pets. Fire is strong against Grass.</div>
+    <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 600"><span>Fee</span><span>1,250 / 50,000</span></div>
+    <div style="height: 6px; background: #2A3242"><div style="width: 3%; height: 6px; background: #E8B33A"></div></div>
+    <button style="height: 44px; border: 1px solid #2A3242; border-radius: 6px; background: #1E2532; color: #9BA6BA; font-size: 14px; font-weight: 600; letter-spacing: 1.5px">NOT ENOUGH COINS</button>
+  </div>
+
+  <div style="position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; gap: 8px; background: #12161F; border: 1px solid #2A3242; border-radius: 6px; padding: 8px">
+    <div style="width: 168px; box-sizing: border-box; background: #1E2532; border-radius: 4px; border-left: 4px solid #4C8DFF; padding: 8px 10px; display: flex; gap: 10px; align-items: center">
+      <div style="width: 40px; height: 40px; border-radius: 4px; background: #D9623A"></div>
+      <div><div style="font-size: 16px; font-weight: 600">Emberkit</div><div style="font-size: 13px; color: #E8B33A; font-weight: 600">+2 CLICK</div></div>
+    </div>
+    <div style="width: 168px; box-sizing: border-box; background: #1E2532; border-radius: 4px; border-left: 4px solid #4CBF73; padding: 8px 10px; display: flex; gap: 10px; align-items: center">
+      <div style="width: 40px; height: 40px; border-radius: 4px; background: #3F8ED1"></div>
+      <div><div style="font-size: 16px; font-weight: 600">Puddlet</div><div style="font-size: 13px; color: #E8B33A; font-weight: 600">+3 CLICK</div></div>
+    </div>
+    <div style="width: 168px; box-sizing: border-box; background: #1E2532; border-radius: 4px; border-left: 4px solid #9BA6BA; padding: 8px 10px; display: flex; gap: 10px; align-items: center">
+      <div style="width: 40px; height: 40px; border-radius: 4px; background: #4FA352"></div>
+      <div><div style="font-size: 16px; font-weight: 600">Leafpup</div><div style="font-size: 13px; color: #E8B33A; font-weight: 600">+1 CLICK</div></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

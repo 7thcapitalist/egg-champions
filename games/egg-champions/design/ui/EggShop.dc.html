@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Egg shop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; box-sizing: border-box; position: relative; overflow: hidden; background: #2B3440; font-family: Barlow, sans-serif; color: #F2F4F8; display: flex; align-items: center; justify-content: center">
+  <div style="width: 1080px; box-sizing: border-box; background: #12161F; border: 1px solid #2A3242; border-radius: 8px; padding: 28px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <div>
+        <div style="font-size: 12px; color: #9BA6BA; font-weight: 600; letter-spacing: 2px">GREEN MEADOW</div>
+        <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 700; letter-spacing: 1px">EGGS</div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: center">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <div style="width: 18px; height: 18px; border-radius: 9px; background: #E8B33A"></div>
+          <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700">1,250</div>
+        </div>
+        <button style="height: 44px; padding: 0 18px; border: 1px solid #2A3242; border-radius: 6px; background: #1E2532; color: #F2F4F8; font-size: 14px; font-weight: 600; letter-spacing: 1.5px">CLOSE</button>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+      <div style="background: #1E2532; border: 1px solid #2A3242; border-radius: 6px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; gap: 16px; align-items: center">
+          <div style="width: 72px; height: 92px; border-radius: 36px; background: #8CC97A; border: 3px solid #4FA352; box-sizing: border-box"></div>
+          <div>
+            <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: 1px">MEADOW EGG</div>
+            <div style="font-size: 18px; font-weight: 600; color: #E8B33A">50 coins</div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; font-size: 16px">
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2A3242"><span>Leafpup</span><span style="color: #B4BCCB">Common 50%</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2A3242"><span>Puddlet</span><span style="color: #6FD694">Uncommon 30%</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2A3242"><span>Emberkit</span><span style="color: #7FAEFF">Rare 15%</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2A3242"><span>Abacatudo</span><span style="color: #C09BFF">Epic 4.5%</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0"><span>Voltibun</span><span style="color: #FFAE45">Legendary 0.5%</span></div>
+        </div>
+        <div style="display: flex; gap: 10px">
+          <button style="flex-grow: 1; height: 52px; border: none; border-radius: 6px; background: #1F7A45; color: #FFFFFF; font-size: 16px; font-weight: 700; letter-spacing: 2px">HATCH</button>
+          <button style="width: 150px; height: 52px; border: 1px solid #E8B33A; border-radius: 6px; background: #1E2532; color: #E8B33A; font-size: 15px; font-weight: 700; letter-spacing: 1.5px">HATCH X3</button>
+        </div>
+      </div>
+
+      <div style="background: #1E2532; border: 1px solid #2A3242; border-radius: 6px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; gap: 16px; align-items: center">
+          <div style="width: 72px; height: 92px; border-radius: 36px; background: #5E8F5A; border: 3px solid #2F6B3A; box-sizing: border-box"></div>
+          <div>
+            <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: 1px">FOREST EGG</div>
+            <div style="font-size: 18px; font-weight: 600; color: #E8B33A">5,000 coins</div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; font-size: 16px">
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2A3242"><span>Zapmoth</span><span style="color: #B4BCCB">Common 50%</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2A3242"><span>Mossnail</span><span style="color: #6FD694">Uncommon 30%</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2A3242"><span>Sparkit</span><span style="color: #7FAEFF">Rare 15%</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2A3242"><span>Cinderhog</span><span style="color: #C09BFF">Epic 4.5%</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0"><span>Brookdeer</span><span style="color: #FFAE45">Legendary 0.5%</span></div>
+        </div>
+        <div style="display: flex; gap: 10px">
+          <button style="flex-grow: 1; height: 52px; border: 1px solid #2A3242; border-radius: 6px; background: #12161F; color: #9BA6BA; font-size: 15px; font-weight: 700; letter-spacing: 1.5px">NEED 3,750 MORE</button>
+          <button style="width: 150px; height: 52px; border: 1px solid #2A3242; border-radius: 6px; background: #12161F; color: #9BA6BA; font-size: 15px; font-weight: 700; letter-spacing: 1.5px">HATCH X3</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size: 15px; color: #9BA6BA">Any hatch can also be Shiny (4%, 2x clicks) or Golden (0.5%, 5x clicks). Hatch x3 needs the Triple Hatch pass.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

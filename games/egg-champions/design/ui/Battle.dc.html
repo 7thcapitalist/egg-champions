@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gym battle</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; box-sizing: border-box; position: relative; overflow: hidden; background: #33503E; font-family: Barlow, sans-serif; color: #F2F4F8">
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 260px; background: #263D2F"></div>
+
+  <div style="position: absolute; left: 0; right: 0; top: 0; height: 56px; box-sizing: border-box; background: #12161F; border-bottom: 1px solid #2A3242; display: flex; align-items: center; justify-content: space-between; padding: 0 24px">
+    <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: 1px">GREEN MEADOW GYM</div>
+    <div style="font-size: 14px; font-weight: 600; letter-spacing: 1.5px; color: #E8B33A">TURN 3. YOUR MOVE</div>
+  </div>
+
+  <div style="position: absolute; left: 40px; top: 90px; width: 380px; box-sizing: border-box; background: #12161F; border: 1px solid #2A3242; border-radius: 6px; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 1px">EMBERKIT</div>
+      <div style="font-size: 13px; color: #FF9A6B; font-weight: 600; letter-spacing: 1.5px">FIRE</div>
+    </div>
+    <div style="height: 10px; background: #2A3242"><div style="width: 62%; height: 10px; background: #4CBF73"></div></div>
+    <div style="display: flex; justify-content: space-between; font-size: 15px"><span>61 / 98 HP</span><span style="color: #9BA6BA">Speed 12</span></div>
+    <div style="display: flex; gap: 6px; align-items: center; font-size: 12px; color: #9BA6BA; font-weight: 600; letter-spacing: 1.5px">TEAM
+      <div style="width: 22px; height: 6px; background: #4CBF73"></div>
+      <div style="width: 22px; height: 6px; background: #4CBF73"></div>
+      <div style="width: 22px; height: 6px; background: #4CBF73"></div>
+    </div>
+  </div>
+
+  <div style="position: absolute; right: 40px; top: 90px; width: 380px; box-sizing: border-box; background: #12161F; border: 1px solid #2A3242; border-radius: 6px; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 1px">LEADER'S PET 2</div>
+      <div style="font-size: 13px; color: #6FD694; font-weight: 600; letter-spacing: 1.5px">GRASS</div>
+    </div>
+    <div style="height: 10px; background: #2A3242"><div style="width: 34%; height: 10px; background: #E8B33A"></div></div>
+    <div style="display: flex; justify-content: space-between; font-size: 15px"><span>50 / 146 HP</span><span style="color: #9BA6BA">Speed 11</span></div>
+    <div style="display: flex; gap: 6px; align-items: center; font-size: 12px; color: #9BA6BA; font-weight: 600; letter-spacing: 1.5px">TEAM
+      <div style="width: 22px; height: 6px; background: #4A5468"></div>
+      <div style="width: 22px; height: 6px; background: #4CBF73"></div>
+      <div style="width: 22px; height: 6px; background: #4CBF73"></div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 240px; top: 300px; width: 150px; height: 150px; border-radius: 6px; background: #D9623A"></div>
+  <div style="position: absolute; right: 240px; top: 300px; width: 150px; height: 150px; border-radius: 6px; background: #4FA352"></div>
+  <div style="position: absolute; right: 262px; top: 250px; font-family: 'Barlow Condensed', sans-serif; font-size: 40px; font-weight: 700; color: #E8B33A">-60</div>
+  <div style="position: absolute; left: 50%; top: 350px; transform: translateX(-50%); font-size: 16px; color: #C9E6D2; text-align: center; width: 300px">Arena view. The attacker hops forward, the target flashes.</div>
+
+  <div style="position: absolute; left: 40px; right: 40px; bottom: 24px; display: flex; gap: 12px; align-items: stretch">
+    <div style="flex-grow: 1; box-sizing: border-box; background: #12161F; border: 1px solid #2A3242; border-radius: 6px; padding: 14px 18px; font-size: 16px; display: flex; flex-direction: column; gap: 4px; justify-content: center">
+      <div>Emberkit used Smash. It is strong against Grass.</div>
+      <div style="color: #9BA6BA">Leader's pet used Leaf Strike. It is weak against Fire.</div>
+    </div>
+    <button style="width: 230px; height: 88px; border: 1px solid #D9623A; border-radius: 6px; background: #12161F; color: #F2F4F8; text-align: left; padding: 0 18px">
+      <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: 1px">FIRE STRIKE</div>
+      <div style="font-size: 14px; color: #9BA6BA">Basic attack. Always ready.</div>
+    </button>
+    <button style="width: 230px; height: 88px; border: 1px solid #2A3242; border-radius: 6px; background: #1E2532; color: #9BA6BA; text-align: left; padding: 0 18px">
+      <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: 1px">SMASH</div>
+      <div style="font-size: 14px">Ready in 2 turns</div>
+    </button>
+    <button style="width: 110px; height: 88px; border: 1px solid #2A3242; border-radius: 6px; background: #12161F; color: #F2F4F8; font-size: 14px; font-weight: 600; letter-spacing: 1.5px">GIVE UP</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
