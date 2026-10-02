@@ -39,16 +39,19 @@ list of build tasks, so no person writes task briefs.
    names exists, dependencies form no cycle, and task 01 is marked done.
 
 ## Done when
-- [ ] `games/egg-champions/tasks/index.json` lists the full build, with the
-      test harness as the first pending task.
-- [ ] The coverage table shows every spec section mapped to at least one task:
+- [x] `games/egg-champions/tasks/index.json` lists the full build, with the
+      test harness as the first pending task. 19 tasks, 01 done, 02 the test
+      harness and the first pending one.
+- [x] The coverage table shows every spec section mapped to at least one task:
       clicking and coins, saving, eggs and hatching with variants, team of 3,
       pet index, rebirth, gym battles with all six specials, worlds and
       unlocking, UI, game passes, analytics events, and every effect listed in
-      `design/eggs-and-effects.md`.
-- [ ] `python factory/tools/gate.py games/egg-champions planned` exits 0.
-- [ ] `python factory/tools/state.py next games/egg-champions` prints `built`.
-- [ ] Committed and pushed.
+      `design/eggs-and-effects.md`. All 14 build-stage effects are named by a
+      brief, checked by matching the design table against the brief text
+      rather than by eye.
+- [x] `python factory/tools/gate.py games/egg-champions planned` exits 0.
+- [x] `python factory/tools/state.py next games/egg-champions` prints `built`.
+- [x] Committed and pushed.
 
 ## Stop here for review
 After this task, stop and tell the owner the task list is ready. He reviews it

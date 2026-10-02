@@ -29,9 +29,11 @@ so every later task has somewhere to put code.
       succeeds.
 - [x] `selene games/egg-champions/src` reports no errors and
       `stylua --check games/egg-champions/src` passes.
+- [x] Changes are committed and pushed.
+
+## Needs human or playtester
 - [ ] Opening the built file in Studio and pressing Play prints the server
       line with 30 pets, 6 eggs, and 3 worlds, with no errors in the Output.
-- [x] Changes are committed and pushed.
 
 ## Out of scope
 Gameplay, UI, saving, tests, and publishing. Those are later tasks.

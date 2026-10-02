@@ -153,53 +153,153 @@ def gate_economy_tuned(game):
 # --------------------------------------------------------------------- built
 
 
+DONE_WHEN = "## Done when"
+
+
 def unticked(path):
-    """Line numbers of checklist items still left unticked in a task brief."""
-    return [
-        n
-        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
-        if line.strip().startswith("- [ ]")
-    ]
+    """Line numbers of unticked checks in a brief's Done-when section.
 
-
-def index_briefs(game, index):
-    """Return (brief paths, error_message) for the briefs a task index names.
-
-    The planner owns this file, so read it loosely: either a list of entries
-    or an object with a `tasks` list. An entry is a brief's file name, or an
-    object with a `file` key. Whether a brief is done is not taken from the
-    index: it is read from the brief's own Done-when checklist, which is how
-    briefs are ticked today, so the index cannot claim work that did not
-    happen.
+    Only that section counts. A brief's "Needs human or playtester" list holds
+    checks no machine can run, so counting those would leave this gate unable
+    to pass however much work was finished. A brief with no Done-when section
+    has nothing to prove and so nothing unticked.
     """
-    entries = index.get("tasks") if isinstance(index, dict) else index
-    if not isinstance(entries, list):
-        return None, "expected a list of tasks, or an object with a 'tasks' list"
-    if not entries:
-        return None, "the task index is empty"
-    paths = []
-    for entry in entries:
-        name = entry if isinstance(entry, str) else (entry or {}).get("file")
-        if not isinstance(name, str) or not name:
-            return None, "every task needs a 'file' naming its brief"
-        paths.append(game / "tasks" / name)
-    return paths, None
+    left = []
+    inside = False
+    for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            inside = stripped == DONE_WHEN
+            continue
+        if inside and stripped.startswith("- [ ]"):
+            left.append(n)
+    return left
 
 
-def gate_built(game):
+def load_tasks(game):
+    """Return (tasks, error_message) from a game's task index.
+
+    A task is {id, title, file, depends_on, status, path}. The planner owns
+    the file, so read it loosely: either a list of entries or an object with
+    a `tasks` list, and an entry may be just a brief's file name.
+    """
     index_path = game / "tasks" / "index.json"
     if not index_path.is_file():
-        return fail("no task index at %s. Run the planner." % index_path.as_posix())
+        return None, "no task index at %s. Run the planner." % index_path.as_posix()
 
     index, err = read_json(index_path)
     if err:
+        return None, err
+
+    entries = index.get("tasks") if isinstance(index, dict) else index
+    if not isinstance(entries, list):
+        return None, "%s: expected a list of tasks, or an object with a 'tasks' list" % (
+            index_path.as_posix()
+        )
+    if not entries:
+        return None, "%s: the task index is empty" % index_path.as_posix()
+
+    tasks = []
+    for position, entry in enumerate(entries, 1):
+        if isinstance(entry, str):
+            entry = {"file": entry}
+        if not isinstance(entry, dict):
+            return None, "%s: task %d is neither a file name nor an object" % (
+                index_path.as_posix(),
+                position,
+            )
+        name = entry.get("file")
+        if not isinstance(name, str) or not name:
+            return None, "%s: task %d needs a 'file' naming its brief" % (
+                index_path.as_posix(),
+                position,
+            )
+        depends = entry.get("depends_on") or []
+        if not isinstance(depends, list):
+            return None, "%s: task %s has a 'depends_on' that is not a list" % (
+                index_path.as_posix(),
+                entry.get("id", name),
+            )
+        tasks.append(
+            {
+                "id": str(entry.get("id") or name),
+                "title": entry.get("title") or name,
+                "file": name,
+                "depends_on": [str(d) for d in depends],
+                "status": entry.get("status") or "pending",
+                "path": game / "tasks" / name,
+            }
+        )
+    return tasks, None
+
+
+def first_cycle(tasks):
+    """Name a dependency cycle as 'a -> b -> a', or return None if acyclic."""
+    by_id = {t["id"]: t for t in tasks}
+    state = {}  # id -> 1 while on the stack, 2 once finished
+
+    def walk(task_id, trail):
+        if state.get(task_id) == 1:
+            start = trail.index(task_id)
+            return " -> ".join(trail[start:] + [task_id])
+        if state.get(task_id) == 2:
+            return None
+        state[task_id] = 1
+        for dep in by_id[task_id]["depends_on"]:
+            if dep in by_id:
+                found = walk(dep, trail + [task_id])
+                if found:
+                    return found
+        state[task_id] = 2
+        return None
+
+    for task in tasks:
+        found = walk(task["id"], [])
+        if found:
+            return found
+    return None
+
+
+def gate_planned(game):
+    tasks, err = load_tasks(game)
+    if err:
         return fail(err)
 
-    briefs, err = index_briefs(game, index)
-    if err:
-        return fail("%s: %s" % (index_path.as_posix(), err))
+    missing = [t["path"].as_posix() for t in tasks if not t["path"].is_file()]
+    if missing:
+        return fail("the task index names %d missing brief(s): %s" % (len(missing), missing[0]))
 
-    for brief in briefs:
+    ids = [t["id"] for t in tasks]
+    repeated = sorted({i for i in ids if ids.count(i) > 1})
+    if repeated:
+        return fail("the task index reuses id(s): %s" % ", ".join(repeated))
+
+    known = set(ids)
+    for task in tasks:
+        unknown = [d for d in task["depends_on"] if d not in known]
+        if unknown:
+            return fail(
+                "task %s depends on unknown id(s): %s" % (task["id"], ", ".join(unknown))
+            )
+
+    cycle = first_cycle(tasks)
+    if cycle:
+        return fail("the task dependencies form a cycle: %s" % cycle)
+
+    first = tasks[0]
+    if first["status"] != "done":
+        return fail("task %s is '%s', expected 'done'" % (first["id"], first["status"]))
+
+    return ok("%d task(s) planned, task %s done, no dependency cycle" % (len(tasks), first["id"]))
+
+
+def gate_built(game):
+    tasks, err = load_tasks(game)
+    if err:
+        return fail(err)
+
+    for task in tasks:
+        brief = task["path"]
         if not brief.is_file():
             return fail("the task index names %s, which does not exist" % brief.as_posix())
         try:
@@ -235,7 +335,7 @@ def gate_built(game):
                 % (cmd[0], lines[0] if lines else "exit code %d" % done.returncode)
             )
 
-    return ok("%d task(s) done, and rojo, selene and stylua all pass" % len(briefs))
+    return ok("%d task(s) done, and rojo, selene and stylua all pass" % len(tasks))
 
 
 # ---------------------------------------------------------------------- main
@@ -243,6 +343,7 @@ def gate_built(game):
 GATES = {
     "spec_parsed": gate_spec_parsed,
     "economy_tuned": gate_economy_tuned,
+    "planned": gate_planned,
     "built": gate_built,
 }
 
