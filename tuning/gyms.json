@@ -1,0 +1,408 @@
+{
+  "generated_by": "factory/tools/simulate_economy.py",
+  "seed": 1,
+  "target_win_rate": 0.8,
+  "leader_speed": 11,
+  "gyms": [
+    {
+      "world": "green_meadow",
+      "world_name": "Green Meadow",
+      "fee": 50000,
+      "target_rebirths": 0,
+      "power": 1.302,
+      "leader_base_egg": "forest",
+      "leader_strength": "rare",
+      "leader_team": [
+        {
+          "type": "grass",
+          "hp": 146,
+          "attack": 29,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "grass",
+          "hp": 146,
+          "attack": 29,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "grass",
+          "hp": 146,
+          "attack": 29,
+          "speed": 11,
+          "special": "smash"
+        }
+      ],
+      "reference_team": [
+        {
+          "pet": "emberkit",
+          "type": "fire",
+          "hp": 98.0,
+          "attack": 20.0,
+          "speed": 12,
+          "special": "smash"
+        },
+        {
+          "pet": "emberkit",
+          "type": "fire",
+          "hp": 98.0,
+          "attack": 20.0,
+          "speed": 12,
+          "special": "smash"
+        },
+        {
+          "pet": "sparkit",
+          "type": "electric",
+          "hp": 146.0,
+          "attack": 29.0,
+          "speed": 13,
+          "special": "smash"
+        }
+      ],
+      "reference_win_rate_at_target": 0.79,
+      "reference_win_rate_by_rebirths": {
+        "0": 0.79,
+        "1": 1.0,
+        "2": 1.0
+      }
+    },
+    {
+      "world": "coral_coast",
+      "world_name": "Coral Coast",
+      "fee": 5000000,
+      "target_rebirths": 2,
+      "power": 1.948,
+      "leader_base_egg": "storm",
+      "leader_strength": "rare",
+      "leader_team": [
+        {
+          "type": "water",
+          "hp": 584,
+          "attack": 117,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "water",
+          "hp": 584,
+          "attack": 117,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "water",
+          "hp": 584,
+          "attack": 117,
+          "speed": 11,
+          "special": "smash"
+        }
+      ],
+      "reference_team": [
+        {
+          "pet": "bananao",
+          "type": "electric",
+          "hp": 390.0,
+          "attack": 78.0,
+          "speed": 12,
+          "special": "smash"
+        },
+        {
+          "pet": "zapeel",
+          "type": "electric",
+          "hp": 244.0,
+          "attack": 49.0,
+          "speed": 13,
+          "special": "smash"
+        },
+        {
+          "pet": "sparkit",
+          "type": "electric",
+          "hp": 146.0,
+          "attack": 29.0,
+          "speed": 13,
+          "special": "smash"
+        }
+      ],
+      "reference_win_rate_at_target": 0.818,
+      "reference_win_rate_by_rebirths": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.818,
+        "3": 1.0,
+        "4": 1.0
+      }
+    },
+    {
+      "world": "ember_volcano",
+      "world_name": "Ember Volcano",
+      "fee": 10000000000,
+      "target_rebirths": 5,
+      "power": 1.324,
+      "leader_base_egg": "magma",
+      "leader_strength": "epic",
+      "leader_team": [
+        {
+          "type": "fire",
+          "hp": 1324,
+          "attack": 265,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "fire",
+          "hp": 1324,
+          "attack": 265,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "fire",
+          "hp": 1324,
+          "attack": 265,
+          "speed": 11,
+          "special": "smash"
+        }
+      ],
+      "reference_team": [
+        {
+          "pet": "voltscorp",
+          "type": "electric",
+          "hp": 975.0,
+          "attack": 195.0,
+          "speed": 12,
+          "special": "smash"
+        },
+        {
+          "pet": "moranguete",
+          "type": "fire",
+          "hp": 634.0,
+          "attack": 127.0,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "pet": "bananao",
+          "type": "electric",
+          "hp": 390.0,
+          "attack": 78.0,
+          "speed": 12,
+          "special": "smash"
+        }
+      ],
+      "reference_win_rate_at_target": 0.793,
+      "reference_win_rate_by_rebirths": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.004,
+        "5": 0.793,
+        "6": 1.0,
+        "7": 1.0
+      }
+    }
+  ],
+  "gyms_with_proposal": [
+    {
+      "world": "green_meadow",
+      "world_name": "Green Meadow",
+      "fee": 50000,
+      "target_rebirths": 0,
+      "power": 1.302,
+      "leader_base_egg": "forest",
+      "leader_strength": "rare",
+      "leader_team": [
+        {
+          "type": "grass",
+          "hp": 146,
+          "attack": 29,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "grass",
+          "hp": 146,
+          "attack": 29,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "grass",
+          "hp": 146,
+          "attack": 29,
+          "speed": 11,
+          "special": "smash"
+        }
+      ],
+      "reference_team": [
+        {
+          "pet": "emberkit",
+          "type": "fire",
+          "hp": 98.0,
+          "attack": 20.0,
+          "speed": 12,
+          "special": "smash"
+        },
+        {
+          "pet": "emberkit",
+          "type": "fire",
+          "hp": 98.0,
+          "attack": 20.0,
+          "speed": 12,
+          "special": "smash"
+        },
+        {
+          "pet": "sparkit",
+          "type": "electric",
+          "hp": 146.0,
+          "attack": 29.0,
+          "speed": 13,
+          "special": "smash"
+        }
+      ],
+      "reference_win_rate_at_target": 0.79,
+      "reference_win_rate_by_rebirths": {
+        "0": 0.79,
+        "1": 1.0,
+        "2": 1.0
+      }
+    },
+    {
+      "world": "coral_coast",
+      "world_name": "Coral Coast",
+      "fee": 5000000,
+      "target_rebirths": 2,
+      "power": 1.948,
+      "leader_base_egg": "storm",
+      "leader_strength": "rare",
+      "leader_team": [
+        {
+          "type": "water",
+          "hp": 584,
+          "attack": 117,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "water",
+          "hp": 584,
+          "attack": 117,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "water",
+          "hp": 584,
+          "attack": 117,
+          "speed": 11,
+          "special": "smash"
+        }
+      ],
+      "reference_team": [
+        {
+          "pet": "bananao",
+          "type": "electric",
+          "hp": 390.0,
+          "attack": 78.0,
+          "speed": 12,
+          "special": "smash"
+        },
+        {
+          "pet": "zapeel",
+          "type": "electric",
+          "hp": 244.0,
+          "attack": 49.0,
+          "speed": 13,
+          "special": "smash"
+        },
+        {
+          "pet": "sparkit",
+          "type": "electric",
+          "hp": 146.0,
+          "attack": 29.0,
+          "speed": 13,
+          "special": "smash"
+        }
+      ],
+      "reference_win_rate_at_target": 0.818,
+      "reference_win_rate_by_rebirths": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.818,
+        "3": 1.0,
+        "4": 1.0
+      }
+    },
+    {
+      "world": "ember_volcano",
+      "world_name": "Ember Volcano",
+      "fee": 10000000000,
+      "target_rebirths": 5,
+      "power": 1.324,
+      "leader_base_egg": "magma",
+      "leader_strength": "epic",
+      "leader_team": [
+        {
+          "type": "fire",
+          "hp": 1324,
+          "attack": 265,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "fire",
+          "hp": 1324,
+          "attack": 265,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "type": "fire",
+          "hp": 1324,
+          "attack": 265,
+          "speed": 11,
+          "special": "smash"
+        }
+      ],
+      "reference_team": [
+        {
+          "pet": "voltscorp",
+          "type": "electric",
+          "hp": 975.0,
+          "attack": 195.0,
+          "speed": 12,
+          "special": "smash"
+        },
+        {
+          "pet": "moranguete",
+          "type": "fire",
+          "hp": 634.0,
+          "attack": 127.0,
+          "speed": 11,
+          "special": "smash"
+        },
+        {
+          "pet": "bananao",
+          "type": "electric",
+          "hp": 390.0,
+          "attack": 78.0,
+          "speed": 12,
+          "special": "smash"
+        }
+      ],
+      "reference_win_rate_at_target": 0.793,
+      "reference_win_rate_by_rebirths": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.004,
+        "5": 0.793,
+        "6": 1.0,
+        "7": 1.0
+      }
+    }
+  ]
+}

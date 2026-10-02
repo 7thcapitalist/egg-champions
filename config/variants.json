@@ -1,0 +1,18 @@
+[
+  {
+    "id": "shiny",
+    "name": "Shiny",
+    "hatch_chance": 0.04,
+    "click_mult": 2,
+    "battle_mult": 1.2,
+    "look": "Brighter colors and sparkle particles"
+  },
+  {
+    "id": "golden",
+    "name": "Golden",
+    "hatch_chance": 0.005,
+    "click_mult": 5,
+    "battle_mult": 1.5,
+    "look": "Gold material and a glow"
+  }
+]

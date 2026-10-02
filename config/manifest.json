@@ -1,0 +1,16 @@
+{
+  "spec": "spec/egg-champions.md",
+  "spec_sha256": "35a7d33e18cc8a70cee0b9f6c4fb9f3e70a81251120e1ef689d949991dd25ff4",
+  "counts": {
+    "constants": 23,
+    "rarities": 5,
+    "roles": 3,
+    "variants": 2,
+    "types": 4,
+    "specials": 6,
+    "passes": 4,
+    "eggs": 6,
+    "worlds": 3,
+    "pets": 30
+  }
+}

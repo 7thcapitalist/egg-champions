@@ -1,0 +1,13 @@
+{
+  "production": {
+    "name": "Egg champions",
+    "universe_id": 10769019314,
+    "place_id": 115689918132204
+  },
+  "test": {
+    "name": "Egg Champions Test",
+    "universe_id": 10769019206,
+    "place_id": 101737317546942
+  },
+  "api_key_secret": "ROBLOX_API_KEY"
+}

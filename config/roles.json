@@ -1,0 +1,20 @@
+[
+  {
+    "id": "worker",
+    "name": "Worker",
+    "click_mult": 1.5,
+    "battle_mult": 0.7
+  },
+  {
+    "id": "balanced",
+    "name": "Balanced",
+    "click_mult": 1,
+    "battle_mult": 1
+  },
+  {
+    "id": "fighter",
+    "name": "Fighter",
+    "click_mult": 0.5,
+    "battle_mult": 1.3
+  }
+]

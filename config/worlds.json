@@ -1,0 +1,56 @@
+[
+  {
+    "index": 1,
+    "id": "green_meadow",
+    "name": "Green Meadow",
+    "environment": "Grass fields and forest edge",
+    "eggs": [
+      "meadow",
+      "forest"
+    ],
+    "gym": {
+      "fee": 50000,
+      "leader_count": 3,
+      "leader_type": "grass",
+      "leader_strength": "rare",
+      "counter_type": "fire",
+      "target_rebirths": 0
+    }
+  },
+  {
+    "index": 2,
+    "id": "coral_coast",
+    "name": "Coral Coast",
+    "environment": "Beach, reef, and storm clouds",
+    "eggs": [
+      "shell",
+      "storm"
+    ],
+    "gym": {
+      "fee": 5000000,
+      "leader_count": 3,
+      "leader_type": "water",
+      "leader_strength": "rare",
+      "counter_type": "electric",
+      "target_rebirths": 2
+    }
+  },
+  {
+    "index": 3,
+    "id": "ember_volcano",
+    "name": "Ember Volcano",
+    "environment": "Lava rivers and ash cliffs",
+    "eggs": [
+      "ember",
+      "magma"
+    ],
+    "gym": {
+      "fee": 10000000000,
+      "leader_count": 3,
+      "leader_type": "fire",
+      "leader_strength": "epic",
+      "counter_type": "water",
+      "target_rebirths": 5
+    }
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "2x_coins",
+    "name": "2x Coins",
+    "effect": "Doubles coins per click"
+  },
+  {
+    "id": "auto_click",
+    "name": "Auto Click",
+    "effect": "Clicks automatically"
+  },
+  {
+    "id": "lucky_eggs",
+    "name": "Lucky Eggs",
+    "effect": "Doubles Epic and Legendary odds"
+  },
+  {
+    "id": "triple_hatch",
+    "name": "Triple Hatch",
+    "effect": "Hatches three eggs at once"
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "fire",
+    "name": "Fire",
+    "strong_against": "grass",
+    "weak_against": "water"
+  },
+  {
+    "id": "grass",
+    "name": "Grass",
+    "strong_against": "electric",
+    "weak_against": "fire"
+  },
+  {
+    "id": "electric",
+    "name": "Electric",
+    "strong_against": "water",
+    "weak_against": "grass"
+  },
+  {
+    "id": "water",
+    "name": "Water",
+    "strong_against": "fire",
+    "weak_against": "electric"
+  }
+]

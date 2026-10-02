@@ -1,0 +1,56 @@
+[
+  {
+    "id": "meadow",
+    "name": "Meadow Egg",
+    "base_click_power": 1,
+    "base_hp": 50,
+    "base_attack": 10,
+    "price": 50,
+    "world": "green_meadow"
+  },
+  {
+    "id": "forest",
+    "name": "Forest Egg",
+    "base_click_power": 5,
+    "base_hp": 75,
+    "base_attack": 15,
+    "price": 5000,
+    "world": "green_meadow"
+  },
+  {
+    "id": "shell",
+    "name": "Shell Egg",
+    "base_click_power": 40,
+    "base_hp": 125,
+    "base_attack": 25,
+    "price": 50000,
+    "world": "coral_coast"
+  },
+  {
+    "id": "storm",
+    "name": "Storm Egg",
+    "base_click_power": 300,
+    "base_hp": 200,
+    "base_attack": 40,
+    "price": 500000,
+    "world": "coral_coast"
+  },
+  {
+    "id": "ember",
+    "name": "Ember Egg",
+    "base_click_power": 3000,
+    "base_hp": 325,
+    "base_attack": 65,
+    "price": 20000000,
+    "world": "ember_volcano"
+  },
+  {
+    "id": "magma",
+    "name": "Magma Egg",
+    "base_click_power": 25000,
+    "base_hp": 500,
+    "base_attack": 100,
+    "price": 500000000,
+    "world": "ember_volcano"
+  }
+]

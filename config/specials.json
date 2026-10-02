@@ -1,0 +1,50 @@
+[
+  {
+    "id": "smash",
+    "name": "Smash",
+    "kind": "attack",
+    "power": 80,
+    "value": 0,
+    "effect": "Strong attack of the pet's type"
+  },
+  {
+    "id": "drain",
+    "name": "Drain",
+    "kind": "drain",
+    "power": 50,
+    "value": 0.5,
+    "effect": "Attack that heals the user for this fraction of the damage"
+  },
+  {
+    "id": "heal",
+    "name": "Heal",
+    "kind": "heal",
+    "power": 0,
+    "value": 0.3,
+    "effect": "Restores this fraction of max HP"
+  },
+  {
+    "id": "guard",
+    "name": "Guard",
+    "kind": "guard",
+    "power": 0,
+    "value": 0.5,
+    "effect": "Multiplies the next hit taken by this fraction"
+  },
+  {
+    "id": "rush",
+    "name": "Rush",
+    "kind": "speed",
+    "power": 0,
+    "value": 0.5,
+    "effect": "Raises own Speed by this fraction for the rest of the battle"
+  },
+  {
+    "id": "off_type",
+    "name": "Off-type",
+    "kind": "offtype",
+    "power": 60,
+    "value": 0,
+    "effect": "Attack of a different type, listed per pet"
+  }
+]

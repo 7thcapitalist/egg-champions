@@ -1,0 +1,42 @@
+[
+  {
+    "id": "common",
+    "name": "Common",
+    "order": 1,
+    "hatch_chance": 0.5,
+    "click_mult": 1,
+    "battle_mult": 1
+  },
+  {
+    "id": "uncommon",
+    "name": "Uncommon",
+    "order": 2,
+    "hatch_chance": 0.3,
+    "click_mult": 2,
+    "battle_mult": 1.2
+  },
+  {
+    "id": "rare",
+    "name": "Rare",
+    "order": 3,
+    "hatch_chance": 0.15,
+    "click_mult": 4,
+    "battle_mult": 1.5
+  },
+  {
+    "id": "epic",
+    "name": "Epic",
+    "order": 4,
+    "hatch_chance": 0.045,
+    "click_mult": 10,
+    "battle_mult": 2
+  },
+  {
+    "id": "legendary",
+    "name": "Legendary",
+    "order": 5,
+    "hatch_chance": 0.005,
+    "click_mult": 30,
+    "battle_mult": 3
+  }
+]
