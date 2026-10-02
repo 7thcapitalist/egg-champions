@@ -1,0 +1,10 @@
+# stylua.toml pins Unix line endings, so keep LF in the working tree on every
+# platform. Without this, a Windows clone checks out CRLF and `stylua --check`
+# fails on files nobody touched.
+* text=auto eol=lf
+
+*.rbxl  -text
+*.rbxlx -text
+*.rbxm  -text
+*.rbxmx -text
+*.png   -text

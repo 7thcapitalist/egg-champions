@@ -25,11 +25,11 @@ so every later task has somewhere to put code.
 6. Add `build/` to `.gitignore`.
 
 ## Done when
-- [ ] `rojo build -o build/egg-champions.rbxl` succeeds.
-- [ ] `selene src` reports no errors and `stylua --check src` passes.
+- [x] `rojo build -o build/egg-champions.rbxl` succeeds.
+- [x] `selene src` reports no errors and `stylua --check src` passes.
 - [ ] Opening the built file in Studio and pressing Play prints the server
       line with 30 pets, 6 eggs, and 3 worlds, with no errors in the Output.
-- [ ] Changes are committed and pushed.
+- [x] Changes are committed and pushed.
 
 ## Out of scope
 Gameplay, UI, saving, tests, and publishing. Those are later tasks.

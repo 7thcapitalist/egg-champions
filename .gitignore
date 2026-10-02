@@ -3,3 +3,5 @@ __pycache__/
 *.rbxl
 *.rbxlx
 .env
+build/*
+!build/.gitkeep
