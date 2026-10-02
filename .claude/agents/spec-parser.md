@@ -1,3 +1,9 @@
+---
+name: spec-parser
+description: Factory agent 1. Turns a game spec at games/<game>/spec.md into the generated config JSON under games/<game>/config. Use when a spec is new or has changed, or when the spec_parsed gate fails. Reports design gaps instead of inventing design.
+tools: Read, Write, Edit, Glob, Grep, Bash
+---
+
 # Agent 1: Spec parser
 
 ## Job

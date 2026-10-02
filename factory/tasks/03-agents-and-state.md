@@ -35,10 +35,16 @@ check a machine can run.
    `economy_tuned` passed (verify with the gates, do not assume).
 
 ## Done when
-- [ ] `python factory/tools/gate.py games/egg-champions spec_parsed` exits 0.
-- [ ] Editing a number in the spec without rerunning agent 1 makes that gate
-      exit 1 (then revert the edit).
-- [ ] `python factory/tools/gate.py games/egg-champions economy_tuned` exits 0.
-- [ ] `python factory/tools/state.py next games/egg-champions` prints `planned`.
+- [x] `python factory/tools/gate.py games/egg-champions spec_parsed` exits 0.
+- [x] Editing a number in the spec without rerunning agent 1 makes that gate
+      exit 1 (then revert the edit). Changed `gym_retry_seconds` from 30 to 31:
+      the gate reported the spec hash against the manifest hash and exited 1.
+      Reverted, and it exits 0 again.
+- [x] `python factory/tools/gate.py games/egg-champions economy_tuned` exits 0.
+- [x] `python factory/tools/state.py next games/egg-champions` prints `planned`.
 - [ ] The three subagents are listed by Claude Code.
-- [ ] Committed and pushed.
+      NOT VERIFIED from inside a session: the agent list is read at startup, so
+      agents added mid-session do not appear until it reloads. All three files
+      parse: frontmatter delimited, `name` matching the filename, `description`
+      and `tools` set, no unknown fields. Run `/agents` to confirm.
+- [x] Committed and pushed.

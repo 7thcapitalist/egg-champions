@@ -31,17 +31,15 @@ new folder and a new spec. No behavior changes.
    to the new paths.
 
 ## Done when
-- [ ] `python factory/tools/parse_spec.py games/egg-champions/spec.md games/egg-champions/config`
+- [x] `python factory/tools/parse_spec.py games/egg-champions/spec.md games/egg-champions/config`
       and `python factory/tools/validate_config.py games/egg-champions/config` pass.
-      NOT RUN: no Python on this machine, only the Microsoft Store stub.
-- [ ] `python factory/tools/simulate_economy.py games/egg-champions/config games/egg-champions/tuning` exits 0.
-      NOT RUN: same reason.
-- [ ] After rerunning those, `git status` shows no content changes in
+- [x] `python factory/tools/simulate_economy.py games/egg-champions/config games/egg-champions/tuning` exits 0.
+- [x] After rerunning those, `git status` shows no content changes in
       `config/` or `tuning/` (only the moves), apart from the spec path in `manifest.json`.
-      Partly checked without running them: every file in `config/` and
-      `tuning/` is a pure `git mv` with a zero-line diff, `spec.md` still
-      hashes to the `spec_sha256` in `manifest.json`, and the `spec` field in
-      `manifest.json` was set by hand to the path a rerun would write.
+      Zero content changes, the spec path included: the rerun wrote the same
+      `games/egg-champions/spec.md` that was already in `manifest.json`. On
+      Windows the tools write CRLF, so `git status` flags the files until it
+      normalizes them; `git diff --numstat` is empty.
 - [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl` succeeds.
 - [x] `selene games/egg-champions/src` and `stylua --check games/egg-champions/src` pass.
 - [x] `grep -ri "egg" factory/tools` finds nothing game-specific. Every hit is

@@ -19,11 +19,49 @@ arguments.
 | 7 | Playtester | Published test place | Bug report | Not built |
 | 8 | Publisher | A passing build | Live game, icon, thumbnails | Not built |
 
-Agent instructions live in `factory/agents/`. Their scripts live in
-`factory/tools/`. Scripts use only the Python standard library.
+Agents are Claude Code subagents. Each one's instructions are the body of its
+file in `.claude/agents/`, which is the only copy of that text:
+
+| Agent | File |
+| --- | --- |
+| 1 Spec parser | [`.claude/agents/spec-parser.md`](../.claude/agents/spec-parser.md) |
+| 2 Economy tuner | [`.claude/agents/economy-tuner.md`](../.claude/agents/economy-tuner.md) |
+| 4 Coder | [`.claude/agents/coder.md`](../.claude/agents/coder.md) |
+
+Their scripts live in `factory/tools/`, standard library only.
 
 Briefs in `factory/tasks/` change the factory itself. Briefs in
 `<game-dir>/tasks/` build one game.
+
+## State and gates
+
+Agents coordinate through files, not through a person.
+`<game-dir>/state.json` is the single record of progress for one game: a
+`game` name and a list of `stages`, each with `id`, `status` (pending,
+running, passed, failed, blocked), `attempts`, `note` and `updated`. The
+stages run in order: `spec_parsed`, `economy_tuned`, `planned`, `built`,
+`assets`, `worlds`, `playtested`, `published_test`.
+
+    python factory/tools/state.py show <game-dir>
+    python factory/tools/state.py set <game-dir> <stage> <status> [--note TEXT]
+    python factory/tools/state.py next <game-dir>
+
+A gate is the machine check for one stage. It only reads what is already in
+the repo, so a stale generated file fails the gate instead of being quietly
+regenerated. Stages with no check yet print "no gate yet" and exit 1, so
+"not implemented" can never be mistaken for "passed".
+
+    python factory/tools/gate.py <game-dir> <stage>
+
+| Stage | Gate today |
+| --- | --- |
+| `spec_parsed` | the validator passes and `manifest.json` matches the spec's current hash |
+| `economy_tuned` | the tuning report shows the time pacing targets met |
+| `built` | every brief in the game's task index is ticked, and rojo, selene and stylua pass |
+| the rest | no gate yet |
+
+`gate.py` decides; `state.py` only records what it found. Nothing marks a
+stage passed on its own word.
 
 ## Run agent 1
 

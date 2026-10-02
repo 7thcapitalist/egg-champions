@@ -1,0 +1,61 @@
+{
+  "game": "egg-champions",
+  "stages": [
+    {
+      "id": "spec_parsed",
+      "status": "passed",
+      "attempts": 1,
+      "note": "config matches the spec's current hash and passes the validator",
+      "updated": "2026-10-02T19:21:02Z"
+    },
+    {
+      "id": "economy_tuned",
+      "status": "passed",
+      "attempts": 1,
+      "note": "all 3 time pacing targets met; rebirths at gym 3 still 4 against a target of 5",
+      "updated": "2026-10-02T19:21:02Z"
+    },
+    {
+      "id": "planned",
+      "status": "pending",
+      "attempts": 0,
+      "note": "",
+      "updated": null
+    },
+    {
+      "id": "built",
+      "status": "pending",
+      "attempts": 0,
+      "note": "",
+      "updated": null
+    },
+    {
+      "id": "assets",
+      "status": "pending",
+      "attempts": 0,
+      "note": "",
+      "updated": null
+    },
+    {
+      "id": "worlds",
+      "status": "pending",
+      "attempts": 0,
+      "note": "",
+      "updated": null
+    },
+    {
+      "id": "playtested",
+      "status": "pending",
+      "attempts": 0,
+      "note": "",
+      "updated": null
+    },
+    {
+      "id": "published_test",
+      "status": "pending",
+      "attempts": 0,
+      "note": "",
+      "updated": null
+    }
+  ]
+}

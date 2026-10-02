@@ -1,3 +1,9 @@
+---
+name: economy-tuner
+description: Factory agent 2. Simulates battles and player progression for one game, sets the gym leader stats, and reports which pacing targets are met. Use after the spec parser, or when the economy_tuned gate fails. Never edits the spec or the config; it proposes numbers for a human to accept.
+tools: Read, Write, Edit, Glob, Grep, Bash
+---
+
 # Agent 2: Economy tuner
 
 ## Job
