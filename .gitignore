@@ -3,5 +3,8 @@ __pycache__/
 *.rbxl
 *.rbxlx
 .env
-build/*
-!build/.gitkeep
+
+# Rojo output. The directory itself is kept so `rojo build -o <game>/build/...`
+# works on a fresh clone; rojo does not create its output directory.
+games/*/build/*
+!games/*/build/.gitkeep

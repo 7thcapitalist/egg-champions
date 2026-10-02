@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Agent 1 tool: turn a game spec (markdown) into config JSON files.
 
-Usage: python factory/tools/parse_spec.py spec/<game>.md config
+Usage: python factory/tools/parse_spec.py <game-dir>/spec.md <game-dir>/config
 
 Tables are found by their column names, not by position, so sections can
 move around in the spec. Every number comes from a table, never from prose.

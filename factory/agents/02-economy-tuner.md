@@ -7,18 +7,19 @@ which targets are met, and proposes new numbers. It never edits the spec or
 the config. The human decides which proposals go into the spec.
 
 ## Input
-`config/*.json` from agent 1. The simulator never reads the spec.
-Optional: `tuning/proposal.json`, the numbers this agent wants to try.
+`<game-dir>/config/*.json` from agent 1. The simulator never reads the spec.
+`<game-dir>` is the game folder under `games/`.
+Optional: `<game-dir>/tuning/proposal.json`, the numbers this agent wants to try.
 
 ## Output
-- `tuning/gyms.json`: per world, the leader team stats, the tuned power, the
-  reference team, and its win rate at 0 to target + 2 rebirths.
-- `tuning/report.md`: targets met and missed, design gaps, the proposal
-  table, the predicted result, and every assumption.
+- `<game-dir>/tuning/gyms.json`: per world, the leader team stats, the tuned
+  power, the reference team, and its win rate at 0 to target + 2 rebirths.
+- `<game-dir>/tuning/report.md`: targets met and missed, design gaps, the
+  proposal table, the predicted result, and every assumption.
 Both files are generated. Never edit them by hand.
 
 ## Steps
-1. Run `python factory/tools/simulate_economy.py config tuning`.
+1. Run `python factory/tools/simulate_economy.py <game-dir>/config <game-dir>/tuning`.
    Options: `--players N` (default 300), `--seed S` (default 1),
    `--proposal FILE`, `--max-hours H` (default 40).
    A `TUNER ERROR` means the config is inconsistent. Rerun agent 1.
@@ -26,8 +27,8 @@ Both files are generated. Never edit them by hand.
    MET or MISSED and by how much.
 3. Read "Design gaps found". These need a spec change by the human, for
    example a missing Rare pet of a gym's counter type.
-4. If a target is missed, write `tuning/proposal.json` and rerun. Change few
-   numbers at a time. Keep going until the predicted result meets the
+4. If a target is missed, write `<game-dir>/tuning/proposal.json` and rerun.
+   Change few numbers at a time. Keep going until the predicted result meets the
    targets or you can explain why it cannot.
 5. Report: tuned gym powers, targets met and missed, the proposal table,
    and open gaps. Ask the human to approve the proposals. After they edit

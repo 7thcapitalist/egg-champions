@@ -3,10 +3,15 @@
 Takes a game spec and produces a published Roblox game. Each agent has one
 job, reads files from this repo, and writes files back.
 
+Nothing in `factory/` names a game. One game lives in one folder under
+`games/`, so a second game is a new folder and a new spec. Below, `<game-dir>`
+means that folder. Every tool takes the game folder or explicit paths as
+arguments.
+
 | # | Agent | Reads | Produces | Status |
 | --- | --- | --- | --- | --- |
-| 1 | Spec parser | `spec/<game>.md` | `config/*.json` | Working |
-| 2 | Economy tuner | `config/` | `tuning/` gym stats, pacing report, proposals | Working |
+| 1 | Spec parser | `<game-dir>/spec.md` | `<game-dir>/config/*.json` | Working |
+| 2 | Economy tuner | `<game-dir>/config/` | `<game-dir>/tuning/` gym stats, pacing report, proposals | Working |
 | 3 | Planner | Spec and config | Task list for the coder | Not built |
 | 4 | Coder | One task at a time | Game code and tests | Not built |
 | 5 | Asset maker | Pet roster, style guide | 3D models | Not built |
@@ -17,7 +22,20 @@ job, reads files from this repo, and writes files back.
 Agent instructions live in `factory/agents/`. Their scripts live in
 `factory/tools/`. Scripts use only the Python standard library.
 
+Briefs in `factory/tasks/` change the factory itself. Briefs in
+`<game-dir>/tasks/` build one game.
+
 ## Run agent 1
 
-    python factory/tools/parse_spec.py spec/egg-champions.md config
-    python factory/tools/validate_config.py config
+    python factory/tools/parse_spec.py <game-dir>/spec.md <game-dir>/config
+    python factory/tools/validate_config.py <game-dir>/config
+
+## Run agent 2
+
+    python factory/tools/simulate_economy.py <game-dir>/config <game-dir>/tuning
+
+## Build a game
+
+    rojo build <game-dir> -o <game-dir>/build/game.rbxl
+    selene <game-dir>/src
+    stylua --check <game-dir>/src

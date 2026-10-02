@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Agent 1 tool: check that generated config is complete and consistent.
 
-Usage: python factory/tools/validate_config.py config
+Usage: python factory/tools/validate_config.py <game-dir>/config
 Exits with code 1 if any check fails. Standard library only.
 """
 import json

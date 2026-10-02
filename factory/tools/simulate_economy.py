@@ -2,11 +2,12 @@
 """Economy simulator and gym tuner (factory agent 2).
 
 Usage:
-    python factory/tools/simulate_economy.py config tuning [--players N] [--seed S]
+    python factory/tools/simulate_economy.py <game-dir>/config <game-dir>/tuning
+                                             [--players N] [--seed S]
                                              [--proposal FILE] [--max-hours H]
 
-Reads config/*.json only. Writes tuning/gyms.json and tuning/report.md.
-If tuning/proposal.json exists (or --proposal is given) the proposed numbers
+Reads <config>/*.json only. Writes <out>/gyms.json and <out>/report.md.
+If <out>/proposal.json exists (or --proposal is given) the proposed numbers
 are applied in memory and simulated too. Config files are never changed.
 Standard library only. Same seed, same output.
 """
@@ -660,7 +661,8 @@ def write_report(path, game, gyms, runs, players, seed, max_hours, prop, prop_ro
     L += ["- " + g for g in gaps(game, gyms)] or ["None."]
     L += ["", "## Proposed changes", ""]
     if not prop:
-        L.append("No proposal file was given. Write `tuning/proposal.json` and rerun.")
+        hint = os.path.join(os.path.dirname(path) or ".", "proposal.json").replace(os.sep, "/")
+        L.append("No proposal file was given. Write `%s` and rerun." % hint)
     else:
         L.append("Proposals only. The spec and config were not changed.")
         L.append("")

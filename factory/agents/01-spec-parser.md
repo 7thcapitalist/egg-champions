@@ -6,20 +6,21 @@ never invents game design. If the spec is missing something, it reports the
 gap and stops.
 
 ## Input
-`spec/<game>.md`, a game spec in the canonical format below.
+`<game-dir>/spec.md`, a game spec in the canonical format below. `<game-dir>` is
+the game folder under `games/`.
 
 ## Output
-`config/*.json` (constants, rarities, roles, variants, types, specials,
-passes, eggs, worlds, pets) and `config/manifest.json`.
+`<game-dir>/config/*.json` (constants, rarities, roles, variants, types,
+specials, passes, eggs, worlds, pets) and `<game-dir>/config/manifest.json`.
 Config files are generated. Never edit them by hand. Change the spec and rerun.
 
 ## Steps
 1. If the spec is loosely written (numbers in prose, missing tables), rewrite
    it into the canonical format first. Move every fixed number into the
    Constants table. Do not change any design decision while doing this.
-2. Run `python factory/tools/parse_spec.py spec/<game>.md config`.
+2. Run `python factory/tools/parse_spec.py <game-dir>/spec.md <game-dir>/config`.
    A `SPEC ERROR` means the spec's format is wrong. Fix the spec, not the tool.
-3. Run `python factory/tools/validate_config.py config`.
+3. Run `python factory/tools/validate_config.py <game-dir>/config`.
    Each failure is a design gap or contradiction in the spec. Fix it in the
    spec only if the fix is unambiguous. Otherwise list it for the human.
 4. Report: counts per file, anything you normalized, and open gaps.
