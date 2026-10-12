@@ -37,12 +37,12 @@ beaten, what a rebirth costs and what it resets. Pure Luau, fully tested.
      again after a rebirth.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0 with the
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0 with the
       new specs included.
-- [ ] A test asserts the exact set of fields a rebirth clears and the exact
+- [x] A test asserts the exact set of fields a rebirth clears and the exact
       set it keeps, so a later change to the state shape cannot silently
       start wiping pets.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Out of scope

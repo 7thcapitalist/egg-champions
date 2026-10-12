@@ -16,4 +16,6 @@ return {
 	ruleSpecs["PetIndex.spec"],
 	ruleSpecs["Battle.spec"],
 	ruleSpecs["Gym.spec"],
+	ruleSpecs["Progression.spec"],
+	ruleSpecs["Rebirth.spec"],
 }
