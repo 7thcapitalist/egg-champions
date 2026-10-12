@@ -45,14 +45,14 @@ gets results. This task is where the rule modules meet real players.
    existing config line.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0.
-- [ ] `grep -rn "RemoteEvent\|RemoteFunction" games/egg-champions/src/client`
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0.
+- [x] `grep -rn "RemoteEvent\|RemoteFunction" games/egg-champions/src/client`
       finds no remote created on the client: the server creates them all.
-- [ ] `grep -rn "OnServerEvent\|OnServerInvoke" games/egg-champions/src`
+- [x] `grep -rn "OnServerEvent\|OnServerInvoke" games/egg-champions/src`
       matches only files under `src/server`.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
 
 ## Needs human or playtester

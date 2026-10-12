@@ -62,6 +62,7 @@ local store = DataStoreService:GetDataStore(STORE_NAME)
 local jobId = if game.JobId ~= "" then game.JobId else "studio-" .. HttpService:GenerateGUID(false)
 
 local loaded: { [Player]: Profile } = {}
+local loadedListeners: { (Player, Profile) -> () } = {}
 
 local Profiles = {}
 
@@ -229,6 +230,12 @@ function Profiles.get(player: Player): Profile?
 	return loaded[player]
 end
 
+-- Calls listener(player, profile) each time a profile finishes loading, so a
+-- service can push the first state down. Listeners run in their own thread.
+function Profiles.onLoaded(listener: (Player, Profile) -> ())
+	table.insert(loadedListeners, listener)
+end
+
 local function onJoin(player: Player)
 	local profile, reason = load(player)
 	if profile == nil then
@@ -243,6 +250,9 @@ local function onJoin(player: Player)
 		return
 	end
 	loaded[player] = profile
+	for _, listener in loadedListeners do
+		task.spawn(listener, player, profile)
+	end
 end
 
 local function onLeave(player: Player)

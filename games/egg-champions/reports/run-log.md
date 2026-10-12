@@ -66,3 +66,12 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-12T20:15:05Z | task 07 | committed | 55afc97 |
 | 2026-10-12T20:15:05Z | built | paused | stopped at the limit of 1 task(s) per run; next is task 08 |
 | 2026-10-12T20:15:05Z | run | end | 1 task(s) done, 0 problem(s), cost about $0.00 |
+| 2026-10-12T20:20:20Z | run | start | games/egg-champions on branch main, max 1 task(s) |
+| 2026-10-12T20:20:20Z | task 08 | coder start | attempt 1 of 1: Server services and remotes |
+| 2026-10-12T20:20:26Z | check 08 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-12T20:20:26Z | check 08 | pass | grep -rn RemoteEvent\/RemoteFunction games/egg-champions/src/client (must find nothing) |
+| 2026-10-12T20:20:26Z | check 08 | pass | grep -rn OnServerEvent\/OnServerInvoke games/egg-champions/src |
+| 2026-10-12T20:20:27Z | check 08 | pass | selene games/egg-champions/src |
+| 2026-10-12T20:20:27Z | check 08 | pass | stylua --check games/egg-champions/src |
+| 2026-10-12T20:20:29Z | check 08 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-12T20:20:29Z | task 08 | passed | attempt 1 |
