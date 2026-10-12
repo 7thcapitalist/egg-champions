@@ -27,6 +27,7 @@ return function()
 				"GiveUp",
 				"Rebirth",
 				"ProfileChanged",
+				"Notice",
 			}
 			local names = {}
 			for _, entry in Remotes.list do
@@ -41,6 +42,7 @@ return function()
 		it("makes the pushes events and the requests with answers functions", function()
 			expect(Remotes.kindOf("Click")).toEqual("event")
 			expect(Remotes.kindOf("ProfileChanged")).toEqual("event")
+			expect(Remotes.kindOf("Notice")).toEqual("event")
 			expect(Remotes.kindOf("BuyEgg")).toEqual("function")
 			expect(Remotes.kindOf("BattleMove")).toEqual("function")
 			expect(Remotes.kindOf("NotARemote")).toEqual(nil)

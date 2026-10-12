@@ -34,15 +34,15 @@ rebuilds the world.
    and keep the SpawnLocation.
 
 ## Done when
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0.
-- [ ] A test asserts `Builder` creates one egg stand per egg in config and
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0.
+- [x] A test asserts `Builder` creates one egg stand per egg in config and
       one gym per world, by counting what it builds against the config
       counts, so a fourth world needs no code change.
-- [ ] `grep -rn "SpecialMesh\|MeshPart\|rbxassetid" games/egg-champions/src/server/World`
+- [x] `grep -rn "SpecialMesh\|MeshPart\|rbxassetid" games/egg-champions/src/server/World`
       finds nothing: parts only at this stage.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Needs human or playtester

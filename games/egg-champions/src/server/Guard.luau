@@ -101,6 +101,16 @@ function Guard.push(player: Player)
 	event:FireClient(player, { profile = deepCopy(profile), derived = derived })
 end
 
+-- Sends the player a short message through Notice, such as why a portal
+-- refused them. The client only shows it.
+function Guard.notify(player: Player, message: string)
+	if player.Parent == nil then
+		return
+	end
+	local event = remote(Remotes.names.Notice) :: RemoteEvent
+	event:FireClient(player, message)
+end
+
 local function expectKind(name: string, kind: Remotes.Kind)
 	local actual = Remotes.kindOf(name)
 	if actual ~= kind then

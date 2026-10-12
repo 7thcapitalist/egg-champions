@@ -8,7 +8,9 @@
 	ReplicatedStorage; the client only waits for them.
 
 	Kinds:
-		"event": a RemoteEvent. Click goes up, ProfileChanged comes down.
+		"event": a RemoteEvent. Click goes up; ProfileChanged and Notice come
+			down. Notice carries a short message for the player, such as why a
+			portal refused them.
 		"function": a RemoteFunction. The client asks and the server answers
 			with a result table, { ok = true, ... } or { ok = false, reason }.
 
@@ -29,6 +31,7 @@ export type Name =
 	| "GiveUp"
 	| "Rebirth"
 	| "ProfileChanged"
+	| "Notice"
 
 local Remotes = {}
 
@@ -46,6 +49,7 @@ Remotes.names = table.freeze({
 	GiveUp = "GiveUp" :: Name,
 	Rebirth = "Rebirth" :: Name,
 	ProfileChanged = "ProfileChanged" :: Name,
+	Notice = "Notice" :: Name,
 })
 
 -- Every remote and its kind, in a fixed order.
@@ -60,6 +64,7 @@ Remotes.list = table.freeze({
 	table.freeze({ name = Remotes.names.GiveUp, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.Rebirth, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.ProfileChanged, kind = "event" :: Kind }),
+	table.freeze({ name = Remotes.names.Notice, kind = "event" :: Kind }),
 })
 
 -- The kind of a remote, or nil for a name that is not a remote.

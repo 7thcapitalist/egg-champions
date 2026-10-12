@@ -9,6 +9,7 @@
 local rules = script.Parent.Parent.rules
 local ruleSpecs = rules.specs
 local netSpecs = script.Parent.Parent.net.specs
+local worldSpecs = script.Parent.Parent.world.specs
 
 return {
 	ruleSpecs["Team.spec"],
@@ -21,4 +22,5 @@ return {
 	ruleSpecs["Rebirth.spec"],
 	ruleSpecs["Profile.spec"],
 	netSpecs["Requests.spec"],
+	worldSpecs["Layout.spec"],
 }
