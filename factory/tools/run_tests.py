@@ -7,6 +7,11 @@ pinned in rokit.toml, with a small stand-in for Roblox's `script` tree and
 `require`, then runs the spec modules listed in
 <game-dir>/src/shared/testing/specs.luau through testing/Runner.luau.
 
+The JSON data the Rojo project maps into ReplicatedStorage (for a game, its
+generated config) is mounted at the same place in the stand-in tree, so a
+shared module can reach it through `script.Parent.Parent` exactly as it does
+in Studio, with no Roblox service.
+
 Rule modules (src/shared/rules/) must need no Roblox service. Every one of
 them is loaded first, and any that touches `game`, `workspace`, `Instance`,
 `Enum` or another engine global fails the run with a message naming it.
@@ -15,6 +20,8 @@ Prints one line per failure and a final count. Exits 0 when every test
 passed, 1 otherwise. Standard library only.
 """
 
+import json
+import math
 import os
 import re
 import shutil
@@ -139,9 +146,109 @@ def collect(shared, game_dir):
     return ",\n".join(entries)
 
 
+def lua_string(text):
+    out = []
+    for ch in text:
+        code = ord(ch)
+        if ch == "\\":
+            out.append("\\\\")
+        elif ch == '"':
+            out.append('\\"')
+        elif code < 32 or code == 127:
+            out.append("\\%d" % code if code > 99 else "\\%03d" % code)
+        else:
+            out.append(ch)
+    return '"' + "".join(out) + '"'
+
+
+def lua_value(value, where):
+    """A JSON value as a Lua expression, matching how Rojo turns JSON into a table."""
+    if value is None:
+        return "nil"
+    if value is True:
+        return "true"
+    if value is False:
+        return "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        if math.isnan(value) or math.isinf(value):
+            fail("%s holds a number Lua cannot read: %r" % (where, value))
+        return repr(value)
+    if isinstance(value, str):
+        return lua_string(value)
+    if isinstance(value, list):
+        if any(item is None for item in value):
+            fail("%s has a null inside a list, which a Lua array cannot hold" % where)
+        return "{" + ", ".join(lua_value(item, where) for item in value) + "}"
+    if isinstance(value, dict):
+        parts = ["[%s] = %s" % (lua_string(str(k)), lua_value(v, where)) for k, v in value.items()]
+        return "{" + ", ".join(parts) + "}"
+    fail("%s holds a value of unknown kind %r" % (where, value))
+
+
+def json_module(path, game_dir):
+    where = path.relative_to(game_dir).as_posix() if path.is_relative_to(game_dir) else str(path)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as err:
+        fail("%s is not valid JSON: %s" % (where, err))
+    return "return " + lua_value(data, where)
+
+
+def project_data(game_dir, shared):
+    """Lua table entries for the JSON data the Rojo project maps into ReplicatedStorage.
+
+    Paths are relative to ReplicatedStorage. src/shared itself is left out; it is
+    collected as code. Only .json files are mounted, as Rojo would turn them
+    into ModuleScripts that return a table.
+    """
+    project = game_dir / "default.project.json"
+    if not project.is_file():
+        return ""
+    try:
+        tree = json.loads(project.read_text(encoding="utf-8")).get("tree", {})
+    except ValueError as err:
+        fail("default.project.json is not valid JSON: %s" % err)
+    storage = tree.get("ReplicatedStorage")
+    if not isinstance(storage, dict):
+        return ""
+    entries = []
+    shared_real = shared.resolve()
+
+    def add_module(node_path, file):
+        entries.append('{kind = "data", path = %s, source = %s}'
+                       % (long_string(node_path), long_string(json_module(file, game_dir))))
+
+    def walk(node, node_path):
+        target = node.get("$path")
+        if isinstance(target, str):
+            source = (game_dir / target).resolve()
+            if source == shared_real:
+                return
+            if source.is_dir():
+                for file in sorted(source.iterdir()):
+                    if file.is_file() and file.suffix == ".json" and not file.name.endswith(".project.json"):
+                        add_module(node_path + "/" + file.stem, file)
+            elif source.is_file() and source.suffix == ".json":
+                add_module(node_path, source)
+        for key, child in node.items():
+            if not key.startswith("$") and isinstance(child, dict):
+                walk(child, (node_path + "/" + key) if node_path else key)
+
+    for key, child in storage.items():
+        if not key.startswith("$") and isinstance(child, dict):
+            walk(child, key)
+    return ",\n".join(entries)
+
+
 BOOTSTRAP = r"""
 local FILES = {
 %FILES%
+}
+
+local DATA = {
+%DATA%
 }
 
 local ENGINE_GLOBALS = {%ENGINE%}
@@ -234,6 +341,28 @@ local function ensure(path, className)
 	local node = newNode(name, className, ensure(parentPath, "Folder"))
 	byPath[path] = node
 	return node
+end
+
+-- Project data (generated config) hangs off ReplicatedStorage, beside Shared.
+local dataByPath = { [""] = storage }
+local function ensureData(path, className)
+	if dataByPath[path] then
+		if className == "ModuleScript" then
+			meta[dataByPath[path]].className = className
+		end
+		return dataByPath[path]
+	end
+	local parentPath, name = string.match(path, "^(.*)/([^/]+)$")
+	if not parentPath then
+		parentPath, name = "", path
+	end
+	local node = newNode(name, className, ensureData(parentPath, "Folder"))
+	dataByPath[path] = node
+	return node
+end
+for _, file in DATA do
+	local node = ensureData(file.path, "ModuleScript")
+	modules[node] = { path = "ReplicatedStorage/" .. file.path, chunk = file.path, source = file.source }
 end
 
 for _, file in FILES do
@@ -388,6 +517,7 @@ def main(argv):
     name, pin = pinned_luau()
     luau = find_luau(name)
     script = BOOTSTRAP.replace("%ENGINE%", ", ".join('"%s"' % n for n in ENGINE_NAMES))
+    script = script.replace("%DATA%", project_data(game_dir, shared))
     script = script.replace("%FILES%", collect(shared, game_dir))
 
     with tempfile.TemporaryDirectory(prefix="run_tests_") as tmp:

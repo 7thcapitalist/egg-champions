@@ -7,7 +7,9 @@
 ]]
 
 local rules = script.Parent.Parent.rules
+local ruleSpecs = rules.specs
 
 return {
-	rules["Example.spec"],
+	ruleSpecs["Team.spec"],
+	ruleSpecs["Coins.spec"],
 }

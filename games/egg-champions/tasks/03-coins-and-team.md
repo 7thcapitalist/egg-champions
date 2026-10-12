@@ -35,11 +35,11 @@ say which pets may be equipped. Pure Luau, fully tested, no Roblox services.
 4. Delete `src/shared/rules/Example.luau` and its spec.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0 with the
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0 with the
       new specs included in the count.
-- [ ] `grep -rnE "[^a-zA-Z_][0-9]{2,}" games/egg-champions/src/shared/rules`
+- [x] `grep -rnE "[^a-zA-Z_][0-9]{2,}" games/egg-champions/src/shared/rules`
       finds no game number: every number comes from config.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Out of scope

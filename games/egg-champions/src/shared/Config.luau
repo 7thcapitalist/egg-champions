@@ -11,7 +11,11 @@
 	typo in a pet or world id fails at the call site rather than much later.
 ]]
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Shared and GameConfig both sit in ReplicatedStorage (see default.project.json).
+-- Reaching GameConfig through the script tree instead of game:GetService keeps
+-- this module free of engine globals, so rule modules can require it and the
+-- headless test runner, which mounts the same JSON at the same place, can load it.
+local ReplicatedStorage = (script.Parent :: Instance).Parent :: Instance
 
 local GameConfig = ReplicatedStorage:WaitForChild("GameConfig")
 
