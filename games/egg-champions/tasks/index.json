@@ -43,7 +43,7 @@
       "depends_on": [
         "02"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "06",

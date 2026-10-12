@@ -62,14 +62,14 @@ rule module; it gets the most tests.
      battles. This is the check that the rules and the tuner agree.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0 with the
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0 with the
       new specs included.
-- [ ] A test covers each of the six specials by name, and a test asserts the
+- [x] A test covers each of the six specials by name, and a test asserts the
       specials covered equal the ids in `config/specials.json`, so a new
       special cannot be added without a test.
-- [ ] The win-rate test agrees with `tuning/gyms.json` within a stated
+- [x] The win-rate test agrees with `tuning/gyms.json` within a stated
       tolerance.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Out of scope

@@ -14,4 +14,6 @@ return {
 	ruleSpecs["Coins.spec"],
 	ruleSpecs["Hatch.spec"],
 	ruleSpecs["PetIndex.spec"],
+	ruleSpecs["Battle.spec"],
+	ruleSpecs["Gym.spec"],
 }
