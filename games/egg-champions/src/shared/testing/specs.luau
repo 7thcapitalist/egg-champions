@@ -12,4 +12,6 @@ local ruleSpecs = rules.specs
 return {
 	ruleSpecs["Team.spec"],
 	ruleSpecs["Coins.spec"],
+	ruleSpecs["Hatch.spec"],
+	ruleSpecs["PetIndex.spec"],
 }

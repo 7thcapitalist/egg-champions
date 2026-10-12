@@ -41,10 +41,10 @@ and what the pet index records. Pure Luau, fully tested, no Roblox services.
      alone does not complete it.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0 with the
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0 with the
       new specs included.
-- [ ] A test asserts the rarity table sums to 1 and fails if config drifts.
-- [ ] `selene games/egg-champions/src` and
+- [x] A test asserts the rarity table sums to 1 and fails if config drifts.
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Out of scope
