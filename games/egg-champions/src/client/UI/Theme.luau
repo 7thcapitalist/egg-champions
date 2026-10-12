@@ -31,6 +31,10 @@ Theme.colors = table.freeze({
 	muted = Color3.fromRGB(155, 166, 186),
 	gold = Color3.fromRGB(232, 179, 58),
 	badgeEmpty = Color3.fromRGB(90, 100, 120),
+	-- The egg shop's Hatch button and the dim behind a full screen panel.
+	hatch = Color3.fromRGB(31, 122, 69),
+	white = Color3.fromRGB(255, 255, 255),
+	backdrop = Color3.fromRGB(0, 0, 0),
 })
 
 -- Lowest rarity first.

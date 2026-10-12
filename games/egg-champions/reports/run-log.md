@@ -100,3 +100,11 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-12T20:33:30Z | task 10 | committed | e71e872 |
 | 2026-10-12T20:33:30Z | built | paused | stopped at the limit of 1 task(s) per run; next is task 11 |
 | 2026-10-12T20:33:31Z | run | end | 1 task(s) done, 0 problem(s), cost about $0.00 |
+| 2026-10-12T20:38:23Z | run | start | games/egg-champions on branch main, max 1 task(s) |
+| 2026-10-12T20:38:23Z | task 11 | coder start | attempt 1 of 1: UI, egg shop |
+| 2026-10-12T20:38:32Z | check 11 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-12T20:38:33Z | check 11 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-12T20:38:33Z | check 11 | pass | grep -rn price\s*=\s*[0-9] games/egg-champions/src/client (must find nothing) |
+| 2026-10-12T20:38:33Z | check 11 | pass | selene games/egg-champions/src |
+| 2026-10-12T20:38:34Z | check 11 | pass | stylua --check games/egg-champions/src |
+| 2026-10-12T20:38:34Z | task 11 | passed | attempt 1 |

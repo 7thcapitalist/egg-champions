@@ -6,10 +6,9 @@
 	- keeps the latest state the server sent (UI/State) and builds the main
 	  screen (UI/Main), where pressing the world view fires Click;
 	- shows the server's Notice messages (such as why a portal refused);
-	- buys from egg stands: touching a stand's pad fires the BuyEgg remote for
-	  that stand's egg. Task 11 replaces this with opening the shop screen
-	  filtered to that egg. The server decides whether the purchase goes
-	  through.
+	- builds the egg shop (UI/EggShop), where Hatch and Hatch x3 send BuyEgg;
+	- opens the egg shop scrolled to a stand's egg when the player touches an
+	  egg stand. The server decides whether any purchase goes through.
 
 	The cooldown below is touch debounce timing, not a game number.
 ]]
@@ -31,11 +30,16 @@ local remotes = ReplicatedStorage:WaitForChild(Remotes.FOLDER)
 local UI = script:WaitForChild("UI")
 local State = require(UI:WaitForChild("State"))
 local Main = require(UI:WaitForChild("Main"))
+local EggShop = require(UI:WaitForChild("EggShop"))
 
 State.start(remotes:WaitForChild(Remotes.names.ProfileChanged) :: RemoteEvent)
 Main.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
 	remotes:WaitForChild(Remotes.names.Click) :: RemoteEvent
+)
+EggShop.mount(
+	player:WaitForChild("PlayerGui") :: PlayerGui,
+	remotes:WaitForChild(Remotes.names.BuyEgg) :: RemoteFunction
 )
 
 local function show(title: string, text: string)
@@ -54,9 +58,7 @@ notice.OnClientEvent:Connect(function(message: any)
 	end
 end)
 
-local buyEgg = remotes:WaitForChild(Remotes.names.BuyEgg) :: RemoteFunction
-local busy = false
-local lastBuy = 0
+local lastOpen = 0
 
 local function onStandTouched(stand: BasePart, hit: BasePart)
 	local character = player.Character
@@ -68,28 +70,11 @@ local function onStandTouched(stand: BasePart, hit: BasePart)
 		return
 	end
 	local now = os.clock()
-	if busy or now - lastBuy < STAND_COOLDOWN_SECONDS then
+	if EggShop.isOpen() or now - lastOpen < STAND_COOLDOWN_SECONDS then
 		return
 	end
-	busy = true
-	lastBuy = now
-	local ok, result = pcall(function(): any
-		return buyEgg:InvokeServer(eggId)
-	end)
-	busy = false
-	if not ok or type(result) ~= "table" then
-		show("Egg", "The shop did not answer. Try again.")
-	elseif result.ok then
-		show(
-			"Egg",
-			string.format(
-				"Hatched %d pet(s)",
-				if type(result.pets) == "table" then #result.pets else 0
-			)
-		)
-	else
-		show("Egg", "Cannot buy: " .. tostring(result.reason))
-	end
+	lastOpen = now
+	EggShop.openAt(eggId)
 end
 
 local hooked: { [Instance]: boolean } = {}

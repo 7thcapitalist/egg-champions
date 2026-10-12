@@ -26,4 +26,5 @@ return {
 	worldSpecs["Layout.spec"],
 	uiSpecs["Format.spec"],
 	uiSpecs["NextGoal.spec"],
+	uiSpecs["EggShopView.spec"],
 }

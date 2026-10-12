@@ -2,7 +2,8 @@
 --[[
 	ShopService: buying and hatching eggs.
 
-	BuyEgg takes the egg id and, optionally, true for a Triple Hatch. The server
+	BuyEgg takes the egg id and a count: 1 (or nothing) for one egg, or
+	Hatch.TRIPLE_COUNT for a Triple Hatch. Any other count is refused. The server
 	checks the egg's world is open (Progression.eggUnlocked), charges the price
 	from config, rolls with Hatch, adds each pet with a fresh uid, and records
 	it in the pet index. Triple Hatch needs the pass, charges three prices and
@@ -32,8 +33,7 @@ type Profile = Profile.Profile
 -- Pass ids from config, checked at load so a renamed pass fails loudly.
 local TRIPLE_HATCH = Config.passById["triple_hatch"].id
 local LUCKY_EGGS = Config.passById["lucky_eggs"].id
--- How many eggs Triple Hatch opens. Names the pass's effect, like its name.
-local TRIPLE_COUNT = 3
+local TRIPLE_COUNT = Hatch.TRIPLE_COUNT
 
 local ShopService = {}
 
@@ -45,16 +45,21 @@ local knownEggs = Requests.setOf(eggIds)
 
 local rng = Random.new()
 
-local function onBuyEgg(player: Player, profile: Profile, eggId: any, triple: any): (boolean, any)
+local function onBuyEgg(
+	player: Player,
+	profile: Profile,
+	eggId: any,
+	requested: any
+): (boolean, any)
 	local valid, reason = Requests.checkChoice(eggId, knownEggs)
 	if not valid then
 		return false, reason
 	end
-	if triple ~= nil and type(triple) ~= "boolean" then
+	if requested ~= nil and requested ~= 1 and requested ~= TRIPLE_COUNT then
 		return false, Requests.reasons.badChoice
 	end
 	local count = 1
-	if triple == true then
+	if requested == TRIPLE_COUNT then
 		if not Passes.owns(player, TRIPLE_HATCH) then
 			return false, "no_triple_hatch_pass"
 		end
@@ -91,6 +96,14 @@ local function onBuyEgg(player: Player, profile: Profile, eggId: any, triple: an
 end
 
 function ShopService.start()
+	-- Which hatch passes the player owns, so the egg shop offers Hatch x3 and
+	-- shows the odds the server will roll. The client only displays these.
+	Guard.addDerived("hatchPasses", function(player: Player, _profile: Profile): any
+		return {
+			tripleHatch = Passes.owns(player, TRIPLE_HATCH),
+			luckyEggs = Passes.owns(player, LUCKY_EGGS),
+		}
+	end)
 	Guard.onInvoke(Remotes.names.BuyEgg, onBuyEgg)
 end
 

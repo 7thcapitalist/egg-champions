@@ -51,6 +51,10 @@ local LUCKY_FACTOR = 2
 
 local Hatch = {}
 
+-- How many eggs the Triple Hatch pass opens at once. Names the pass's effect
+-- ("Hatches three eggs at once"), like LUCKY_FACTOR above.
+Hatch.TRIPLE_COUNT = 3
+
 -- Load time checks
 
 local function sumOf(entries: { OddsEntry }): number

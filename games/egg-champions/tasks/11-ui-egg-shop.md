@@ -32,14 +32,14 @@ mockup.
    enough.
 
 ## Done when
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0.
-- [ ] A test asserts the odds the screen would display for every egg equal
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0.
+- [x] A test asserts the odds the screen would display for every egg equal
       the config hatch chances, so the display cannot drift from the roll.
-- [ ] `grep -rn "price\s*=\s*[0-9]" games/egg-champions/src/client` finds no
+- [x] `grep -rn "price\s*=\s*[0-9]" games/egg-champions/src/client` finds no
       hard-coded price.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Needs human or playtester
