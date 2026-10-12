@@ -13,126 +13,184 @@
       "id": "02",
       "title": "Test harness",
       "file": "02-test-harness.md",
-      "depends_on": ["01"],
-      "status": "pending"
+      "depends_on": [
+        "01"
+      ],
+      "status": "done"
     },
     {
       "id": "03",
       "title": "Coins, click power, and the team of 3",
       "file": "03-coins-and-team.md",
-      "depends_on": ["02"],
+      "depends_on": [
+        "02"
+      ],
       "status": "pending"
     },
     {
       "id": "04",
       "title": "Hatching, variants, and the pet index",
       "file": "04-hatching-and-index.md",
-      "depends_on": ["02"],
+      "depends_on": [
+        "02"
+      ],
       "status": "pending"
     },
     {
       "id": "05",
       "title": "Battle rules and all six specials",
       "file": "05-battle-rules.md",
-      "depends_on": ["02"],
+      "depends_on": [
+        "02"
+      ],
       "status": "pending"
     },
     {
       "id": "06",
       "title": "Rebirth, badges, and world unlocking",
       "file": "06-rebirth-and-progression.md",
-      "depends_on": ["02", "03"],
+      "depends_on": [
+        "02",
+        "03"
+      ],
       "status": "pending"
     },
     {
       "id": "07",
       "title": "Player profile and saving",
       "file": "07-profile-and-saving.md",
-      "depends_on": ["03", "04", "06"],
+      "depends_on": [
+        "03",
+        "04",
+        "06"
+      ],
       "status": "pending"
     },
     {
       "id": "08",
       "title": "Server services and remotes",
       "file": "08-server-services.md",
-      "depends_on": ["03", "04", "05", "06", "07"],
+      "depends_on": [
+        "03",
+        "04",
+        "05",
+        "06",
+        "07"
+      ],
       "status": "pending"
     },
     {
       "id": "09",
       "title": "Worlds built by code",
       "file": "09-worlds-by-code.md",
-      "depends_on": ["06", "08"],
+      "depends_on": [
+        "06",
+        "08"
+      ],
       "status": "pending"
     },
     {
       "id": "10",
       "title": "UI, main screen",
       "file": "10-ui-main-screen.md",
-      "depends_on": ["08"],
+      "depends_on": [
+        "08"
+      ],
       "status": "pending"
     },
     {
       "id": "11",
       "title": "UI, egg shop",
       "file": "11-ui-egg-shop.md",
-      "depends_on": ["08", "10"],
+      "depends_on": [
+        "08",
+        "10"
+      ],
       "status": "pending"
     },
     {
       "id": "12",
       "title": "UI, pets and the index",
       "file": "12-ui-pets-and-index.md",
-      "depends_on": ["08", "10"],
+      "depends_on": [
+        "08",
+        "10"
+      ],
       "status": "pending"
     },
     {
       "id": "13",
       "title": "UI, gym battle screen",
       "file": "13-ui-battle-screen.md",
-      "depends_on": ["05", "08", "10"],
+      "depends_on": [
+        "05",
+        "08",
+        "10"
+      ],
       "status": "pending"
     },
     {
       "id": "14",
       "title": "Pet visuals and variant looks",
       "file": "14-pet-visuals-and-variants.md",
-      "depends_on": ["09", "10"],
+      "depends_on": [
+        "09",
+        "10"
+      ],
       "status": "pending"
     },
     {
       "id": "15",
       "title": "Effects, clicking and hatching",
       "file": "15-effects-click-and-hatch.md",
-      "depends_on": ["10", "11", "14"],
+      "depends_on": [
+        "10",
+        "11",
+        "14"
+      ],
       "status": "pending"
     },
     {
       "id": "16",
       "title": "Effects, battle",
       "file": "16-effects-battle.md",
-      "depends_on": ["13", "14", "15"],
+      "depends_on": [
+        "13",
+        "14",
+        "15"
+      ],
       "status": "pending"
     },
     {
       "id": "17",
       "title": "Effects, progression",
       "file": "17-effects-progression.md",
-      "depends_on": ["09", "10", "15"],
+      "depends_on": [
+        "09",
+        "10",
+        "15"
+      ],
       "status": "pending"
     },
     {
       "id": "18",
       "title": "Game passes",
       "file": "18-game-passes.md",
-      "depends_on": ["03", "04", "08", "10"],
+      "depends_on": [
+        "03",
+        "04",
+        "08",
+        "10"
+      ],
       "status": "pending"
     },
     {
       "id": "19",
       "title": "Analytics events",
       "file": "19-analytics-events.md",
-      "depends_on": ["08"],
+      "depends_on": [
+        "08"
+      ],
       "status": "pending"
     }
   ]

@@ -33,15 +33,15 @@ can prove its own rules. One command, exit 0 or 1.
    copy. Delete the example in the first task that adds a real rule module.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0 and
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0 and
       prints the test count.
-- [ ] A deliberately broken expectation makes it exit 1 and name the failing
+- [x] A deliberately broken expectation makes it exit 1 and name the failing
       test. Revert the break.
-- [ ] A rule module that requires a Roblox service makes it exit 1 and name
+- [x] A rule module that requires a Roblox service makes it exit 1 and name
       the module. Revert.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       still succeeds.
 
 ## Out of scope

@@ -1,0 +1,8 @@
+#!/bin/sh
+# Shim so `factory/tools/run_tests <game-dir>` works as named.
+# On Windows, run: python factory/tools/run_tests.py <game-dir>
+here=$(dirname "$0")
+if command -v python3 >/dev/null 2>&1; then
+	exec python3 "$here/run_tests.py" "$@"
+fi
+exec python "$here/run_tests.py" "$@"
