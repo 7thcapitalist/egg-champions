@@ -2,13 +2,14 @@
 --[[
 	Server entry point.
 
-	For now it only proves the generated config loads. Gameplay services arrive
-	in later tasks and hang off this script.
+	Proves the generated config loads, then starts the server services.
+	More gameplay services arrive in later tasks and hang off this script.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Profiles = require(script:WaitForChild("Profiles"))
 
 print(
 	string.format(
@@ -19,3 +20,5 @@ print(
 		#Config.worlds
 	)
 )
+
+Profiles.start()

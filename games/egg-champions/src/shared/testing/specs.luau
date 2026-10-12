@@ -18,4 +18,5 @@ return {
 	ruleSpecs["Gym.spec"],
 	ruleSpecs["Progression.spec"],
 	ruleSpecs["Rebirth.spec"],
+	ruleSpecs["Profile.spec"],
 }

@@ -39,11 +39,11 @@ duplicated by two servers at once.
    - A team longer than `team_size` is reported.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0 with the
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0 with the
       new specs included.
-- [ ] `grep -rn "GetDataStore" games/egg-champions/src` matches only
+- [x] `grep -rn "GetDataStore" games/egg-champions/src` matches only
       `src/server/Profiles.luau`.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Needs human or playtester
