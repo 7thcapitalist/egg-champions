@@ -24,10 +24,10 @@
     },
     {
       "id": "built",
-      "status": "running",
+      "status": "pending",
       "attempts": 9,
-      "note": "stopped at the limit of 1 task(s) per run; next is task 10",
-      "updated": "2026-10-12T20:33:17Z"
+      "note": "stopped at the limit of 1 task(s) per run; next is task 11",
+      "updated": "2026-10-12T20:33:30Z"
     },
     {
       "id": "assets",
