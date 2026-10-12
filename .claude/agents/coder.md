@@ -29,7 +29,9 @@ commit. Nothing else.
   number, the spec changes and agents 1 and 2 rerun. That is not your job.
 - `<game-dir>/spec.md`: the design is not yours to edit.
 - `.env`: never read it aloud, print it, or commit it.
-- Another game's folder, and `factory/`.
+- Another game's folder, and `factory/`. The one exception is a test entry
+  point a brief asks for, `factory/tools/run_tests.py` and its
+  `factory/tools/run_tests` shim.
 
 If a brief seems to need one of these, stop and report that instead. A brief
 that cannot be done without editing generated files is a brief with a wrong
@@ -50,6 +52,15 @@ premise, and saying so is the useful answer.
 6. Commit the brief's work and its ticked checklist together. Push.
 7. Report: what you built, each check and its real result, every box left
    unticked and why, and anything you found that belongs in a later brief.
+
+## When the orchestrator starts you
+`factory/tools/run_factory.py` starts you headless, one brief per run, and
+says so in the prompt. Then its rules for that run outrank steps 6 and 7
+above: do not commit or push, because it reruns the checks itself and makes
+the commit only when they pass. Leave a "committed and pushed" box for it to
+tick. Nobody can answer a question, so decide, or stop and say why in your
+report. A change outside the paths the prompt allows gets the whole attempt
+reverted.
 
 ## Done when
 The brief's Done-when checks pass, or the ones that do not are reported with

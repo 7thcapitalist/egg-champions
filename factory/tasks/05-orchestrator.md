@@ -37,9 +37,18 @@ report when it cannot continue.
 - [ ] `python factory/tools/run_factory.py games/egg-champions --max-tasks 2`
       completes the first two pending tasks with no input, each committed and
       pushed, and both pass their checks.
-- [ ] A deliberately failing check produces a retry, then a blocked task and a
+      Not run yet: a Claude Code session's own permission classifier refuses
+      to start a nested headless `claude` run, so this first live run has to
+      be started by a person from a terminal.
+- [x] A deliberately failing check produces a retry, then a blocked task and a
       report, and the loop stops (test this on a scratch branch, then discard it).
-- [ ] An attempt by a coder run to edit `games/egg-champions/config/` is
+      Tested on a scratch branch with `--agent-cmd` standing in for the coder:
+      stylua failed, the failure went back into attempts 2 and 3, the task was
+      blocked, its work saved as a patch that applies cleanly, the tree was
+      reverted, and `latest.md` named the next step. Branch discarded.
+- [x] An attempt by a coder run to edit `games/egg-champions/config/` is
       rejected and reverted.
-- [ ] `reports/latest.md` reads clearly to someone who was not watching.
-- [ ] Committed and pushed.
+      Same scratch branch: every attempt that touched `config/` was rejected,
+      and `config/` and `src/` were left as they were.
+- [x] `reports/latest.md` reads clearly to someone who was not watching.
+- [x] Committed and pushed.
