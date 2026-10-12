@@ -39,13 +39,13 @@ redesign it.
    mockup allows, and keep every tap target at least 44px.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0,
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0,
       including tests for the number formatter and the next-goal rule.
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
-- [ ] `grep -rn "0x\|Color3.fromRGB" games/egg-champions/src/client/UI`
+- [x] `grep -rn "0x\|Color3.fromRGB" games/egg-champions/src/client/UI`
       shows colors only in `Theme.luau`.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Needs human or playtester

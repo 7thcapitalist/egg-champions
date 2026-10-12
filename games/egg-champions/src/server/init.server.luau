@@ -5,7 +5,8 @@
 	Proves the generated config loads, then starts the server in order: the
 	worlds are built from config, Guard creates every remote, the services and
 	portals hook their handlers, and only then do profiles start loading, so no
-	player can send a request before its handler exists.
+	player can send a request before its handler exists. Each profile is pushed
+	to its player as soon as it loads, so the HUD starts with real numbers.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -52,4 +53,9 @@ TeamService.start()
 GymService.start()
 RebirthService.start()
 Portals.start(built)
+-- Send each player their first state as soon as it loads, so the HUD shows the
+-- real numbers before the first click.
+Profiles.onLoaded(function(player: Player)
+	Guard.push(player)
+end)
 Profiles.start()

@@ -2,7 +2,9 @@
 --[[
 	Client entry point.
 
-	The client only sends requests and shows results. For now it:
+	The client only sends requests and shows results. It:
+	- keeps the latest state the server sent (UI/State) and builds the main
+	  screen (UI/Main), where pressing the world view fires Click;
 	- shows the server's Notice messages (such as why a portal refused);
 	- buys from egg stands: touching a stand's pad fires the BuyEgg remote for
 	  that stand's egg. Task 11 replaces this with opening the shop screen
@@ -25,6 +27,16 @@ local STAND_COOLDOWN_SECONDS = 2
 
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild(Remotes.FOLDER)
+
+local UI = script:WaitForChild("UI")
+local State = require(UI:WaitForChild("State"))
+local Main = require(UI:WaitForChild("Main"))
+
+State.start(remotes:WaitForChild(Remotes.names.ProfileChanged) :: RemoteEvent)
+Main.mount(
+	player:WaitForChild("PlayerGui") :: PlayerGui,
+	remotes:WaitForChild(Remotes.names.Click) :: RemoteEvent
+)
 
 local function show(title: string, text: string)
 	local ok = pcall(function()

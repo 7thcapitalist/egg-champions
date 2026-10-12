@@ -1,0 +1,173 @@
+--!strict
+local Runner = require(script.Parent.Parent.Parent.testing.Runner)
+local Config = require(script.Parent.Parent.Parent.Config)
+local NextGoal = require(script.Parent.Parent.NextGoal)
+
+local describe = Runner.describe
+local it = Runner.it
+local expect = Runner.expect
+
+local EPSILON = 1e-9
+
+local function newState(coins: number): NextGoal.State
+	return { coins = coins, rebirths = 0, index = {}, gymsBeaten = {}, feesPaid = {} }
+end
+
+local function worldsInOrder(): { Config.World }
+	local list = table.clone(Config.worlds)
+	table.sort(list, function(a, b)
+		return a.index < b.index
+	end)
+	return list
+end
+
+-- The eggs of a world that the rule may pick, cheapest first.
+local function goalEggs(world: Config.World): { Config.Egg }
+	local list = {}
+	for _, eggId in world.eggs do
+		local egg = Config.eggById[eggId]
+		if egg.price < world.gym.fee then
+			table.insert(list, egg)
+		end
+	end
+	table.sort(list, function(a, b)
+		return a.price < b.price
+	end)
+	return list
+end
+
+-- Marks one pet of the egg as seen in the index.
+local function hatch(state: NextGoal.State, eggId: string)
+	for _, pet in Config.pets do
+		if pet.egg == eggId then
+			state.index[pet.id] = { normal = true }
+			return
+		end
+	end
+	error("no pet hatches from " .. eggId)
+end
+
+local worlds = worldsInOrder()
+local first = worlds[1]
+local last = worlds[#worlds]
+
+return function()
+	describe("NextGoal.currentWorld", function()
+		it("starts in the first world", function()
+			expect(NextGoal.currentWorld(newState(0)).id).toEqual(first.id)
+		end)
+
+		it("moves on when the gym of the current world is beaten", function()
+			if #worlds < 2 then
+				return
+			end
+			local state = newState(0)
+			state.gymsBeaten[first.id] = true
+			expect(NextGoal.currentWorld(state).id).toEqual(worlds[2].id)
+		end)
+	end)
+
+	describe("NextGoal.pick", function()
+		it("points a new player at the cheapest egg of the first world", function()
+			local eggs = goalEggs(first)
+			expect(#eggs > 0).toBeTrue()
+			local goal = NextGoal.pick(newState(0), 0)
+			expect(goal.kind).toEqual(NextGoal.kinds.egg)
+			expect(goal.id).toEqual(eggs[1].id)
+			expect(goal.need).toEqual(eggs[1].price)
+			expect(goal.have).toEqual(0)
+			expect(goal.progress).toEqual(0)
+			expect(goal.ready).toBeFalse()
+		end)
+
+		it("moves to the next egg once the first has been hatched", function()
+			local eggs = goalEggs(first)
+			if #eggs < 2 then
+				return
+			end
+			local state = newState(0)
+			hatch(state, eggs[1].id)
+			local goal = NextGoal.pick(state, 0)
+			expect(goal.kind).toEqual(NextGoal.kinds.egg)
+			expect(goal.id).toEqual(eggs[2].id)
+		end)
+
+		it("points at the gym fee once every egg of the world was hatched", function()
+			local state = newState(0)
+			for _, egg in goalEggs(first) do
+				hatch(state, egg.id)
+			end
+			local goal = NextGoal.pick(state, 0)
+			expect(goal.kind).toEqual(NextGoal.kinds.gym)
+			expect(goal.id).toEqual(first.id)
+			expect(goal.need).toEqual(first.gym.fee)
+		end)
+
+		it("fills the bar with the coins held and caps it at the target", function()
+			local state = newState(0)
+			for _, egg in goalEggs(first) do
+				hatch(state, egg.id)
+			end
+			local fee = first.gym.fee
+			state.coins = fee / 4
+			local quarter = NextGoal.pick(state, 0)
+			expect(quarter.progress).toBeCloseTo(0.25, EPSILON)
+			expect(quarter.have).toEqual(fee / 4)
+			expect(quarter.ready).toBeFalse()
+
+			state.coins = fee * 3
+			local over = NextGoal.pick(state, 0)
+			expect(over.progress).toEqual(1)
+			expect(over.have).toEqual(fee)
+			expect(over.ready).toBeTrue()
+		end)
+
+		it("names the leader type and its counter for a gym goal", function()
+			local state = newState(0)
+			for _, egg in goalEggs(first) do
+				hatch(state, egg.id)
+			end
+			local goal = NextGoal.pick(state, 0)
+			local leader = Config.typeById[first.gym.leader_type].name
+			local counter = Config.typeById[first.gym.counter_type].name
+			expect(string.find(goal.detail, leader, 1, true) ~= nil).toBeTrue()
+			expect(string.find(goal.detail, counter, 1, true) ~= nil).toBeTrue()
+		end)
+
+		it("shows a paid gym as ready even with no coins", function()
+			local state = newState(0)
+			state.feesPaid[first.id] = true
+			local goal = NextGoal.pick(state, 0)
+			expect(goal.kind).toEqual(NextGoal.kinds.gym)
+			expect(goal.ready).toBeTrue()
+			expect(goal.progress).toEqual(1)
+		end)
+
+		it("points at the rebirth cost the server sent once the last gym is beaten", function()
+			local state = newState(0)
+			for _, world in worlds do
+				state.gymsBeaten[world.id] = true
+			end
+			local cost = Config.constants.rebirth_first_cost
+			state.coins = cost / 2
+			local goal = NextGoal.pick(state, cost)
+			expect(goal.kind).toEqual(NextGoal.kinds.rebirth)
+			expect(goal.id).toEqual(last.id)
+			expect(goal.need).toEqual(cost)
+			expect(goal.progress).toBeCloseTo(0.5, EPSILON)
+		end)
+
+		it("leaves the state it is given untouched", function()
+			local state = newState(10)
+			state.feesPaid[first.id] = true
+			NextGoal.pick(state, 0)
+			expect(state).toEqual({
+				coins = 10,
+				rebirths = 0,
+				index = {},
+				gymsBeaten = {},
+				feesPaid = { [first.id] = true },
+			})
+		end)
+	end)
+end

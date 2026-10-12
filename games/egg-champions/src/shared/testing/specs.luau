@@ -10,6 +10,7 @@ local rules = script.Parent.Parent.rules
 local ruleSpecs = rules.specs
 local netSpecs = script.Parent.Parent.net.specs
 local worldSpecs = script.Parent.Parent.world.specs
+local uiSpecs = script.Parent.Parent.ui.specs
 
 return {
 	ruleSpecs["Team.spec"],
@@ -23,4 +24,6 @@ return {
 	ruleSpecs["Profile.spec"],
 	netSpecs["Requests.spec"],
 	worldSpecs["Layout.spec"],
+	uiSpecs["Format.spec"],
+	uiSpecs["NextGoal.spec"],
 }

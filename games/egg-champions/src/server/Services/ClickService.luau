@@ -75,8 +75,26 @@ local function onClick(player: Player, profile: Profile)
 	Guard.push(player)
 end
 
+-- Each equipped pet's own Click Power, keyed by uid, for the team bar. The
+-- client shows these numbers and never works them out itself.
+function ClickService.teamClickPower(_player: Player, profile: Profile): { [string]: number }
+	local byUid: { [string]: Profile.OwnedPet } = {}
+	for _, pet in profile.pets do
+		byUid[pet.uid] = pet
+	end
+	local powers: { [string]: number } = {}
+	for _, uid in profile.team do
+		local pet = byUid[uid]
+		if pet ~= nil then
+			powers[uid] = Coins.clickPowerOf({ petId = pet.petId, variant = pet.variant })
+		end
+	end
+	return powers
+end
+
 function ClickService.start()
 	Guard.addDerived("coinsPerClick", ClickService.coinsPerClick)
+	Guard.addDerived("teamClickPower", ClickService.teamClickPower)
 	Guard.onEvent(Remotes.names.Click, onClick)
 	Players.PlayerRemoving:Connect(function(player: Player)
 		Requests.forget(limiter, player)
