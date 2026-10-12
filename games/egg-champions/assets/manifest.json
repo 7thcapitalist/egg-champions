@@ -1,0 +1,370 @@
+{
+  "game": "egg-champions",
+  "place": "Egg Champions Test",
+  "pet_folder": "Workspace.Pets_Selected",
+  "egg_folder": "Workspace.Eggs",
+  "updated": "2026-10-12",
+  "entries": [
+    {
+      "id": "leafpup",
+      "kind": "pet",
+      "source_model": "Leafpup_B",
+      "mesh_asset_id": "pending_studio_read",
+      "texture_asset_id": "pending_studio_read",
+      "height_studs": 5.0,
+      "status": "pending_studio_read",
+      "notes": "From model test 2 (12,000 triangles); height is the test 2 measurement, recheck in Studio."
+    },
+    {
+      "id": "puddlet",
+      "kind": "pet",
+      "source_model": "Puddlet_2",
+      "mesh_asset_id": "97362739098055",
+      "texture_asset_id": "78869701978561",
+      "height_studs": 4.0,
+      "status": "ready",
+      "notes": "No water droplet ring. Face is friendly rather than fierce. Height is measured to the raised tail tip, so the body is only about 2 studs tall."
+    },
+    {
+      "id": "emberkit",
+      "kind": "pet",
+      "source_model": "Emberkit_A2",
+      "mesh_asset_id": "pending_studio_read",
+      "texture_asset_id": "pending_studio_read",
+      "height_studs": 5.0,
+      "status": "pending_studio_read",
+      "notes": "From model test 2; tail flame is sculpted, not real fire, so a ParticleEmitter may be added."
+    },
+    {
+      "id": "abacatudo",
+      "kind": "pet",
+      "source_model": "Abacatudo_S2",
+      "mesh_asset_id": "pending_studio_read",
+      "texture_asset_id": "pending_studio_read",
+      "height_studs": 8.0,
+      "status": "pending_studio_read",
+      "notes": "Fruit Edition; height is the 8 stud design target, not measured."
+    },
+    {
+      "id": "voltibun",
+      "kind": "pet",
+      "source_model": "Voltibun_3",
+      "mesh_asset_id": "82220365452549",
+      "texture_asset_id": "103615852726557",
+      "height_studs": 6.0,
+      "status": "ready",
+      "notes": "Lightning-bolt ears and quadruped crouch are right. Body is plump and pale yellow, eyes are plain dots, spine spikes are black fins instead of sparks. Does not read as Legendary."
+    },
+    {
+      "id": "zapmoth",
+      "kind": "pet",
+      "source_model": "Zapmoth_1",
+      "mesh_asset_id": "138035237314725",
+      "texture_asset_id": "104790447521164",
+      "height_studs": 4.0,
+      "status": "ready",
+      "notes": "Antennae are bolt-tipped stalks, not feathery. Wings are vertical like a pinned specimen. Yellow is pale."
+    },
+    {
+      "id": "mossnail",
+      "kind": "pet",
+      "source_model": "Mossnail_2",
+      "mesh_asset_id": "86261195839042",
+      "texture_asset_id": "93713682169389",
+      "height_studs": 4.0,
+      "status": "ready",
+      "notes": "Shell is a round dome with one stripe, the spiral is weak. Mushrooms account for about a third of the height."
+    },
+    {
+      "id": "sparkit",
+      "kind": "pet",
+      "source_model": "Sparkit_2",
+      "mesh_asset_id": "129085619828782",
+      "texture_asset_id": "133529017905068",
+      "height_studs": 4.5,
+      "status": "ready",
+      "notes": "Tail ends in a spear tip, not a forked bolt. Color is orange-yellow."
+    },
+    {
+      "id": "cinderhog",
+      "kind": "pet",
+      "source_model": "Cinderhog_1",
+      "mesh_asset_id": "95352394279780",
+      "texture_asset_id": "110855870374565",
+      "height_studs": 5.0,
+      "status": "ready",
+      "notes": "Body is light gray, not soot-dark. Flames are few and salmon-colored, not bright orange. Coals are blocky chunks rather than spines."
+    },
+    {
+      "id": "brookdeer",
+      "kind": "pet",
+      "source_model": "Brookdeer_1",
+      "mesh_asset_id": "77380287345600",
+      "texture_asset_id": "94438306868801",
+      "height_studs": 6.5,
+      "status": "ready",
+      "notes": "Antlers read as solid light-blue antlers, not flowing water. Hoof splashes are present but there is no trailing stream. Head is turned slightly to the side."
+    },
+    {
+      "id": "bubblecrab",
+      "kind": "pet",
+      "source_model": "Bubblecrab_1",
+      "mesh_asset_id": "80338458113760",
+      "texture_asset_id": "95221110321260",
+      "height_studs": 3.5,
+      "status": "ready",
+      "notes": "The two claws are close in size, so the \"one oversized claw\" is weak. Bubble cluster, raised claws and angry eyes are good."
+    },
+    {
+      "id": "kelpony",
+      "kind": "pet",
+      "source_model": "Kelpony_3",
+      "mesh_asset_id": "140690359491733",
+      "texture_asset_id": "129031662473199",
+      "height_studs": 5.0,
+      "status": "ready",
+      "notes": "Batch verdict was fail. No kelp mane or kelp tail in any of the 3 attempts, only a small teal spiky crest. Angry eyes, upright pose and curled tail are fine."
+    },
+    {
+      "id": "zapeel",
+      "kind": "pet",
+      "source_model": "Zapeel_1",
+      "mesh_asset_id": "94503668275072",
+      "texture_asset_id": "125634790958699",
+      "height_studs": 4.5,
+      "status": "ready",
+      "notes": "No yellow side stripes (it has a cream belly instead) and it reads slightly as a cobra. Coil, raised head, open fanged jaw and lightning tail tip are present."
+    },
+    {
+      "id": "pearlotter",
+      "kind": "pet",
+      "source_model": "Pearlotter_2",
+      "mesh_asset_id": "116430907416990",
+      "texture_asset_id": "88052726522194",
+      "height_studs": 5.5,
+      "status": "ready",
+      "notes": "The pearl is held up in one paw instead of both. Pearl surface is matte white, not glowing."
+    },
+    {
+      "id": "tidewhale",
+      "kind": "pet",
+      "source_model": "Tidewhale_1",
+      "mesh_asset_id": "79917394377579",
+      "texture_asset_id": "112161657523910",
+      "height_studs": 7.0,
+      "status": "ready",
+      "notes": "Pose is leaping at an angle above the splash disc, not fully rearing vertical. Wave crest, barnacles, fins and splash are all there."
+    },
+    {
+      "id": "driftgull",
+      "kind": "pet",
+      "source_model": "Driftgull_3",
+      "mesh_asset_id": "79248603245050",
+      "texture_asset_id": "81990171490852",
+      "height_studs": 2.15,
+      "status": "ready",
+      "notes": "Wingtip spray is only small white blobs. Scaled to a 6.5 stud wingspan instead of 3.5 height (see note below)."
+    },
+    {
+      "id": "fuzzbolt",
+      "kind": "pet",
+      "source_model": "Fuzzbolt_1",
+      "mesh_asset_id": "134426363088320",
+      "texture_asset_id": "99763398900976",
+      "height_studs": 4.5,
+      "status": "ready",
+      "notes": "Wool is dark grey-brown spikes, not woolly, and there are no visible sparks. Curled yellow horns, lowered head and stance are strong."
+    },
+    {
+      "id": "bananao",
+      "kind": "pet",
+      "source_model": "Bananao_3",
+      "mesh_asset_id": "pending_studio_read",
+      "texture_asset_id": "pending_studio_read",
+      "height_studs": 8.0,
+      "status": "pending_studio_read",
+      "notes": "Fruit Edition; height is the 8 stud design target, not measured."
+    },
+    {
+      "id": "reefwyrm",
+      "kind": "pet",
+      "source_model": "Reefwyrm_2",
+      "mesh_asset_id": "111527870610916",
+      "texture_asset_id": "121287034056512",
+      "height_studs": 5.5,
+      "status": "ready",
+      "notes": "The frill collar reads more as a swept-back fin mane than a full round collar."
+    },
+    {
+      "id": "thundrake",
+      "kind": "pet",
+      "source_model": "Thundrake_2",
+      "mesh_asset_id": "122536523889916",
+      "texture_asset_id": "131340852366168",
+      "height_studs": 7.0,
+      "status": "ready",
+      "notes": "Wings are bat wings with a couple of cloud puffs on top, not thundercloud wings. Body is blue-grey, not dark grey. Lightning horns, yellow eyes and lightning tail tip are present. Footprint is large (9.8 x 9.0 studs)."
+    },
+    {
+      "id": "coalmole",
+      "kind": "pet",
+      "source_model": "Coalmole_2",
+      "mesh_asset_id": "127395602524556",
+      "texture_asset_id": "108020513098197",
+      "height_studs": 3.5,
+      "status": "ready",
+      "notes": "Dark grey rather than jet black; lava shows as glowing bands between coal lumps more than thin cracks"
+    },
+    {
+      "id": "steamtoad",
+      "kind": "pet",
+      "source_model": "Steamtoad_1",
+      "mesh_asset_id": "82594137198070",
+      "texture_asset_id": "123912621943996",
+      "height_studs": 4.0,
+      "status": "ready",
+      "notes": "Only two vents; more blue than grey-blue"
+    },
+    {
+      "id": "moranguete",
+      "kind": "pet",
+      "source_model": "Moranguete_R4",
+      "mesh_asset_id": "pending_studio_read",
+      "texture_asset_id": "pending_studio_read",
+      "height_studs": 8.0,
+      "status": "pending_studio_read",
+      "notes": "Fruit Edition; face was repainted in Studio and the new texture is not saved as an asset yet (design sheet calls it Moranguete_R4_repaint_newface).",
+      "needs_texture_save": true
+    },
+    {
+      "id": "ashwolf",
+      "kind": "pet",
+      "source_model": "Ashwolf_1",
+      "mesh_asset_id": "139782701478806",
+      "texture_asset_id": "97910440813971",
+      "height_studs": 5.5,
+      "status": "ready",
+      "notes": "Eyes yellow, not orange; mane reads as spiky fur with ember tips more than drifting ash"
+    },
+    {
+      "id": "thornback",
+      "kind": "pet",
+      "source_model": "Thornback_2",
+      "mesh_asset_id": "98531796695287",
+      "texture_asset_id": "116171623995137",
+      "height_studs": 6.0,
+      "status": "ready",
+      "notes": "Only about five small cacti and no tall spines, so it does not read as Legendary; Thornback_3 has more cactus and spines but a smiling face"
+    },
+    {
+      "id": "sootbat",
+      "kind": "pet",
+      "source_model": "Sootbat_1",
+      "mesh_asset_id": "98637375272072",
+      "texture_asset_id": "103096197832398",
+      "height_studs": 3.5,
+      "status": "ready",
+      "notes": "Gargoyle-like body with separate arms; wing membranes red rather than black with ember edges"
+    },
+    {
+      "id": "geyserpup",
+      "kind": "pet",
+      "source_model": "Geyserpup_3",
+      "mesh_asset_id": "94703205175492",
+      "texture_asset_id": "87550567647088",
+      "height_studs": 4.0,
+      "status": "ready",
+      "notes": "Cream chest; vent is a raised rock collar; a bit stocky"
+    },
+    {
+      "id": "voltscorp",
+      "kind": "pet",
+      "source_model": "Voltscorp_1",
+      "mesh_asset_id": "129917143622604",
+      "texture_asset_id": "137589761303648",
+      "height_studs": 4.5,
+      "status": "ready",
+      "notes": "Joints glow orange, not yellow; pincers held low, not raised; stinger is a pale jagged tip, not a clear lightning bolt"
+    },
+    {
+      "id": "lavalynx",
+      "kind": "pet",
+      "source_model": "Lavalynx_2",
+      "mesh_asset_id": "81968972653650",
+      "texture_asset_id": "77301111020372",
+      "height_studs": 5.0,
+      "status": "ready",
+      "notes": "Body mostly red-orange with black rock plates, the inverse of dark fur with lava cracks; stalking lunge more than a deep crouch"
+    },
+    {
+      "id": "magmaroc",
+      "kind": "pet",
+      "source_model": "Magmaroc_3",
+      "mesh_asset_id": "98698074415242",
+      "texture_asset_id": "89632971567186",
+      "height_studs": 7.0,
+      "status": "ready",
+      "notes": "Flame crest small; lava is one glowing channel per wing; very thin mesh (1.6 studs deep)"
+    },
+    {
+      "id": "meadow",
+      "kind": "egg",
+      "source_model": "MeadowEgg_1",
+      "mesh_asset_id": "136013679702071",
+      "texture_asset_id": "77671766462502",
+      "height_studs": null,
+      "status": "ready",
+      "notes": "Ids from the egg batch report; height not recorded in the repo, read it in Studio."
+    },
+    {
+      "id": "forest",
+      "kind": "egg",
+      "source_model": "ForestEgg_3",
+      "mesh_asset_id": "136875195353143",
+      "texture_asset_id": "115896911943731",
+      "height_studs": null,
+      "status": "ready",
+      "notes": "Ids from the egg batch report; height not recorded in the repo, read it in Studio."
+    },
+    {
+      "id": "shell",
+      "kind": "egg",
+      "source_model": "ShellEgg_2",
+      "mesh_asset_id": "133131747151786",
+      "texture_asset_id": "126621865710777",
+      "height_studs": null,
+      "status": "ready",
+      "notes": "Ids from the egg batch report; height not recorded in the repo, read it in Studio."
+    },
+    {
+      "id": "storm",
+      "kind": "egg",
+      "source_model": "StormEgg_3",
+      "mesh_asset_id": "131526106741314",
+      "texture_asset_id": "100488589450550",
+      "height_studs": null,
+      "status": "ready",
+      "notes": "Ids from the egg batch report; height not recorded in the repo, read it in Studio."
+    },
+    {
+      "id": "ember",
+      "kind": "egg",
+      "source_model": "EmberEgg_2",
+      "mesh_asset_id": "137183210307587",
+      "texture_asset_id": "131962562598879",
+      "height_studs": null,
+      "status": "ready",
+      "notes": "Ids from the egg batch report; height not recorded in the repo, read it in Studio."
+    },
+    {
+      "id": "magma",
+      "kind": "egg",
+      "source_model": "MagmaEgg_1",
+      "mesh_asset_id": "90051632512905",
+      "texture_asset_id": "86989204447291",
+      "height_studs": null,
+      "status": "ready",
+      "notes": "Ids from the egg batch report; height not recorded in the repo, read it in Studio."
+    }
+  ]
+}
