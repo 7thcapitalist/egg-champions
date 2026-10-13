@@ -31,13 +31,13 @@ mockup.
    equip is legal.
 
 ## Done when
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0,
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0,
       including tests for the sort and filter helpers.
-- [ ] A test asserts the Index tab lists exactly the 30 pets in config, with
+- [x] A test asserts the Index tab lists exactly the 30 pets in config, with
       the Fruit Edition tab listing exactly those whose `edition` is set.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Needs human or playtester

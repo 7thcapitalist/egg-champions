@@ -7,6 +7,8 @@
 	  screen (UI/Main), where pressing the world view fires Click;
 	- shows the server's Notice messages (such as why a portal refused);
 	- builds the egg shop (UI/EggShop), where Hatch and Hatch x3 send BuyEgg;
+	- builds the pets and index screen (UI/Pets), where Equip and Unequip send
+	  their remotes;
 	- opens the egg shop scrolled to a stand's egg when the player touches an
 	  egg stand. The server decides whether any purchase goes through.
 
@@ -31,6 +33,7 @@ local UI = script:WaitForChild("UI")
 local State = require(UI:WaitForChild("State"))
 local Main = require(UI:WaitForChild("Main"))
 local EggShop = require(UI:WaitForChild("EggShop"))
+local Pets = require(UI:WaitForChild("Pets"))
 
 State.start(remotes:WaitForChild(Remotes.names.ProfileChanged) :: RemoteEvent)
 Main.mount(
@@ -40,6 +43,11 @@ Main.mount(
 EggShop.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
 	remotes:WaitForChild(Remotes.names.BuyEgg) :: RemoteFunction
+)
+Pets.mount(
+	player:WaitForChild("PlayerGui") :: PlayerGui,
+	remotes:WaitForChild(Remotes.names.Equip) :: RemoteFunction,
+	remotes:WaitForChild(Remotes.names.Unequip) :: RemoteFunction
 )
 
 local function show(title: string, text: string)
