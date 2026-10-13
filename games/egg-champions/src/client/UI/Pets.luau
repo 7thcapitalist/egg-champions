@@ -23,6 +23,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local PetsView = require(Shared:WaitForChild("ui"):WaitForChild("PetsView"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
@@ -115,16 +116,16 @@ local function clear(parent: Instance)
 	end
 end
 
--- A colored block stands in for the pet until task 14.
-local function block(parent: Instance, petId: string, size: number): Frame
-	local pet = Config.petById[petId]
+-- A framed pet view from PetVisual, the one place a pet's look is built.
+local function block(parent: Instance, petId: string, size: number, variant: string?): Frame
 	local b = frame("Block", parent)
 	b.BackgroundTransparency = 0
-	b.BackgroundColor3 = Theme.typeColor(pet.type)
+	b.BackgroundColor3 = colors.panel
 	b.Size = UDim2.fromOffset(size, size)
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, sizes.slotRadius)
 	corner.Parent = b
+	PetVisual.view(b, petId, variant, nil)
 	return b
 end
 
@@ -166,6 +167,10 @@ local function tileButton(
 	pet.LayoutOrder = 1
 	if dim then
 		pet.BackgroundTransparency = 0.7
+		local view = pet:FindFirstChild("PetView")
+		if view ~= nil and view:IsA("ViewportFrame") then
+			view.ImageTransparency = 0.6
+		end
 	end
 	local label = Theme.text({
 		name = "Name",
@@ -439,7 +444,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		top.Size = UDim2.new(1, 0, 0, LAYOUT.detailBlock)
 		local topList = list(top, Enum.FillDirection.Horizontal, 14)
 		topList.VerticalAlignment = Enum.VerticalAlignment.Center
-		local big = block(top, choice.petId, LAYOUT.detailBlock)
+		local big = block(top, choice.petId, LAYOUT.detailBlock, choice.variant)
 		big.LayoutOrder = 1
 		local bigStroke = Instance.new("UIStroke")
 		bigStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border

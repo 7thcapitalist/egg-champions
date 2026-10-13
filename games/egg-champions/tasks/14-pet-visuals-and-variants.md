@@ -30,14 +30,14 @@ stage swaps the block for a model later without touching any caller.
    block. The asset stage fills the table and nothing else changes.
 
 ## Done when
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0,
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0,
       including a test that every pet in config resolves to a color and a
       size, so a new pet cannot render as nil.
-- [ ] `grep -rln "Instance.new(\"Part\")" games/egg-champions/src` shows pets
+- [x] `grep -rln "Instance.new(\"Part\")" games/egg-champions/src` shows pets
       built only in `PetVisual.luau` and the world kit from task 09.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Needs human or playtester

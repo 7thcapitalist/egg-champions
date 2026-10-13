@@ -25,6 +25,7 @@ local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local Format = require(uiShared:WaitForChild("Format"))
 local EggShopView = require(uiShared:WaitForChild("EggShopView"))
@@ -350,11 +351,10 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			entry.AutomaticSize = Enum.AutomaticSize.XY
 			local entryList = list(entry, Enum.FillDirection.Horizontal, 10)
 			entryList.VerticalAlignment = Enum.VerticalAlignment.Center
-			-- A colored block stands in for the pet until task 14.
 			local block = frame("Block", entry)
 			block.LayoutOrder = 1
 			block.BackgroundTransparency = 0
-			block.BackgroundColor3 = Theme.typeColor(pet.type)
+			block.BackgroundColor3 = colors.panel
 			block.Size = UDim2.fromOffset(LAYOUT.resultBlock, LAYOUT.resultBlock)
 			local blockCorner = Instance.new("UICorner")
 			blockCorner.CornerRadius = UDim.new(0, sizes.slotRadius)
@@ -364,6 +364,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			stroke.Thickness = 2
 			stroke.Color = Theme.rarityColor(line.rarity)
 			stroke.Parent = block
+			PetVisual.view(block, pet.id, line.variant, nil)
 			local words = frame("Words", entry)
 			words.LayoutOrder = 2
 			words.AutomaticSize = Enum.AutomaticSize.XY

@@ -7,11 +7,8 @@
 	that spells out a color. The RGB values are the hex codes of the mockup
 	(panel #12161F, border #2A3242, text #F2F4F8, muted #9BA6BA, gold #E8B33A).
 
-	Rarity colors follow the rarity order in config: the lowest rarity gets
-	the first color of RARITY_PALETTE, the next one the second, and so on.
-	The palette runs Common grey, Uncommon green, Rare blue, Epic purple,
-	Legendary orange. A rarity past the end of the palette reuses its last
-	color.
+	Rarity and type colors live in shared/visual/PetLook, the one place a
+	pet's look is defined, so the 2D UI and the 3D pets always agree.
 
 	Barlow is not a Roblox font, so the closest built in families stand in:
 	Roboto for Barlow and Roboto Condensed for Barlow Condensed.
@@ -19,7 +16,8 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local PetLook = require(Shared:WaitForChild("visual"):WaitForChild("PetLook"))
 
 local Theme = {}
 
@@ -43,40 +41,19 @@ Theme.colors = table.freeze({
 	fainted = Color3.fromRGB(74, 84, 104),
 })
 
--- Lowest rarity first.
-local RARITY_PALETTE = table.freeze({
-	Color3.fromRGB(155, 166, 186),
-	Color3.fromRGB(76, 191, 115),
-	Color3.fromRGB(76, 141, 255),
-	Color3.fromRGB(192, 155, 255),
-	Color3.fromRGB(255, 174, 69),
-})
-
--- Pets are colored blocks until the asset stage, tinted by type.
-local TYPE_COLORS: { [string]: Color3 } = {
-	fire = Color3.fromRGB(217, 98, 58),
-	water = Color3.fromRGB(63, 142, 209),
-	grass = Color3.fromRGB(79, 163, 82),
-	electric = Color3.fromRGB(214, 190, 63),
-}
-
-local rarityColors: { [string]: Color3 } = {}
-do
-	local ordered = table.clone(Config.rarities)
-	table.sort(ordered, function(a, b)
-		return a.order < b.order
-	end)
-	for rank, rarity in ordered do
-		rarityColors[rarity.id] = RARITY_PALETTE[math.min(rank, #RARITY_PALETTE)]
-	end
+-- Type and rarity colors come from PetLook, so the UI and the 3D pets agree.
+local function color(c: PetLook.RGB): Color3
+	return Color3.fromRGB(c.r, c.g, c.b)
 end
 
 function Theme.rarityColor(rarityId: string): Color3
-	return rarityColors[rarityId] or Theme.colors.muted
+	-- An unknown rarity gets PetLook's fallback, the same grey as muted.
+	return color(PetLook.rarityColor(rarityId))
 end
 
 function Theme.typeColor(typeId: string): Color3
-	return TYPE_COLORS[typeId] or Theme.colors.muted
+	local c = PetLook.TYPE_COLORS[typeId]
+	return if c ~= nil then color(c) else Theme.colors.muted
 end
 
 Theme.fonts = table.freeze({

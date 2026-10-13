@@ -31,6 +31,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local BattleView = require(uiShared:WaitForChild("BattleView"))
 
@@ -575,8 +576,17 @@ function Battle.mount(
 			marker.LayoutOrder = position
 			marker.Size = UDim2.fromOffset(LAYOUT.marker.X, LAYOUT.marker.Y)
 		end
-		block.BackgroundColor3 = Theme.typeColor(shown.type)
+		block.BackgroundColor3 = colors.panel
 		block.BackgroundTransparency = if shown.hp > 0 then 0 else 0.6
+		local key = PetVisual.key(shown.pet, shown.variant, shown.type)
+		local view = block:FindFirstChild("PetView")
+		if block:GetAttribute("PetKey") ~= key or view == nil then
+			view = PetVisual.view(block, shown.pet, shown.variant, shown.type)
+			block:SetAttribute("PetKey", key)
+		end
+		if view ~= nil and view:IsA("ViewportFrame") then
+			view.ImageTransparency = if shown.hp > 0 then 0 else 0.6
+		end
 	end
 
 	local function renderButtons(snapshot: BattleView.Snapshot)

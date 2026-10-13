@@ -25,6 +25,7 @@ local GuiService = game:GetService("GuiService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local Format = require(uiShared:WaitForChild("Format"))
 local NextGoal = require(uiShared:WaitForChild("NextGoal"))
@@ -607,7 +608,12 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 			if data ~= nil and uid ~= nil then
 				slot.stripe.BackgroundColor3 = Theme.rarityColor(data.rarity)
 				slot.block.BackgroundTransparency = 0
-				slot.block.BackgroundColor3 = Theme.typeColor(data.type)
+				slot.block.BackgroundColor3 = colors.panel
+				local key = PetVisual.key(pet.petId, pet.variant, nil)
+				if slot.block:GetAttribute("PetKey") ~= key then
+					PetVisual.view(slot.block, pet.petId, pet.variant, nil)
+					slot.block:SetAttribute("PetKey", key)
+				end
 				slot.name.Text = data.name
 				slot.name.TextColor3 = colors.text
 				local power = powers[uid]
@@ -617,6 +623,11 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 			else
 				slot.stripe.BackgroundColor3 = colors.border
 				slot.block.BackgroundTransparency = 1
+				local view = slot.block:FindFirstChild("PetView")
+				if view ~= nil then
+					view:Destroy()
+				end
+				slot.block:SetAttribute("PetKey", nil)
 				slot.name.Text = "Empty"
 				slot.name.TextColor3 = colors.muted
 				slot.power.Text = ""

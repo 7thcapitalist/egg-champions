@@ -11,6 +11,7 @@ local ruleSpecs = rules.specs
 local netSpecs = script.Parent.Parent.net.specs
 local worldSpecs = script.Parent.Parent.world.specs
 local uiSpecs = script.Parent.Parent.ui.specs
+local visualSpecs = script.Parent.Parent.visual.specs
 
 return {
 	ruleSpecs["Team.spec"],
@@ -29,4 +30,5 @@ return {
 	uiSpecs["EggShopView.spec"],
 	uiSpecs["PetsView.spec"],
 	uiSpecs["BattleView.spec"],
+	visualSpecs["PetLook.spec"],
 }

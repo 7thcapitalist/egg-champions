@@ -132,3 +132,11 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-13T13:49:40Z | task 13 | committed | 371e362 |
 | 2026-10-13T13:49:40Z | built | paused | stopped at the limit of 1 task(s) per run; next is task 14 |
 | 2026-10-13T13:49:40Z | run | end | 1 task(s) done, 0 problem(s), cost about $0.00 |
+| 2026-10-13T13:54:44Z | run | start | games/egg-champions on branch main, max 1 task(s) |
+| 2026-10-13T13:54:44Z | task 14 | coder start | attempt 1 of 1: Pet visuals and variant looks |
+| 2026-10-13T13:54:58Z | check 14 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-13T13:55:01Z | check 14 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-13T13:55:02Z | check 14 | pass | grep -rln Instance.new("Part") games/egg-champions/src |
+| 2026-10-13T13:55:03Z | check 14 | pass | selene games/egg-champions/src |
+| 2026-10-13T13:55:05Z | check 14 | pass | stylua --check games/egg-champions/src |
+| 2026-10-13T13:55:05Z | task 14 | passed | attempt 1 |
