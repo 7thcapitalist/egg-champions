@@ -104,6 +104,20 @@ local Battle = {}
 Battle.BASIC = 1
 Battle.SPECIAL = 2
 
+-- Every event kind takeTurn can emit, in the order of the Event type above.
+-- The battle screen's log keeps one line format per kind, checked against this.
+Battle.EVENT_KINDS = table.freeze({
+	"attack",
+	"damage",
+	"heal",
+	"guard",
+	"rush",
+	"faint",
+	"switch",
+	"win",
+	"lose",
+})
+
 local function constants(): Config.Constants
 	return Config.constants
 end

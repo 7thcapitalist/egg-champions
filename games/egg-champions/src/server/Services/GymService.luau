@@ -31,6 +31,7 @@ local Profile = require(rules:WaitForChild("Profile"))
 local Progression = require(rules:WaitForChild("Progression"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local Requests = require(Shared:WaitForChild("net"):WaitForChild("Requests"))
+local BattleView = require(Shared:WaitForChild("ui"):WaitForChild("BattleView"))
 
 local Guard = require(script.Parent.Parent:WaitForChild("Guard"))
 
@@ -62,28 +63,10 @@ local sessionOf: { [Player]: string } = {}
 -- retryAt[player][worldId] = os.clock() time the next attempt is allowed.
 local retryAt: { [Player]: { [string]: number } } = {}
 
-local function view(state: Battle.State): any
-	local function side(s: Battle.Side): any
-		local fighters = {}
-		for _, fighter in s.fighters do
-			table.insert(fighters, {
-				pet = fighter.pet,
-				variant = fighter.variant,
-				type = fighter.type,
-				hp = fighter.hp,
-				maxHp = fighter.maxHp,
-				special = fighter.special,
-				cooldown = fighter.cooldown,
-			})
-		end
-		return { active = s.active, fighters = fighters }
-	end
-	return {
-		turn = state.turn,
-		player = side(state.player),
-		leader = side(state.leader),
-		specialReady = Battle.canUseSpecial(state),
-	}
+-- The battle view every answer carries: HP, max HP, speed, cooldowns and the
+-- active pets. The battle screen renders it as sent.
+local function view(state: Battle.State): BattleView.Snapshot
+	return BattleView.snapshot(state)
 end
 
 local function sessionView(session: Session?): Requests.SessionView?

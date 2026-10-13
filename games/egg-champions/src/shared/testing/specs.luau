@@ -28,4 +28,5 @@ return {
 	uiSpecs["NextGoal.spec"],
 	uiSpecs["EggShopView.spec"],
 	uiSpecs["PetsView.spec"],
+	uiSpecs["BattleView.spec"],
 }

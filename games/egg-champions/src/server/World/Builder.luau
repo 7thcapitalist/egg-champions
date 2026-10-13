@@ -282,6 +282,10 @@ function Builder.buildAll(): Built
 		)
 		model.Name = "Gym_" .. gym.worldId
 		model:SetAttribute("WorldId", gym.worldId)
+		-- Stepping on the gym floor opens the battle screen's fee prompt.
+		local floor = model.PrimaryPart :: BasePart
+		floor:SetAttribute("WorldId", gym.worldId)
+		floor:AddTag("GymFloor")
 		model.Parent = folder
 		table.insert(built.gyms, model)
 	end

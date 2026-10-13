@@ -36,17 +36,17 @@ mockup.
    so the whole battle can be sped up later.
 
 ## Done when
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0,
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0,
       including a test that feeds a recorded event list from the task 05
       specs through the log formatter and asserts one readable line per
       event, with no event kind unhandled.
-- [ ] A test asserts every event kind the battle rules can emit has a log
+- [x] A test asserts every event kind the battle rules can emit has a log
       line, by comparing against the kinds listed in `Battle.luau`.
-- [ ] `grep -rn "takeTurn\|Battle.damage" games/egg-champions/src/client`
+- [x] `grep -rn "takeTurn\|Battle.damage" games/egg-champions/src/client`
       finds nothing: the client never resolves a turn.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Needs human or playtester

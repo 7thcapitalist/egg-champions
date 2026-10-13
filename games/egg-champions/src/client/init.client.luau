@@ -10,7 +10,9 @@
 	- builds the pets and index screen (UI/Pets), where Equip and Unequip send
 	  their remotes;
 	- opens the egg shop scrolled to a stand's egg when the player touches an
-	  egg stand. The server decides whether any purchase goes through.
+	  egg stand. The server decides whether any purchase goes through;
+	- builds the gym battle screen (UI/Battle), which pays the fee, starts the
+	  battle and sends each move choice, then plays the server's events.
 
 	The cooldown below is touch debounce timing, not a game number.
 ]]
@@ -34,6 +36,7 @@ local State = require(UI:WaitForChild("State"))
 local Main = require(UI:WaitForChild("Main"))
 local EggShop = require(UI:WaitForChild("EggShop"))
 local Pets = require(UI:WaitForChild("Pets"))
+local Battle = require(UI:WaitForChild("Battle"))
 
 State.start(remotes:WaitForChild(Remotes.names.ProfileChanged) :: RemoteEvent)
 Main.mount(
@@ -48,6 +51,14 @@ Pets.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
 	remotes:WaitForChild(Remotes.names.Equip) :: RemoteFunction,
 	remotes:WaitForChild(Remotes.names.Unequip) :: RemoteFunction
+)
+
+Battle.mount(
+	player:WaitForChild("PlayerGui") :: PlayerGui,
+	remotes:WaitForChild(Remotes.names.PayGymFee) :: RemoteFunction,
+	remotes:WaitForChild(Remotes.names.StartBattle) :: RemoteFunction,
+	remotes:WaitForChild(Remotes.names.BattleMove) :: RemoteFunction,
+	remotes:WaitForChild(Remotes.names.GiveUp) :: RemoteFunction
 )
 
 local function show(title: string, text: string)

@@ -121,3 +121,11 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-13T13:42:21Z | task 12 | committed | 8586e46 |
 | 2026-10-13T13:42:21Z | built | paused | stopped at the limit of 1 task(s) per run; next is task 13 |
 | 2026-10-13T13:42:21Z | run | end | 1 task(s) done, 0 problem(s), cost about $0.00 |
+| 2026-10-13T13:49:16Z | run | start | games/egg-champions on branch main, max 1 task(s) |
+| 2026-10-13T13:49:17Z | task 13 | coder start | attempt 1 of 1: UI, gym battle screen |
+| 2026-10-13T13:49:30Z | check 13 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-13T13:49:32Z | check 13 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-13T13:49:32Z | check 13 | pass | grep -rn takeTurn\/Battle.damage games/egg-champions/src/client (must find nothing) |
+| 2026-10-13T13:49:33Z | check 13 | pass | selene games/egg-champions/src |
+| 2026-10-13T13:49:35Z | check 13 | pass | stylua --check games/egg-champions/src |
+| 2026-10-13T13:49:35Z | task 13 | passed | attempt 1 |

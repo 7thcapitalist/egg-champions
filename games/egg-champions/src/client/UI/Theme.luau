@@ -35,6 +35,12 @@ Theme.colors = table.freeze({
 	hatch = Color3.fromRGB(31, 122, 69),
 	white = Color3.fromRGB(255, 255, 255),
 	backdrop = Color3.fromRGB(0, 0, 0),
+	-- The gym battle (Battle.dc.html): arena ground, healthy HP and team
+	-- markers, and a fainted team marker. Low HP uses gold.
+	arena = Color3.fromRGB(51, 80, 62),
+	arenaFloor = Color3.fromRGB(38, 61, 47),
+	healthy = Color3.fromRGB(76, 191, 115),
+	fainted = Color3.fromRGB(74, 84, 104),
 })
 
 -- Lowest rarity first.
