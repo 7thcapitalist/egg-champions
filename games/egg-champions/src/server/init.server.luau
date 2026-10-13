@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 local Profiles = require(script:WaitForChild("Profiles"))
 local Guard = require(script:WaitForChild("Guard"))
+local Analytics = require(script:WaitForChild("Analytics"))
 
 local Services = script:WaitForChild("Services")
 local ClickService = require(Services:WaitForChild("ClickService"))
@@ -55,6 +56,9 @@ GymService.start()
 RebirthService.start()
 PassService.start(ClickService.autoClick)
 Portals.start(built)
+-- Session start and end, and the analytics flush loop. Before Profiles.start,
+-- so the first profile load already counts as a session start.
+Analytics.start(ClickService.coinsPerClick)
 -- Send each player their first state as soon as it loads, so the HUD shows the
 -- real numbers before the first click.
 Profiles.onLoaded(function(player: Player)

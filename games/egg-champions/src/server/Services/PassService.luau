@@ -34,6 +34,7 @@ local Profile = require(Shared:WaitForChild("rules"):WaitForChild("Profile"))
 local server = script.Parent.Parent
 local Guard = require(server:WaitForChild("Guard"))
 local Profiles = require(server:WaitForChild("Profiles"))
+local Analytics = require(server:WaitForChild("Analytics"))
 
 type Profile = Profile.Profile
 
@@ -205,6 +206,7 @@ function PassService.start(onAutoClick: (Player, Profile) -> ())
 			end
 			if purchased then
 				entryFor(player).owned[passId] = true
+				Analytics.track(player, "pass_purchased", { passId = passId })
 			end
 			check(player, passId)
 			Guard.push(player)

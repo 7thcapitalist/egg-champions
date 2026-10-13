@@ -12,6 +12,11 @@ generated config) is mounted at the same place in the stand-in tree, so a
 shared module can reach it through `script.Parent.Parent` exactly as it does
 in Studio, with no Roblox service.
 
+Markdown documents a test may check against (every .md file in <game-dir>/notes
+and <game-dir>/tuning) are mounted as modules that return their text, at
+ReplicatedStorage.Docs.<folder>.<file name without .md>. They exist only in this
+test tree, not in Studio, so a spec that reads them only runs here.
+
 Rule modules (src/shared/rules/) must need no Roblox service. Every one of
 them is loaded first, and any that touches `game`, `workspace`, `Instance`,
 `Enum` or another engine global fails the run with a message naming it.
@@ -239,6 +244,29 @@ def project_data(game_dir, shared):
     for key, child in storage.items():
         if not key.startswith("$") and isinstance(child, dict):
             walk(child, key)
+    return ",\n".join(entries)
+
+
+DOC_FOLDERS = ("notes", "tuning")
+
+
+def project_docs(game_dir):
+    """Lua table entries mounting the game's Markdown notes and reports as text.
+
+    Each <game-dir>/<folder>/<name>.md becomes Docs/<folder>/<name>, a module
+    that returns the file's text, so a spec can check code against a document.
+    """
+    entries = []
+    for folder in DOC_FOLDERS:
+        base = game_dir / folder
+        if not base.is_dir():
+            continue
+        for file in sorted(base.iterdir()):
+            if file.is_file() and file.suffix == ".md":
+                text = file.read_text(encoding="utf-8")
+                entries.append('{kind = "data", path = %s, source = %s}'
+                               % (long_string("Docs/%s/%s" % (folder, file.stem)),
+                                  long_string("return " + long_string(text))))
     return ",\n".join(entries)
 
 
@@ -517,7 +545,8 @@ def main(argv):
     name, pin = pinned_luau()
     luau = find_luau(name)
     script = BOOTSTRAP.replace("%ENGINE%", ", ".join('"%s"' % n for n in ENGINE_NAMES))
-    script = script.replace("%DATA%", project_data(game_dir, shared))
+    data = [part for part in (project_data(game_dir, shared), project_docs(game_dir)) if part]
+    script = script.replace("%DATA%", ",\n".join(data))
     script = script.replace("%FILES%", collect(shared, game_dir))
 
     with tempfile.TemporaryDirectory(prefix="run_tests_") as tmp:

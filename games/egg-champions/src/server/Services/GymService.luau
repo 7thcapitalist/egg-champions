@@ -35,6 +35,7 @@ local BattleView = require(Shared:WaitForChild("ui"):WaitForChild("BattleView"))
 
 local Guard = require(script.Parent.Parent:WaitForChild("Guard"))
 local Passes = require(script.Parent.Parent:WaitForChild("Passes"))
+local Analytics = require(script.Parent.Parent:WaitForChild("Analytics"))
 
 type Profile = Profile.Profile
 
@@ -104,16 +105,46 @@ local function forgetSession(player: Player)
 	end
 end
 
--- Ends a session. Returns true when a win gave a new badge.
-local function finish(player: Player, profile: Profile, session: Session, won: boolean): boolean
+local function worldExists(worldIndex: number): boolean
+	for _, world in Config.worlds do
+		if world.index == worldIndex then
+			return true
+		end
+	end
+	return false
+end
+
+local function trackResult(player: Player, session: Session, outcome: string)
+	Analytics.track(player, "gym_result", {
+		worldIndex = session.worldIndex,
+		outcome = outcome,
+		secondsSinceJoin = Analytics.secondsSinceJoin(player),
+	})
+end
+
+-- Ends a session with an Analytics.outcomes value. Returns true when a win
+-- gave a new badge.
+local function finish(player: Player, profile: Profile, session: Session, outcome: string): boolean
 	session.ended = true
-	if won then
+	if outcome == Analytics.outcomes.win then
 		local waits = retryAt[player]
 		if waits ~= nil then
 			waits[session.worldId] = nil
 		end
-		return Progression.beatGym(profile :: any, session.worldIndex)
+		local nextIndex = session.worldIndex + 1
+		local hasNext = worldExists(nextIndex)
+		local wasOpen = hasNext and Progression.worldUnlocked(profile :: any, nextIndex)
+		local newBadge = Progression.beatGym(profile :: any, session.worldIndex)
+		trackResult(player, session, outcome)
+		if hasNext and not wasOpen and Progression.worldUnlocked(profile :: any, nextIndex) then
+			Analytics.track(player, "world_unlocked", {
+				worldIndex = nextIndex,
+				secondsSinceJoin = Analytics.secondsSinceJoin(player),
+			})
+		end
+		return newBadge
 	end
+	trackResult(player, session, outcome)
 	local waits = retryAt[player] or {}
 	retryAt[player] = waits
 	waits[session.worldId] = os.clock() + Gym.retrySeconds()
@@ -197,6 +228,10 @@ local function onStartBattle(player: Player, profile: Profile, worldId: any): (b
 	}
 	sessions[session.id] = session
 	sessionOf[player] = session.id
+	Analytics.track(player, "gym_attempt", {
+		worldIndex = world.index,
+		secondsSinceJoin = Analytics.secondsSinceJoin(player),
+	})
 	return true, { sessionId = session.id, worldId = worldId, battle = view(state) }
 end
 
@@ -220,7 +255,12 @@ local function onBattleMove(
 	local winner = Battle.isOver(nextState)
 	local newBadge = false
 	if winner ~= nil then
-		newBadge = finish(player, profile, session, winner == "player")
+		newBadge = finish(
+			player,
+			profile,
+			session,
+			if winner == "player" then Analytics.outcomes.win else Analytics.outcomes.loss
+		)
 	end
 	return true,
 		{
@@ -243,7 +283,7 @@ local function onGiveUp(player: Player, profile: Profile, sessionId: any): (bool
 	if not ok or session == nil then
 		return false, reason
 	end
-	finish(player, profile, session, false)
+	finish(player, profile, session, Analytics.outcomes.gaveUp)
 	return true,
 		{
 			sessionId = session.id,

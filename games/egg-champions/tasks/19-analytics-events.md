@@ -40,17 +40,17 @@ guesses.
    playtester and the tuner both read this.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0,
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0,
       including a test that firing an event not in the table errors, and a
       test that every event in the table has a documented row in
       `notes/analytics-events.md`.
-- [ ] `grep -rn "Analytics" games/egg-champions/src/client` finds nothing:
+- [x] `grep -rn "Analytics" games/egg-champions/src/client` finds nothing:
       events fire only on the server.
-- [ ] A test asserts the event list covers every tuner target named in
+- [x] A test asserts the event list covers every tuner target named in
       `tuning/report.md`, so a pacing target can never go unmeasured.
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Needs human or playtester

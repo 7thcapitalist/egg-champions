@@ -17,6 +17,7 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local Requests = require(Shared:WaitForChild("net"):WaitForChild("Requests"))
 
 local Guard = require(script.Parent.Parent:WaitForChild("Guard"))
+local Analytics = require(script.Parent.Parent:WaitForChild("Analytics"))
 
 type Profile = Profile.Profile
 
@@ -30,7 +31,23 @@ local function ownedUids(profile: Profile): { string }
 	return uids
 end
 
-local function onEquip(_player: Player, profile: Profile, uid: any): (boolean, any)
+-- The pet ids of a team of uids, for analytics.
+local function teamPetIds(profile: Profile, team: { string }): { string }
+	local byUid: { [string]: string } = {}
+	for _, pet in profile.pets do
+		byUid[pet.uid] = pet.petId
+	end
+	local ids: { string } = {}
+	for _, uid in team do
+		local petId = byUid[uid]
+		if petId ~= nil then
+			table.insert(ids, petId)
+		end
+	end
+	return ids
+end
+
+local function onEquip(player: Player, profile: Profile, uid: any): (boolean, any)
 	if not Requests.isChoiceString(uid) then
 		return false, Requests.reasons.badChoice
 	end
@@ -39,6 +56,9 @@ local function onEquip(_player: Player, profile: Profile, uid: any): (boolean, a
 		return false, reason
 	end
 	profile.team = nextTeam
+	local petIds = teamPetIds(profile, nextTeam)
+	local equipped = teamPetIds(profile, { uid })
+	Analytics.track(player, "pet_equipped", { petId = equipped[1] or "", team = petIds })
 	return true, { team = table.clone(nextTeam) }
 end
 

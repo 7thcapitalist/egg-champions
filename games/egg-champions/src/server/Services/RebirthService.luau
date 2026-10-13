@@ -19,6 +19,7 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 
 local Guard = require(script.Parent.Parent:WaitForChild("Guard"))
 local GymService = require(script.Parent:WaitForChild("GymService"))
+local Analytics = require(script.Parent.Parent:WaitForChild("Analytics"))
 
 type Profile = Profile.Profile
 
@@ -36,6 +37,10 @@ local function onRebirth(player: Player, profile: Profile): (boolean, any)
 	for key, value in nextState do
 		target[key] = value
 	end
+	Analytics.track(player, "rebirth", {
+		count = profile.rebirths,
+		secondsSinceJoin = Analytics.secondsSinceJoin(player),
+	})
 	return true, { rebirths = profile.rebirths }
 end
 

@@ -28,6 +28,7 @@ local Requests = require(Shared:WaitForChild("net"):WaitForChild("Requests"))
 local server = script.Parent.Parent
 local Guard = require(server:WaitForChild("Guard"))
 local Passes = require(server:WaitForChild("Passes"))
+local Analytics = require(server:WaitForChild("Analytics"))
 
 type Profile = Profile.Profile
 
@@ -69,6 +70,8 @@ local function onBuyEgg(
 		return false, "cannot_afford"
 	end
 
+	-- A first hatch ever: the pet index is empty until something hatches.
+	local firstEver = next(profile.index) == nil
 	local results = Hatch.rollMany(eggId, rng :: any, PassEffects.hatchOptions(owned), count)
 	profile.coins -= price
 	local hatched = {}
@@ -86,6 +89,26 @@ local function onBuyEgg(
 			variant = pet.variant,
 			newInIndex = newInIndex,
 		})
+	end
+	Analytics.track(player, "egg_bought", {
+		eggId = eggId,
+		count = count,
+		price = price,
+		coinsAfter = profile.coins,
+	})
+	for _, result in results do
+		Analytics.track(player, "pet_hatched", {
+			petId = result.petId,
+			rarity = Config.petById[result.petId].rarity,
+			variant = result.variant or Analytics.NORMAL_VARIANT,
+		})
+	end
+	if firstEver then
+		Analytics.track(
+			player,
+			"first_hatch",
+			{ secondsSinceJoin = Analytics.secondsSinceJoin(player) }
+		)
 	end
 	return true, { eggId = eggId, pets = hatched, price = price }
 end
