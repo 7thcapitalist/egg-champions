@@ -12,7 +12,9 @@
 	- opens the egg shop scrolled to a stand's egg when the player touches an
 	  egg stand. The server decides whether any purchase goes through;
 	- builds the gym battle screen (UI/Battle), which pays the fee, starts the
-	  battle and sends each move choice, then plays the server's events.
+	  battle and sends each move choice, then plays the server's events;
+	- mounts Effects, which pops the coins the server credited (ClickCredited)
+	  at each world click and plays the hatch sequence in the egg shop.
 
 	The cooldown below is touch debounce timing, not a game number.
 ]]
@@ -37,8 +39,14 @@ local Main = require(UI:WaitForChild("Main"))
 local EggShop = require(UI:WaitForChild("EggShop"))
 local Pets = require(UI:WaitForChild("Pets"))
 local Battle = require(UI:WaitForChild("Battle"))
+local Effects = require(script:WaitForChild("Effects"):WaitForChild("Effects"))
 
 State.start(remotes:WaitForChild(Remotes.names.ProfileChanged) :: RemoteEvent)
+Effects.mount(
+	player:WaitForChild("PlayerGui") :: PlayerGui,
+	remotes:WaitForChild(Remotes.names.ClickCredited) :: RemoteEvent
+)
+Main.onWorldClick(Effects.clicked)
 Main.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
 	remotes:WaitForChild(Remotes.names.Click) :: RemoteEvent

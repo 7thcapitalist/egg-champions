@@ -8,9 +8,11 @@
 	ReplicatedStorage; the client only waits for them.
 
 	Kinds:
-		"event": a RemoteEvent. Click goes up; ProfileChanged and Notice come
-			down. Notice carries a short message for the player, such as why a
-			portal refused them.
+		"event": a RemoteEvent. Click goes up; ProfileChanged, Notice and
+			ClickCredited come down. Notice carries a short message for the
+			player, such as why a portal refused them. ClickCredited carries
+			the coins the server added for one accepted click, so the click pop
+			shows the credited amount and never a client guess.
 		"function": a RemoteFunction. The client asks and the server answers
 			with a result table, { ok = true, ... } or { ok = false, reason }.
 
@@ -32,6 +34,7 @@ export type Name =
 	| "Rebirth"
 	| "ProfileChanged"
 	| "Notice"
+	| "ClickCredited"
 
 local Remotes = {}
 
@@ -50,6 +53,7 @@ Remotes.names = table.freeze({
 	Rebirth = "Rebirth" :: Name,
 	ProfileChanged = "ProfileChanged" :: Name,
 	Notice = "Notice" :: Name,
+	ClickCredited = "ClickCredited" :: Name,
 })
 
 -- Every remote and its kind, in a fixed order.
@@ -65,6 +69,7 @@ Remotes.list = table.freeze({
 	table.freeze({ name = Remotes.names.Rebirth, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.ProfileChanged, kind = "event" :: Kind }),
 	table.freeze({ name = Remotes.names.Notice, kind = "event" :: Kind }),
+	table.freeze({ name = Remotes.names.ClickCredited, kind = "event" :: Kind }),
 })
 
 -- The kind of a remote, or nil for a name that is not a remote.

@@ -9,6 +9,9 @@
 	Clicks past MAX_CLICKS_PER_SECOND in any one second are dropped, not
 	credited. The first drop in each window is logged; logging every dropped
 	click from a spamming client would flood the Output.
+
+	Each accepted click also sends the credited amount back through
+	ClickCredited, so the client's coin pop shows what the server added.
 ]]
 
 local Players = game:GetService("Players")
@@ -71,8 +74,10 @@ local function onClick(player: Player, profile: Profile)
 		end
 		return
 	end
-	profile.coins += ClickService.coinsPerClick(player, profile)
+	local credited = ClickService.coinsPerClick(player, profile)
+	profile.coins += credited
 	Guard.push(player)
+	Guard.fire(player, Remotes.names.ClickCredited, credited)
 end
 
 -- Each equipped pet's own Click Power, keyed by uid, for the team bar. The

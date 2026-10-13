@@ -14,7 +14,9 @@
 	  triple count and is only offered when the server reports the Triple Hatch
 	  pass. Neither ever sends a price.
 	- The result panel shows what hatched, its rarity and its variant, straight
-	  from the server's reply. The hatch animation is task 15.
+	  from the server's reply. Effects.playHatch then plays the hatch sequence
+	  over the screen for the same reply; it is skippable by tapping, and the
+	  result panel underneath already holds the answer.
 
 	EggShop.openAt(eggId) opens the screen scrolled to that egg's card, for the
 	egg stands in the world.
@@ -33,6 +35,8 @@ local NextGoal = require(uiShared:WaitForChild("NextGoal"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
+local Effects =
+	require((script.Parent :: Instance).Parent:WaitForChild("Effects"):WaitForChild("Effects"))
 local State = require(script.Parent:WaitForChild("State"))
 
 local colors = Theme.colors
@@ -413,6 +417,11 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			showMessage("The shop did not answer. Try again.")
 		elseif reply.ok == true then
 			showHatched(reply)
+			-- Visuals only: the server already decided what hatched.
+			busy = true
+			Effects.playHatch(gui, shellColor(eggId), EggShopView.hatchLines(reply), function()
+				busy = false
+			end)
 		else
 			showMessage(EggShopView.reasonText(reply.reason))
 		end

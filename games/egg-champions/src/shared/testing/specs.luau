@@ -31,4 +31,5 @@ return {
 	uiSpecs["PetsView.spec"],
 	uiSpecs["BattleView.spec"],
 	visualSpecs["PetLook.spec"],
+	visualSpecs["Effects.spec"],
 }

@@ -111,6 +111,19 @@ function Guard.notify(player: Player, message: string)
 	event:FireClient(player, message)
 end
 
+-- Fires a server to client RemoteEvent to one player, such as
+-- ClickCredited with the coins one click earned. The client only shows it.
+function Guard.fire(player: Player, name: string, ...: any)
+	if player.Parent == nil then
+		return
+	end
+	if Remotes.kindOf(name) ~= "event" then
+		error(string.format("Guard: %s is not an event remote", name), 2)
+	end
+	local event = remote(name) :: RemoteEvent
+	event:FireClient(player, ...)
+end
+
 local function expectKind(name: string, kind: Remotes.Kind)
 	local actual = Remotes.kindOf(name)
 	if actual ~= kind then

@@ -28,6 +28,7 @@ return function()
 				"Rebirth",
 				"ProfileChanged",
 				"Notice",
+				"ClickCredited",
 			}
 			local names = {}
 			for _, entry in Remotes.list do
@@ -43,6 +44,7 @@ return function()
 			expect(Remotes.kindOf("Click")).toEqual("event")
 			expect(Remotes.kindOf("ProfileChanged")).toEqual("event")
 			expect(Remotes.kindOf("Notice")).toEqual("event")
+			expect(Remotes.kindOf("ClickCredited")).toEqual("event")
 			expect(Remotes.kindOf("BuyEgg")).toEqual("function")
 			expect(Remotes.kindOf("BattleMove")).toEqual("function")
 			expect(Remotes.kindOf("NotARemote")).toEqual(nil)
