@@ -33,4 +33,5 @@ return {
 	visualSpecs["PetLook.spec"],
 	visualSpecs["Effects.spec"],
 	visualSpecs["BattleEffects.spec"],
+	visualSpecs["Progress.spec"],
 }

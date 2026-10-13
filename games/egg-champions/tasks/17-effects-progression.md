@@ -32,17 +32,17 @@ gym win, rebirth and world unlock effects.
    sees the correct portals and badges with no effect replayed.
 
 ## Done when
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0,
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0,
       including a test that every world in config has an unlock color, taken
       from the shared palette table.
-- [ ] A test asserts the rebirth effect is triggered only by a confirmed
+- [x] A test asserts the rebirth effect is triggered only by a confirmed
       server event, by driving the handler with a refused response and
       asserting nothing plays.
-- [ ] `grep -rn "palette" games/egg-champions/src` shows one palette table,
+- [x] `grep -rn "palette" games/egg-champions/src` shows one palette table,
       shared, not two.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Needs human or playtester

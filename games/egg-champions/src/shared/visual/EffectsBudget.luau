@@ -203,6 +203,52 @@ EffectsBudget.BATTLE = table.freeze({
 	labelPool = 8,
 })
 
+-- Progression effects: gym win, rebirth and world unlock. Screen sizes are
+-- pixels at 1280 x 720; world sizes are studs.
+EffectsBudget.PROGRESS = table.freeze({
+	-- Gym win: the badge pops in with a burst in the gold accent, holds, and
+	-- fades. The newly open portal lights up once the badge is done.
+	badgeSize = 120,
+	badgeInSeconds = 0.35,
+	badgeHoldSeconds = 1.2,
+	badgeOutSeconds = 0.3,
+	badgeBurstDots = 10,
+	badgeBurstDistance = 150,
+	badgeBurstDotSize = 14,
+	badgeBurstSeconds = 0.5,
+	captionSize = 30,
+	-- Rebirth: one screen flash and one ring rising around the player.
+	flashStrength = 0.15,
+	flashSeconds = 0.5,
+	ringSize = 8,
+	ringGrow = 3,
+	ringThickness = 0.4,
+	ringRise = 9,
+	ringSeconds = 0.9,
+	-- World unlock: a swirl of particles on the portal in the world's color,
+	-- and a short screen swirl when a player walks through an open portal.
+	swirlParticles = 24,
+	swirlLifetime = 0.8,
+	swirlSpeed = 6,
+	swirlSize = 0.6,
+	swirlSpin = 360,
+	-- Only portals this close to the camera play their swirl; farther ones
+	-- just change state, so nothing runs off screen.
+	swirlDistance = 160,
+	walkSwirlSize = 260,
+	walkSwirlSeconds = 0.6,
+	walkSwirlTurns = 1,
+	-- Portal look while locked: the glow dims.
+	lockedTransparency = 0.75,
+	openTransparency = 0.3,
+})
+
+-- Seconds the gym win badge plays before the next portal lights up.
+function EffectsBudget.badgeSeconds(): number
+	local p = EffectsBudget.PROGRESS
+	return p.badgeInSeconds + p.badgeHoldSeconds + p.badgeOutSeconds
+end
+
 -- Seconds one event kind plays for. An unknown kind gets the shortest row,
 -- so a malformed event cannot stall the queue.
 function EffectsBudget.battleSeconds(kind: string): number

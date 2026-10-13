@@ -14,7 +14,11 @@
 	- builds the gym battle screen (UI/Battle), which pays the fee, starts the
 	  battle and sends each move choice, then plays the server's events;
 	- mounts Effects, which pops the coins the server credited (ClickCredited)
-	  at each world click and plays the hatch sequence in the egg shop.
+	  at each world click and plays the hatch sequence in the egg shop;
+	- mounts Progress, the gym win, rebirth and world unlock effects, which
+	  shows every portal open or locked from ProfileChanged;
+	- builds the rebirth prompt (UI/Rebirth), which sends Rebirth and plays
+	  the rebirth effect only when the server confirms it.
 
 	The cooldown below is touch debounce timing, not a game number.
 ]]
@@ -39,13 +43,16 @@ local Main = require(UI:WaitForChild("Main"))
 local EggShop = require(UI:WaitForChild("EggShop"))
 local Pets = require(UI:WaitForChild("Pets"))
 local Battle = require(UI:WaitForChild("Battle"))
+local Rebirth = require(UI:WaitForChild("Rebirth"))
 local Effects = require(script:WaitForChild("Effects"):WaitForChild("Effects"))
+local Progress = require(script:WaitForChild("Effects"):WaitForChild("Progress"))
 
 State.start(remotes:WaitForChild(Remotes.names.ProfileChanged) :: RemoteEvent)
 Effects.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
 	remotes:WaitForChild(Remotes.names.ClickCredited) :: RemoteEvent
 )
+Progress.mount(player:WaitForChild("PlayerGui") :: PlayerGui)
 Main.onWorldClick(Effects.clicked)
 Main.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
@@ -67,6 +74,11 @@ Battle.mount(
 	remotes:WaitForChild(Remotes.names.StartBattle) :: RemoteFunction,
 	remotes:WaitForChild(Remotes.names.BattleMove) :: RemoteFunction,
 	remotes:WaitForChild(Remotes.names.GiveUp) :: RemoteFunction
+)
+
+Rebirth.mount(
+	player:WaitForChild("PlayerGui") :: PlayerGui,
+	remotes:WaitForChild(Remotes.names.Rebirth) :: RemoteFunction
 )
 
 local function show(title: string, text: string)

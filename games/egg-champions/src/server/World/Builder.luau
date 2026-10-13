@@ -12,9 +12,10 @@
 	It also removes the placeholder Baseplate from the Rojo project (the
 	generated ground replaces it) and moves the SpawnLocation onto world 1.
 
-	Palettes live in PALETTES below, keyed by world id. A world with no entry
-	gets a palette picked from keywords in its environment string, so a new
-	world in the spec still builds with no code change.
+	Colors come from shared/world/WorldPalette, the one palette table, keyed
+	by world id. A world with no row gets one picked from keywords in its
+	environment string, so a new world in the spec still builds with no code
+	change. The client reads the same table for each world's unlock swirl.
 
 	Returns what it built, counted from the instances themselves, and errors if
 	that differs from the plan.
@@ -25,6 +26,7 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Layout = require(Shared:WaitForChild("world"):WaitForChild("Layout"))
+local WorldPalette = require(Shared:WaitForChild("world"):WaitForChild("WorldPalette"))
 local Kit = require(script.Parent:WaitForChild("Kit"))
 
 type Palette = Kit.Palette
@@ -50,81 +52,41 @@ export type Built = {
 }
 
 local GENERATED_ATTRIBUTE = "GeneratedWorld"
+local PORTAL_TAG = "Portal"
 local WATER_SIZE = Layout.ISLAND_SIZE + 140
 local SCENERY_RADIUS = 68
 local SCENERY_SLOTS = 12
 local LIGHT_RADIUS = 52
 local SIGN_OFFSET: Vec = { x = -22, y = 0, z = 14 }
 
-local function rgb(r: number, g: number, b: number): Color3
-	return Color3.fromRGB(r, g, b)
+local function color(c: WorldPalette.RGB): Color3
+	return Color3.fromRGB(c.r, c.g, c.b)
 end
 
-local PALETTES: { [string]: Palette } = {
-	green_meadow = {
-		ground = rgb(106, 170, 78),
-		groundMaterial = Enum.Material.Grass,
-		cliff = rgb(122, 96, 70),
-		water = rgb(80, 150, 210),
-		trunk = rgb(110, 76, 48),
-		leaf = rgb(62, 140, 64),
-		rock = rgb(140, 140, 132),
-		accent = rgb(250, 214, 92),
-		trim = rgb(236, 230, 214),
-		glow = rgb(255, 240, 170),
-		text = rgb(255, 255, 255),
-	},
-	coral_coast = {
-		ground = rgb(236, 214, 158),
-		groundMaterial = Enum.Material.Sand,
-		cliff = rgb(196, 160, 118),
-		water = rgb(40, 170, 200),
-		trunk = rgb(150, 112, 70),
-		leaf = rgb(70, 170, 120),
-		rock = rgb(232, 128, 120),
-		accent = rgb(90, 120, 200),
-		trim = rgb(248, 244, 232),
-		glow = rgb(150, 220, 255),
-		text = rgb(255, 255, 255),
-	},
-	ember_volcano = {
-		ground = rgb(70, 62, 62),
-		groundMaterial = Enum.Material.Basalt,
-		cliff = rgb(48, 42, 42),
-		water = rgb(240, 100, 30),
-		trunk = rgb(60, 50, 46),
-		leaf = rgb(110, 90, 80),
-		rock = rgb(90, 80, 78),
-		accent = rgb(230, 90, 40),
-		trim = rgb(150, 140, 136),
-		glow = rgb(255, 150, 60),
-		text = rgb(255, 255, 255),
-	},
-}
-
--- For a world with no palette entry: keywords in its environment string pick
--- one of the palettes above.
-local KEYWORD_PALETTES: { { words: { string }, palette: string } } = {
-	{ words = { "lava", "volcano", "ash", "ember", "fire" }, palette = "ember_volcano" },
-	{ words = { "beach", "reef", "sea", "ocean", "coast", "storm" }, palette = "coral_coast" },
-	{ words = { "grass", "forest", "meadow", "field" }, palette = "green_meadow" },
-}
-local DEFAULT_PALETTE = "green_meadow"
-
+-- Turns a shared WorldPalette row into the Color3 and Enum form Kit takes.
+local converted: { [WorldPalette.Palette]: Palette } = {}
 local function paletteFor(worldId: string, environment: string): Palette
-	local own = PALETTES[worldId]
-	if own ~= nil then
-		return own
+	local row = WorldPalette.forWorld(worldId, environment)
+	local done = converted[row]
+	if done ~= nil then
+		return done
 	end
-	local text = string.lower(environment)
-	for _, entry in KEYWORD_PALETTES do
-		for _, word in entry.words do
-			if string.find(text, word, 1, true) ~= nil then
-				return PALETTES[entry.palette]
-			end
-		end
-	end
-	return PALETTES[DEFAULT_PALETTE]
+	local material = (Enum.Material :: any)[row.groundMaterial] :: Enum.Material
+	local made: Palette = {
+		ground = color(row.ground),
+		groundMaterial = material,
+		cliff = color(row.cliff),
+		water = color(row.water),
+		trunk = color(row.trunk),
+		leaf = color(row.leaf),
+		rock = color(row.rock),
+		accent = color(row.accent),
+		trim = color(row.trim),
+		glow = color(row.glow),
+		text = color(row.text),
+	}
+	converted[row] = made
+	return made
 end
 
 local Builder = {}
@@ -233,10 +195,10 @@ function Builder.buildAll(): Built
 		counts = { eggStands = 0, gyms = 0, portals = 0 },
 	}
 
-	local palettes: { [string]: Palette } = {}
+	local byWorld: { [string]: Palette } = {}
 	for _, island in plan.islands do
 		local palette = paletteFor(island.worldId, island.environment)
-		palettes[island.worldId] = palette
+		byWorld[island.worldId] = palette
 
 		local folder = Instance.new("Folder")
 		folder.Name = "World_" .. island.worldId
@@ -263,7 +225,7 @@ function Builder.buildAll(): Built
 		local center = plan.arrivals[stand.worldId]
 		-- Stands face the island center, so the Trigger pad is on the near side.
 		local model =
-			Kit.eggStand(facing(stand.position, center), palettes[stand.worldId], stand.label)
+			Kit.eggStand(facing(stand.position, center), byWorld[stand.worldId], stand.label)
 		model.Name = "EggStand_" .. stand.eggId
 		model:SetAttribute("EggId", stand.eggId)
 		local trigger = triggerOf(model)
@@ -277,7 +239,7 @@ function Builder.buildAll(): Built
 		local folder = built.folders[gym.worldId]
 		local model = Kit.gymBuilding(
 			facing(gym.position, plan.arrivals[gym.worldId]),
-			palettes[gym.worldId],
+			byWorld[gym.worldId],
 			gym.label
 		)
 		model.Name = "Gym_" .. gym.worldId
@@ -294,11 +256,15 @@ function Builder.buildAll(): Built
 		local folder = built.folders[portal.worldId]
 		local model = Kit.portalFrame(
 			facing(portal.position, plan.arrivals[portal.worldId]),
-			palettes[portal.worldId],
+			byWorld[portal.worldId],
 			portal.label
 		)
 		model.Name = "Portal_" .. portal.worldId
 		model:SetAttribute("FromIndex", portal.fromIndex)
+		-- The client finds portals by this tag and shows each one open or
+		-- locked from its own ProfileChanged state.
+		model:SetAttribute("WorldId", portal.worldId)
+		model:AddTag(PORTAL_TAG)
 		if portal.toIndex ~= nil then
 			model:SetAttribute("ToIndex", portal.toIndex)
 		end

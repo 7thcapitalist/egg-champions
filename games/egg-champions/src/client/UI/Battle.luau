@@ -23,8 +23,11 @@
 	from config and that attempts are free until the next rebirth, pays with
 	PayGymFee when unpaid, then sends StartBattle.
 
-	Leaving: a win shows the badge and the newly open world; a loss shows the
-	server's retry wait as a countdown before the gym can be entered again.
+	Leaving: a win shows the badge and the newly open world, and plays the
+	gym win effect (client/Effects/Progress): the badge burst, then the
+	portal lighting up, or the "coming soon" gate after the last gym. A loss
+	shows the server's retry wait as a countdown before the gym can be
+	entered again.
 ]]
 
 local CollectionService = game:GetService("CollectionService")
@@ -36,7 +39,10 @@ local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local BattleView = require(uiShared:WaitForChild("BattleView"))
 
-local Effects = require(script.Parent.Parent:WaitForChild("Effects"):WaitForChild("Effects"))
+local EffectsFolder = script.Parent.Parent:WaitForChild("Effects")
+local Effects = require(EffectsFolder:WaitForChild("Effects"))
+local Progress = require(EffectsFolder:WaitForChild("Progress"))
+local ProgressEffects = require(Shared:WaitForChild("visual"):WaitForChild("ProgressEffects"))
 local Theme = require(script.Parent:WaitForChild("Theme"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
 local State = require(script.Parent:WaitForChild("State"))
@@ -694,6 +700,13 @@ function Battle.mount(
 		cardTitle.Text = Theme.label(if won then "Victory" else "Defeat")
 		if won then
 			cardBody.Text = BattleView.winText(worldId, reply.newBadge == true)
+			if worldId ~= "" then
+				local payload = State.get()
+				local profile = if payload ~= nil then payload.profile else {}
+				Progress.playGymWin(
+					ProgressEffects.gymWin(worldId, profile, reply.newBadge == true)
+				)
+			end
 			cardStatus.Text = ""
 			cardStatus.Visible = false
 		else
