@@ -9,9 +9,11 @@
 	  and Give up.
 	- Every number on screen comes from the server. BattleMove answers with the
 	  turn's event list and the battle view after it. The events are queued
-	  and played one at a time (EVENT_SECONDS each), each one writing its log
-	  line (shared/ui/BattleView) and moving the HP bars by the numbers the
-	  event carries. When the queue is empty the screen resyncs to the view
+	  and played one at a time, each one writing its log line
+	  (shared/ui/BattleView), moving the HP bars by the numbers the event
+	  carries, and playing its effect (client/Effects). Each event lasts its
+	  row of the effects budget, so the budget is the one knob for battle
+	  speed. When the queue is empty the screen resyncs to the view
 	  the server sent, so if the two ever disagree the server is right.
 	- Move 2 shows the cooldown the server sent and cannot be pressed while it
 	  cools down. Both buttons wait while events play.
@@ -23,7 +25,6 @@
 
 	Leaving: a win shows the badge and the newly open world; a loss shows the
 	server's retry wait as a countdown before the gym can be entered again.
-	Battle particles and motion are task 16.
 ]]
 
 local CollectionService = game:GetService("CollectionService")
@@ -35,15 +36,13 @@ local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local BattleView = require(uiShared:WaitForChild("BattleView"))
 
+local Effects = require(script.Parent.Parent:WaitForChild("Effects"):WaitForChild("Effects"))
 local Theme = require(script.Parent:WaitForChild("Theme"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
 local State = require(script.Parent:WaitForChild("State"))
 
 local colors = Theme.colors
 local sizes = Theme.sizes
-
--- How long one server event plays on screen. The one knob for battle speed.
-local EVENT_SECONDS = 0.7
 
 -- Touch debounce for the gym floor, not a game number.
 local FLOOR_COOLDOWN_SECONDS = 2
@@ -64,7 +63,6 @@ local LAYOUT = table.freeze({
 	blockSize = 150,
 	blockX = 240,
 	blockY = 300,
-	popupY = 250,
 	bottomGap = 24,
 	rowHeight = 88,
 	moveWidth = 230,
@@ -76,7 +74,6 @@ local LAYOUT = table.freeze({
 	titleSize = 24,
 	moveName = 24,
 	moveSub = 14,
-	popupSize = 40,
 	logSize = 16,
 	small = 13,
 })
@@ -359,27 +356,8 @@ function Battle.mount(
 	leaderBlock.Position = UDim2.new(1, -LAYOUT.blockX, 0, LAYOUT.blockY)
 	Theme.panel(leaderBlock, sizes.radius, colors.panel)
 
-	local function popup(name: string, block: Frame): TextLabel
-		local label = Theme.text({
-			name = name,
-			font = Theme.fonts.heading,
-			size = LAYOUT.popupSize,
-			color = colors.gold,
-			parent = canvas,
-		})
-		label.AnchorPoint = Vector2.new(0.5, 1)
-		label.Position = UDim2.new(
-			block.Position.X.Scale,
-			block.Position.X.Offset
-				+ (if block.AnchorPoint.X == 1 then -1 else 1) * LAYOUT.blockSize / 2,
-			0,
-			LAYOUT.blockY - 8
-		)
-		label.Visible = false
-		return label
-	end
-	local playerPopup = popup("PlayerPopup", playerBlock)
-	local leaderPopup = popup("LeaderPopup", leaderBlock)
+	-- Hops, bursts, damage numbers and the special visuals draw over these.
+	Effects.mountBattle(canvas, playerBlock, leaderBlock)
 
 	-- Bottom row: log, move 1, move 2, Give up.
 	local row = frame("Row", canvas)
@@ -630,16 +608,6 @@ function Battle.mount(
 		renderButtons(snapshot)
 	end
 
-	local function showPopup(event: any)
-		local label = if event.side == "player" then playerPopup else leaderPopup
-		label.Text =
-			BattleView.damageText(if type(event.amount) == "number" then event.amount else 0)
-		label.Visible = true
-		task.delay(EVENT_SECONDS, function()
-			label.Visible = false
-		end)
-	end
-
 	-- Prompt and result
 
 	local refreshPrompt: () -> ()
@@ -695,6 +663,7 @@ function Battle.mount(
 	end
 
 	local function closeAll()
+		Effects.resetBattle()
 		mode = "closed"
 		promptWorld = nil
 		showCard(false)
@@ -761,6 +730,7 @@ function Battle.mount(
 		showCard(false)
 		primary.Visible = true
 		clearLog()
+		Effects.resetBattle()
 		gymTitle.Text = Theme.label(BattleView.feePrompt(worldId, gymState()).title)
 		arena.Visible = true
 		addLog("The battle begins. Pick a move.", true)
@@ -805,11 +775,8 @@ function Battle.mount(
 			if snapshot ~= nil and BattleView.handles(event.kind) then
 				addLog(BattleView.lineFor(event, snapshot), event.side == "leader")
 				BattleView.apply(snapshot, event)
-				if event.kind == "damage" then
-					showPopup(event)
-				end
 				render()
-				task.wait(EVENT_SECONDS)
+				task.wait(Effects.playBattle(event))
 			end
 		end
 		if type(reply.battle) == "table" then

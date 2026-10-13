@@ -153,3 +153,10 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-13T14:01:35Z | task 15 | committed | 33f1b62 |
 | 2026-10-13T14:01:35Z | built | paused | stopped at the limit of 1 task(s) per run; next is task 16 |
 | 2026-10-13T14:01:35Z | run | end | 1 task(s) done, 0 problem(s), cost about $0.00 |
+| 2026-10-13T14:08:41Z | run | start | games/egg-champions on branch main, max 1 task(s) |
+| 2026-10-13T14:08:41Z | task 16 | coder start | attempt 1 of 1: Effects, battle |
+| 2026-10-13T14:08:55Z | check 16 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-13T14:08:57Z | check 16 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-13T14:08:58Z | check 16 | pass | selene games/egg-champions/src |
+| 2026-10-13T14:09:00Z | check 16 | pass | stylua --check games/egg-champions/src |
+| 2026-10-13T14:09:00Z | task 16 | passed | attempt 1 |

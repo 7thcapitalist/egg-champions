@@ -35,15 +35,15 @@ so the visuals can never claim something the rules did not do.
    battle screen is closed.
 
 ## Done when
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0.
-- [ ] A test asserts every special id in `config/specials.json` has a visual
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0.
+- [x] A test asserts every special id in `config/specials.json` has a visual
       registered, and every type id has a burst color, so a new special or
       type fails the suite rather than silently showing nothing.
-- [ ] A test feeds a recorded battle event list from the task 05 specs
+- [x] A test feeds a recorded battle event list from the task 05 specs
       through the effect dispatcher and asserts no event kind is unhandled.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Needs human or playtester
