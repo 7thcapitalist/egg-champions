@@ -192,6 +192,35 @@
         "08"
       ],
       "status": "pending"
+    },
+    {
+      "id": "20",
+      "title": "Fix test runner gaps",
+      "file": "20-fix-test-runner-gaps.md",
+      "depends_on": [
+        "02"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "21",
+      "title": "Gym retry wait survives a rejoin",
+      "file": "21-fix-gym-retry-on-rejoin.md",
+      "depends_on": [
+        "08",
+        "13"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "22",
+      "title": "Shiny and golden looks that actually show",
+      "file": "22-variant-looks-that-render.md",
+      "depends_on": [
+        "14",
+        "15"
+      ],
+      "status": "pending"
     }
   ]
 }
