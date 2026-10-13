@@ -63,6 +63,11 @@ local function show(value: any): string
 	return tostring(value)
 end
 
+-- True only for a number that is neither NaN nor infinite.
+local function isFinite(value: any): boolean
+	return type(value) == "number" and value == value and value ~= math.huge and value ~= -math.huge
+end
+
 -- Returns nil when equal, or a short reason naming the first difference.
 local function difference(a: any, b: any, path: string, seen: { [any]: any }): string?
 	if a == b then
@@ -109,7 +114,20 @@ function Runner.expect(value: any): Expectation
 
 	function expectation.toBeCloseTo(expected: number, epsilon: number?)
 		local margin = epsilon or 1e-6
-		if type(value) ~= "number" or math.abs(value - expected) > margin then
+		-- NaN and infinity never count as close: NaN compares false with
+		-- everything, and inf - inf is NaN, so either could slip past the check.
+		if not isFinite(value) or not isFinite(expected) or not isFinite(margin) then
+			error(
+				string.format(
+					"toBeCloseTo failed: got %s, expected %s within %s (NaN and infinity are never close)",
+					show(value),
+					show(expected),
+					show(margin)
+				),
+				2
+			)
+		end
+		if not (math.abs(value - expected) <= margin) then
 			error(
 				string.format(
 					"toBeCloseTo failed: got %s, expected %s within %s",

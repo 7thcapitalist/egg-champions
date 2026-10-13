@@ -15,11 +15,11 @@ broken rule can never pass silently.
 4. Add tests for all three.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0.
-- [ ] A spec asserting `toBeCloseTo` on `0/0` fails, then is removed.
-- [ ] An unregistered spec file makes the run exit 1 and name it, then is removed.
-- [ ] `selene games/egg-champions/src` and `stylua --check games/egg-champions/src` pass.
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl` succeeds.
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0.
+- [x] A spec asserting `toBeCloseTo` on `0/0` fails, then is removed.
+- [x] An unregistered spec file makes the run exit 1 and name it, then is removed.
+- [x] `selene games/egg-champions/src` and `stylua --check games/egg-champions/src` pass.
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl` succeeds.
 
 ## Out of scope
 New game rules.

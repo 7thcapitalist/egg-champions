@@ -20,6 +20,17 @@ test tree, not in Studio, so a spec that reads them only runs here.
 Rule modules (src/shared/rules/) must need no Roblox service. Every one of
 them is loaded first, and any that touches `game`, `workspace`, `Instance`,
 `Enum` or another engine global fails the run with a message naming it.
+Rule modules must also be deterministic: `math.random` and `os.time` are
+trapped the same way (and caught by a static scan), because rules take an
+injected rng or time instead.
+
+Every `*.spec.luau` file under src/shared must be listed in
+src/shared/testing/specs.luau; one that is not fails the run, naming the file,
+so a spec can never be skipped silently.
+
+Before the game's own tests, a few self-tests run the harness on tiny fixture
+games (using the game's own testing/Runner.luau) to prove that each of these
+checks, and Runner's NaN and infinity handling, still fail when they should.
 
 Prints one line per failure and a final count. Exits 0 when every test
 passed, 1 otherwise. Standard library only.
@@ -107,8 +118,24 @@ def engine_uses(source):
     return found
 
 
+IMPURE_NAMES = ("math.random", "os.time")
+IMPURE_USE = re.compile(r"(?<![\w.:])(math|os)\s*\.\s*(random|time)\b")
+IMPURE_HINT = "rules take an injected rng or time instead"
+
+
+def impure_uses(source):
+    """Uses of math.random or os.time in a module's code, ignoring comments and strings."""
+    code = LONG_BLOCK.sub(lambda m: "\n" * m.group(0).count("\n"), source)
+    code = SHORT_PARTS.sub(lambda m: "\n" * m.group(0).count("\n"), code)
+    found = []
+    for n, line in enumerate(code.splitlines(), 1):
+        for m in IMPURE_USE.finditer(line):
+            found.append("'%s.%s' on line %d" % (m.group(1), m.group(2), n))
+    return found
+
+
 def scan_rules(shared, game_dir):
-    """Static check: rule modules name no Roblox engine global anywhere."""
+    """Static check: rule modules name no Roblox engine global, math.random or os.time."""
     problems = []
     rules = shared / "rules"
     if not rules.is_dir():
@@ -117,10 +144,16 @@ def scan_rules(shared, game_dir):
         name = module_name(path.name)
         if not path.is_file() or name is None or name.endswith(".spec"):
             continue
-        uses = engine_uses(path.read_text(encoding="utf-8"))
+        source = path.read_text(encoding="utf-8")
+        rel = path.relative_to(game_dir).as_posix()
+        uses = engine_uses(source)
         if uses:
             problems.append("FAIL rule module %s: uses the Roblox engine (%s); rule modules must need no Roblox service"
-                            % (path.relative_to(game_dir).as_posix(), ", ".join(uses)))
+                            % (rel, ", ".join(uses)))
+        impure = impure_uses(source)
+        if impure:
+            problems.append("FAIL rule module %s: uses %s; %s"
+                            % (rel, ", ".join(impure), IMPURE_HINT))
     return problems
 
 
@@ -280,6 +313,7 @@ local DATA = {
 }
 
 local ENGINE_GLOBALS = {%ENGINE%}
+local IMPURE_HINT = %IMPURE_HINT%
 
 local meta = {}
 local nodeMeta = {}
@@ -419,6 +453,21 @@ local function trap(moduleName, globalName)
 	})
 end
 
+-- Rule modules get copies of math and os whose random and time throw, so a
+-- rule can never depend on hidden randomness or the clock.
+local function impure(moduleName, fullName)
+	return function()
+		error(string.format(
+			"RULE_IMPURE: rule module %s called %s; %s",
+			moduleName, fullName, IMPURE_HINT
+		), 0)
+	end
+end
+
+local function isRuleModule(path)
+	return string.sub(path, 1, 6) == "rules/" and not string.find(path, "%.spec$")
+end
+
 local cache = {}
 local loading = {}
 local baseEnv = getfenv(0)
@@ -447,6 +496,14 @@ local function requireNode(target)
 	for _, name in ENGINE_GLOBALS do
 		env[name] = trap(info.path, name)
 	end
+	if isRuleModule(info.path) then
+		local safeMath = table.clone(math)
+		safeMath.random = impure(info.path, "math.random")
+		local safeOs = table.clone(os)
+		safeOs.time = impure(info.path, "os.time")
+		env.math = safeMath
+		env.os = safeOs
+	end
 	setfenv(fn, setmetatable(env, { __index = baseEnv }))
 	local ok, value = pcall(fn)
 	loading[target] = nil
@@ -469,7 +526,7 @@ local rulesFolder = byPath["rules"]
 if rulesFolder then
 	local list = {}
 	for node, info in modules do
-		if string.sub(info.path, 1, 6) == "rules/" and not string.find(info.path, "%.spec$") then
+		if isRuleModule(info.path) then
 			table.insert(list, node)
 		end
 	end
@@ -510,6 +567,23 @@ if not okRunner or not okSpecs then
 	return
 end
 
+-- 3. Every spec module under src/shared must be in the spec list.
+local registered = {}
+for _, node in specList do
+	registered[node] = true
+end
+local unlisted = {}
+for node, info in modules do
+	if string.find(info.path, "%.spec$") and not string.find(info.path, "^ReplicatedStorage/") and not registered[node] then
+		table.insert(unlisted, info.chunk)
+	end
+end
+table.sort(unlisted)
+for _, chunk in unlisted do
+	loadFailures += 1
+	emit("FAIL", "unregistered spec " .. chunk, "this spec file is not listed in src/shared/testing/specs.luau, so it would never run; add it there")
+end
+
 local specs = {}
 for _, node in specList do
 	local name = modules[node] and modules[node].path or tostring(node)
@@ -533,18 +607,11 @@ print("RESULT\t" .. result.passed .. "\t" .. (result.failed + loadFailures))
 """
 
 
-def main(argv):
-    if len(argv) != 2:
-        print(__doc__.strip())
-        return 2
-    game_dir = Path(argv[1]).resolve()
+def run_suite(game_dir, luau, pin, out):
+    """Run one game folder's tests. Appends report lines to out; returns the exit code."""
     shared = game_dir / "src" / "shared"
-    if not shared.is_dir():
-        fail("%s has no src/shared folder" % argv[1])
-
-    name, pin = pinned_luau()
-    luau = find_luau(name)
     script = BOOTSTRAP.replace("%ENGINE%", ", ".join('"%s"' % n for n in ENGINE_NAMES))
+    script = script.replace("%IMPURE_HINT%", lua_string(IMPURE_HINT))
     data = [part for part in (project_data(game_dir, shared), project_docs(game_dir)) if part]
     script = script.replace("%DATA%", ",\n".join(data))
     script = script.replace("%FILES%", collect(shared, game_dir))
@@ -561,26 +628,154 @@ def main(argv):
             fail("the test run timed out after %d seconds" % TIMEOUT)
 
     static = scan_rules(shared, game_dir)
-    for line in static:
-        print(line)
+    out.extend(static)
 
     passed = failed = None
     for line in (done.stdout or "").splitlines():
         parts = line.split("\t")
         if parts[0] in ("FAIL", "FATAL") and len(parts) >= 3:
-            print("FAIL %s: %s" % (parts[1], "\t".join(parts[2:])))
+            out.append("FAIL %s: %s" % (parts[1], "\t".join(parts[2:])))
         elif parts[0] == "RESULT" and len(parts) == 3:
             passed, failed = int(parts[1]), int(parts[2])
         elif line.strip():
-            print(line)
+            out.append(line)
     if done.stderr.strip():
-        print(done.stderr.strip())
+        out.append(done.stderr.strip())
     if passed is None or done.returncode != 0:
-        print("run_tests: the Luau run crashed (exit code %d)" % done.returncode)
+        out.append("run_tests: the Luau run crashed (exit code %d)" % done.returncode)
         return 1
     failed += len(static)
-    print("%d passed, %d failed, %d total (luau %s)" % (passed, failed, passed + failed, pin))
+    out.append("%d passed, %d failed, %d total (luau %s)" % (passed, failed, passed + failed, pin))
     return 0 if failed == 0 else 1
+
+
+# Self-tests: tiny fixture games that each must pass or fail in a known way.
+# Each is (name, files under src/shared, expected exit code, texts the report must contain).
+SPEC_HEADER = "local Runner = require(script.Parent.Parent.Parent.testing.Runner)\nlocal expect = Runner.expect\n"
+SELF_TESTS = (
+    (
+        "a clean fixture passes",
+        {
+            "rules/Add.luau": "return function(a, b) return a + b end\n",
+            "rules/specs/Add.spec.luau": SPEC_HEADER + "local Add = require(script.Parent.Parent.Add)\n"
+            "return function() Runner.it('adds', function() expect(Add(0.1, 0.2)).toBeCloseTo(0.3) end) end\n",
+            "testing/specs.luau": "return { script.Parent.Parent.rules.specs['Add.spec'] }\n",
+        },
+        0,
+        ("1 passed, 0 failed",),
+    ),
+    (
+        "toBeCloseTo fails on NaN and infinity",
+        {
+            "rules/specs/Close.spec.luau": SPEC_HEADER + "return function()\n"
+            "  Runner.it('nan value', function() expect(0/0).toBeCloseTo(0, 1) end)\n"
+            "  Runner.it('nan expected', function() expect(0).toBeCloseTo(0/0, 1) end)\n"
+            "  Runner.it('inf both', function() expect(math.huge).toBeCloseTo(math.huge, 1) end)\n"
+            "  Runner.it('inf margin', function() expect(1).toBeCloseTo(2, math.huge) end)\n"
+            "end\n",
+            "testing/specs.luau": "return { script.Parent.Parent.rules.specs['Close.spec'] }\n",
+        },
+        1,
+        ("0 passed, 4 failed", "nan value", "nan expected", "inf both", "inf margin"),
+    ),
+    (
+        "an unregistered spec file fails, named",
+        {
+            "rules/specs/Listed.spec.luau": SPEC_HEADER
+            + "return function() Runner.it('ok', function() expect(1).toEqual(1) end) end\n",
+            "rules/specs/Orphan.spec.luau": SPEC_HEADER
+            + "return function() Runner.it('ok', function() expect(1).toEqual(1) end) end\n",
+            "testing/specs.luau": "return { script.Parent.Parent.rules.specs['Listed.spec'] }\n",
+        },
+        1,
+        ("unregistered spec src/shared/rules/specs/Orphan.spec.luau",),
+    ),
+    (
+        "a rule module using math.random fails",
+        {
+            "rules/Roll.luau": "return function() return math.random(1, 6) end\n",
+            "testing/specs.luau": "return {}\n",
+        },
+        1,
+        ("src/shared/rules/Roll.luau", "'math.random' on line 1", IMPURE_HINT),
+    ),
+    (
+        "a rule module using os.time fails",
+        {
+            "rules/Clock.luau": "local now = os.time()\nreturn function() return now end\n",
+            "testing/specs.luau": "return {}\n",
+        },
+        1,
+        ("RULE_IMPURE: rule module rules/Clock called os.time", "'os.time' on line 1", IMPURE_HINT),
+    ),
+    (
+        "a hidden math.random call is trapped at run time",
+        {
+            "rules/Hidden.luau": "local m = math\nlocal key = 'ran' .. 'dom'\n"
+            "return function() return m[key](1, 6) end\n",
+            "rules/specs/Hidden.spec.luau": SPEC_HEADER + "local Hidden = require(script.Parent.Parent.Hidden)\n"
+            "return function() Runner.it('rolls', function() Hidden() end) end\n",
+            "testing/specs.luau": "return { script.Parent.Parent.rules.specs['Hidden.spec'] }\n",
+        },
+        1,
+        ("RULE_IMPURE: rule module rules/Hidden called math.random", IMPURE_HINT),
+    ),
+)
+
+
+def self_test(runner_source, luau, pin):
+    """Run the harness on the fixture games. Returns a list of problems, empty when all behave."""
+    problems = []
+    with tempfile.TemporaryDirectory(prefix="run_tests_self_") as tmp:
+        for index, (name, files, want_code, want_texts) in enumerate(SELF_TESTS):
+            game = Path(tmp) / ("fixture%d" % index)
+            shared = game / "src" / "shared"
+            all_files = dict(files)
+            all_files["testing/Runner.luau"] = runner_source
+            for rel, text in all_files.items():
+                target = shared / rel
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(text, encoding="utf-8")
+            out = []
+            code = run_suite(game, luau, pin, out)
+            report = "\n".join(out)
+            missing = [text for text in want_texts if text not in report]
+            if code != want_code or missing:
+                problems.append("self-test '%s': exit %d (wanted %d)%s; report: %s"
+                                % (name, code, want_code,
+                                   ", missing %s" % ", ".join(repr(t) for t in missing) if missing else "",
+                                   " | ".join(out)))
+    return problems
+
+
+def main(argv):
+    if len(argv) != 2:
+        print(__doc__.strip())
+        return 2
+    game_dir = Path(argv[1]).resolve()
+    shared = game_dir / "src" / "shared"
+    if not shared.is_dir():
+        fail("%s has no src/shared folder" % argv[1])
+
+    name, pin = pinned_luau()
+    luau = find_luau(name)
+
+    runner = shared / "testing" / "Runner.luau"
+    if runner.is_file():
+        problems = self_test(runner.read_text(encoding="utf-8"), luau, pin)
+        for line in problems:
+            print("FAIL run_tests " + line)
+        if problems:
+            print("run_tests: %d of %d self-tests failed; the harness itself is broken"
+                  % (len(problems), len(SELF_TESTS)))
+            return 1
+        print("run_tests: %d self-tests passed" % len(SELF_TESTS))
+
+    out = []
+    code = run_suite(game_dir, luau, pin, out)
+    for line in out:
+        print(line)
+    return code
 
 
 if __name__ == "__main__":

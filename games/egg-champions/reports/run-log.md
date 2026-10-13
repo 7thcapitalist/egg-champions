@@ -196,3 +196,10 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-13T14:33:54Z | task 19 | committed | a1c6c5a |
 | 2026-10-13T14:33:54Z | built | paused | stopped at the limit of 1 task(s) per run; next is task 20 |
 | 2026-10-13T14:33:55Z | run | end | 1 task(s) done, 0 problem(s), cost about $0.00 |
+| 2026-10-13T14:37:33Z | run | start | games/egg-champions on branch main, max 1 task(s) |
+| 2026-10-13T14:37:33Z | task 20 | coder start | attempt 1 of 1: Fix test runner gaps |
+| 2026-10-13T14:37:47Z | check 20 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-13T14:37:49Z | check 20 | pass | selene games/egg-champions/src |
+| 2026-10-13T14:37:51Z | check 20 | pass | stylua --check games/egg-champions/src |
+| 2026-10-13T14:37:55Z | check 20 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-13T14:37:55Z | task 20 | passed | attempt 1 |

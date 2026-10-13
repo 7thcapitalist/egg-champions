@@ -13,6 +13,7 @@ local worldSpecs = script.Parent.Parent.world.specs
 local uiSpecs = script.Parent.Parent.ui.specs
 local visualSpecs = script.Parent.Parent.visual.specs
 local analyticsSpecs = script.Parent.Parent.analytics.specs
+local testingSpecs = script.Parent
 
 return {
 	ruleSpecs["Team.spec"],
@@ -37,4 +38,5 @@ return {
 	visualSpecs["BattleEffects.spec"],
 	visualSpecs["Progress.spec"],
 	analyticsSpecs["Events.spec"],
+	testingSpecs["Runner.spec"],
 }
