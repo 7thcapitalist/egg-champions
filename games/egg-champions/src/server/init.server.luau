@@ -21,6 +21,7 @@ local ShopService = require(Services:WaitForChild("ShopService"))
 local TeamService = require(Services:WaitForChild("TeamService"))
 local GymService = require(Services:WaitForChild("GymService"))
 local RebirthService = require(Services:WaitForChild("RebirthService"))
+local PassService = require(Services:WaitForChild("PassService"))
 
 local World = script:WaitForChild("World")
 local Builder = require(World:WaitForChild("Builder"))
@@ -52,6 +53,7 @@ ShopService.start()
 TeamService.start()
 GymService.start()
 RebirthService.start()
+PassService.start(ClickService.autoClick)
 Portals.start(built)
 -- Send each player their first state as soon as it loads, so the HUD shows the
 -- real numbers before the first click.

@@ -80,6 +80,13 @@ local function onClick(player: Player, profile: Profile)
 	Guard.fire(player, Remotes.names.ClickCredited, credited)
 end
 
+-- One click the server makes for an Auto Click owner (see PassService). It
+-- skips the rate limit, which is for client clicks; the server sets the rate.
+function ClickService.autoClick(player: Player, profile: Profile)
+	profile.coins += ClickService.coinsPerClick(player, profile)
+	Guard.push(player)
+end
+
 -- Each equipped pet's own Click Power, keyed by uid, for the team bar. The
 -- client shows these numbers and never works them out itself.
 function ClickService.teamClickPower(_player: Player, profile: Profile): { [string]: number }

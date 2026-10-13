@@ -55,6 +55,39 @@ function Gym.referenceTeam(worldId: string): { Battle.FighterSpec }
 	return team
 end
 
+export type OwnedPet = {
+	petId: string,
+	variant: string?,
+}
+
+-- Everything about the player that a gym battle could be started from.
+export type BattleInput = {
+	worldId: string,
+	-- The equipped pets, in team order, already resolved from uids.
+	pets: { OwnedPet },
+	rebirths: number,
+	-- The player's owned game passes. The spec says no pass changes HP or
+	-- Attack, so nothing here reads it. It is part of the input so the one
+	-- function GymService starts battles with is the one a test runs with
+	-- every pass on and off, and a pass wired into battle would fail it.
+	passes: { [string]: boolean }?,
+}
+
+-- Starts a gym battle: the player team from the equipped pets, the leader
+-- team from Gym.leaderTeam. Errors on an empty team, like Battle.start.
+function Gym.startBattle(input: BattleInput, rng: Battle.Rng): Battle.State
+	local playerTeam: { Battle.FighterSpec } = {}
+	for _, pet in input.pets do
+		table.insert(playerTeam, Battle.fighterFromPet(pet.petId, pet.variant))
+	end
+	return Battle.start(
+		playerTeam,
+		Gym.leaderTeam(input.worldId, input.rebirths),
+		input.rebirths,
+		rng
+	)
+end
+
 function Gym.fee(worldId: string): number
 	return Config.worldById[worldId].gym.fee
 end

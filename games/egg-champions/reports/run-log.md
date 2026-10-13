@@ -174,3 +174,11 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-13T14:21:05Z | task 17 | committed | ffa9016 |
 | 2026-10-13T14:21:05Z | built | paused | stopped at the limit of 1 task(s) per run; next is task 18 |
 | 2026-10-13T14:21:05Z | run | end | 1 task(s) done, 0 problem(s), cost about $0.00 |
+| 2026-10-13T14:26:03Z | run | start | games/egg-champions on branch main, max 1 task(s) |
+| 2026-10-13T14:26:03Z | task 18 | coder start | attempt 1 of 1: Game passes |
+| 2026-10-13T14:26:18Z | check 18 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-13T14:26:22Z | check 18 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-13T14:26:24Z | check 18 | pass | grep -rn UserOwnsGamePass games/egg-champions/src |
+| 2026-10-13T14:26:26Z | check 18 | pass | selene games/egg-champions/src |
+| 2026-10-13T14:26:28Z | check 18 | pass | stylua --check games/egg-champions/src |
+| 2026-10-13T14:26:28Z | task 18 | passed | attempt 1 |

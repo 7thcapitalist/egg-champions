@@ -34,6 +34,7 @@ local Requests = require(Shared:WaitForChild("net"):WaitForChild("Requests"))
 local BattleView = require(Shared:WaitForChild("ui"):WaitForChild("BattleView"))
 
 local Guard = require(script.Parent.Parent:WaitForChild("Guard"))
+local Passes = require(script.Parent.Parent:WaitForChild("Passes"))
 
 type Profile = Profile.Profile
 
@@ -168,23 +169,23 @@ local function onStartBattle(player: Player, profile: Profile, worldId: any): (b
 	for _, pet in profile.pets do
 		byUid[pet.uid] = pet
 	end
-	local playerTeam: { Battle.FighterSpec } = {}
+	local equipped: { Gym.OwnedPet } = {}
 	for _, uid in profile.team do
 		local pet = byUid[uid]
 		if pet ~= nil then
-			table.insert(playerTeam, Battle.fighterFromPet(pet.petId, pet.variant))
+			table.insert(equipped, { petId = pet.petId, variant = pet.variant })
 		end
 	end
-	if #playerTeam == 0 then
+	if #equipped == 0 then
 		return false, "team_empty"
 	end
 
-	local state = Battle.start(
-		playerTeam,
-		Gym.leaderTeam(worldId, profile.rebirths),
-		profile.rebirths,
-		rng :: any
-	)
+	local state = Gym.startBattle({
+		worldId = worldId,
+		pets = equipped,
+		rebirths = profile.rebirths,
+		passes = Passes.owned(player),
+	}, rng :: any)
 	forgetSession(player)
 	local session: Session = {
 		id = HttpService:GenerateGUID(false),

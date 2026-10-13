@@ -32,7 +32,7 @@ touch battle stats.
    bar.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0,
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0,
       including:
       - a test that the pass ids handled equal the ids in
         `config/passes.json`, so a new pass cannot be half-implemented;
@@ -43,11 +43,11 @@ touch battle stats.
       - a test that no pass changes any value on the battle path, by running
         a seeded battle with every pass on and off and asserting identical
         results.
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
-- [ ] `grep -rn "UserOwnsGamePass" games/egg-champions/src` matches only
+- [x] `grep -rn "UserOwnsGamePass" games/egg-champions/src` matches only
       `src/server`.
-- [ ] `selene games/egg-champions/src` and
+- [x] `selene games/egg-champions/src` and
       `stylua --check games/egg-champions/src` pass.
 
 ## Needs human or playtester

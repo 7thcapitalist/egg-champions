@@ -23,6 +23,7 @@ return {
 	ruleSpecs["Progression.spec"],
 	ruleSpecs["Rebirth.spec"],
 	ruleSpecs["Profile.spec"],
+	ruleSpecs["PassEffects.spec"],
 	netSpecs["Requests.spec"],
 	worldSpecs["Layout.spec"],
 	uiSpecs["Format.spec"],

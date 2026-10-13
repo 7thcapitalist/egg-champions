@@ -5,6 +5,9 @@
 
 	- Top bar (64px): coins, coins per click in gold, the world index and name
 	  centred, rebirth count, and one badge marker per world, filled when won.
+	- Pass chips in the top bar's badge area, one per game pass in config:
+	  gold when owned, and a purchase prompt on press when not. Ownership is
+	  the server's derived "passes" field; the client never checks it.
 	- Left menu: Eggs, Pets, Index, Rebirth, Shop. Each opens its screen
 	  through Screens.
 	- Next-goal panel on the right, picked by shared/ui/NextGoal.
@@ -21,6 +24,8 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
 local GuiService = game:GetService("GuiService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -148,7 +153,26 @@ type TopBar = {
 	worldName: TextLabel,
 	rebirths: TextLabel,
 	badges: { [string]: Frame },
+	passes: { [string]: TextButton },
 }
+
+-- The Roblox id to prompt for each pass, as the server last sent it. 0 or
+-- missing means the pass cannot be bought yet.
+local passProducts: { [string]: number } = {}
+local passOwned: { [string]: boolean } = {}
+
+local function promptPass(passId: string)
+	if passOwned[passId] == true then
+		return
+	end
+	local productId = passProducts[passId]
+	if productId == nil or productId <= 0 then
+		return
+	end
+	pcall(function()
+		MarketplaceService:PromptGamePassPurchase(Players.LocalPlayer, productId)
+	end)
+end
 
 local function buildTopBar(parent: Instance): (Frame, TopBar)
 	local bar = panel("TopBar", parent, 0)
@@ -276,6 +300,38 @@ local function buildTopBar(parent: Instance): (Frame, TopBar)
 		badges[world.id] = diamond
 	end
 
+	-- One chip per game pass, after the world badges.
+	local passGroup = frame("Passes", right)
+	passGroup.LayoutOrder = 3
+	passGroup.AutomaticSize = Enum.AutomaticSize.XY
+	list(passGroup, Enum.FillDirection.Horizontal, 6, Enum.VerticalAlignment.Center)
+	local passes: { [string]: TextButton } = {}
+	for position, pass in Config.passes do
+		local chip = Instance.new("TextButton")
+		chip.Name = "Pass_" .. pass.id
+		chip.LayoutOrder = position
+		chip.AutoButtonColor = true
+		chip.AutomaticSize = Enum.AutomaticSize.X
+		chip.Size = UDim2.fromOffset(0, sizes.badge + 12)
+		chip.BackgroundColor3 = colors.panel
+		chip.BorderSizePixel = 0
+		chip.FontFace = Theme.fonts.label
+		chip.TextSize = textSizes.small
+		chip.TextColor3 = colors.muted
+		chip.Text = Theme.label("+ " .. pass.name)
+		chip.ZIndex = Z_PANEL
+		chip.Parent = passGroup
+		local chipPad = Instance.new("UIPadding")
+		chipPad.PaddingLeft = UDim.new(0, 6)
+		chipPad.PaddingRight = UDim.new(0, 6)
+		chipPad.Parent = chip
+		Theme.panel(chip, sizes.radius, colors.border)
+		chip.Activated:Connect(function()
+			promptPass(pass.id)
+		end)
+		passes[pass.id] = chip
+	end
+
 	return bar,
 		{
 			coins = coins,
@@ -284,6 +340,7 @@ local function buildTopBar(parent: Instance): (Frame, TopBar)
 			worldName = worldName,
 			rebirths = rebirths,
 			badges = badges,
+			passes = passes,
 		}
 end
 
@@ -563,6 +620,31 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 		local badges = if type(profile.badges) == "table" then profile.badges else {}
 		for worldId, marker in top.badges do
 			marker.BackgroundTransparency = if badges[worldId] == true then 0 else 1
+		end
+
+		local passList = if type(derived.passes) == "table" then derived.passes else {}
+		for _, entry in passList do
+			if type(entry) == "table" and type(entry.id) == "string" then
+				passOwned[entry.id] = entry.owned == true
+				passProducts[entry.id] = if type(entry.productId) == "number"
+					then entry.productId
+					else 0
+			end
+		end
+		for _, pass in Config.passes do
+			local chip = top.passes[pass.id]
+			local owned = passOwned[pass.id] == true
+			local buyable = (passProducts[pass.id] or 0) > 0
+			chip.Text = Theme.label(if owned then pass.name else "+ " .. pass.name)
+			chip.TextColor3 = if owned
+				then colors.gold
+				elseif buyable then colors.text
+				else colors.muted
+			chip.AutoButtonColor = not owned and buyable
+			local stroke = chip:FindFirstChildOfClass("UIStroke")
+			if stroke ~= nil then
+				stroke.Color = if owned then colors.gold else colors.border
+			end
 		end
 
 		local picked = NextGoal.pick(goalState, number(derived.rebirthCost))

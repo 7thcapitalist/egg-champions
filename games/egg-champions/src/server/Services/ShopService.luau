@@ -18,6 +18,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local rules = Shared:WaitForChild("rules")
 local Config = require(Shared:WaitForChild("Config"))
 local Hatch = require(rules:WaitForChild("Hatch"))
+local PassEffects = require(rules:WaitForChild("PassEffects"))
 local PetIndex = require(rules:WaitForChild("PetIndex"))
 local Profile = require(rules:WaitForChild("Profile"))
 local Progression = require(rules:WaitForChild("Progression"))
@@ -30,9 +31,6 @@ local Passes = require(server:WaitForChild("Passes"))
 
 type Profile = Profile.Profile
 
--- Pass ids from config, checked at load so a renamed pass fails loudly.
-local TRIPLE_HATCH = Config.passById["triple_hatch"].id
-local LUCKY_EGGS = Config.passById["lucky_eggs"].id
 local TRIPLE_COUNT = Hatch.TRIPLE_COUNT
 
 local ShopService = {}
@@ -58,12 +56,10 @@ local function onBuyEgg(
 	if requested ~= nil and requested ~= 1 and requested ~= TRIPLE_COUNT then
 		return false, Requests.reasons.badChoice
 	end
-	local count = 1
-	if requested == TRIPLE_COUNT then
-		if not Passes.owns(player, TRIPLE_HATCH) then
-			return false, "no_triple_hatch_pass"
-		end
-		count = TRIPLE_COUNT
+	local owned = Passes.owned(player)
+	local count = if requested == TRIPLE_COUNT then TRIPLE_COUNT else 1
+	if not PassEffects.hatchCountAllowed(owned, count) then
+		return false, "no_triple_hatch_pass"
 	end
 	if not Progression.eggUnlocked(profile :: any, eggId) then
 		return false, "egg_locked"
@@ -73,8 +69,7 @@ local function onBuyEgg(
 		return false, "cannot_afford"
 	end
 
-	local results =
-		Hatch.rollMany(eggId, rng :: any, { luckyEggs = Passes.owns(player, LUCKY_EGGS) }, count)
+	local results = Hatch.rollMany(eggId, rng :: any, PassEffects.hatchOptions(owned), count)
 	profile.coins -= price
 	local hatched = {}
 	for _, result in results do
@@ -99,9 +94,10 @@ function ShopService.start()
 	-- Which hatch passes the player owns, so the egg shop offers Hatch x3 and
 	-- shows the odds the server will roll. The client only displays these.
 	Guard.addDerived("hatchPasses", function(player: Player, _profile: Profile): any
+		local owned = Passes.owned(player)
 		return {
-			tripleHatch = Passes.owns(player, TRIPLE_HATCH),
-			luckyEggs = Passes.owns(player, LUCKY_EGGS),
+			tripleHatch = PassEffects.hatchCountAllowed(owned, TRIPLE_COUNT),
+			luckyEggs = PassEffects.hatchOptions(owned).luckyEggs == true,
 		}
 	end)
 	Guard.onInvoke(Remotes.names.BuyEgg, onBuyEgg)

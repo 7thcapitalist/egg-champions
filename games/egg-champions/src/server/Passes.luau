@@ -2,27 +2,33 @@
 --[[
 	Passes: what the services ask about game passes.
 
-	Task 18 wires this to real game pass ownership. Until then nobody owns a
-	pass, so Triple Hatch and Lucky Eggs are refused or off, and the coin
-	multiplier is 1. Services ask here and never check a pass themselves, so
-	task 18 changes this one file.
+	Ownership comes from Services/PassService, which checks it with Roblox on
+	the server. What each pass does comes from shared/rules/PassEffects.
+	Services ask here and never check a pass themselves.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local PassEffects = require(
+	ReplicatedStorage:WaitForChild("Shared"):WaitForChild("rules"):WaitForChild("PassEffects")
+)
+local PassService = require(script.Parent:WaitForChild("Services"):WaitForChild("PassService"))
 
 local Passes = {}
 
 -- True when the player owns the pass with this config id.
-function Passes.owns(_player: Player, passId: string): boolean
-	local _ = Config.passById[passId]
-	return false
+function Passes.owns(player: Player, passId: string): boolean
+	return PassService.owns(player, passId)
+end
+
+-- The player's owned passes, keyed by config pass id.
+function Passes.owned(player: Player): PassEffects.Owned
+	return PassService.owned(player)
 end
 
 -- The product of every owned pass's coin factor, for Coins.perClick.
-function Passes.coinMultiplier(_player: Player): number
-	return 1
+function Passes.coinMultiplier(player: Player): number
+	return PassEffects.coinMultiplier(PassService.owned(player))
 end
 
 return Passes
