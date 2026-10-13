@@ -13,10 +13,13 @@
 		rebirths: number
 		gymsBeaten: { [worldId] = true }, wins in the current rebirth run
 		feesPaid: { [worldId] = true }, gym fees paid in the current run
+		gymRetryAt: { [worldId] = unix seconds }, when the next gym attempt
+			is allowed after a loss (see Gym.recordLoss). Kept through rebirth.
 
 	Schema versions:
 		1: coins, pets, team, index, badges, rebirths.
 		2: adds gymsBeaten and feesPaid (task 06 progression).
+		3: adds gymRetryAt, so a gym retry wait survives leaving and rejoining.
 
 	The version is a storage format number, not a game number, so it lives here
 	rather than in config. Every function leaves its input untouched.
@@ -41,6 +44,7 @@ export type Profile = {
 	rebirths: number,
 	gymsBeaten: Progression.Flags,
 	feesPaid: Progression.Flags,
+	gymRetryAt: { [string]: number },
 }
 
 export type ProblemKind =
@@ -59,7 +63,7 @@ export type Problem = {
 	repairable: boolean,
 }
 
-local CURRENT_VERSION = 2
+local CURRENT_VERSION = 3
 
 local Profile = {}
 
@@ -100,6 +104,7 @@ function Profile.new(): Profile
 		rebirths = state.rebirths,
 		gymsBeaten = state.gymsBeaten,
 		feesPaid = state.feesPaid,
+		gymRetryAt = {},
 	}
 end
 
@@ -109,6 +114,11 @@ local steps: { [number]: (any) -> any } = {
 		data.gymsBeaten = data.gymsBeaten or {}
 		data.feesPaid = data.feesPaid or {}
 		data.version = 2
+		return data
+	end,
+	[2] = function(data: any): any
+		data.gymRetryAt = data.gymRetryAt or {}
+		data.version = 3
 		return data
 	end,
 }

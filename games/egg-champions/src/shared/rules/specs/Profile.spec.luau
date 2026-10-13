@@ -58,6 +58,7 @@ return function()
 			expect(profile.badges).toEqual({})
 			expect(profile.gymsBeaten).toEqual({})
 			expect(profile.feesPaid).toEqual({})
+			expect(profile.gymRetryAt).toEqual({})
 		end)
 
 		it("passes validate when new", function()
@@ -74,8 +75,22 @@ return function()
 			expect(migrated.rebirths).toEqual(2)
 			expect(migrated.gymsBeaten).toEqual({})
 			expect(migrated.feesPaid).toEqual({})
+			expect(migrated.gymRetryAt).toEqual({})
 			expect(Profile.validate(migrated)).toEqual({})
 			expect(save.version).toEqual(1)
+		end)
+
+		it("migrates a v2 profile by adding empty gym retry deadlines", function()
+			local save = v1Save()
+			save.version = 2
+			save.gymsBeaten = { [Config.worlds[1].id] = true }
+			save.feesPaid = { [Config.worlds[1].id] = true }
+			local migrated = Profile.migrate(save)
+			expect(migrated.version).toEqual(Profile.version)
+			expect(migrated.gymsBeaten).toEqual({ [Config.worlds[1].id] = true })
+			expect(migrated.feesPaid).toEqual({ [Config.worlds[1].id] = true })
+			expect(migrated.gymRetryAt).toEqual({})
+			expect(save.gymRetryAt).toEqual(nil)
 		end)
 
 		it("leaves a current profile as it is", function()

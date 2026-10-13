@@ -54,6 +54,57 @@ return function()
 			end
 		end)
 
+		it("sets the retry deadline from config on a loss", function()
+			local worldId = Config.worlds[1].id
+			local waits: Gym.RetryWaits = {}
+			Gym.recordLoss(waits, worldId, 1000)
+			expect(waits[worldId]).toEqual(1000 + Config.constants.gym_retry_seconds)
+			expect(Gym.retryWaitLeft(waits, worldId, 1000)).toEqual(
+				Config.constants.gym_retry_seconds
+			)
+		end)
+
+		it("refuses a start before the deadline and allows one after it", function()
+			local worldId = Config.worlds[1].id
+			local wait = Config.constants.gym_retry_seconds
+			local waits: Gym.RetryWaits = {}
+			expect(Gym.canStart(waits, worldId, 1000)).toBeTrue()
+			Gym.recordLoss(waits, worldId, 1000)
+			expect(Gym.canStart(waits, worldId, 1000)).toBeFalse()
+			expect(Gym.canStart(waits, worldId, 1000 + wait - 0.5)).toBeFalse()
+			expect(Gym.canStart(waits, worldId, 1000 + wait)).toBeTrue()
+			expect(Gym.canStart(waits, worldId, 1000 + wait + 60)).toBeTrue()
+			expect(Gym.retryWaitLeft(waits, worldId, 1000 + wait + 60)).toEqual(0)
+		end)
+
+		it("keeps each gym's wait separate and clears it on a win", function()
+			local first = Config.worlds[1].id
+			local waits: Gym.RetryWaits = {}
+			Gym.recordLoss(waits, first, 1000)
+			if #Config.worlds > 1 then
+				expect(Gym.canStart(waits, Config.worlds[2].id, 1000)).toBeTrue()
+			end
+			Gym.clearWait(waits, first)
+			expect(Gym.canStart(waits, first, 1000)).toBeTrue()
+		end)
+
+		it("survives a rejoin because the deadline is plain saved data", function()
+			local worldId = Config.worlds[1].id
+			local waits: Gym.RetryWaits = {}
+			Gym.recordLoss(waits, worldId, 1000)
+			-- What a save and load gives back: a fresh table with the same numbers.
+			local reloaded: Gym.RetryWaits = table.clone(waits)
+			expect(Gym.canStart(reloaded, worldId, 1001)).toBeFalse()
+		end)
+
+		it("never waits longer than one retry wait, even for a deadline far ahead", function()
+			local worldId = Config.worlds[1].id
+			local waits: Gym.RetryWaits = { [worldId] = 1e12 }
+			expect(Gym.retryWaitLeft(waits, worldId, 1000)).toEqual(
+				Config.constants.gym_retry_seconds
+			)
+		end)
+
 		it("rejects an unknown world", function()
 			expect(function()
 				Gym.leaderTeam("no_such_world", 0)

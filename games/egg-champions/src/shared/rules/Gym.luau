@@ -96,4 +96,36 @@ function Gym.retrySeconds(): number
 	return Config.constants.gym_retry_seconds
 end
 
+-- When the next attempt at each world's gym is allowed, by world id, in the
+-- same clock as `now` below (the server's unix time in seconds). It lives in
+-- the player's profile, so the wait survives leaving and rejoining.
+export type RetryWaits = { [string]: number }
+
+-- Starts the retry wait after a loss: the next attempt is allowed
+-- gym_retry_seconds after `now`. Changes `waits` in place.
+function Gym.recordLoss(waits: RetryWaits, worldId: string, now: number)
+	waits[worldId] = now + Gym.retrySeconds()
+end
+
+-- A win ends any wait for that gym. Changes `waits` in place.
+function Gym.clearWait(waits: RetryWaits, worldId: string)
+	waits[worldId] = nil
+end
+
+-- Seconds left before the gym can be tried again, 0 when it can be now. Never
+-- more than gym_retry_seconds, so a deadline saved by a server whose clock ran
+-- ahead cannot lock a gym for longer than one wait.
+function Gym.retryWaitLeft(waits: RetryWaits, worldId: string, now: number): number
+	local readyAt = waits[worldId]
+	if type(readyAt) ~= "number" or readyAt ~= readyAt then
+		return 0
+	end
+	return math.clamp(readyAt - now, 0, Gym.retrySeconds())
+end
+
+-- True when a battle at this gym may start at `now`.
+function Gym.canStart(waits: RetryWaits, worldId: string, now: number): boolean
+	return Gym.retryWaitLeft(waits, worldId, now) <= 0
+end
+
 return Gym

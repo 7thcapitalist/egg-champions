@@ -206,3 +206,10 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-13T14:38:00Z | task 20 | committed | 0d3f8ee |
 | 2026-10-13T14:38:01Z | built | paused | stopped at the limit of 1 task(s) per run; next is task 21 |
 | 2026-10-13T14:38:01Z | run | end | 1 task(s) done, 0 problem(s), cost about $0.00 |
+| 2026-10-13T14:40:09Z | run | start | games/egg-champions on branch main, max 1 task(s) |
+| 2026-10-13T14:40:09Z | task 21 | coder start | attempt 1 of 1: Gym retry wait survives a rejoin |
+| 2026-10-13T14:40:23Z | check 21 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-13T14:40:24Z | check 21 | pass | selene games/egg-champions/src |
+| 2026-10-13T14:40:26Z | check 21 | pass | stylua --check games/egg-champions/src |
+| 2026-10-13T14:40:30Z | check 21 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-13T14:40:31Z | task 21 | passed | attempt 1 |

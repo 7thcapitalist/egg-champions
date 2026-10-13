@@ -11,6 +11,10 @@
 	- BattleMove(sessionId, move): resolves exactly one turn with
 	  Battle.takeTurn and returns its event list. A win calls
 	  Progression.beatGym; a loss starts the gym_retry_seconds wait.
+
+	The retry wait is a deadline in the player's profile (Profile.gymRetryAt,
+	server unix time), not server memory, so leaving and rejoining, even on
+	another server, does not clear it.
 	- GiveUp(sessionId): ends the session as a loss.
 
 	The client holds no HP and no cooldown. Every answer carries a view of the
@@ -62,8 +66,21 @@ local rng = Random.new()
 -- last one that ended, so a late move on it is answered "session_ended".
 local sessions: { [string]: Session } = {}
 local sessionOf: { [Player]: string } = {}
--- retryAt[player][worldId] = os.clock() time the next attempt is allowed.
-local retryAt: { [Player]: { [string]: number } } = {}
+-- The server's clock for retry deadlines: unix seconds, shared by every
+-- server, so a deadline saved on one server means the same on the next.
+local function now(): number
+	return DateTime.now().UnixTimestampMillis / 1000
+end
+
+-- The profile's retry deadlines, created if an older table lacks them.
+local function retryWaits(profile: Profile): Gym.RetryWaits
+	local waits = profile.gymRetryAt
+	if type(waits) ~= "table" then
+		waits = {}
+		profile.gymRetryAt = waits
+	end
+	return waits
+end
 
 -- The battle view every answer carries: HP, max HP, speed, cooldowns and the
 -- active pets. The battle screen renders it as sent.
@@ -127,10 +144,7 @@ end
 local function finish(player: Player, profile: Profile, session: Session, outcome: string): boolean
 	session.ended = true
 	if outcome == Analytics.outcomes.win then
-		local waits = retryAt[player]
-		if waits ~= nil then
-			waits[session.worldId] = nil
-		end
+		Gym.clearWait(retryWaits(profile), session.worldId)
 		local nextIndex = session.worldIndex + 1
 		local hasNext = worldExists(nextIndex)
 		local wasOpen = hasNext and Progression.worldUnlocked(profile :: any, nextIndex)
@@ -145,9 +159,7 @@ local function finish(player: Player, profile: Profile, session: Session, outcom
 		return newBadge
 	end
 	trackResult(player, session, outcome)
-	local waits = retryAt[player] or {}
-	retryAt[player] = waits
-	waits[session.worldId] = os.clock() + Gym.retrySeconds()
+	Gym.recordLoss(retryWaits(profile), session.worldId, now())
 	return false
 end
 
@@ -187,9 +199,7 @@ local function onStartBattle(player: Player, profile: Profile, worldId: any): (b
 	if running(player) ~= nil then
 		return false, "already_in_battle"
 	end
-	local waits = retryAt[player]
-	local readyAt = if waits ~= nil then waits[worldId] else nil
-	if readyAt ~= nil and os.clock() < readyAt then
+	if not Gym.canStart(retryWaits(profile), worldId, now()) then
 		return false, "retry_wait"
 	end
 	if #profile.team == 0 then
@@ -303,7 +313,6 @@ function GymService.start()
 	Guard.onInvoke(Remotes.names.GiveUp, onGiveUp)
 	Players.PlayerRemoving:Connect(function(player: Player)
 		forgetSession(player)
-		retryAt[player] = nil
 	end)
 end
 

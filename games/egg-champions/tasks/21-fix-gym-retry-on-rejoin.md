@@ -13,9 +13,9 @@ leave and rejoin. Today the wait is cleared when the player leaves.
    takes the current time as an argument.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0.
-- [ ] `selene games/egg-champions/src` and `stylua --check games/egg-champions/src` pass.
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl` succeeds.
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0.
+- [x] `selene games/egg-champions/src` and `stylua --check games/egg-champions/src` pass.
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl` succeeds.
 
 ## Needs human or playtester
 - Lose a gym, rejoin, and confirm the wait still applies.
