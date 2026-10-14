@@ -103,10 +103,10 @@ If `CreateMeshPartAsync` fails in a live server (permissions, throttling):
    `assets` row in the gate table.
 
 ## Done when
-- [ ] `python factory/tools/build_models.py games/egg-champions` exits 0 and
+- [x] `python factory/tools/build_models.py games/egg-champions` exits 0 and
       `games/egg-champions/assets/models.json` has 36 entries: 30 with kind
       `pet` and 6 with kind `egg`.
-- [ ] Removing one pet from a scratch copy of the manifest makes
+- [x] Removing one pet from a scratch copy of the manifest makes
       `build_models.py` exit 1 and name that pet.
 - [ ] Moranguete's entry has a positive integer `texture_id` that came from
       the plugin, and `execute_luau` reads her MeshPart's `SavedTextureId`
@@ -116,7 +116,7 @@ If `CreateMeshPartAsync` fails in a live server (permissions, throttling):
 - [ ] `python factory/tools/gate.py games/egg-champions assets` exits 0.
 - [ ] Editing one `mesh_id` in `models.json` by hand makes the gate exit 1
       (stale `verify.json`); restore the file afterwards.
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl`
       succeeds.
 - [ ] After every screenshot taken for this brief, `execute_luau` returns
       `Enum.CameraType.Fixed` for `workspace.CurrentCamera.CameraType`.

@@ -59,6 +59,7 @@ regenerated. Stages with no check yet print "no gate yet" and exit 1, so
 | `spec_parsed` | the validator passes and `manifest.json` matches the spec's current hash |
 | `economy_tuned` | the tuning report shows the time pacing targets met |
 | `built` | every brief in the game's task index is ticked, and rojo, selene and stylua pass |
+| `assets` | every pet and egg has a current entry in `assets/models.json`, the project maps it, `rojo build` passes, and `assets/verify.json` checked this exact `models.json` with every entry ok |
 | the rest | no gate yet |
 
 `gate.py` decides; `state.py` only records what it found. Nothing marks a
@@ -72,6 +73,28 @@ stage passed on its own word.
 ## Run agent 2
 
     python factory/tools/simulate_economy.py <game-dir>/config <game-dir>/tuning
+
+## Assets
+
+Three files in `<game-dir>/assets/`:
+- `manifest.json`: the approved mesh and texture ids per pet and egg, by hand
+  or by the asset maker.
+- `models.json`: the model table the game loads, mapped to
+  `ReplicatedStorage.GameConfig.models`. Rebuild it after any manifest change:
+
+      python factory/tools/build_models.py <game-dir>
+
+- `verify.json`: what Roblox itself made of every entry. The server's
+  `ModelLibrary` builds each template with `CreateMeshPartAsync` at start;
+  this checks the same call in an Open Cloud Luau Execution task on the test
+  place. It needs the API key in the environment variable that `roblox.json`
+  names (load `.env` first) with the scope
+  `universe.place.luau-execution-session:write`:
+
+      set -a; . ./.env; set +a
+      python factory/tools/verify_assets.py <game-dir> [--wait SECONDS]
+
+  Exit 2 means the task is still running; run it again to resume it.
 
 ## Build a game
 
