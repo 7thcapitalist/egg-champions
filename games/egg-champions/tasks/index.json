@@ -221,6 +221,33 @@
         "15"
       ],
       "status": "done"
+    },
+    {
+      "id": "23",
+      "title": "Leaving mid-battle counts as a loss",
+      "file": "23-gym-leave-counts-as-loss.md",
+      "depends_on": [
+        "21"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "24",
+      "title": "Analytics measures total playtime and sends its fields",
+      "file": "24-analytics-total-playtime-and-fields.md",
+      "depends_on": [
+        "19"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "25",
+      "title": "Variant look polish",
+      "file": "25-variant-look-polish.md",
+      "depends_on": [
+        "22"
+      ],
+      "status": "pending"
     }
   ]
 }
