@@ -30,6 +30,7 @@ local StarterGui = game:GetService("StarterGui")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared:WaitForChild("Remotes"))
+local ModelTemplates = require(Shared:WaitForChild("visual"):WaitForChild("ModelTemplates"))
 
 local STAND_TAG = "EggStand"
 local STAND_COOLDOWN_SECONDS = 2
@@ -137,3 +138,16 @@ CollectionService:GetInstanceRemovedSignal(STAND_TAG):Connect(function(instance:
 end)
 
 print("client ready")
+
+-- The asset seam: every pet template the server builds in PetModels
+-- replaces that pet's placeholder block here too.
+local function useModel(child: Instance)
+	ModelTemplates.applySeam(ModelTemplates.seamFrom({ child.Name }))
+end
+task.spawn(function()
+	local models = ReplicatedStorage:WaitForChild("PetModels")
+	models.ChildAdded:Connect(useModel)
+	for _, child in models:GetChildren() do
+		useModel(child)
+	end
+end)

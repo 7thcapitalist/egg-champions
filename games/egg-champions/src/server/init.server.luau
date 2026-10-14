@@ -15,6 +15,7 @@ local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Co
 local Profiles = require(script:WaitForChild("Profiles"))
 local Guard = require(script:WaitForChild("Guard"))
 local Analytics = require(script:WaitForChild("Analytics"))
+local ModelLibrary = require(script:WaitForChild("ModelLibrary"))
 
 local Services = script:WaitForChild("Services")
 local ClickService = require(Services:WaitForChild("ClickService"))
@@ -47,6 +48,10 @@ print(
 		built.counts.portals
 	)
 )
+
+-- Pet and egg models load in their own thread; until one loads, PetVisual
+-- shows its placeholder block.
+task.spawn(ModelLibrary.start)
 
 Guard.start()
 ClickService.start()

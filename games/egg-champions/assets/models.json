@@ -1,0 +1,257 @@
+{
+  "manifest_sha256": "0f16301453fdf5f1cbc5b44bad97cff9c051ad5bfb0a794e1d00a1b66422d095",
+  "entries": [
+    {
+      "id": "leafpup",
+      "kind": "pet",
+      "mesh_id": 77547241049625,
+      "texture_id": 131126824041673,
+      "height": 5.0
+    },
+    {
+      "id": "puddlet",
+      "kind": "pet",
+      "mesh_id": 97362739098055,
+      "texture_id": 78869701978561,
+      "height": 4.0
+    },
+    {
+      "id": "emberkit",
+      "kind": "pet",
+      "mesh_id": 105956315740522,
+      "texture_id": 122554067457750,
+      "height": 5.0
+    },
+    {
+      "id": "abacatudo",
+      "kind": "pet",
+      "mesh_id": 75364490083379,
+      "texture_id": 105993944524172,
+      "height": 8.0
+    },
+    {
+      "id": "voltibun",
+      "kind": "pet",
+      "mesh_id": 82220365452549,
+      "texture_id": 103615852726557,
+      "height": 6.0
+    },
+    {
+      "id": "zapmoth",
+      "kind": "pet",
+      "mesh_id": 138035237314725,
+      "texture_id": 104790447521164,
+      "height": 4.0
+    },
+    {
+      "id": "mossnail",
+      "kind": "pet",
+      "mesh_id": 86261195839042,
+      "texture_id": 93713682169389,
+      "height": 4.0
+    },
+    {
+      "id": "sparkit",
+      "kind": "pet",
+      "mesh_id": 129085619828782,
+      "texture_id": 133529017905068,
+      "height": 4.5
+    },
+    {
+      "id": "cinderhog",
+      "kind": "pet",
+      "mesh_id": 95352394279780,
+      "texture_id": 110855870374565,
+      "height": 5.0
+    },
+    {
+      "id": "brookdeer",
+      "kind": "pet",
+      "mesh_id": 77380287345600,
+      "texture_id": 94438306868801,
+      "height": 6.5
+    },
+    {
+      "id": "bubblecrab",
+      "kind": "pet",
+      "mesh_id": 80338458113760,
+      "texture_id": 95221110321260,
+      "height": 3.5
+    },
+    {
+      "id": "kelpony",
+      "kind": "pet",
+      "mesh_id": 140690359491733,
+      "texture_id": 129031662473199,
+      "height": 5.0
+    },
+    {
+      "id": "zapeel",
+      "kind": "pet",
+      "mesh_id": 94503668275072,
+      "texture_id": 125634790958699,
+      "height": 4.5
+    },
+    {
+      "id": "pearlotter",
+      "kind": "pet",
+      "mesh_id": 116430907416990,
+      "texture_id": 88052726522194,
+      "height": 5.5
+    },
+    {
+      "id": "tidewhale",
+      "kind": "pet",
+      "mesh_id": 79917394377579,
+      "texture_id": 112161657523910,
+      "height": 7.0
+    },
+    {
+      "id": "driftgull",
+      "kind": "pet",
+      "mesh_id": 79248603245050,
+      "texture_id": 81990171490852,
+      "height": 2.15
+    },
+    {
+      "id": "fuzzbolt",
+      "kind": "pet",
+      "mesh_id": 134426363088320,
+      "texture_id": 99763398900976,
+      "height": 4.5
+    },
+    {
+      "id": "bananao",
+      "kind": "pet",
+      "mesh_id": 100479348953405,
+      "texture_id": 111326714007510,
+      "height": 8.0
+    },
+    {
+      "id": "reefwyrm",
+      "kind": "pet",
+      "mesh_id": 111527870610916,
+      "texture_id": 121287034056512,
+      "height": 5.5
+    },
+    {
+      "id": "thundrake",
+      "kind": "pet",
+      "mesh_id": 122536523889916,
+      "texture_id": 131340852366168,
+      "height": 7.0
+    },
+    {
+      "id": "coalmole",
+      "kind": "pet",
+      "mesh_id": 127395602524556,
+      "texture_id": 108020513098197,
+      "height": 3.5
+    },
+    {
+      "id": "steamtoad",
+      "kind": "pet",
+      "mesh_id": 82594137198070,
+      "texture_id": 123912621943996,
+      "height": 4.0
+    },
+    {
+      "id": "moranguete",
+      "kind": "pet",
+      "mesh_id": 136103984711129,
+      "texture_id": 124116507973862,
+      "height": 7.56
+    },
+    {
+      "id": "ashwolf",
+      "kind": "pet",
+      "mesh_id": 139782701478806,
+      "texture_id": 97910440813971,
+      "height": 5.5
+    },
+    {
+      "id": "thornback",
+      "kind": "pet",
+      "mesh_id": 98531796695287,
+      "texture_id": 116171623995137,
+      "height": 6.0
+    },
+    {
+      "id": "sootbat",
+      "kind": "pet",
+      "mesh_id": 98637375272072,
+      "texture_id": 103096197832398,
+      "height": 3.5
+    },
+    {
+      "id": "geyserpup",
+      "kind": "pet",
+      "mesh_id": 94703205175492,
+      "texture_id": 87550567647088,
+      "height": 4.0
+    },
+    {
+      "id": "voltscorp",
+      "kind": "pet",
+      "mesh_id": 129917143622604,
+      "texture_id": 137589761303648,
+      "height": 4.5
+    },
+    {
+      "id": "lavalynx",
+      "kind": "pet",
+      "mesh_id": 81968972653650,
+      "texture_id": 77301111020372,
+      "height": 5.0
+    },
+    {
+      "id": "magmaroc",
+      "kind": "pet",
+      "mesh_id": 98698074415242,
+      "texture_id": 89632971567186,
+      "height": 7.0
+    },
+    {
+      "id": "meadow",
+      "kind": "egg",
+      "mesh_id": 136013679702071,
+      "texture_id": 77671766462502,
+      "height": 4.0
+    },
+    {
+      "id": "forest",
+      "kind": "egg",
+      "mesh_id": 136875195353143,
+      "texture_id": 115896911943731,
+      "height": 4.0
+    },
+    {
+      "id": "shell",
+      "kind": "egg",
+      "mesh_id": 133131747151786,
+      "texture_id": 126621865710777,
+      "height": 4.0
+    },
+    {
+      "id": "storm",
+      "kind": "egg",
+      "mesh_id": 131526106741314,
+      "texture_id": 100488589450550,
+      "height": 4.0
+    },
+    {
+      "id": "ember",
+      "kind": "egg",
+      "mesh_id": 137183210307587,
+      "texture_id": 131962562598879,
+      "height": 4.0
+    },
+    {
+      "id": "magma",
+      "kind": "egg",
+      "mesh_id": 90051632512905,
+      "texture_id": 86989204447291,
+      "height": 4.0
+    }
+  ]
+}

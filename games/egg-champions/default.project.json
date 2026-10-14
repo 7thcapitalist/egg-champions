@@ -15,6 +15,10 @@
 
         "gyms": {
           "$path": "tuning/gyms.json"
+        },
+
+        "models": {
+          "$path": "assets/models.json"
         }
       }
     },

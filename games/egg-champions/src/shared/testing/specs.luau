@@ -38,6 +38,7 @@ return {
 	visualSpecs["BattleEffects.spec"],
 	visualSpecs["Progress.spec"],
 	visualSpecs["VariantView.spec"],
+	visualSpecs["ModelTemplates.spec"],
 	analyticsSpecs["Events.spec"],
 	testingSpecs["Runner.spec"],
 }
