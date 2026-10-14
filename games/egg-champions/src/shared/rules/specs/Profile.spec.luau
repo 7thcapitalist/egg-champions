@@ -59,6 +59,7 @@ return function()
 			expect(profile.gymsBeaten).toEqual({})
 			expect(profile.feesPaid).toEqual({})
 			expect(profile.gymRetryAt).toEqual({})
+			expect(profile.playSeconds).toEqual(0)
 		end)
 
 		it("passes validate when new", function()
@@ -91,6 +92,58 @@ return function()
 			expect(migrated.feesPaid).toEqual({ [Config.worlds[1].id] = true })
 			expect(migrated.gymRetryAt).toEqual({})
 			expect(save.gymRetryAt).toEqual(nil)
+		end)
+
+		it("migrates a v3 profile by starting total play time at zero", function()
+			local save = v1Save()
+			save.version = 3
+			save.gymsBeaten = {}
+			save.feesPaid = {}
+			save.gymRetryAt = { [Config.worlds[1].id] = 100 }
+			local migrated = Profile.migrate(save)
+			expect(migrated.version).toEqual(4)
+			expect(migrated.playSeconds).toEqual(0)
+			expect(migrated.gymRetryAt).toEqual({ [Config.worlds[1].id] = 100 })
+			expect(save.playSeconds).toEqual(nil)
+			expect(Profile.validate(migrated)).toEqual({})
+			-- A v1 save gets there too.
+			expect(Profile.migrate(v1Save()).playSeconds).toEqual(0)
+		end)
+
+		it("grows total play time across sessions and keeps it through migration", function()
+			-- Simulates what the server does: a session starts from the saved
+			-- playSeconds, and every save writes the base plus session time.
+			local function playSession(saved: any, autosaves: { number }, leaveAt: number): any
+				local profile = Profile.migrate(saved)
+				local base = profile.playSeconds
+				for _, at in autosaves do
+					profile.playSeconds = Profile.playSecondsAfter(base, at)
+				end
+				profile.playSeconds = Profile.playSecondsAfter(base, leaveAt)
+				return profile
+			end
+
+			local save = v1Save()
+			save.version = 3
+			save.gymsBeaten = {}
+			save.feesPaid = {}
+			save.gymRetryAt = {}
+			local first = playSession(save, { 60, 120 }, 150.7)
+			expect(first.playSeconds).toEqual(150)
+			local second = playSession(first, { 60 }, 90)
+			expect(second.playSeconds).toEqual(240)
+			local third = playSession(second, {}, 1200)
+			expect(third.playSeconds).toEqual(1440)
+			-- Autosaves in a session never count it twice.
+			local many = playSession(third, { 10, 20, 30, 40 }, 40)
+			expect(many.playSeconds).toEqual(1480)
+		end)
+
+		it("never lowers total play time on a bad session time", function()
+			expect(Profile.playSecondsAfter(100, -5)).toEqual(100)
+			expect(Profile.playSecondsAfter(100, 0 / 0)).toEqual(100)
+			expect(Profile.playSecondsAfter(100, math.huge)).toEqual(100)
+			expect(Profile.playSecondsAfter(100, 9.9)).toEqual(109)
 		end)
 
 		it("leaves a current profile as it is", function()

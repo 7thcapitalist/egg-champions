@@ -101,16 +101,28 @@ return function()
 
 		it("errors on a missing, extra or wrongly typed field", function()
 			expect(function()
-				Events.build("first_hatch", {}, CONTEXT)
+				Events.build("first_hatch", { totalPlaySeconds = 5 }, CONTEXT)
 			end).toThrow("missing field 'secondsSinceJoin'")
 			expect(function()
-				Events.build("first_hatch", { secondsSinceJoin = 5, name = "someone" }, CONTEXT)
+				Events.build(
+					"first_hatch",
+					{ totalPlaySeconds = 5, secondsSinceJoin = 5, name = "someone" },
+					CONTEXT
+				)
 			end).toThrow("has no field 'name'")
 			expect(function()
-				Events.build("first_hatch", { secondsSinceJoin = "5" }, CONTEXT)
+				Events.build(
+					"first_hatch",
+					{ totalPlaySeconds = 5, secondsSinceJoin = "5" },
+					CONTEXT
+				)
 			end).toThrow("must be a number")
 			expect(function()
-				Events.build("first_hatch", { secondsSinceJoin = 0 / 0 }, CONTEXT)
+				Events.build(
+					"first_hatch",
+					{ totalPlaySeconds = 0 / 0, secondsSinceJoin = 5 },
+					CONTEXT
+				)
 			end).toThrow("must be a number")
 		end)
 
@@ -131,8 +143,11 @@ return function()
 				seen[event.name] = true
 				expect(string.match(event.name, "^[a-z_]+$") ~= nil).toBeTrue()
 				expect(#event.dimensions <= 2).toBeTrue()
-				for _, field in event.dimensions do
-					expect(event.fields[field] ~= nil).toBeTrue()
+				for _, slot in event.dimensions do
+					expect(#slot >= 1).toBeTrue()
+					for _, field in slot do
+						expect(event.fields[field] ~= nil).toBeTrue()
+					end
 				end
 				if event.value ~= nil then
 					expect(event.fields[event.value]).toEqual("number")
@@ -168,23 +183,119 @@ return function()
 		end)
 
 		it("sends dimensions as custom fields and the value field as the value", function()
-			local record = Events.build(
-				"gym_result",
-				{ worldIndex = 2, outcome = Events.outcomes.win, secondsSinceJoin = 90 },
-				CONTEXT
-			)
+			local record = Events.build("gym_result", {
+				worldIndex = 2,
+				outcome = Events.outcomes.win,
+				totalPlaySeconds = 5400,
+				secondsSinceJoin = 90,
+			}, CONTEXT)
 			expect(Events.customFields(record)).toEqual({
 				CustomField01 = "rebirths 2, world 3",
-				CustomField02 = "2",
-				CustomField03 = "win",
+				CustomField02 = "2, win",
+				CustomField03 = "90",
 			})
-			expect(Events.value(record)).toEqual(90)
+			expect(Events.value(record)).toEqual(5400)
 			local hatched = Events.build(
 				"pet_hatched",
 				{ petId = "p", rarity = "rare", variant = Events.NORMAL_VARIANT },
 				CONTEXT
 			)
 			expect(Events.value(hatched)).toEqual(nil)
+		end)
+
+		it("sends the fields that matter to Roblox", function()
+			local hatched = Events.build(
+				"pet_hatched",
+				{ petId = "pet_a", rarity = "rare", variant = Events.NORMAL_VARIANT },
+				CONTEXT
+			)
+			expect(Events.customFields(hatched)).toEqual({
+				CustomField01 = "rebirths 2, world 3",
+				CustomField02 = "pet_a",
+				CustomField03 = "rare, normal",
+			})
+			local equipped = Events.build(
+				"pet_equipped",
+				{ petId = "pet_a", team = { "pet_a", "pet_b" } },
+				CONTEXT
+			)
+			expect(Events.customFields(equipped).CustomField02).toEqual("pet_a")
+			expect(Events.customFields(equipped).CustomField03).toEqual("pet_a,pet_b")
+			local ended =
+				Events.build("session_end", { lengthSeconds = 600, coinsPerClick = 12 }, CONTEXT)
+			expect(Events.value(ended)).toEqual(600)
+			expect(Events.customFields(ended).CustomField02).toEqual("12")
+			-- Gym events carry the rebirth count in the stage, field 01.
+			for _, name in { "gym_attempt", "gym_result" } do
+				local record = Events.build(name, sample(Events.get(name)), CONTEXT)
+				local stage = Events.customFields(record).CustomField01
+				expect(string.find(stage, "rebirths 2", 1, true) == 1).toBeTrue()
+			end
+		end)
+
+		it("sends total play time as the value of every pacing event", function()
+			for _, name in
+				{ "first_hatch", "gym_attempt", "gym_result", "rebirth", "world_unlocked" }
+			do
+				local event = Events.get(name)
+				expect(event.value).toEqual("totalPlaySeconds")
+				expect(event.fields.secondsSinceJoin).toEqual("number")
+				local fields = sample(event)
+				fields.totalPlaySeconds = 7200
+				fields.secondsSinceJoin = 300
+				local record = Events.build(name, fields, CONTEXT)
+				expect(Events.value(record)).toEqual(7200)
+				local found = false
+				for _, text in Events.customFields(record) do
+					if text == "300" or string.find(text, ", 300", 1, true) ~= nil then
+						found = true
+					end
+				end
+				if not found then
+					error(string.format("'%s' does not send secondsSinceJoin", name))
+				end
+			end
+		end)
+
+		it("sends every field of every event", function()
+			for _, event in Events.list do
+				expect(Events.sentFields(event)).toEqual(sortedFields(event))
+			end
+		end)
+
+		it("documents exactly the fields each event sends", function()
+			local notes = doc("notes", "analytics-events")
+			for _, event in Events.list do
+				local row = notesRow(notes, event.name)
+				if row == nil then
+					error(
+						string.format("notes/analytics-events.md has no row for '%s'", event.name)
+					)
+				end
+				local cells = {}
+				for cell in string.gmatch(row, "|([^|]*)") do
+					table.insert(cells, cell)
+				end
+				local documented: { [string]: boolean } = {}
+				for name in string.gmatch(cells[2] or "", "`([^`]+)`") do
+					documented[name] = true
+				end
+				local names = {}
+				for name in documented do
+					table.insert(names, name)
+				end
+				table.sort(names)
+				if table.concat(names, " ") ~= table.concat(Events.sentFields(event), " ") then
+					error(
+						string.format(
+							"the notes row for '%s' names fields {%s} but the event sends {%s}",
+							event.name,
+							table.concat(names, " "),
+							table.concat(Events.sentFields(event), " ")
+						)
+					)
+				end
+			end
 		end)
 
 		it("copies list fields, so a later team change does not alter a record", function()

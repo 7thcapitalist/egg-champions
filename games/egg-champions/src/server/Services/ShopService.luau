@@ -104,11 +104,7 @@ local function onBuyEgg(
 		})
 	end
 	if firstEver then
-		Analytics.track(
-			player,
-			"first_hatch",
-			{ secondsSinceJoin = Analytics.secondsSinceJoin(player) }
-		)
+		Analytics.track(player, "first_hatch", Analytics.withPlaytime(player, {}))
 	end
 	return true, { eggId = eggId, pets = hatched, price = price }
 end

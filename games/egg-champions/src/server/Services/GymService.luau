@@ -136,11 +136,14 @@ local function worldExists(worldIndex: number): boolean
 end
 
 local function trackResult(player: Player, session: Session, outcome: string)
-	Analytics.track(player, "gym_result", {
-		worldIndex = session.worldIndex,
-		outcome = outcome,
-		secondsSinceJoin = Analytics.secondsSinceJoin(player),
-	})
+	Analytics.track(
+		player,
+		"gym_result",
+		Analytics.withPlaytime(player, {
+			worldIndex = session.worldIndex,
+			outcome = outcome,
+		})
+	)
 end
 
 -- Ends a session with an Analytics.outcomes value. Returns true when a win
@@ -155,10 +158,11 @@ local function finish(player: Player, profile: Profile, session: Session, outcom
 		local newBadge = Progression.beatGym(profile :: any, session.worldIndex)
 		trackResult(player, session, outcome)
 		if hasNext and not wasOpen and Progression.worldUnlocked(profile :: any, nextIndex) then
-			Analytics.track(player, "world_unlocked", {
-				worldIndex = nextIndex,
-				secondsSinceJoin = Analytics.secondsSinceJoin(player),
-			})
+			Analytics.track(
+				player,
+				"world_unlocked",
+				Analytics.withPlaytime(player, { worldIndex = nextIndex })
+			)
 		end
 		return newBadge
 	end
@@ -245,10 +249,11 @@ local function onStartBattle(player: Player, profile: Profile, worldId: any): (b
 	}
 	sessions[session.id] = session
 	sessionOf[player] = session.id
-	Analytics.track(player, "gym_attempt", {
-		worldIndex = world.index,
-		secondsSinceJoin = Analytics.secondsSinceJoin(player),
-	})
+	Analytics.track(
+		player,
+		"gym_attempt",
+		Analytics.withPlaytime(player, { worldIndex = world.index })
+	)
 	return true, { sessionId = session.id, worldId = worldId, battle = view(state) }
 end
 

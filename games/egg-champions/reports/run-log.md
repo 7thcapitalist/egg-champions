@@ -220,3 +220,8 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-14T02:01:42Z | task 22 | coder start | attempt 1 of 1: Shiny and golden looks that actually show |
 | 2026-10-14T02:05:00Z | task 22 | passed | verified by hand: run_tests 273/273, rojo build, selene, stylua (orchestrator run cut off by the 45s shell limit) |
 | 2026-10-14T16:30:22Z | task 23 | passed | verified by hand: run_tests 277/277, rojo build, selene, stylua (orchestrator run cut off by the 45s shell limit) |
+| 2026-10-14T18:13:13Z | check 24 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-14T18:13:13Z | check 24 | pass | selene games/egg-champions/src |
+| 2026-10-14T18:13:13Z | check 24 | pass | stylua --check games/egg-champions/src |
+| 2026-10-14T18:13:14Z | check 24 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-14T18:13:14Z | task 24 | passed | checked with --finish |

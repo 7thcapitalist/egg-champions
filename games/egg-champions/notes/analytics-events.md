@@ -19,15 +19,22 @@ does not name every field the event carries.
 - No personal data beyond the Roblox user id, which Roblox attaches itself.
 - Events are batched and flushed on an interval and when a player leaves.
   A failed send is logged and dropped, never retried.
-- `secondsSinceJoin` counts from when this session's profile loaded. A tuner
-  target is total play time, so for a player who needed several sessions,
-  add up `session_end.lengthSeconds` of the earlier sessions.
+- `totalPlaySeconds` is the player's play time over every session, this one
+  included. It is saved in the profile (`playSeconds`, profile version 4),
+  updated on every save and when the player leaves. Tuner targets are total
+  play time, so read this one for pacing.
+- `secondsSinceJoin` counts from when this session's profile loaded.
 
 ## How events reach Roblox
 
 - Custom events: `AnalyticsService:LogCustomEvent`. The value is the field
   marked "value" below; custom field 02 and 03 are the fields marked
-  "dimension".
+  "field 02" and "field 03". Roblox allows three custom fields per event and
+  field 01 is the stage, so two fields that share a slot are sent together,
+  joined by ", " (gym_result field 02 is "2, win"), and a list is sent as its
+  items joined by "," (pet_equipped field 03 is "pet_a,pet_b").
+- The Fields column names every field an event sends, and nothing else. A
+  test checks it against the code.
 - `egg_bought` is an economy event: `LogEconomyEvent` with flow Sink, currency
   Coins, amount `price`, ending balance `coinsAfter`, transaction type Shop
   and item `eggId`.
@@ -38,13 +45,13 @@ does not name every field the event carries.
 | Event | Fields | Sent as | Tuner target or spec question |
 | --- | --- | --- | --- |
 | `session_start` | `coinsPerClick` (value) | custom | Where players stand when a session starts: coins per click and stage. |
-| `session_end` | `lengthSeconds` (value), `coinsPerClick` | custom | Session length and how far a session moved coins per click and rebirths. Needed to add up play time across sessions. |
-| `first_hatch` | `secondsSinceJoin` (value) | custom and onboarding step 1 | Tuner target "First hatch", `pacing_first_hatch_minutes`. Fires once, on a player's first hatch ever (empty pet index). |
-| `egg_bought` | `eggId` (item, dimension), `count` (dimension), `price` (amount), `coinsAfter` (balance) | economy | Which eggs players buy at which stage, and the coin balance they keep. Checks the egg prices in the spec. |
-| `pet_hatched` | `petId`, `rarity` (dimension), `variant` (dimension, "normal" for none) | custom | The real rarity and variant distribution, to check against `config/rarities.json` and `config/variants.json`. |
-| `pet_equipped` | `petId` (dimension), `team` (the team after, as pet ids) | custom | Which pets players actually field, to check the tuner's reference teams. |
-| `gym_attempt` | `worldIndex` (dimension), `secondsSinceJoin` (value) | custom | How many tries each gym takes, at which rebirth count. |
-| `gym_result` | `worldIndex` (dimension), `outcome` (dimension: win, loss, gave_up), `secondsSinceJoin` (value) | custom | Tuner targets "Gym N beaten" (`pacing_gym1_minutes_min`, `pacing_gym1_minutes_max`), "Final gym beaten" (`pacing_final_gym_hours_min`, `pacing_final_gym_hours_max`) and "Rebirths at gym N" (the stage's rebirth count on a win). Win rates by rebirths check the tuned gym power and the "hard wall" gaps the report names. |
-| `rebirth` | `count` (the new count, dimension), `secondsSinceJoin` (value) | custom | When players rebirth, against the report's rebirth timing table. |
-| `world_unlocked` | `worldIndex` (the world that opened, dimension), `secondsSinceJoin` (value) | custom | When each world opens in a run. Fires again after each rebirth, with the new rebirth count. |
-| `pass_purchased` | `passId` (dimension) | custom | Which passes sell, and at what stage. |
+| `session_end` | `lengthSeconds` (value), `coinsPerClick` (field 02) | custom | Session length and how far a session moved coins per click and rebirths. |
+| `first_hatch` | `totalPlaySeconds` (value), `secondsSinceJoin` (field 02) | custom and onboarding step 1 | Tuner target "First hatch", `pacing_first_hatch_minutes`. Fires once, on a player's first hatch ever (empty pet index). |
+| `egg_bought` | `eggId` (item, field 02), `count` (field 03), `price` (amount), `coinsAfter` (balance) | economy | Which eggs players buy at which stage, and the coin balance they keep. Checks the egg prices in the spec. |
+| `pet_hatched` | `petId` (field 02), `rarity` and `variant` (field 03 together, as "rare, golden"; variant "normal" for none) | custom | The real pet, rarity and variant distribution, to check against `config/rarities.json` and `config/variants.json`. |
+| `pet_equipped` | `petId` (field 02), `team` (the team after, as pet ids, field 03) | custom | Which pets players actually field, to check the tuner's reference teams. |
+| `gym_attempt` | `totalPlaySeconds` (value), `worldIndex` (field 02), `secondsSinceJoin` (field 03) | custom | How many tries each gym takes, at which rebirth count (the stage in field 01). |
+| `gym_result` | `totalPlaySeconds` (value), `worldIndex` and `outcome` (field 02 together, as "2, win"; outcome win, loss or gave_up), `secondsSinceJoin` (field 03) | custom | Tuner targets "Gym N beaten" (`pacing_gym1_minutes_min`, `pacing_gym1_minutes_max`), "Final gym beaten" (`pacing_final_gym_hours_min`, `pacing_final_gym_hours_max`) and "Rebirths at gym N" (the rebirth count in field 01 on a win). Win rates by rebirths check the tuned gym power and the "hard wall" gaps the report names. |
+| `rebirth` | `totalPlaySeconds` (value), `count` (the new count, field 02), `secondsSinceJoin` (field 03) | custom | When players rebirth, against the report's rebirth timing table. |
+| `world_unlocked` | `totalPlaySeconds` (value), `worldIndex` (the world that opened, field 02), `secondsSinceJoin` (field 03) | custom | When each world opens in a run. Fires again after each rebirth, with the new rebirth count. |
+| `pass_purchased` | `passId` (field 02) | custom | Which passes sell, and at what stage. |

@@ -13,12 +13,12 @@ session started. Some documented fields also never reach Roblox.
 3. Make the fields that matter actually reach Roblox: petId on pet_hatched,
    team on pet_equipped, coinsPerClick on session_end, rebirths on
    gym_attempt and gym_result. Where a field cannot fit the custom field
-   limits, remove it from notes/analytics-events.md so the doc matches what
+   limits, remove it from `notes/analytics-events.md` so the doc matches what
    is really sent.
 4. Tests: total playtime grows across simulated sessions and survives the
    migration; each event's sent fields match the doc table.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0.
-- [ ] `selene games/egg-champions/src` and `stylua --check games/egg-champions/src` pass.
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl` succeeds.
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0.
+- [x] `selene games/egg-champions/src` and `stylua --check games/egg-champions/src` pass.
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl` succeeds.

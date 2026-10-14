@@ -37,10 +37,7 @@ local function onRebirth(player: Player, profile: Profile): (boolean, any)
 	for key, value in nextState do
 		target[key] = value
 	end
-	Analytics.track(player, "rebirth", {
-		count = profile.rebirths,
-		secondsSinceJoin = Analytics.secondsSinceJoin(player),
-	})
+	Analytics.track(player, "rebirth", Analytics.withPlaytime(player, { count = profile.rebirths }))
 	return true, { rebirths = profile.rebirths }
 end
 

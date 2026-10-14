@@ -24,6 +24,11 @@
 	Repairable problems (a team that is too long, or that holds a uid the player
 	does not own) are fixed and logged; anything else refuses the load.
 
+	Play time: when a profile loads, its playSeconds is the total of every
+	earlier session. Every save (autosave, leave and shutdown) first writes
+	that total plus this session's time back into playSeconds, so total play
+	time survives leaving and a crash loses at most one autosave of it.
+
 	The numbers below are storage timing, not game numbers.
 ]]
 
@@ -62,6 +67,8 @@ local store = DataStoreService:GetDataStore(STORE_NAME)
 local jobId = if game.JobId ~= "" then game.JobId else "studio-" .. HttpService:GenerateGUID(false)
 
 local loaded: { [Player]: Profile } = {}
+-- Per loaded player: playSeconds when the session began, and when it began.
+local sessionClock: { [Player]: { base: number, startedAt: number } } = {}
 local loadedListeners: { (Player, Profile) -> () } = {}
 local leavingListeners: { (Player, Profile) -> () } = {}
 
@@ -226,6 +233,31 @@ local function save(userId: number, profile: Profile, release: boolean): boolean
 	return ok
 end
 
+-- Whole seconds since this player's profile loaded in this session, or 0.
+function Profiles.sessionSeconds(player: Player): number
+	local clock = sessionClock[player]
+	if clock == nil then
+		return 0
+	end
+	return math.max(0, math.floor(os.clock() - clock.startedAt))
+end
+
+-- Total seconds played over every session, this one included, or 0.
+function Profiles.totalPlaySeconds(player: Player): number
+	local clock = sessionClock[player]
+	if clock == nil then
+		return 0
+	end
+	return Profile.playSecondsAfter(clock.base, Profiles.sessionSeconds(player))
+end
+
+-- Writes the total play time into the profile before it is saved.
+local function recordPlaytime(player: Player, profile: Profile)
+	if sessionClock[player] ~= nil then
+		profile.playSeconds = Profiles.totalPlaySeconds(player)
+	end
+end
+
 -- The loaded profile for a player, or nil while loading or after a failed load.
 function Profiles.get(player: Player): Profile?
 	return loaded[player]
@@ -269,6 +301,7 @@ local function onJoin(player: Player)
 		return
 	end
 	loaded[player] = profile
+	sessionClock[player] = { base = profile.playSeconds, startedAt = os.clock() }
 	for _, listener in loadedListeners do
 		task.spawn(listener, player, profile)
 	end
@@ -280,7 +313,9 @@ local function onLeave(player: Player)
 		return
 	end
 	settleBeforeSave(player, profile)
+	recordPlaytime(player, profile)
 	loaded[player] = nil
+	sessionClock[player] = nil
 	save(player.UserId, profile, true)
 end
 
@@ -303,6 +338,7 @@ function Profiles.start()
 		while true do
 			task.wait(AUTOSAVE_SECONDS)
 			for player, profile in loaded do
+				recordPlaytime(player, profile)
 				task.spawn(save, player.UserId, profile, false)
 			end
 		end
@@ -312,10 +348,12 @@ function Profiles.start()
 		local pending = 0
 		for player, profile in loaded do
 			settleBeforeSave(player, profile)
+			recordPlaytime(player, profile)
 		end
 		for player, profile in loaded do
 			pending += 1
 			loaded[player] = nil
+			sessionClock[player] = nil
 			task.spawn(function()
 				save(player.UserId, profile, true)
 				pending -= 1

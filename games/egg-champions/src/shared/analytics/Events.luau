@@ -13,13 +13,25 @@
 		fields: { name = kind }, kind "number", "string" or "list"
 		kind: "custom" (AnalyticsService custom event) or "economy"
 		value: the number field sent as the custom event value, if any
-		dimensions: up to two fields sent as custom fields 02 and 03
+		dimensions: up to two slots, sent as custom fields 02 and 03. A slot
+			is a list of fields; a slot with several fields is sent as their
+			values joined by ", " ("2, win"), and a list field as its items
+			joined by "," ("pet_a,pet_b"). Roblox allows three custom fields
+			per event and field 01 is the stage, so this is how a field that
+			matters still reaches Roblox.
 		economy: for an economy event, which fields hold the amount, the
 			balance after and the item, and the flow ("Sink" or "Source")
 		onboardingStep: also logged as this onboarding funnel step
 		measures: tuner targets in tuning/report.md this event measures, with
 			every number written as N ("Gym N beaten")
 		constants: the config pacing constants this event measures
+
+	Every field of every event is sent (as the value, in a dimension slot, or
+	as an economy amount, balance or item); Events.sentFields lists them, and
+	a test checks that list against the event's fields and the notes table.
+
+	Play time: totalPlaySeconds is the player's play time over every session
+	(saved in the profile), and secondsSinceJoin the time in this session.
 
 	Every record also carries the player's stage: the rebirth count and the
 	current world, which is the highest world open in the current run. That
@@ -47,7 +59,7 @@ export type Event = {
 	fields: { [string]: FieldKind },
 	kind: "custom" | "economy",
 	value: string?,
-	dimensions: { string },
+	dimensions: { { string } },
 	economy: Economy?,
 	onboardingStep: number?,
 	measures: { string },
@@ -83,16 +95,16 @@ local list: { Event } = {
 		fields = { lengthSeconds = "number", coinsPerClick = "number" },
 		kind = "custom",
 		value = "lengthSeconds",
-		dimensions = {},
+		dimensions = { { "coinsPerClick" } },
 		measures = {},
 		constants = {},
 	},
 	{
 		name = "first_hatch",
-		fields = { secondsSinceJoin = "number" },
+		fields = { totalPlaySeconds = "number", secondsSinceJoin = "number" },
 		kind = "custom",
-		value = "secondsSinceJoin",
-		dimensions = {},
+		value = "totalPlaySeconds",
+		dimensions = { { "secondsSinceJoin" } },
 		onboardingStep = 1,
 		measures = { "First hatch" },
 		constants = { "pacing_first_hatch_minutes" },
@@ -101,7 +113,7 @@ local list: { Event } = {
 		name = "egg_bought",
 		fields = { eggId = "string", count = "number", price = "number", coinsAfter = "number" },
 		kind = "economy",
-		dimensions = { "eggId", "count" },
+		dimensions = { { "eggId" }, { "count" } },
 		economy = {
 			flow = "Sink",
 			amount = "price",
@@ -116,7 +128,7 @@ local list: { Event } = {
 		name = "pet_hatched",
 		fields = { petId = "string", rarity = "string", variant = "string" },
 		kind = "custom",
-		dimensions = { "rarity", "variant" },
+		dimensions = { { "petId" }, { "rarity", "variant" } },
 		measures = {},
 		constants = {},
 	},
@@ -124,25 +136,34 @@ local list: { Event } = {
 		name = "pet_equipped",
 		fields = { petId = "string", team = "list" },
 		kind = "custom",
-		dimensions = { "petId" },
+		dimensions = { { "petId" }, { "team" } },
 		measures = {},
 		constants = {},
 	},
 	{
 		name = "gym_attempt",
-		fields = { worldIndex = "number", secondsSinceJoin = "number" },
+		fields = {
+			worldIndex = "number",
+			totalPlaySeconds = "number",
+			secondsSinceJoin = "number",
+		},
 		kind = "custom",
-		value = "secondsSinceJoin",
-		dimensions = { "worldIndex" },
+		value = "totalPlaySeconds",
+		dimensions = { { "worldIndex" }, { "secondsSinceJoin" } },
 		measures = {},
 		constants = {},
 	},
 	{
 		name = "gym_result",
-		fields = { worldIndex = "number", outcome = "string", secondsSinceJoin = "number" },
+		fields = {
+			worldIndex = "number",
+			outcome = "string",
+			totalPlaySeconds = "number",
+			secondsSinceJoin = "number",
+		},
 		kind = "custom",
-		value = "secondsSinceJoin",
-		dimensions = { "worldIndex", "outcome" },
+		value = "totalPlaySeconds",
+		dimensions = { { "worldIndex", "outcome" }, { "secondsSinceJoin" } },
 		measures = { "Gym N beaten", "Final gym beaten", "Rebirths at gym N" },
 		constants = {
 			"pacing_gym1_minutes_min",
@@ -153,19 +174,23 @@ local list: { Event } = {
 	},
 	{
 		name = "rebirth",
-		fields = { count = "number", secondsSinceJoin = "number" },
+		fields = { count = "number", totalPlaySeconds = "number", secondsSinceJoin = "number" },
 		kind = "custom",
-		value = "secondsSinceJoin",
-		dimensions = { "count" },
+		value = "totalPlaySeconds",
+		dimensions = { { "count" }, { "secondsSinceJoin" } },
 		measures = {},
 		constants = {},
 	},
 	{
 		name = "world_unlocked",
-		fields = { worldIndex = "number", secondsSinceJoin = "number" },
+		fields = {
+			worldIndex = "number",
+			totalPlaySeconds = "number",
+			secondsSinceJoin = "number",
+		},
 		kind = "custom",
-		value = "secondsSinceJoin",
-		dimensions = { "worldIndex" },
+		value = "totalPlaySeconds",
+		dimensions = { { "worldIndex" }, { "secondsSinceJoin" } },
 		measures = {},
 		constants = {},
 	},
@@ -173,7 +198,7 @@ local list: { Event } = {
 		name = "pass_purchased",
 		fields = { passId = "string" },
 		kind = "custom",
-		dimensions = { "passId" },
+		dimensions = { { "passId" } },
 		measures = {},
 		constants = {},
 	},
@@ -278,18 +303,62 @@ function Events.stage(record: Record): string
 	return string.format("rebirths %d, world %d", record.rebirths, record.world)
 end
 
+local function fieldText(value: any): string
+	if type(value) == "table" then
+		local parts = {}
+		for _, item in value do
+			table.insert(parts, tostring(item))
+		end
+		return table.concat(parts, ",")
+	end
+	return tostring(value)
+end
+
 -- The custom fields sent with a record: 01 the stage, 02 and 03 the event's
--- dimensions. Keys are the AnalyticsCustomFieldKeys names.
+-- dimension slots. Keys are the AnalyticsCustomFieldKeys names.
 function Events.customFields(record: Record): { [string]: string }
 	local event = Events.get(record.name)
 	local custom: { [string]: string } = { CustomField01 = Events.stage(record) }
 	local keys = { "CustomField02", "CustomField03" }
-	for i, field in event.dimensions do
+	for i, slot in event.dimensions do
 		if keys[i] ~= nil then
-			custom[keys[i]] = tostring(record.fields[field])
+			local parts = {}
+			for _, field in slot do
+				table.insert(parts, fieldText(record.fields[field]))
+			end
+			custom[keys[i]] = table.concat(parts, ", ")
 		end
 	end
 	return custom
+end
+
+-- Every field of an event that reaches Roblox: the value, the fields in the
+-- first two dimension slots, and an economy event's amount, balance and item.
+-- Sorted, each once.
+function Events.sentFields(event: Event): { string }
+	local seen: { [string]: boolean } = {}
+	if event.value ~= nil then
+		seen[event.value] = true
+	end
+	for i, slot in event.dimensions do
+		if i <= 2 then
+			for _, field in slot do
+				seen[field] = true
+			end
+		end
+	end
+	local economy = event.economy
+	if economy ~= nil then
+		seen[economy.amount] = true
+		seen[economy.balance] = true
+		seen[economy.item] = true
+	end
+	local names = {}
+	for field in seen do
+		table.insert(names, field)
+	end
+	table.sort(names)
+	return names
 end
 
 -- The number sent as a custom event's value, or nil when the event has none.

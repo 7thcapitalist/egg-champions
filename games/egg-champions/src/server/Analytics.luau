@@ -15,7 +15,9 @@
 	is logged and dropped, never retried. Analytics never breaks gameplay.
 
 	session_start fires when a profile loads, session_end when the player
-	leaves. Only the Roblox user id identifies a player; no other personal
+	leaves (from Profiles.onLeaving, so it fires before the final save and on
+	shutdown too). Session and total play time come from Profiles, which saves
+	the total in the profile. Only the Roblox user id identifies a player; no other personal
 	data is recorded. See notes/analytics-events.md for every event.
 
 	The numbers below are send timing and memory limits, not game numbers.
@@ -47,7 +49,6 @@ local CURRENCY = "Coins"
 local Analytics = {}
 
 local queue: Queue.Queue<Pending> = Queue.new(QUEUE_LIMIT)
-local joinedAt: { [Player]: number } = {}
 -- The last loaded profile per player, so session_end still has the stage
 -- after Profiles has let go of the player.
 local lastProfile: { [Player]: Profile } = {}
@@ -66,11 +67,21 @@ Analytics.outcomes = Events.outcomes
 
 -- Seconds since this player's profile loaded in this session.
 function Analytics.secondsSinceJoin(player: Player): number
-	local at = joinedAt[player]
-	if at == nil then
-		return 0
-	end
-	return math.floor(os.clock() - at)
+	return Profiles.sessionSeconds(player)
+end
+
+-- Seconds this player has played over every session, this one included.
+function Analytics.totalPlaySeconds(player: Player): number
+	return Profiles.totalPlaySeconds(player)
+end
+
+-- The fields with the player's play time added: totalPlaySeconds and
+-- secondsSinceJoin. For the events that measure pacing.
+function Analytics.withPlaytime(player: Player, fields: { [string]: any }): { [string]: any }
+	local out = table.clone(fields)
+	out.totalPlaySeconds = Analytics.totalPlaySeconds(player)
+	out.secondsSinceJoin = Analytics.secondsSinceJoin(player)
+	return out
 end
 
 -- Queues one event. Errors when the event is not in Events.list or a field is
@@ -166,25 +177,23 @@ function Analytics.start(coinsPerClickOf: (Player, Profile) -> number)
 	coinsPerClick = coinsPerClickOf
 
 	Profiles.onLoaded(function(player: Player, profile: Profile)
-		joinedAt[player] = os.clock()
 		lastProfile[player] = profile
 		safeFire(player, "session_start", function()
 			return { coinsPerClick = coinsPerClick(player, profile) }
 		end)
 	end)
 
+	Profiles.onLeaving(function(player: Player, profile: Profile)
+		safeFire(player, "session_end", function()
+			return {
+				lengthSeconds = Analytics.secondsSinceJoin(player),
+				coinsPerClick = coinsPerClick(player, profile),
+			}
+		end)
+	end)
+
 	Players.PlayerRemoving:Connect(function(player: Player)
-		local profile = lastProfile[player]
-		if profile ~= nil then
-			safeFire(player, "session_end", function()
-				return {
-					lengthSeconds = Analytics.secondsSinceJoin(player),
-					coinsPerClick = coinsPerClick(player, profile),
-				}
-			end)
-		end
 		Analytics.flush()
-		joinedAt[player] = nil
 		lastProfile[player] = nil
 	end)
 
