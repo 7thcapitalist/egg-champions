@@ -860,7 +860,16 @@ This is attempt {attempt} of {total}.""".format(
                 tid, reason if task is None else "next is task %s" % task["id"]))
             return 1
         base = self.git("rev-parse", "HEAD").stdout.strip()
-        breaks = self.guard(base, "built", task["path"])
+        # The agent already ran, so these baselines are taken now: the guard
+        # still catches pushes and .env changes made from here on, and every
+        # path rule applies to the whole working tree change.
+        self.upstream_before = self.upstream()
+        self.env_before = self.env_stat()
+        try:
+            breaks = self.guard(base, "built", task["path"])
+        except Stop as stop:
+            print("FINISH REFUSED: %s" % stop)
+            return 1
         if breaks:
             print("FINISH REFUSED: changed files the task may not change:\n"
                   + "\n".join("- " + b for b in breaks))
