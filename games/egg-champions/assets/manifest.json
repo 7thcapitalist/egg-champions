@@ -3,7 +3,7 @@
   "place": "Egg Champions Test",
   "pet_folder": "Workspace.Pets_Selected",
   "egg_folder": "Workspace.Eggs",
-  "updated": "2026-10-12",
+  "updated": "2026-10-14",
   "entries": [
     {
       "id": "leafpup",
@@ -230,11 +230,10 @@
       "kind": "pet",
       "source_model": "Moranguete_R4",
       "mesh_asset_id": "rbxassetid://136103984711129",
-      "texture_asset_id": "rbxassetid://124116507973862",
+      "texture_asset_id": "rbxassetid://104793537824092",
       "height_studs": 7.56,
       "status": "ready",
-      "notes": "Fruit Edition; uses the R4 texture for now. The repainted face is a Studio EditableImage that cannot be uploaded from Studio; redo it as a PNG and upload through Open Cloud.",
-      "needs_texture_save": true
+      "notes": "Texture 104793537824092 saved by factory/tools/texture_jobs.py from workspace.MorangueteFix.RepaintNewface_source on 2026-10-14."
     },
     {
       "id": "ashwolf",

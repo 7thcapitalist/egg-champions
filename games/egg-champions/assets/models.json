@@ -1,5 +1,5 @@
 {
-  "manifest_sha256": "0f16301453fdf5f1cbc5b44bad97cff9c051ad5bfb0a794e1d00a1b66422d095",
+  "manifest_sha256": "c975a5f901353893ef55b3b24d1c96d3b4ddbc731b10b9671e959f8d1e29b45a",
   "entries": [
     {
       "id": "leafpup",
@@ -159,7 +159,7 @@
       "id": "moranguete",
       "kind": "pet",
       "mesh_id": 136103984711129,
-      "texture_id": 124116507973862,
+      "texture_id": 104793537824092,
       "height": 7.56
     },
     {
