@@ -24,6 +24,7 @@ import json
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -77,18 +78,29 @@ def main(argv=None):
         print("publish_test: rojo build failed")
         return 1
 
-    try:
-        reply = opencloud.call(
-            "POST",
-            PUBLISH_URL % (universe, place),
-            key,
-            raw=out.read_bytes(),
-            content_type="application/octet-stream",
-            timeout=300,
-        )
-    except opencloud.CloudError as err:
-        print("publish_test: %s" % err)
-        return 1
+    # Roblox answers 409 "Server is busy" while the place is open in Studio
+    # or another save is running, and 429 when rate limited. Both pass.
+    attempts = 6
+    for attempt in range(1, attempts + 1):
+        try:
+            reply = opencloud.call(
+                "POST",
+                PUBLISH_URL % (universe, place),
+                key,
+                raw=out.read_bytes(),
+                content_type="application/octet-stream",
+                timeout=300,
+            )
+            break
+        except opencloud.CloudError as err:
+            busy = "HTTP 409" in str(err) or "HTTP 429" in str(err)
+            if not busy or attempt == attempts:
+                print("publish_test: %s" % err)
+                if busy:
+                    print("publish_test: still busy; close the place in Studio and run again")
+                return 1
+            print("publish_test: busy (try %d of %d), waiting 60 seconds" % (attempt, attempts))
+            time.sleep(60)
     version = reply.get("versionNumber", reply.get("text"))
     print("publish_test: published test place %d as version %s" % (place, version))
     return 0
