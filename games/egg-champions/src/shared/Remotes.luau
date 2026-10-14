@@ -17,7 +17,8 @@
 			with a result table, { ok = true, ... } or { ok = false, reason }.
 
 	The only thing a client ever sends is a choice: which egg, which pet uid,
-	which world, which battle session, which move. Never an amount.
+	which world, which battle session, which move, or SkipTutorial with
+	nothing at all. Never an amount.
 ]]
 
 export type Kind = "event" | "function"
@@ -35,6 +36,7 @@ export type Name =
 	| "ProfileChanged"
 	| "Notice"
 	| "ClickCredited"
+	| "SkipTutorial"
 
 local Remotes = {}
 
@@ -54,6 +56,7 @@ Remotes.names = table.freeze({
 	ProfileChanged = "ProfileChanged" :: Name,
 	Notice = "Notice" :: Name,
 	ClickCredited = "ClickCredited" :: Name,
+	SkipTutorial = "SkipTutorial" :: Name,
 })
 
 -- Every remote and its kind, in a fixed order.
@@ -70,6 +73,7 @@ Remotes.list = table.freeze({
 	table.freeze({ name = Remotes.names.ProfileChanged, kind = "event" :: Kind }),
 	table.freeze({ name = Remotes.names.Notice, kind = "event" :: Kind }),
 	table.freeze({ name = Remotes.names.ClickCredited, kind = "event" :: Kind }),
+	table.freeze({ name = Remotes.names.SkipTutorial, kind = "function" :: Kind }),
 })
 
 -- The kind of a remote, or nil for a name that is not a remote.

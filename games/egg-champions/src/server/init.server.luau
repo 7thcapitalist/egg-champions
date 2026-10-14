@@ -24,6 +24,7 @@ local TeamService = require(Services:WaitForChild("TeamService"))
 local GymService = require(Services:WaitForChild("GymService"))
 local RebirthService = require(Services:WaitForChild("RebirthService"))
 local PassService = require(Services:WaitForChild("PassService"))
+local TutorialService = require(Services:WaitForChild("TutorialService"))
 
 local World = script:WaitForChild("World")
 local Builder = require(World:WaitForChild("Builder"))
@@ -62,6 +63,7 @@ TeamService.start()
 GymService.start()
 RebirthService.start()
 PassService.start(ClickService.autoClick)
+TutorialService.start()
 Portals.start(built)
 -- Session start and end, and the analytics flush loop. Before Profiles.start,
 -- so the first profile load already counts as a session start.

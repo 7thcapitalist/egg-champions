@@ -18,12 +18,16 @@
 		playSeconds: total seconds played over every earlier session, kept
 			through rebirth. The server adds the current session's time on
 			every save and when the player leaves (see Profile.playSecondsAfter).
+		tutorialStep: the first-time tutorial step (see Tutorial), kept
+			through rebirth.
 
 	Schema versions:
 		1: coins, pets, team, index, badges, rebirths.
 		2: adds gymsBeaten and feesPaid (task 06 progression).
 		3: adds gymRetryAt, so a gym retry wait survives leaving and rejoining.
 		4: adds playSeconds, so analytics can report total play time.
+		5: adds tutorialStep. An older save gets Tutorial.initialFor, so a
+		   player who already owns a pet skips the first three steps.
 
 	The version is a storage format number, not a game number, so it lives here
 	rather than in config. Every function leaves its input untouched.
@@ -31,6 +35,7 @@
 
 local Config = require(script.Parent.Parent.Config)
 local Progression = require(script.Parent.Progression)
+local Tutorial = require(script.Parent.Tutorial)
 
 export type OwnedPet = {
 	uid: string,
@@ -50,6 +55,7 @@ export type Profile = {
 	feesPaid: Progression.Flags,
 	gymRetryAt: { [string]: number },
 	playSeconds: number,
+	tutorialStep: number,
 }
 
 export type ProblemKind =
@@ -61,6 +67,7 @@ export type ProblemKind =
 	| "team_too_long"
 	| "team_not_owned"
 	| "team_duplicate"
+	| "bad_tutorial_step"
 
 export type Problem = {
 	kind: ProblemKind,
@@ -68,7 +75,7 @@ export type Problem = {
 	repairable: boolean,
 }
 
-local CURRENT_VERSION = 4
+local CURRENT_VERSION = 5
 
 local Profile = {}
 
@@ -83,6 +90,7 @@ Profile.problems = table.freeze({
 	teamTooLong = "team_too_long" :: ProblemKind,
 	teamNotOwned = "team_not_owned" :: ProblemKind,
 	teamDuplicate = "team_duplicate" :: ProblemKind,
+	badTutorialStep = "bad_tutorial_step" :: ProblemKind,
 })
 
 local function deepCopy(value: any): any
@@ -111,6 +119,7 @@ function Profile.new(): Profile
 		feesPaid = state.feesPaid,
 		gymRetryAt = {},
 		playSeconds = 0,
+		tutorialStep = Tutorial.steps.click,
 	}
 end
 
@@ -130,6 +139,11 @@ local steps: { [number]: (any) -> any } = {
 	[3] = function(data: any): any
 		data.playSeconds = if type(data.playSeconds) == "number" then data.playSeconds else 0
 		data.version = 4
+		return data
+	end,
+	[4] = function(data: any): any
+		data.tutorialStep = Tutorial.initialFor(data)
+		data.version = 5
 		return data
 	end,
 }
@@ -261,12 +275,20 @@ function Profile.validate(profile: Profile): { Problem }
 		equipped[uid] = true
 	end
 
+	if not Tutorial.isStep(profile.tutorialStep) then
+		report(
+			Profile.problems.badTutorialStep,
+			"tutorialStep is " .. tostring(profile.tutorialStep),
+			true
+		)
+	end
+
 	return problems
 end
 
 -- Fixes what can be fixed without losing anything the player earned: drops
 -- team entries that are not owned or repeated, then trims the team to
--- team_size. Returns a new profile and the problems that remain, which are
+-- team_size, and works out a broken tutorial step again. Returns a new profile and the problems that remain, which are
 -- the ones that must not be trusted.
 function Profile.repair(profile: Profile): (Profile, { Problem })
 	local fixed: Profile = deepCopy(profile)
@@ -283,6 +305,9 @@ function Profile.repair(profile: Profile): (Profile, { Problem })
 		end
 	end
 	fixed.team = team
+	if not Tutorial.isStep(fixed.tutorialStep) then
+		fixed.tutorialStep = Tutorial.initialFor(fixed :: any)
+	end
 	return fixed, Profile.validate(fixed)
 end
 

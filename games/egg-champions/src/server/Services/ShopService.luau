@@ -29,6 +29,7 @@ local server = script.Parent.Parent
 local Guard = require(server:WaitForChild("Guard"))
 local Passes = require(server:WaitForChild("Passes"))
 local Analytics = require(server:WaitForChild("Analytics"))
+local TutorialService = require(script.Parent:WaitForChild("TutorialService"))
 
 type Profile = Profile.Profile
 
@@ -103,6 +104,7 @@ local function onBuyEgg(
 			variant = result.variant or Analytics.NORMAL_VARIANT,
 		})
 	end
+	TutorialService.note(profile, "hatched")
 	if firstEver then
 		Analytics.track(player, "first_hatch", Analytics.withPlaytime(player, {}))
 	end

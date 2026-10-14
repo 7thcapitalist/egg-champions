@@ -15,6 +15,9 @@
 	  Index is a tab inside the Pets screen.
 	- Next-goal card on the right, picked by shared/ui/NextGoal: one line and
 	  one button. Hidden while any menu screen is open (Screens.anyOpen).
+	  While the first-time tutorial runs (shared/rules/Tutorial, step sent by
+	  the server), the card shows the tutorial line instead, with a small
+	  SKIP that sends SkipTutorial, and UI/Pointer outlines the thing to use.
 	- Team bar at the bottom: hidden until the player owns a pet, then one
 	  slot per owned pet up to constants.team_size (HudLayout.teamSlots).
 
@@ -38,10 +41,12 @@ local uiShared = Shared:WaitForChild("ui")
 local Format = require(uiShared:WaitForChild("Format"))
 local NextGoal = require(uiShared:WaitForChild("NextGoal"))
 local HudLayout = require(uiShared:WaitForChild("HudLayout"))
+local Tutorial = require(Shared:WaitForChild("rules"):WaitForChild("Tutorial"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
 local State = require(script.Parent:WaitForChild("State"))
+local Pointer = require(script.Parent:WaitForChild("Pointer"))
 
 local colors = Theme.colors
 local sizes = Theme.sizes
@@ -50,6 +55,21 @@ local textSizes = Theme.textSizes
 -- Layering inside the ScreenGui. The click layer is lowest.
 local Z_CLICK = 1
 local Z_PANEL = 2
+
+-- Width of the tutorial SKIP button on the goal card, and the gap before it.
+-- Display sizes, not game numbers.
+local SKIP_WIDTH = 56
+local SKIP_GAP = 6
+
+-- The ScreenGui names of the screens the tutorial pointer looks into.
+local EGG_SHOP_GUI = "EggShop"
+local PETS_GUI = "Pets"
+
+-- The goal card button for each tutorial step that opens a screen.
+local TUTORIAL_ACTION: { [number]: { label: string, screen: string } } = {
+	[Tutorial.steps.hatch] = { label = "Open eggs", screen = Screens.names.Eggs },
+	[Tutorial.steps.equip] = { label = "Open pets", screen = Screens.names.Pets },
+}
 
 -- The screen each HudLayout.MENU entry opens. Shop is the accent button.
 local MENU_SCREEN: { [string]: string } = {
@@ -251,6 +271,7 @@ local function buildMenu(parent: Instance): Menu
 		local b = button(entry, entry, menu, entry == MENU_ACCENT)
 		b.LayoutOrder = position
 		local screen = MENU_SCREEN[entry]
+		Pointer.register("menu:" .. entry, b)
 		b.Activated:Connect(function()
 			Screens.open(screen)
 		end)
@@ -264,6 +285,7 @@ type GoalCard = {
 	line: TextLabel,
 	action: TextButton,
 	actionStroke: UIStroke,
+	skip: TextButton,
 }
 
 local goalScreen: string? = nil
@@ -284,7 +306,17 @@ local function buildGoal(parent: Instance): GoalCard
 			Screens.open(screen)
 		end
 	end)
-	return { frame = goal, line = line, action = action, actionStroke = actionStroke }
+	local skip = button("Skip", "Skip", goal, false)
+	skip.TextSize = textSizes.small
+	skip.TextColor3 = colors.muted
+	skip.Visible = false
+	return {
+		frame = goal,
+		line = line,
+		action = action,
+		actionStroke = actionStroke,
+		skip = skip,
+	}
 end
 
 type Slot = {
@@ -382,7 +414,11 @@ local function number(value: any): number
 end
 
 -- Builds the main screen under playerGui and keeps it in step with State.
-function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
+function Main.mount(
+	playerGui: PlayerGui,
+	click: RemoteEvent,
+	skipTutorial: RemoteFunction?
+): ScreenGui
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "Main"
 	gui.ResetOnSpawn = false
@@ -416,6 +452,9 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 
 	local shownSlots = 0
 	local goalWanted = true
+	-- The tutorial step the server last sent, and whether a skip is in flight.
+	local tutorialStep: any = nil
+	local skipping = false
 
 	local function applyLayout()
 		local area = content.AbsoluteSize
@@ -442,7 +481,11 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 
 		place(goal.frame, layout.goal)
 		goal.line.Position = UDim2.fromOffset(s.goalPad, s.goalPad)
-		goal.line.Size = UDim2.new(1, -2 * s.goalPad, 0, s.goalLine)
+		local skipRoom = if goal.skip.Visible then SKIP_WIDTH + SKIP_GAP else 0
+		goal.line.Size = UDim2.new(1, -2 * s.goalPad - skipRoom, 0, s.goalLine)
+		goal.skip.AnchorPoint = Vector2.new(1, 0)
+		goal.skip.Position = UDim2.new(1, -s.goalPad, 0, s.goalPad)
+		goal.skip.Size = UDim2.fromOffset(SKIP_WIDTH, s.goalLine)
 		goal.action.Position = UDim2.fromOffset(s.goalPad, s.goalPad + s.goalLine + s.goalGap)
 		goal.action.Size = UDim2.new(1, -2 * s.goalPad, 0, s.goalButton)
 		goal.frame.Visible = goalWanted and not Screens.anyOpen()
@@ -468,9 +511,34 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 		end
 	end
 
+	-- Points at the thing the current tutorial step asks for, or at nothing.
+	local function updatePointer()
+		local card = Tutorial.card(tutorialStep, {
+			eggsOpen = Screens.isShown(EGG_SHOP_GUI),
+			petsOpen = Screens.isShown(PETS_GUI),
+		})
+		Pointer.set(if card ~= nil then card.target else nil)
+	end
+
 	content:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyLayout)
 	Screens.onChange(function()
 		goal.frame.Visible = goalWanted and not Screens.anyOpen()
+		updatePointer()
+	end)
+
+	goal.skip.Activated:Connect(function()
+		if skipTutorial == nil or skipping then
+			return
+		end
+		skipping = true
+		-- The server ends the tutorial and pushes the new step.
+		local ok, reply = pcall(function()
+			return skipTutorial:InvokeServer()
+		end)
+		if not ok or type(reply) ~= "table" or reply.ok ~= true then
+			warn("[UI] the tutorial could not be skipped: " .. tostring(reply))
+		end
+		skipping = false
 	end)
 
 	clickLayer.MouseButton1Down:Connect(function(x: number, y: number)
@@ -506,13 +574,50 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 		top.rebirths.Text = Theme.label(string.format("Rebirths %s", Format.abbreviate(rebirths)))
 
 		local picked = NextGoal.pick(goalState, number(derived.rebirthCost))
-		goal.line.Text = string.format(
-			"%s  %s / %s",
-			Theme.label(picked.title),
-			Format.abbreviate(picked.have),
-			Format.abbreviate(picked.need)
-		)
+		tutorialStep = profile.tutorialStep
+		local tutorial = Tutorial.card(tutorialStep, { eggsOpen = false, petsOpen = false })
+		local skipWanted = tutorial ~= nil and skipTutorial ~= nil
+		if goal.skip.Visible ~= skipWanted then
+			goal.skip.Visible = skipWanted
+			applyLayout()
+		end
+		updatePointer()
+
 		local action = GOAL_ACTION[picked.kind]
+		local progressText: string? = nil
+		if tutorial ~= nil then
+			goal.line.Text = tutorial.text
+			if tutorial.step == Tutorial.steps.click then
+				local price = Tutorial.firstEggPrice()
+				action = nil
+				progressText = string.format(
+					"%s / %s",
+					Format.abbreviate(math.min(coins, price)),
+					Format.abbreviate(price)
+				)
+			elseif TUTORIAL_ACTION[tutorial.step] ~= nil then
+				action = TUTORIAL_ACTION[tutorial.step]
+				picked.ready = true
+			else
+				-- The gym step: the first world's gym fee, or the gym itself
+				-- once the fee is paid.
+				local fee = Config.worldById[Tutorial.gymWorldId].gym.fee
+				local paid = goalState.feesPaid[Tutorial.gymWorldId] == true
+				action = GOAL_ACTION.gym
+				picked.ready = paid or coins >= fee
+				if not picked.ready then
+					progressText =
+						string.format("%s / %s", Format.abbreviate(coins), Format.abbreviate(fee))
+				end
+			end
+		else
+			goal.line.Text = string.format(
+				"%s  %s / %s",
+				Theme.label(picked.title),
+				Format.abbreviate(picked.have),
+				Format.abbreviate(picked.need)
+			)
+		end
 		if picked.ready and action ~= nil then
 			goalScreen = action.screen
 			goal.action.Text = Theme.label(action.label)
@@ -522,7 +627,7 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 			goal.action.AutoButtonColor = true
 		else
 			goalScreen = nil
-			goal.action.Text = Theme.label("Not enough coins")
+			goal.action.Text = Theme.label(progressText or "Not enough coins")
 			goal.action.TextColor3 = colors.muted
 			goal.action.BackgroundColor3 = colors.raised
 			goal.actionStroke.Color = colors.border

@@ -28,6 +28,7 @@ local Requests = require(Shared:WaitForChild("net"):WaitForChild("Requests"))
 local server = script.Parent.Parent
 local Guard = require(server:WaitForChild("Guard"))
 local Passes = require(server:WaitForChild("Passes"))
+local TutorialService = require(script.Parent:WaitForChild("TutorialService"))
 
 type Profile = Profile.Profile
 
@@ -76,6 +77,7 @@ local function onClick(player: Player, profile: Profile)
 	end
 	local credited = ClickService.coinsPerClick(player, profile)
 	profile.coins += credited
+	TutorialService.note(profile, "coins")
 	Guard.push(player)
 	Guard.fire(player, Remotes.names.ClickCredited, credited)
 end
@@ -84,6 +86,7 @@ end
 -- skips the rate limit, which is for client clicks; the server sets the rate.
 function ClickService.autoClick(player: Player, profile: Profile)
 	profile.coins += ClickService.coinsPerClick(player, profile)
+	TutorialService.note(profile, "coins")
 	Guard.push(player)
 end
 

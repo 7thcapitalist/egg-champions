@@ -18,6 +18,7 @@ local Requests = require(Shared:WaitForChild("net"):WaitForChild("Requests"))
 
 local Guard = require(script.Parent.Parent:WaitForChild("Guard"))
 local Analytics = require(script.Parent.Parent:WaitForChild("Analytics"))
+local TutorialService = require(script.Parent:WaitForChild("TutorialService"))
 
 type Profile = Profile.Profile
 
@@ -56,6 +57,7 @@ local function onEquip(player: Player, profile: Profile, uid: any): (boolean, an
 		return false, reason
 	end
 	profile.team = nextTeam
+	TutorialService.note(profile, "equipped")
 	local petIds = teamPetIds(profile, nextTeam)
 	local equipped = teamPetIds(profile, { uid })
 	Analytics.track(player, "pet_equipped", { petId = equipped[1] or "", team = petIds })

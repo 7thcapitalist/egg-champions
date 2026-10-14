@@ -27,6 +27,7 @@ local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local PetsView = require(Shared:WaitForChild("ui"):WaitForChild("PetsView"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
+local Pointer = require(script.Parent:WaitForChild("Pointer"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
 local State = require(script.Parent:WaitForChild("State"))
 
@@ -536,6 +537,9 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 				action.TextColor3 = colors.gold
 				local stroke = action:FindFirstChildOfClass("UIStroke") :: UIStroke
 				stroke.Color = colors.gold
+			end
+			if not equipped then
+				Pointer.register("equip", action)
 			end
 			action.Activated:Connect(function()
 				-- The client never decides: both go to the server as they are.

@@ -29,6 +29,7 @@ return function()
 				"ProfileChanged",
 				"Notice",
 				"ClickCredited",
+				"SkipTutorial",
 			}
 			local names = {}
 			for _, entry in Remotes.list do

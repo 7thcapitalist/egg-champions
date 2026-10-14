@@ -26,6 +26,7 @@ return {
 	ruleSpecs["Rebirth.spec"],
 	ruleSpecs["Profile.spec"],
 	ruleSpecs["PassEffects.spec"],
+	ruleSpecs["Tutorial.spec"],
 	netSpecs["Requests.spec"],
 	worldSpecs["Layout.spec"],
 	uiSpecs["Format.spec"],

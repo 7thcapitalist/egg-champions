@@ -101,7 +101,7 @@ return function()
 			save.feesPaid = {}
 			save.gymRetryAt = { [Config.worlds[1].id] = 100 }
 			local migrated = Profile.migrate(save)
-			expect(migrated.version).toEqual(4)
+			expect(migrated.version).toEqual(Profile.version)
 			expect(migrated.playSeconds).toEqual(0)
 			expect(migrated.gymRetryAt).toEqual({ [Config.worlds[1].id] = 100 })
 			expect(save.playSeconds).toEqual(nil)

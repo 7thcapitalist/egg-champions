@@ -34,6 +34,7 @@ local EggShopView = require(uiShared:WaitForChild("EggShopView"))
 local NextGoal = require(uiShared:WaitForChild("NextGoal"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
+local Pointer = require(script.Parent:WaitForChild("Pointer"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
 local Effects =
 	require((script.Parent :: Instance).Parent:WaitForChild("Effects"):WaitForChild("Effects"))
@@ -525,6 +526,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		triple.Text = Theme.label(string.format("Hatch x%d", EggShopView.TRIPLE_COUNT))
 
 		local eggId = egg.id
+		Pointer.register("hatch:" .. eggId, hatch)
 		hatch.Activated:Connect(function()
 			buy(eggId, 1)
 		end)

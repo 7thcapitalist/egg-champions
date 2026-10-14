@@ -4,7 +4,8 @@
 
 	The client only sends requests and shows results. It:
 	- keeps the latest state the server sent (UI/State) and builds the main
-	  screen (UI/Main), where pressing the world view fires Click;
+	  screen (UI/Main), where pressing the world view fires Click and the
+	  tutorial card's SKIP sends SkipTutorial;
 	- shows the server's Notice messages (such as why a portal refused);
 	- builds the egg shop (UI/EggShop), where Hatch and Hatch x3 send BuyEgg;
 	- builds the pets and index screen (UI/Pets), where Equip and Unequip send
@@ -59,7 +60,8 @@ Progress.mount(player:WaitForChild("PlayerGui") :: PlayerGui)
 Main.onWorldClick(Effects.clicked)
 Main.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
-	remotes:WaitForChild(Remotes.names.Click) :: RemoteEvent
+	remotes:WaitForChild(Remotes.names.Click) :: RemoteEvent,
+	remotes:WaitForChild(Remotes.names.SkipTutorial) :: RemoteFunction
 )
 EggShop.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,

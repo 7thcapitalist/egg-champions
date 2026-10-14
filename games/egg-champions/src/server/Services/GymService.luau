@@ -43,6 +43,7 @@ local BattleView = require(Shared:WaitForChild("ui"):WaitForChild("BattleView"))
 local Guard = require(script.Parent.Parent:WaitForChild("Guard"))
 local Passes = require(script.Parent.Parent:WaitForChild("Passes"))
 local Analytics = require(script.Parent.Parent:WaitForChild("Analytics"))
+local TutorialService = require(script.Parent:WaitForChild("TutorialService"))
 local Profiles = require(script.Parent.Parent:WaitForChild("Profiles"))
 
 type Profile = Profile.Profile
@@ -249,6 +250,7 @@ local function onStartBattle(player: Player, profile: Profile, worldId: any): (b
 	}
 	sessions[session.id] = session
 	sessionOf[player] = session.id
+	TutorialService.note(profile, "gym_started")
 	Analytics.track(
 		player,
 		"gym_attempt",
