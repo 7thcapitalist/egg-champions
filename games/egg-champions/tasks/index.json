@@ -275,6 +275,60 @@
         "26"
       ],
       "status": "done"
+    },
+    {
+      "id": "29",
+      "title": "Egg shop you can use without scrolling",
+      "file": "29-egg-shop-usable.md",
+      "depends_on": [
+        "28"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "30",
+      "title": "Pets screen fits, and the tutorial guides inside screens",
+      "file": "30-pets-screen-and-in-screen-guidance.md",
+      "depends_on": [
+        "29"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "31",
+      "title": "The first minutes have a next step, and the gym is easy to find",
+      "file": "31-first-minutes-pacing.md",
+      "depends_on": [
+        "30"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "32",
+      "title": "Clear HUD priorities, team bar, and pets that follow you",
+      "file": "32-hud-hierarchy-team-and-followers.md",
+      "depends_on": [
+        "31"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "33",
+      "title": "Small fixes from the playtest and review",
+      "file": "33-small-fixes-from-playtest.md",
+      "depends_on": [
+        "32"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "34",
+      "title": "Worlds that look good",
+      "file": "34-world-art-pass.md",
+      "depends_on": [
+        "33"
+      ],
+      "status": "pending"
     }
   ]
 }
