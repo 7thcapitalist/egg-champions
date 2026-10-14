@@ -338,6 +338,108 @@ def gate_built(game):
     return ok("%d task(s) done, and rojo, selene and stylua all pass" % len(tasks))
 
 
+# --------------------------------------------------------------------- assets
+
+
+def maps_path(node, target):
+    """True when a Rojo project tree maps `target` somewhere."""
+    if not isinstance(node, dict):
+        return False
+    if node.get("$path") == target:
+        return True
+    return any(maps_path(v, target) for k, v in node.items() if not k.startswith("$"))
+
+
+def positive_size(size):
+    return (
+        isinstance(size, list)
+        and len(size) == 3
+        and all(isinstance(n, (int, float)) and not isinstance(n, bool) and n > 0 for n in size)
+    )
+
+
+def gate_assets(game):
+    assets = game / "assets"
+    manifest_path = assets / "manifest.json"
+    models_path = assets / "models.json"
+    verify_path = assets / "verify.json"
+    for path, hint in (
+        (manifest_path, "the asset manifest"),
+        (models_path, "Run factory/tools/build_models.py."),
+        (verify_path, "Run factory/tools/verify_assets.py."),
+    ):
+        if not path.is_file():
+            return fail("no %s. %s" % (path.as_posix(), hint))
+
+    models_bytes = models_path.read_bytes()
+    models, err = read_json(models_path)
+    if err:
+        return fail(err)
+    entries = models.get("entries") if isinstance(models, dict) else None
+    if not isinstance(entries, list):
+        return fail("%s has no 'entries' list" % models_path.as_posix())
+    by_id = {e.get("id"): e for e in entries if isinstance(e, dict)}
+
+    pets, err = read_json(game / "config" / "pets.json")
+    if err:
+        return fail(err)
+    eggs, err = read_json(game / "config" / "eggs.json")
+    if err:
+        return fail(err)
+    wanted = [(p["id"], "pet") for p in pets] + [(e["id"], "egg") for e in eggs]
+    for item_id, kind in wanted:
+        entry = by_id.get(item_id)
+        if entry is None or entry.get("kind") != kind:
+            return fail("%s %s has no entry in %s" % (kind, item_id, models_path.as_posix()))
+
+    current = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    if models.get("manifest_sha256") != current:
+        return fail(
+            "%s is stale: the manifest changed since it was built. Rerun build_models.py."
+            % models_path.as_posix()
+        )
+
+    project, err = read_json(game / "default.project.json")
+    if err:
+        return fail(err)
+    if not maps_path(project.get("tree"), "assets/models.json"):
+        return fail("default.project.json does not map assets/models.json")
+
+    verify, err = read_json(verify_path)
+    if err:
+        return fail(err)
+    if verify.get("models_sha256") != hashlib.sha256(models_bytes).hexdigest():
+        return fail(
+            "%s checked a different models.json. Rerun verify_assets.py." % verify_path.as_posix()
+        )
+    results = {r.get("id"): r for r in verify.get("entries") or [] if isinstance(r, dict)}
+    for item_id, _kind in wanted:
+        result = results.get(item_id)
+        if result is None:
+            return fail("%s has no result for %s" % (verify_path.as_posix(), item_id))
+        if not result.get("ok") or not positive_size(result.get("mesh_size")):
+            return fail(
+                "%s: %s is not ok (%s)"
+                % (verify_path.as_posix(), item_id, result.get("error") or result.get("texture_status"))
+            )
+
+    out = game / "build"
+    exe = shutil.which("rojo")
+    if exe is None:
+        return fail("rojo is not on PATH")
+    out.mkdir(parents=True, exist_ok=True)
+    done = subprocess.run(
+        [exe, "build", game.as_posix(), "-o", (out / "game.rbxl").as_posix()],
+        capture_output=True,
+        text=True,
+    )
+    if done.returncode != 0:
+        lines = (done.stderr or done.stdout or "").strip().splitlines()
+        return fail("rojo failed: %s" % (lines[0] if lines else "exit code %d" % done.returncode))
+
+    return ok("%d models current, mapped, built and verified on Roblox" % len(wanted))
+
+
 # ---------------------------------------------------------------------- main
 
 GATES = {
@@ -345,6 +447,7 @@ GATES = {
     "economy_tuned": gate_economy_tuned,
     "planned": gate_planned,
     "built": gate_built,
+    "assets": gate_assets,
 }
 
 
