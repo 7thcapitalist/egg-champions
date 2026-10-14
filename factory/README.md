@@ -144,3 +144,13 @@ A blocked stage other than `built` resumes the same way, after
 `--agent-cmd CMD` swaps `claude` for another command, which gets the prompt
 on stdin. It exists only to test the orchestrator itself without spending
 agent runs.
+
+`--finish ID` is for agents whose shell calls are cut short (for example a
+45 second limit). The agent builds task ID in the working tree and ticks its
+Done-when boxes, then runs
+`python factory/tools/run_factory.py <game-dir> --no-push --finish ID`.
+It applies the same path guard and checks as a normal attempt (the checks
+run side by side), then marks the task done and commits it. It skips the
+stage gates and the run report, and it never reverts: on failure it prints
+what failed and the agent fixes it and runs it again. Only the next runnable
+task can be finished.

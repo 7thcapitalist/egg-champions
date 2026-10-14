@@ -51,6 +51,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import concurrent.futures  # noqa: E402
 import gate  # noqa: E402  lives next to this file
 
 STAGE_AGENTS = {
@@ -587,8 +588,13 @@ class Run:
                     failures.append(("em dash in a changed file", rel))
             except (OSError, UnicodeDecodeError):
                 pass
-        for argv, expect in self.task_checks(brief):
-            ok, out = self.run_check(argv, expect)
+        # The checks are independent, so run them side by side. Agent shells
+        # can be short (45 seconds), and in sequence the checks plus the
+        # orchestrator's own work did not fit.
+        checks = self.task_checks(brief)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, len(checks))) as pool:
+            results = list(pool.map(lambda c: self.run_check(c[0], c[1]), checks))
+        for (argv, expect), (ok, out) in zip(checks, results):
             name = " ".join(argv) + (" (must find nothing)" if expect == "empty" else "")
             self.log("check %s" % task["id"], "pass" if ok else "FAIL", name)
             if not ok:
@@ -838,6 +844,41 @@ This is attempt {attempt} of {total}.""".format(
             "`python factory/tools/run_factory.py %s --unblock %s`." % (start, self.game, tid)
         )
 
+    # ---------------------------------------------------------------- finish
+
+    def finish(self, tid):
+        """Check and commit a task an agent already made in the working tree.
+
+        For agent shells too short for a full run (each git call can take
+        seconds on a mounted folder): no stage gates, no agent, no run
+        report. The same path guard and checks as a normal attempt. Nothing
+        is reverted on failure; the agent fixes it and runs again.
+        """
+        task, reason = self.next_task()
+        if task is None or task["id"] != tid:
+            print("FINISH REFUSED: task %s is not the next runnable task (%s)" % (
+                tid, reason if task is None else "next is task %s" % task["id"]))
+            return 1
+        base = self.git("rev-parse", "HEAD").stdout.strip()
+        breaks = self.guard(base, "built", task["path"])
+        if breaks:
+            print("FINISH REFUSED: changed files the task may not change:\n"
+                  + "\n".join("- " + b for b in breaks))
+            return 1
+        failures = self.verify_task(task, base)
+        if failures:
+            print("FINISH FAILED:\n" + "\n\n".join("### %s\n%s" % f for f in failures))
+            return 1
+        tick_commit_items(task["path"])
+        self.set_task_status(tid, "done")
+        self.log("task %s" % tid, "passed", "checked with --finish")
+        sha = self.commit("Task %s: %s\n\nBuilt by the coder agent and checked by factory/tools/run_factory.py\n"
+                          "--finish. Every check in the brief and the build checks pass." % (tid, task["title"]))
+        self.log("task %s" % tid, "committed", sha)
+        self.commit("Run log for task %s" % tid)
+        print("FINISHED: task %s committed as %s" % (tid, sha))
+        return 0
+
     # ------------------------------------------------------------------ main
 
     def preflight(self):
@@ -960,9 +1001,13 @@ def main(argv=None):
     ap.add_argument("--unblock", default=None, metavar="ID")
     ap.add_argument("--no-push", action="store_true")
     ap.add_argument("--agent-cmd", default=None, help="for testing this tool: run CMD instead of claude")
+    ap.add_argument("--finish", default=None, metavar="ID",
+                    help="check and commit task ID from the working tree, for short agent shells")
     args = ap.parse_args(argv)
     if args.max_tasks < 1 or args.attempts < 1 or args.task_minutes < 1:
         ap.error("--max-tasks, --attempts and --task-minutes must be at least 1")
+    if args.finish:
+        return Run(args).finish(args.finish)
     return Run(args).go()
 
 
