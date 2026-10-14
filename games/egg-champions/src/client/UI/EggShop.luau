@@ -643,6 +643,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 	render(nil)
 	gui.Parent = playerGui
 	State.subscribe(render)
+	Screens.track(gui)
 	Screens.register(Screens.names.Eggs, function()
 		EggShop.openAt(nil)
 	end)

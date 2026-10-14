@@ -182,6 +182,7 @@ function Rebirth.mount(playerGui: PlayerGui, rebirthRemote: RemoteFunction)
 		end
 	end)
 
+	Screens.track(gui)
 	Screens.register(Screens.names.Rebirth, open)
 end
 

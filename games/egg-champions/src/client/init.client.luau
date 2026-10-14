@@ -18,7 +18,8 @@
 	- mounts Progress, the gym win, rebirth and world unlock effects, which
 	  shows every portal open or locked from ProfileChanged;
 	- builds the rebirth prompt (UI/Rebirth), which sends Rebirth and plays
-	  the rebirth effect only when the server confirms it.
+	  the rebirth effect only when the server confirms it;
+	- builds the shop (UI/Shop), the only place game passes are offered.
 
 	The cooldown below is touch debounce timing, not a game number.
 ]]
@@ -45,6 +46,7 @@ local EggShop = require(UI:WaitForChild("EggShop"))
 local Pets = require(UI:WaitForChild("Pets"))
 local Battle = require(UI:WaitForChild("Battle"))
 local Rebirth = require(UI:WaitForChild("Rebirth"))
+local Shop = require(UI:WaitForChild("Shop"))
 local Effects = require(script:WaitForChild("Effects"):WaitForChild("Effects"))
 local Progress = require(script:WaitForChild("Effects"):WaitForChild("Progress"))
 
@@ -81,6 +83,8 @@ Rebirth.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
 	remotes:WaitForChild(Remotes.names.Rebirth) :: RemoteFunction
 )
+
+Shop.mount(player:WaitForChild("PlayerGui") :: PlayerGui)
 
 local function show(title: string, text: string)
 	local ok = pcall(function()

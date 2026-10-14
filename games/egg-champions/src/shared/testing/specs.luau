@@ -33,6 +33,7 @@ return {
 	uiSpecs["EggShopView.spec"],
 	uiSpecs["PetsView.spec"],
 	uiSpecs["BattleView.spec"],
+	uiSpecs["HudLayout.spec"],
 	visualSpecs["PetLook.spec"],
 	visualSpecs["Effects.spec"],
 	visualSpecs["BattleEffects.spec"],

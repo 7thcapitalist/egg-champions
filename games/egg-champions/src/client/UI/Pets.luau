@@ -739,6 +739,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			render()
 		end
 	end)
+	Screens.track(gui)
 	Screens.register(Screens.names.Pets, function()
 		Pets.open("pets")
 	end)

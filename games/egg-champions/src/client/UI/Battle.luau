@@ -888,6 +888,7 @@ function Battle.mount(
 	isShown = function(): boolean
 		return mode ~= "closed"
 	end
+	Screens.track(gui)
 	Screens.register(Screens.names.Battle, function()
 		openPrompt(BattleView.pickGym(gymState()))
 	end)
