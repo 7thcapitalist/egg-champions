@@ -41,10 +41,10 @@ type Profile = Profile.Profile
 -- Roblox game pass ids, by config pass id. The owner fills these in after
 -- creating the passes; 0 means not created yet.
 local PRODUCT_IDS: { [string]: number } = {
-	["2x_coins"] = 0,
-	["auto_click"] = 0,
-	["lucky_eggs"] = 0,
-	["triple_hatch"] = 0,
+	["2x_coins"] = 2036822460,
+	["auto_click"] = 2036948474,
+	["lucky_eggs"] = 2037398470,
+	["triple_hatch"] = 2039582279,
 }
 
 -- How often a failed ownership check is tried again.
