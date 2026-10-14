@@ -15,10 +15,11 @@ Reads <game-dir>/assets/texture_jobs.json, a list of jobs:
 that paints an EditableImage named imgB. A job runs only while its manifest
 entry has `needs_texture_save`, so a rerun after success does nothing.
 
-For each such job, one Open Cloud Luau Execution task on the TEST place:
+For each such job, two Open Cloud Luau Execution tasks on the TEST place:
 - reads the snippet from `source`;
-- replaces the line `return_edit` with that line plus `return imgB`, and
-  runs the result with loadstring;
+- replaces the line `return_edit` with that line plus `return imgB`;
+  Luau Execution has no loadstring, so a second task carries the edited
+  snippet inline and runs it;
 - calls AssetService:CreateAssetAsync(imgB, Enum.AssetType.Image, {Name,
   CreatorId = game.CreatorId, CreatorType = User}) and returns the new id.
 
@@ -41,7 +42,7 @@ import opencloud  # noqa: E402  lives next to this file
 
 # The JSON arguments are decoded inside the task, so no snippet text or path
 # is ever spliced into Luau source.
-SCRIPT = r"""
+FETCH_SCRIPT = r"""
 local AssetService = game:GetService("AssetService")
 local HttpService = game:GetService("HttpService")
 local job = HttpService:JSONDecode([==[%s]==])
@@ -69,27 +70,25 @@ if not node:IsA("StringValue") then
 	error(job.source .. " is a " .. node.ClassName .. ", not a StringValue")
 end
 
-local snippet = (node :: StringValue).Value
-local first, last = string.find(snippet, job.return_edit, 1, true)
-if first == nil then
-	error("the snippet has no line " .. job.return_edit)
-end
-snippet = string.sub(snippet, 1, last) .. "\nreturn imgB\n" .. string.sub(snippet, last + 1)
+return { snippet = (node :: StringValue).Value }
+"""
 
-if loadstring == nil then
-	error("loadstring is not available in this task")
+# Luau Execution tasks have no loadstring, so a second task carries the
+# snippet inline. The snippet comes from the game's own TEST place.
+RUN_SCRIPT = """
+local AssetService = game:GetService("AssetService")
+if game.CreatorType ~= Enum.CreatorType.User then
+	error("the place's creator is not a user; CreatorId cannot be read from the place")
 end
-local chunk, compileError = loadstring(snippet)
-if chunk == nil then
-	error("the edited snippet does not compile: " .. tostring(compileError))
+local function paint()
+%(snippet)s
 end
-local imgB = chunk()
-if typeof(imgB) ~= "Object" and typeof(imgB) ~= "Instance" then
-	error("the snippet returned " .. typeof(imgB) .. ", not an EditableImage")
+local imgB = paint()
+if imgB == nil then
+	error("the snippet returned nothing")
 end
-
 local result, assetId = AssetService:CreateAssetAsync(imgB, Enum.AssetType.Image, {
-	Name = job.name,
+	Name = %(name)s,
 	CreatorId = game.CreatorId,
 	CreatorType = Enum.AssetCreatorType.User,
 })
@@ -97,16 +96,10 @@ return { result = tostring(result), asset_id = tostring(assetId) }
 """
 
 
-def run_job(game, job, universe, place, key, wait):
-    payload = {
-        "source": job["source"],
-        "return_edit": job["return_edit"],
-        "name": job.get("name") or job["id"],
-    }
-    script = SCRIPT % json.dumps(payload)
+def _task(game, label, fingerprint, universe, place, key, script, wait):
     task = opencloud.run(
-        game / "build" / ("texture-job-%s.json" % job["id"]),
-        json.dumps(payload, sort_keys=True),
+        game / "build" / ("texture-job-%s.json" % label),
+        fingerprint,
         universe,
         place,
         key,
@@ -121,6 +114,22 @@ def run_job(game, job, universe, place, key, wait):
             "task ended %s: %s%s"
             % (task.get("state"), json.dumps(task.get("error")), "".join("\n  log: " + l for l in logs))
         )
+    return task
+
+
+def run_job(game, job, universe, place, key, wait):
+    payload = {"source": job["source"]}
+    fetched = _task(game, job["id"] + "-fetch", json.dumps(payload, sort_keys=True),
+                    universe, place, key, FETCH_SCRIPT % json.dumps(payload), wait)
+    snippet = (opencloud.returned(fetched) or {}).get("snippet") or ""
+    edit = job["return_edit"]
+    if edit not in snippet:
+        raise opencloud.CloudError("the snippet has no line %s" % edit)
+    snippet = snippet.replace(edit, edit + "\nreturn imgB", 1)
+    name = job.get("name") or job["id"]
+    script = RUN_SCRIPT % {"snippet": snippet, "name": json.dumps(name)}
+    task = _task(game, job["id"], json.dumps({"snippet": snippet, "name": name}, sort_keys=True),
+                 universe, place, key, script, wait)
     value = opencloud.returned(task) or {}
     asset_id = str(value.get("asset_id") or "")
     if not asset_id.isdigit() or int(asset_id) <= 0:
