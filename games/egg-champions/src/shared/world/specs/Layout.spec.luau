@@ -134,6 +134,70 @@ return function()
 			end
 		end)
 
+		it("keeps every two egg stands at least the minimum distance apart", function()
+			local function check(plan: Layout.Plan)
+				for i = 1, #plan.eggStands do
+					for j = i + 1, #plan.eggStands do
+						local a = plan.eggStands[i].position
+						local b = plan.eggStands[j].position
+						local apart = math.sqrt((a.x - b.x) ^ 2 + (a.z - b.z) ^ 2)
+						expect(apart >= Layout.STAND_MIN_GAP).toBeTrue()
+					end
+				end
+			end
+			check(Layout.plan())
+			check(Layout.plan(withFourthWorld()))
+			-- A crowded world still spaces its stands.
+			local crowded = table.clone(Config.worlds)
+			local first = table.clone(crowded[1])
+			local many = {}
+			for _, egg in Config.eggs do
+				table.insert(many, egg.id)
+			end
+			first.eggs = many
+			crowded[1] = first
+			check(Layout.plan(crowded))
+		end)
+
+		it("lays each world's stands on an arc facing the arrival point", function()
+			local plan = Layout.plan()
+			for _, stand in plan.eggStands do
+				local arrival = plan.arrivals[stand.worldId]
+				local first: Layout.EggStand? = nil
+				for _, other in plan.eggStands do
+					if other.worldId == stand.worldId then
+						first = first or other
+					end
+				end
+				local f = (first :: Layout.EggStand).position
+				local r0 = math.sqrt((f.x - arrival.x) ^ 2 + (f.z - arrival.z) ^ 2)
+				local p = stand.position
+				local r = math.sqrt((p.x - arrival.x) ^ 2 + (p.z - arrival.z) ^ 2)
+				expect(math.abs(r - r0) < 0.001).toBeTrue()
+				-- In front of the player: on the -z side of the arrival point.
+				expect(p.z < arrival.z).toBeTrue()
+			end
+		end)
+
+		it("gives every egg in every world a stand with its name and price", function()
+			local plan = Layout.plan()
+			local standFor: { [string]: Layout.EggStand } = {}
+			for _, stand in plan.eggStands do
+				standFor[stand.worldId .. "/" .. stand.eggId] = stand
+			end
+			for _, world in Config.worlds do
+				for _, eggId in world.eggs do
+					local stand = standFor[world.id .. "/" .. eggId]
+					expect(stand ~= nil).toBeTrue()
+					local egg = Config.eggById[eggId]
+					expect((stand :: Layout.EggStand).name).toEqual(egg.name)
+					expect((stand :: Layout.EggStand).price).toEqual(
+						Layout.formatCount(egg.price) .. " coins"
+					)
+				end
+			end
+		end)
+
 		it("formats counts with thousands separators", function()
 			expect(Layout.formatCount(50)).toEqual("50")
 			expect(Layout.formatCount(5000)).toEqual("5,000")

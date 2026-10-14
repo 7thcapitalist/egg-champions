@@ -32,6 +32,9 @@ export type EggStand = {
 	worldId: string,
 	eggId: string,
 	label: string,
+	-- The sign's two lines: the egg's name, and its price below it.
+	name: string,
+	price: string,
 	position: Vec,
 }
 
@@ -69,8 +72,14 @@ export type Plan = {
 local ISLAND_SIZE = 160
 local ISLAND_SPACING = 400
 local GRID_COLUMNS = 3
-local STAND_ROW_Z = -40
-local STAND_GAP = 24
+-- Egg stands stand on an arc around the arrival point, on the -z side, so
+-- every stand faces the player as they land. Neighbors sit STAND_GAP apart
+-- along the arc's chord; the arc grows its radius past STAND_RADIUS when a
+-- world has so many eggs that they would not fit in STAND_MAX_SPREAD.
+local STAND_RADIUS = 40
+local STAND_GAP = 18
+local STAND_MIN_GAP = 14
+local STAND_MAX_SPREAD = math.rad(120)
 local GYM_OFFSET: Vec = { x = 0, y = 0, z = 50 }
 local PORTAL_OFFSET: Vec = { x = 60, y = 0, z = 0 }
 local ARRIVAL_OFFSET: Vec = { x = 0, y = 0, z = 0 }
@@ -78,6 +87,8 @@ local ARRIVAL_OFFSET: Vec = { x = 0, y = 0, z = 0 }
 local Layout = {}
 
 Layout.ISLAND_SIZE = ISLAND_SIZE
+-- No two egg stands are planned closer than this, in studs.
+Layout.STAND_MIN_GAP = STAND_MIN_GAP
 
 local function add(a: Vec, b: Vec): Vec
 	return { x = a.x + b.x, y = a.y + b.y, z = a.z + b.z }
@@ -108,9 +119,37 @@ function Layout.islandOrigin(slot: number): Vec
 	return { x = column * ISLAND_SPACING, y = 0, z = row * ISLAND_SPACING }
 end
 
+function Layout.eggPrice(eggId: string): string
+	return Layout.formatCount(Config.eggById[eggId].price) .. " coins"
+end
+
 function Layout.eggLabel(eggId: string): string
-	local egg = Config.eggById[eggId]
-	return string.format("%s\n%s coins", egg.name, Layout.formatCount(egg.price))
+	return string.format("%s\n%s", Config.eggById[eggId].name, Layout.eggPrice(eggId))
+end
+
+-- Offsets from the arrival point for `count` stands on an arc facing it,
+-- left to right as seen from the arrival point looking toward -z.
+function Layout.standOffsets(count: number): { Vec }
+	local offsets: { Vec } = {}
+	if count <= 0 then
+		return offsets
+	end
+	local radius = STAND_RADIUS
+	if count > 1 then
+		-- The radius at which count - 1 chords of STAND_GAP span the max spread.
+		local half = STAND_MAX_SPREAD / (2 * (count - 1))
+		radius = math.max(radius, STAND_GAP / (2 * math.sin(half)))
+	end
+	local step = 2 * math.asin(math.min(1, STAND_GAP / (2 * radius)))
+	for i = 1, count do
+		local angle = (i - (count + 1) / 2) * step
+		table.insert(offsets, {
+			x = radius * math.sin(angle),
+			y = 0,
+			z = -radius * math.cos(angle),
+		})
+	end
+	return offsets
 end
 
 function Layout.gymLabel(world: Config.World): string
@@ -162,14 +201,16 @@ function Layout.plan(worldList: { Config.World }?): Plan
 			plan.spawn = add(origin, ARRIVAL_OFFSET)
 		end
 
-		local eggCount = #world.eggs
+		local arrival = plan.arrivals[world.id]
+		local offsets = Layout.standOffsets(#world.eggs)
 		for position, eggId in world.eggs do
-			local x = (position - (eggCount + 1) / 2) * STAND_GAP
 			table.insert(plan.eggStands, {
 				worldId = world.id,
 				eggId = eggId,
 				label = Layout.eggLabel(eggId),
-				position = add(origin, { x = x, y = 0, z = STAND_ROW_Z }),
+				name = Config.eggById[eggId].name,
+				price = Layout.eggPrice(eggId),
+				position = add(arrival, offsets[position]),
 			})
 		end
 

@@ -155,3 +155,32 @@ task.spawn(function()
 		useModel(child)
 	end
 end)
+
+-- Egg stands: each egg on a stand turns slowly. The server places it and tags
+-- it; spinning here keeps the per-frame motion off the network. Spin speed is
+-- display timing, not a game number.
+local EGG_SPIN_TAG = "SpinningEgg"
+local EGG_SPIN_RADIANS_PER_SECOND = math.rad(40)
+local spinning: { [Model]: CFrame } = {}
+local function addSpin(instance: Instance)
+	if instance:IsA("Model") and instance:IsDescendantOf(workspace) then
+		spinning[instance] = instance:GetPivot()
+	end
+end
+for _, instance in CollectionService:GetTagged(EGG_SPIN_TAG) do
+	addSpin(instance)
+end
+CollectionService:GetInstanceAddedSignal(EGG_SPIN_TAG):Connect(addSpin)
+CollectionService:GetInstanceRemovedSignal(EGG_SPIN_TAG):Connect(function(instance: Instance)
+	spinning[instance :: Model] = nil
+end)
+game:GetService("RunService").RenderStepped:Connect(function()
+	local turn = CFrame.Angles(0, os.clock() * EGG_SPIN_RADIANS_PER_SECOND, 0)
+	for model, base in spinning do
+		if model.Parent == nil then
+			spinning[model] = nil
+		else
+			model:PivotTo(base * turn)
+		end
+	end
+end)

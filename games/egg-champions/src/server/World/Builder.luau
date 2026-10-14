@@ -40,6 +40,7 @@ export type PortalSite = {
 export type StandSite = {
 	trigger: BasePart,
 	stand: Layout.EggStand,
+	model: Model,
 }
 
 export type Built = {
@@ -224,15 +225,19 @@ function Builder.buildAll(): Built
 		local folder = built.folders[stand.worldId]
 		local center = plan.arrivals[stand.worldId]
 		-- Stands face the island center, so the Trigger pad is on the near side.
-		local model =
-			Kit.eggStand(facing(stand.position, center), byWorld[stand.worldId], stand.label)
+		local model = Kit.eggStand(
+			facing(stand.position, center),
+			byWorld[stand.worldId],
+			stand.name,
+			stand.price
+		)
 		model.Name = "EggStand_" .. stand.eggId
 		model:SetAttribute("EggId", stand.eggId)
 		local trigger = triggerOf(model)
 		trigger:SetAttribute("EggId", stand.eggId)
 		trigger:AddTag("EggStand")
 		model.Parent = folder
-		table.insert(built.eggStands, { trigger = trigger, stand = stand })
+		table.insert(built.eggStands, { trigger = trigger, stand = stand, model = model })
 	end
 
 	for _, gym in plan.gyms do
@@ -308,6 +313,35 @@ function Builder.buildAll(): Built
 		)
 	end
 	return built
+end
+
+-- Puts each egg's real model on its stand once the asset stage has loaded it
+-- into ReplicatedStorage.PetModels (named by egg id), and again whenever it is
+-- reloaded. A stand whose model never loads keeps its placeholder. Call it in
+-- its own thread: it waits for the PetModels folder.
+function Builder.dressEggStands(built: Built, folderName: string)
+	local models = ReplicatedStorage:WaitForChild(folderName)
+	local byEgg: { [string]: { Model } } = {}
+	for _, site in built.eggStands do
+		local list = byEgg[site.stand.eggId] or {}
+		table.insert(list, site.model)
+		byEgg[site.stand.eggId] = list
+	end
+	local function use(child: Instance)
+		local stands = byEgg[child.Name]
+		if stands == nil or not child:IsA("Model") then
+			return
+		end
+		for _, stand in stands do
+			if stand.Parent ~= nil then
+				Kit.setEgg(stand, child)
+			end
+		end
+	end
+	models.ChildAdded:Connect(use)
+	for _, child in models:GetChildren() do
+		use(child)
+	end
 end
 
 return Builder

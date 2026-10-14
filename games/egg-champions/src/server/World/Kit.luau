@@ -79,6 +79,46 @@ local function label(adornee: BasePart, text: string, height: number, color: Col
 	gui.Parent = adornee
 end
 
+-- Egg stand signs: sized in studs, so they shrink with distance, and hidden
+-- past SIGN_MAX_DISTANCE so only the stands near the player show a sign.
+local SIGN_SIZE = UDim2.fromScale(9, 3.2)
+local SIGN_MAX_DISTANCE = 60
+local SIGN_HEIGHT = 3.5
+local PRICE_GOLD = Color3.fromRGB(232, 179, 58)
+local EGG_HOVER = 0.5
+
+Kit.EGG_SPIN_TAG = "SpinningEgg"
+
+local function line(gui: BillboardGui, text: string, top: number, color: Color3, name: string)
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Name = name
+	textLabel.Size = UDim2.fromScale(1, 0.5)
+	textLabel.Position = UDim2.fromScale(0, top)
+	textLabel.BackgroundTransparency = 1
+	textLabel.Text = text
+	textLabel.TextColor3 = color
+	textLabel.TextStrokeTransparency = 0.3
+	textLabel.TextScaled = true
+	textLabel.TextWrapped = false
+	textLabel.Font = Enum.Font.FredokaOne
+	textLabel.Parent = gui
+end
+
+-- An egg stand's sign: the name on one line, the price below it in gold.
+local function standSign(adornee: BasePart, name: string, price: string, color: Color3)
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "Label"
+	gui.Size = SIGN_SIZE
+	gui.StudsOffsetWorldSpace = Vector3.new(0, SIGN_HEIGHT, 0)
+	gui.AlwaysOnTop = false
+	gui.MaxDistance = SIGN_MAX_DISTANCE
+	gui.LightInfluence = 0
+	gui.Adornee = adornee
+	line(gui, name, 0, color, "Name")
+	line(gui, price, 0.5, PRICE_GOLD, "Price")
+	gui.Parent = adornee
+end
+
 -- 1. Ground: the flat top of an island. The base CFrame is the top center.
 function Kit.ground(size: number, base: CFrame, palette: Palette): Model
 	local model = newModel("Ground")
@@ -189,8 +229,9 @@ function Kit.water(size: number, base: CFrame, palette: Palette): Model
 	return model
 end
 
--- 6. Egg stand: a plinth, a blocky egg on top, a label, and a Trigger pad.
-function Kit.eggStand(base: CFrame, palette: Palette, text: string): Model
+-- 6. Egg stand: a plinth, a blocky placeholder egg on top (in a Model named
+-- "Egg" that Kit.setEgg swaps for the real one), a sign, and a Trigger pad.
+function Kit.eggStand(base: CFrame, palette: Palette, name: string, price: string): Model
 	local model = newModel("EggStand")
 	local plinth = part(
 		model,
@@ -200,8 +241,14 @@ function Kit.eggStand(base: CFrame, palette: Palette, text: string): Model
 		palette.trim,
 		Enum.Material.Marble
 	)
-	part(model, "EggLow", Vector3.new(4, 3, 4), base * CFrame.new(0, 4.5, 0), palette.accent)
-	part(model, "EggHigh", Vector3.new(3, 2, 3), base * CFrame.new(0, 7, 0), palette.accent)
+	local egg = Instance.new("Model")
+	egg.Name = "Egg"
+	local low =
+		part(egg, "EggLow", Vector3.new(4, 3, 4), base * CFrame.new(0, 4.5, 0), palette.accent)
+	part(egg, "EggHigh", Vector3.new(3, 2, 3), base * CFrame.new(0, 7, 0), palette.accent)
+	egg.PrimaryPart = low
+	egg:AddTag(Kit.EGG_SPIN_TAG)
+	egg.Parent = model
 	local trigger = part(
 		model,
 		"Trigger",
@@ -212,9 +259,50 @@ function Kit.eggStand(base: CFrame, palette: Palette, text: string): Model
 	)
 	trigger.Transparency = 0.4
 	trigger.CanCollide = false
-	label(plinth, text, 10, palette.text)
+	-- The sign floats above the egg: plinth top, egg, then the sign.
+	local signPart = part(
+		model,
+		"SignAnchor",
+		Vector3.new(1, 1, 1),
+		base * CFrame.new(0, 3 + 4 + 2 * EGG_HOVER + 1, 0),
+		palette.trim
+	)
+	signPart.Transparency = 1
+	signPart.CanCollide = false
+	signPart.CanQuery = false
+	signPart.CanTouch = false
+	standSign(signPart, name, price, palette.text)
 	model.PrimaryPart = plinth
 	return model
+end
+
+-- Replaces an egg stand's egg with a clone of `template` (a Model from
+-- ReplicatedStorage.PetModels, already scaled to its configured height),
+-- resting just above the plinth and tagged to spin on clients.
+function Kit.setEgg(stand: Model, template: Model)
+	local plinth = stand.PrimaryPart
+	if plinth == nil then
+		return
+	end
+	local egg = template:Clone()
+	egg.Name = "Egg"
+	for _, item in egg:GetDescendants() do
+		if item:IsA("BasePart") then
+			item.Anchored = true
+			item.CanCollide = false
+			item.CanQuery = false
+			item.CanTouch = false
+		end
+	end
+	local _, size = egg:GetBoundingBox()
+	local top = plinth.CFrame * CFrame.new(0, plinth.Size.Y / 2, 0)
+	egg:PivotTo(top * CFrame.new(0, size.Y / 2 + EGG_HOVER, 0))
+	egg:AddTag(Kit.EGG_SPIN_TAG)
+	local old = stand:FindFirstChild("Egg")
+	if old ~= nil then
+		old:Destroy()
+	end
+	egg.Parent = stand
 end
 
 -- 7. Gym building: walls, a roof, a door gap, and a label.

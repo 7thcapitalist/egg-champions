@@ -52,6 +52,8 @@ print(
 -- Pet and egg models load in their own thread; until one loads, PetVisual
 -- shows its placeholder block.
 task.spawn(ModelLibrary.start)
+-- Each egg stand swaps its placeholder for the egg's model once it loads.
+task.spawn(Builder.dressEggStands, built, ModelLibrary.FOLDER)
 
 Guard.start()
 ClickService.start()
