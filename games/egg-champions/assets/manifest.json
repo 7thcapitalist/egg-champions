@@ -230,10 +230,10 @@
       "kind": "pet",
       "source_model": "Moranguete_R4",
       "mesh_asset_id": "rbxassetid://136103984711129",
-      "texture_asset_id": "pending_studio_read",
+      "texture_asset_id": "rbxassetid://124116507973862",
       "height_studs": 7.56,
-      "status": "pending_studio_read",
-      "notes": "Fruit Edition; face was repainted in Studio and the new texture is not saved as an asset yet (design sheet calls it Moranguete_R4_repaint_newface).",
+      "status": "ready",
+      "notes": "Fruit Edition; uses the R4 texture for now. The repainted face is a Studio EditableImage that cannot be uploaded from Studio; redo it as a PNG and upload through Open Cloud.",
       "needs_texture_save": true
     },
     {
