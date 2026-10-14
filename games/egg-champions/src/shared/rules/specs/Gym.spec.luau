@@ -113,5 +113,46 @@ return function()
 				Gym.fee("no_such_world")
 			end).toThrow("no_such_world")
 		end)
+
+		it("sets the same deadline when a session ends by leaving as after a loss", function()
+			local worldId = Config.worlds[1].id
+			local lost: Gym.RetryWaits = {}
+			local left: Gym.RetryWaits = {}
+			Gym.recordEnd(lost, worldId, Gym.endings.loss, 1000)
+			Gym.recordLeave(left, worldId, 1000)
+			expect(left[worldId]).toEqual(lost[worldId])
+			expect(left[worldId]).toEqual(1000 + Config.constants.gym_retry_seconds)
+			expect(Gym.canStart(left, worldId, 1001)).toBeFalse()
+		end)
+
+		it("treats giving up like a loss and a win as clearing the wait", function()
+			local worldId = Config.worlds[1].id
+			local waits: Gym.RetryWaits = {}
+			Gym.recordEnd(waits, worldId, Gym.endings.gaveUp, 1000)
+			expect(waits[worldId]).toEqual(1000 + Config.constants.gym_retry_seconds)
+			Gym.recordEnd(waits, worldId, Gym.endings.win, 1001)
+			expect(waits[worldId]).toEqual(nil)
+		end)
+
+		it("refuses a start for the wait with the whole seconds left", function()
+			local worldId = Config.worlds[1].id
+			local wait = Config.constants.gym_retry_seconds
+			local waits: Gym.RetryWaits = {}
+			local reason, seconds = Gym.retryRefusal(waits, worldId, 1000)
+			expect(reason).toEqual(nil)
+			expect(seconds).toEqual(nil)
+			Gym.recordLeave(waits, worldId, 1000)
+			reason, seconds = Gym.retryRefusal(waits, worldId, 1000)
+			expect(reason).toEqual("retry_wait")
+			expect(seconds).toEqual(wait)
+			reason, seconds = Gym.retryRefusal(waits, worldId, 1000 + 10.25)
+			expect(seconds).toEqual(math.ceil(wait - 10.25))
+			reason, seconds = Gym.retryRefusal(waits, worldId, 1000 + wait - 0.1)
+			expect(reason).toEqual("retry_wait")
+			expect(seconds).toEqual(1)
+			reason, seconds = Gym.retryRefusal(waits, worldId, 1000 + wait)
+			expect(reason).toEqual(nil)
+			expect(seconds).toEqual(nil)
+		end)
 	end)
 end

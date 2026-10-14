@@ -249,5 +249,19 @@ return function()
 				expect(string.find(BattleView.reasonText(reason), "refused", 1, true) == nil).toBeTrue()
 			end
 		end)
+
+		it("reads the seconds left from a retry_wait refusal and nothing else", function()
+			expect(BattleView.retryWaitOf({ ok = false, reason = "retry_wait", retrySeconds = 12 })).toEqual(
+				12
+			)
+			expect(BattleView.retryWaitOf({ ok = false, reason = "retry_wait" })).toEqual(0)
+			expect(BattleView.retryWaitOf({ ok = false, reason = "team_empty", retrySeconds = 12 })).toEqual(
+				0
+			)
+			expect(
+				BattleView.retryWaitOf({ ok = false, reason = "retry_wait", retrySeconds = 0 / 0 })
+			).toEqual(0)
+			expect(BattleView.retryWaitOf(nil)).toEqual(0)
+		end)
 	end)
 end

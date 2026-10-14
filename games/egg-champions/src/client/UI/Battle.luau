@@ -770,6 +770,15 @@ function Battle.mount(
 		local started = invoke(startBattle, worldId)
 		busy = false
 		if started.ok ~= true or type(started.battle) ~= "table" then
+			local wait = BattleView.retryWaitOf(started)
+			if wait > 0 then
+				-- The server still holds a wait for this gym, for example after
+				-- leaving mid-battle and rejoining: count it down.
+				retryUntil[worldId] = os.clock() + wait
+				refreshPrompt()
+				runCountdown(worldId)
+				return
+			end
 			cardStatus.Text = BattleView.reasonText(started.reason)
 			cardStatus.Visible = true
 			refreshPrompt()

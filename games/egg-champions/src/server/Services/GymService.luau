@@ -14,8 +14,11 @@
 
 	The retry wait is a deadline in the player's profile (Profile.gymRetryAt,
 	server unix time), not server memory, so leaving and rejoining, even on
-	another server, does not clear it.
+	another server, does not clear it. A "retry_wait" refusal carries
+	retrySeconds, the whole seconds left, for the client's countdown.
 	- GiveUp(sessionId): ends the session as a loss.
+	- Leaving the game with a battle running ends it as giving up, before the
+	  profile saves, so leaving and rejoining cannot skip the wait.
 
 	The client holds no HP and no cooldown. Every answer carries a view of the
 	battle (HP, max HP, cooldowns, the active pets) that it renders as sent.
@@ -40,6 +43,7 @@ local BattleView = require(Shared:WaitForChild("ui"):WaitForChild("BattleView"))
 local Guard = require(script.Parent.Parent:WaitForChild("Guard"))
 local Passes = require(script.Parent.Parent:WaitForChild("Passes"))
 local Analytics = require(script.Parent.Parent:WaitForChild("Analytics"))
+local Profiles = require(script.Parent.Parent:WaitForChild("Profiles"))
 
 type Profile = Profile.Profile
 
@@ -159,7 +163,7 @@ local function finish(player: Player, profile: Profile, session: Session, outcom
 		return newBadge
 	end
 	trackResult(player, session, outcome)
-	Gym.recordLoss(retryWaits(profile), session.worldId, now())
+	Gym.recordEnd(retryWaits(profile), session.worldId, outcome, now())
 	return false
 end
 
@@ -184,7 +188,7 @@ local function onPayGymFee(_player: Player, profile: Profile, worldId: any): (bo
 	return true, { worldId = worldId, fee = fee }
 end
 
-local function onStartBattle(player: Player, profile: Profile, worldId: any): (boolean, any)
+local function onStartBattle(player: Player, profile: Profile, worldId: any): (boolean, any, any)
 	local valid, reason = Requests.checkChoice(worldId, knownWorlds)
 	if not valid then
 		return false, reason
@@ -199,8 +203,11 @@ local function onStartBattle(player: Player, profile: Profile, worldId: any): (b
 	if running(player) ~= nil then
 		return false, "already_in_battle"
 	end
-	if not Gym.canStart(retryWaits(profile), worldId, now()) then
-		return false, "retry_wait"
+	local waitReason, secondsLeft = Gym.retryRefusal(retryWaits(profile), worldId, now())
+	if waitReason ~= nil then
+		-- The seconds left ride along so the client can count down, even
+		-- right after a rejoin when it never saw the loss.
+		return false, waitReason, { retrySeconds = secondsLeft }
 	end
 	if #profile.team == 0 then
 		return false, "team_empty"
@@ -311,8 +318,19 @@ function GymService.start()
 	Guard.onInvoke(Remotes.names.StartBattle, onStartBattle)
 	Guard.onInvoke(Remotes.names.BattleMove, onBattleMove)
 	Guard.onInvoke(Remotes.names.GiveUp, onGiveUp)
-	Players.PlayerRemoving:Connect(function(player: Player)
+	-- Leaving with a battle running counts as giving up, so the retry wait
+	-- applies after a rejoin. Profiles runs this before it saves the profile
+	-- on leave (and on shutdown), so the deadline is in the saved data.
+	Profiles.onLeaving(function(player: Player, profile: Profile)
+		local session = running(player)
+		if session ~= nil then
+			finish(player, profile, session, Analytics.outcomes.gaveUp)
+		end
 		forgetSession(player)
+	end)
+	-- A player whose profile never loaded has no session; this only tidies.
+	Players.PlayerRemoving:Connect(function(player: Player)
+		task.defer(forgetSession, player)
 	end)
 end
 

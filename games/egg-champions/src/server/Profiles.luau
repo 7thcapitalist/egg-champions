@@ -63,6 +63,7 @@ local jobId = if game.JobId ~= "" then game.JobId else "studio-" .. HttpService:
 
 local loaded: { [Player]: Profile } = {}
 local loadedListeners: { (Player, Profile) -> () } = {}
+local leavingListeners: { (Player, Profile) -> () } = {}
 
 local Profiles = {}
 
@@ -236,6 +237,24 @@ function Profiles.onLoaded(listener: (Player, Profile) -> ())
 	table.insert(loadedListeners, listener)
 end
 
+-- Calls listener(player, profile) when a loaded player leaves, or the server
+-- shuts down, right before the final save, so a service can settle what the
+-- save must hold (a battle left running counts as given up). Listeners run in
+-- order, in the leaving thread, and must not yield. One that errors is logged
+-- and the save still happens.
+function Profiles.onLeaving(listener: (Player, Profile) -> ())
+	table.insert(leavingListeners, listener)
+end
+
+local function settleBeforeSave(player: Player, profile: Profile)
+	for _, listener in leavingListeners do
+		local ok, err = pcall(listener, player, profile)
+		if not ok then
+			log(player.UserId, "leaving listener failed: " .. tostring(err))
+		end
+	end
+end
+
 local function onJoin(player: Player)
 	local profile, reason = load(player)
 	if profile == nil then
@@ -260,6 +279,7 @@ local function onLeave(player: Player)
 	if profile == nil then
 		return
 	end
+	settleBeforeSave(player, profile)
 	loaded[player] = nil
 	save(player.UserId, profile, true)
 end
@@ -290,6 +310,9 @@ function Profiles.start()
 
 	game:BindToClose(function()
 		local pending = 0
+		for player, profile in loaded do
+			settleBeforeSave(player, profile)
+		end
 		for player, profile in loaded do
 			pending += 1
 			loaded[player] = nil

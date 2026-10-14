@@ -32,7 +32,7 @@ local Profiles = require(script.Parent:WaitForChild("Profiles"))
 type Profile = Profile.Profile
 
 export type EventHandler = (Player, Profile, ...any) -> ()
-export type InvokeHandler = (Player, Profile, ...any) -> (boolean, any)
+export type InvokeHandler = (Player, Profile, ...any) -> (boolean, any, any?)
 
 local SERVER_ERROR = "server_error"
 
@@ -157,7 +157,8 @@ function Guard.onEvent(name: string, handler: EventHandler)
 end
 
 -- Hooks a RemoteFunction. The handler returns true and a result table, or
--- false and a reason string.
+-- false, a reason string and optionally a table of extra fields for the
+-- refusal (such as the seconds left on a wait).
 function Guard.onInvoke(name: string, handler: InvokeHandler)
 	expectKind(name, "function")
 	local fn = remote(name) :: RemoteFunction
@@ -167,7 +168,7 @@ function Guard.onInvoke(name: string, handler: InvokeHandler)
 			Guard.reject(player, name, Requests.reasons.noProfile)
 			return { ok = false, reason = Requests.reasons.noProfile }
 		end
-		local called, ok, value = pcall(handler, player, profile, ...)
+		local called, ok, value, extra = pcall(handler, player, profile, ...)
 		if not called then
 			warn(
 				string.format(
@@ -183,7 +184,15 @@ function Guard.onInvoke(name: string, handler: InvokeHandler)
 		if not ok then
 			local reason = tostring(value)
 			Guard.reject(player, name, reason)
-			return { ok = false, reason = reason }
+			local refusal: { [string]: any } = {}
+			if type(extra) == "table" then
+				for field, inner in extra do
+					refusal[field] = deepCopy(inner)
+				end
+			end
+			refusal.ok = false
+			refusal.reason = reason
+			return refusal
 		end
 		Guard.push(player)
 		local result: { [string]: any } = if type(value) == "table" then value else {}

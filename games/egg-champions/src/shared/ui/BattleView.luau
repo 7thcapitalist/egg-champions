@@ -403,6 +403,19 @@ function BattleView.countdownText(secondsLeft: number): string
 	return string.format("You can try again in %ds.", whole)
 end
 
+-- The seconds left on a "retry_wait" refusal from the server, 0 for any other
+-- answer. The server sends the number; this only reads it safely.
+function BattleView.retryWaitOf(reply: any): number
+	if type(reply) ~= "table" or reply.reason ~= "retry_wait" then
+		return 0
+	end
+	local seconds = reply.retrySeconds
+	if type(seconds) ~= "number" or seconds ~= seconds or seconds == math.huge then
+		return 0
+	end
+	return math.max(0, seconds)
+end
+
 -- The line under the result after a win: the badge, and the next world.
 function BattleView.winText(worldId: string, newBadge: boolean): string
 	local world = Config.worldById[worldId]

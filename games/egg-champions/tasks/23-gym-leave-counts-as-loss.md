@@ -16,9 +16,9 @@ as giving up, so the wait applies.
    deadline as a loss; the refusal carries a correct seconds-left value.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0.
-- [ ] `selene games/egg-champions/src` and `stylua --check games/egg-champions/src` pass.
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl` succeeds.
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0.
+- [x] `selene games/egg-champions/src` and `stylua --check games/egg-champions/src` pass.
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl` succeeds.
 
 ## Needs human or playtester
 - Start a gym battle, leave mid-battle, rejoin, and confirm the wait applies with a countdown.

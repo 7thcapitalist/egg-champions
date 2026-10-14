@@ -128,4 +128,35 @@ function Gym.canStart(waits: RetryWaits, worldId: string, now: number): boolean
 	return Gym.retryWaitLeft(waits, worldId, now) <= 0
 end
 
+-- How a battle session ended, as gym_result reports it. Leaving the game with
+-- a battle running counts as giving up.
+Gym.endings = table.freeze({ win = "win", loss = "loss", gaveUp = "gave_up" })
+
+-- The one rule for the retry wait when a session ends: a win clears the wait,
+-- and anything else (a loss, giving up, leaving mid-battle) starts it, the
+-- same way. Changes `waits` in place.
+function Gym.recordEnd(waits: RetryWaits, worldId: string, ending: string, now: number)
+	if ending == Gym.endings.win then
+		Gym.clearWait(waits, worldId)
+	else
+		Gym.recordLoss(waits, worldId, now)
+	end
+end
+
+-- Ends a session because the player left the game: the same path as giving up.
+function Gym.recordLeave(waits: RetryWaits, worldId: string, now: number)
+	Gym.recordEnd(waits, worldId, Gym.endings.gaveUp, now)
+end
+
+-- Why a start is refused for the wait, if it is: "retry_wait" and the whole
+-- seconds left (rounded up, at least 1), so the client can count down after a
+-- rejoin. Nil when the gym can be tried now.
+function Gym.retryRefusal(waits: RetryWaits, worldId: string, now: number): (string?, number?)
+	local left = Gym.retryWaitLeft(waits, worldId, now)
+	if left <= 0 then
+		return nil, nil
+	end
+	return "retry_wait", math.max(1, math.ceil(left))
+end
+
 return Gym
