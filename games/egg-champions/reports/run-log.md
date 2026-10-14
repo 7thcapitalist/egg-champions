@@ -216,3 +216,6 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-13T14:40:36Z | task 21 | committed | 84e988b |
 | 2026-10-13T14:40:36Z | built | paused | stopped at the limit of 1 task(s) per run; next is task 22 |
 | 2026-10-13T14:40:36Z | run | end | 1 task(s) done, 0 problem(s), cost about $0.00 |
+| 2026-10-14T02:01:40Z | run | start | games/egg-champions on branch main, max 1 task(s) |
+| 2026-10-14T02:01:42Z | task 22 | coder start | attempt 1 of 1: Shiny and golden looks that actually show |
+| 2026-10-14T02:05:00Z | task 22 | passed | verified by hand: run_tests 273/273, rojo build, selene, stylua (orchestrator run cut off by the 45s shell limit) |

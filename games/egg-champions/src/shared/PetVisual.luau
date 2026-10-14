@@ -5,63 +5,39 @@
 	PetVisual.create(petId, variant) returns a Model. Until the asset stage,
 	that is a colored block: body color from the pet's type, a band in the
 	rarity color, and a size that grows with rarity. The battle arena, the
-	egg shop result, the pets screen and the team bar all show pets through
-	PetVisual.view, which puts this same model in a ViewportFrame. No caller
-	builds its own pet.
+	egg shop result, the pets screen, the team bar and the hatch reveal all
+	show pets through PetVisual.view, which puts this same model in a
+	ViewportFrame. No caller builds its own pet.
 
-	Variant looks (design/eggs-and-effects.md), driven by the variant the
-	server sent. A pet is never both:
-	- Shiny: brighter colors and a sparkle emitter.
-	- Golden: gold material and a soft glow.
+	Roblox does not render particles or lights inside a ViewportFrame, and
+	every pet is shown in one, so nothing here uses them. Variant looks
+	(design/eggs-and-effects.md) come from EffectsBudget.VARIANT_VIEW and use
+	only what renders there. A pet is never both:
+	- Shiny: brighter colors in Neon, a pale stroke, a sweeping pale shimmer
+	  and a few twinkling sparkle images.
+	- Golden: gold Foil body, a warm gold stroke, a slow glow pulse and a
+	  broad warm shimmer.
+	The material goes on the model; the stroke, shimmer, pulse and twinkles
+	are UI layered on the ViewportFrame itself, so they show at any size.
 
 	Every model carries an attachment named for its elemental feature (Flame,
-	Sparks, Droplets, Leaves). Fire, electric and water pets get a small idle
-	emitter there. Emitters start disabled; on the client one throttled loop
-	enables them only while the pet is in the workspace, on screen and within
-	IDLE.maxDistance of the camera. Particles do not render inside a
-	ViewportFrame, so UI views never run them.
+	Sparks, Droplets, Leaves). Fire, electric and water pets get a small solid
+	accent there in the feature color.
 
 	The asset stage's seam is PetLook.MODEL_IDS: when a pet has an entry,
 	PetVisual clones ReplicatedStorage.PetModels[<model id>] instead of the
 	block, adds the feature attachment if the model lacks it, and applies
-	the variant look to its parts. Callers do not change.
+	the variant material to its parts. Callers do not change.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
+local EffectsBudget = require(script.Parent.visual.EffectsBudget)
 local PetLook = require(script.Parent.visual.PetLook)
 
 local PetVisual = {}
-
--- Every idle and variant particle number, in one table.
-local IDLE = table.freeze({
-	-- Studs from the camera past which emitters switch off.
-	maxDistance = 60,
-	-- Seconds between visibility checks.
-	checkInterval = 0.25,
-	-- Elemental idle emitter.
-	rate = 4,
-	lifetimeMin = 0.4,
-	lifetimeMax = 0.7,
-	speed = 1.5,
-	sizeStart = 0.35,
-	-- Shiny sparkle emitter.
-	sparkleRate = 3,
-	sparkleLifetime = 0.6,
-	sparkleSize = 0.3,
-	-- Golden glow.
-	glowBrightness = 1,
-	glowRange = 6,
-})
-PetVisual.IDLE = IDLE
-
-local TEXTURES = table.freeze({
-	Flame = "rbxasset://textures/particles/fire_main.dds",
-	Sparks = "rbxasset://textures/particles/sparkles_main.dds",
-	Droplets = "rbxasset://textures/particles/smoke_main.dds",
-	Sparkle = "rbxasset://textures/particles/sparkles_main.dds",
-})
 
 -- The block's depth and the band's thickness, as shares of its edge.
 local DEPTH_SHARE = 0.8
@@ -72,111 +48,46 @@ local function color(c: PetLook.RGB): Color3
 	return Color3.fromRGB(c.r, c.g, c.b)
 end
 
--- Culling
-
-local tracked: { [ParticleEmitter]: Attachment } = {}
-local loopStarted = false
-
-local function startCulling()
-	if loopStarted or not RunService:IsClient() then
-		return
-	end
-	loopStarted = true
-	local elapsed = 0
-	RunService.Heartbeat:Connect(function(dt: number)
-		elapsed += dt
-		if elapsed < IDLE.checkInterval then
-			return
-		end
-		elapsed = 0
-		local camera = workspace.CurrentCamera
-		for emitter, attachment in tracked do
-			if emitter.Parent == nil then
-				tracked[emitter] = nil
-				continue
-			end
-			local visible = false
-			if camera ~= nil and emitter:IsDescendantOf(workspace) then
-				local position = attachment.WorldPosition
-				if (position - camera.CFrame.Position).Magnitude <= IDLE.maxDistance then
-					local _, onScreen = camera:WorldToViewportPoint(position)
-					visible = onScreen
-				end
-			end
-			if emitter.Enabled ~= visible then
-				emitter.Enabled = visible
-			end
-		end
-	end)
-end
-
-local function track(emitter: ParticleEmitter, attachment: Attachment)
-	emitter.Enabled = false
-	tracked[emitter] = attachment
-	startCulling()
+local function material(name: string): Enum.Material
+	return (Enum.Material :: any)[name] :: Enum.Material
 end
 
 -- Building
 
-local function idleEmitter(look: PetLook.Look, attachment: Attachment)
-	local emitter = Instance.new("ParticleEmitter")
-	emitter.Name = "Idle"
-	emitter.Texture = TEXTURES[look.feature.attachment] or TEXTURES.Sparkle
-	emitter.Color = ColorSequence.new(color(look.feature.color))
-	emitter.LightEmission = 0.6
-	emitter.Rate = IDLE.rate
-	emitter.Lifetime = NumberRange.new(IDLE.lifetimeMin, IDLE.lifetimeMax)
-	emitter.Speed = NumberRange.new(IDLE.speed)
-	emitter.SpreadAngle = Vector2.new(15, 15)
-	emitter.Size = NumberSequence.new(IDLE.sizeStart, 0)
-	emitter.Transparency = NumberSequence.new(0.2, 1)
-	emitter.Parent = attachment
-	track(emitter, attachment)
+local function accent(look: PetLook.Look, base: BasePart, attachment: Attachment)
+	local edge = look.size * EffectsBudget.ACCENT.share
+	local piece = Instance.new("Part")
+	piece.Name = "Accent"
+	piece.Anchored = true
+	piece.CanCollide = false
+	piece.CanQuery = false
+	piece.CanTouch = false
+	piece.CastShadow = false
+	piece.Material = material(EffectsBudget.ACCENT.material)
+	piece.Color = color(look.feature.color)
+	piece.Size = Vector3.new(edge, edge, edge)
+	piece.CFrame = attachment.WorldCFrame
+	piece.Parent = base.Parent
 end
 
-local function sparkle(root: BasePart)
-	local attachment = Instance.new("Attachment")
-	attachment.Name = "Sparkle"
-	attachment.Parent = root
-	local emitter = Instance.new("ParticleEmitter")
-	emitter.Name = "Sparkle"
-	emitter.Texture = TEXTURES.Sparkle
-	emitter.LightEmission = 1
-	emitter.Rate = IDLE.sparkleRate
-	emitter.Lifetime = NumberRange.new(IDLE.sparkleLifetime)
-	emitter.Speed = NumberRange.new(0.5)
-	emitter.SpreadAngle = Vector2.new(180, 180)
-	emitter.Size = NumberSequence.new(IDLE.sparkleSize, 0)
-	emitter.Shape = Enum.ParticleEmitterShape.Box
-	emitter.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
-	emitter.Parent = attachment
-	track(emitter, attachment)
-end
-
--- Paints the variant look onto every part of a model.
-local function applyVariant(model: Model, root: BasePart, look: PetLook.Look)
-	if look.golden then
-		for _, part in model:GetDescendants() do
-			if part:IsA("BasePart") and part.Name ~= "Band" then
+-- Paints the variant material onto the model. Golden leaves the rarity band
+-- alone so rarity still reads; shiny brightens every part.
+local function applyVariant(model: Model, look: PetLook.Look)
+	local view = EffectsBudget.variantView(look.variant)
+	if view.material == nil then
+		return
+	end
+	local mat = material(view.material :: string)
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") then
+			if look.golden and part.Name == "Band" then
+				continue
+			end
+			if look.golden then
 				part.Color = color(look.body)
-				part.Material = Enum.Material.Foil
-				part.Reflectance = 0.2
 			end
+			part.Material = mat
 		end
-		local glow = Instance.new("PointLight")
-		glow.Name = "Glow"
-		glow.Color = color(look.body)
-		glow.Brightness = IDLE.glowBrightness
-		glow.Range = IDLE.glowRange
-		glow.Shadows = false
-		glow.Parent = root
-	elseif look.shiny then
-		for _, part in model:GetDescendants() do
-			if part:IsA("BasePart") then
-				part.Material = Enum.Material.Neon
-			end
-		end
-		sparkle(root)
 	end
 end
 
@@ -275,11 +186,138 @@ local function build(look: PetLook.Look): Model
 		made.Parent = base
 		attachment = made
 	end
-	if look.feature.emits then
-		idleEmitter(look, attachment :: Attachment)
+	if look.feature.accent then
+		accent(look, base, attachment :: Attachment)
 	end
-	applyVariant(pet, base, look)
+	applyVariant(pet, look)
 	return pet
+end
+
+-- Variant UI on the frame
+
+-- A looping tween, cancelled when the view goes away.
+local function loop(view: ViewportFrame, target: Instance, info: TweenInfo, goal: { [string]: any })
+	local tween = TweenService:Create(target, info, goal)
+	tween:Play()
+	view.Destroying:Connect(function()
+		tween:Cancel()
+	end)
+end
+
+-- Layers the variant's stroke, shimmer, pulse and twinkles on the view.
+-- Only UI objects, which render over a ViewportFrame at any size.
+local function variantFx(view: ViewportFrame, variant: string?)
+	local look = EffectsBudget.variantView(variant)
+	if look.stroke == nil and look.shimmer == nil and look.twinkles == nil then
+		return
+	end
+	local animate = RunService:IsClient()
+
+	local fx = Instance.new("Frame")
+	fx.Name = "VariantFx"
+	fx.BackgroundTransparency = 1
+	fx.BorderSizePixel = 0
+	fx.Size = UDim2.fromScale(1, 1)
+	fx.ZIndex = view.ZIndex
+	fx.Parent = view
+
+	local stroke: UIStroke? = nil
+	if look.stroke ~= nil then
+		local s = look.stroke :: EffectsBudget.VariantStroke
+		local made = Instance.new("UIStroke")
+		made.Name = "VariantStroke"
+		made.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		made.Color = color(s.color)
+		made.Thickness = s.thickness
+		made.Transparency = s.transparency
+		made.Parent = fx
+		stroke = made
+	end
+
+	if look.shimmer ~= nil then
+		local sh = look.shimmer :: EffectsBudget.VariantShimmer
+		fx.BackgroundColor3 = color(sh.color)
+		fx.BackgroundTransparency = sh.transparency
+		local half = sh.width / 2
+		local gradient = Instance.new("UIGradient")
+		gradient.Name = "Shimmer"
+		gradient.Rotation = 30
+		gradient.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(math.max(0.5 - half, 0.001), 1),
+			NumberSequenceKeypoint.new(0.5, 0),
+			NumberSequenceKeypoint.new(math.min(0.5 + half, 0.999), 1),
+			NumberSequenceKeypoint.new(1, 1),
+		})
+		gradient.Offset = Vector2.new(-1, 0)
+		gradient.Parent = fx
+		if animate then
+			loop(
+				view,
+				gradient,
+				TweenInfo.new(sh.seconds, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1),
+				{ Offset = Vector2.new(1, 0) }
+			)
+		end
+	end
+
+	if look.pulse ~= nil and animate then
+		local p = look.pulse :: EffectsBudget.VariantPulse
+		local info =
+			TweenInfo.new(p.seconds, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+		if stroke ~= nil then
+			stroke.Transparency = p.low
+			loop(view, stroke, info, { Transparency = p.high })
+		end
+		if look.shimmer ~= nil then
+			local base = fx.BackgroundTransparency
+			loop(view, fx, info, { BackgroundTransparency = base + (1 - base) * p.high })
+		end
+	end
+
+	if look.twinkles ~= nil then
+		local t = look.twinkles :: EffectsBudget.VariantTwinkles
+		for i, spot in t.spots do
+			local star = Instance.new("ImageLabel")
+			star.Name = "Twinkle" .. i
+			star.BackgroundTransparency = 1
+			star.Image = t.image
+			star.ImageColor3 = color(t.color)
+			star.AnchorPoint = Vector2.new(0.5, 0.5)
+			star.Position = UDim2.fromScale(spot.x, spot.y)
+			star.Size = UDim2.fromScale(t.size, t.size)
+			star.ZIndex = view.ZIndex + 1
+			star.Parent = view
+			if animate then
+				star.Size = UDim2.fromScale(0, 0)
+				loop(
+					view,
+					star,
+					TweenInfo.new(
+						t.seconds / 2,
+						Enum.EasingStyle.Quad,
+						Enum.EasingDirection.Out,
+						-1,
+						true,
+						t.stagger * (i - 1)
+					),
+					{ Size = UDim2.fromScale(t.size, t.size) }
+				)
+			end
+		end
+	end
+
+	-- Callers may raise the view's ZIndex after building it (the hatch
+	-- reveal does); keep the layers on top of it either way.
+	local function follow()
+		fx.ZIndex = view.ZIndex
+		for _, child in view:GetChildren() do
+			if child:IsA("ImageLabel") then
+				child.ZIndex = view.ZIndex + 1
+			end
+		end
+	end
+	view:GetPropertyChangedSignal("ZIndex"):Connect(follow)
 end
 
 -- One pet, with the variant the server sent (nil for a normal pet).
@@ -331,6 +369,7 @@ function PetVisual.view(
 	camera.CFrame = CFrame.lookAt(eye, Vector3.zero)
 	camera.Parent = viewport
 	viewport.CurrentCamera = camera
+	variantFx(viewport, look.variant)
 	viewport.Parent = parent
 	return viewport
 end

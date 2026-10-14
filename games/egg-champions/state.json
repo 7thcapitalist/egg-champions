@@ -24,10 +24,10 @@
     },
     {
       "id": "built",
-      "status": "pending",
-      "attempts": 20,
-      "note": "stopped at the limit of 1 task(s) per run; next is task 22",
-      "updated": "2026-10-13T14:40:36Z"
+      "status": "passed",
+      "attempts": 21,
+      "note": "all 22 tasks done; built gate passes",
+      "updated": "2026-10-14T02:04:18Z"
     },
     {
       "id": "assets",

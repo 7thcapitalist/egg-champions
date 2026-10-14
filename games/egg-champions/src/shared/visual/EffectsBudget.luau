@@ -243,6 +243,133 @@ EffectsBudget.PROGRESS = table.freeze({
 	openTransparency = 0.3,
 })
 
+-- Variant looks inside a ViewportFrame. Roblox does not render particles or
+-- lights in a ViewportFrame, so every pet view (shop, pets screen, team bar,
+-- battle, hatch reveal) shows shiny and golden only with things that do
+-- render there: the model's material, and UI layered on the frame itself.
+--
+-- Each row may have:
+-- - material: the Enum.Material name painted on the model's parts
+--   (golden skips the rarity band, so rarity still reads).
+-- - stroke: a UIStroke in the variant color around the frame.
+-- - shimmer: a Frame tinted `color` with a UIGradient band that sweeps
+--   across every `seconds`. `transparency` is the band at its strongest.
+-- - pulse: the stroke and the tint breathe between `low` and `high`
+--   transparency every `seconds`, back and forth.
+-- - twinkles: small sparkle ImageLabels at fixed spots (scale 0 to 1 of the
+--   frame), each growing in and out over `seconds`, staggered by `stagger`.
+--
+-- The normal row is empty: a normal pet is just its model.
+export type RGB = PetLook.RGB
+
+export type VariantStroke = { color: RGB, thickness: number, transparency: number }
+export type VariantShimmer = { color: RGB, transparency: number, width: number, seconds: number }
+export type VariantPulse = { low: number, high: number, seconds: number }
+export type VariantTwinkles = {
+	image: string,
+	color: RGB,
+	size: number,
+	seconds: number,
+	stagger: number,
+	spots: { { x: number, y: number } },
+}
+export type VariantView = {
+	material: string?,
+	stroke: VariantStroke?,
+	shimmer: VariantShimmer?,
+	pulse: VariantPulse?,
+	twinkles: VariantTwinkles?,
+}
+
+local function rgb(r: number, g: number, b: number): RGB
+	return table.freeze({ r = r, g = g, b = b })
+end
+
+local SPARKLE_IMAGE = "rbxasset://textures/particles/sparkles_main.dds"
+
+EffectsBudget.VARIANT_VIEW = table.freeze({
+	normal = table.freeze({}),
+	shiny = table.freeze({
+		material = "Neon",
+		stroke = table.freeze({ color = rgb(214, 236, 255), thickness = 2, transparency = 0.15 }),
+		shimmer = table.freeze({
+			color = rgb(235, 245, 255),
+			transparency = 0.55,
+			width = 0.25,
+			seconds = 1.6,
+		}),
+		twinkles = table.freeze({
+			image = SPARKLE_IMAGE,
+			color = rgb(255, 255, 255),
+			size = 0.18,
+			seconds = 0.9,
+			stagger = 0.3,
+			spots = table.freeze({
+				table.freeze({ x = 0.2, y = 0.22 }),
+				table.freeze({ x = 0.8, y = 0.3 }),
+				table.freeze({ x = 0.7, y = 0.8 }),
+			}),
+		}),
+	}),
+	golden = table.freeze({
+		material = "Foil",
+		stroke = table.freeze({ color = PetLook.GOLD, thickness = 3, transparency = 0 }),
+		shimmer = table.freeze({
+			color = rgb(255, 214, 110),
+			transparency = 0.7,
+			width = 0.6,
+			seconds = 2.4,
+		}),
+		pulse = table.freeze({ low = 0, high = 0.6, seconds = 1.2 }),
+	}),
+} :: { [string]: VariantView })
+
+-- The elemental accent on fire, electric and water pets: a small solid
+-- piece at the feature attachment, its edge this share of the pet's edge.
+EffectsBudget.ACCENT = table.freeze({
+	share = 0.3,
+	material = "Neon",
+})
+
+-- The instance classes each part of a variant view is made of, so the tests
+-- can prove no view depends on something a ViewportFrame cannot render.
+EffectsBudget.VIEW_CLASSES = table.freeze({
+	stroke = table.freeze({ "UIStroke" }),
+	shimmer = table.freeze({ "Frame", "UIGradient" }),
+	pulse = table.freeze({ "UIStroke", "Frame" }),
+	twinkles = table.freeze({ "ImageLabel" }),
+} :: { [string]: { string } })
+
+-- The viewport look for a variant id (nil for a normal pet). Errors on a
+-- variant id that is not in config, like every config lookup.
+function EffectsBudget.variantView(variant: string?): VariantView
+	if variant == nil then
+		return EffectsBudget.VARIANT_VIEW.normal
+	end
+	local _ = Config.variantById[variant]
+	local row = EffectsBudget.VARIANT_VIEW[variant]
+	if row == nil then
+		error(string.format("EffectsBudget: no viewport look for variant %q", variant))
+	end
+	return row
+end
+
+-- Every instance class a variant's view creates, besides the model itself.
+function EffectsBudget.variantClasses(variant: string?): { string }
+	local view = EffectsBudget.variantView(variant)
+	local classes: { string } = {}
+	for _, piece in { "stroke", "shimmer", "pulse", "twinkles" } do
+		if (view :: any)[piece] ~= nil then
+			for _, class in EffectsBudget.VIEW_CLASSES[piece] do
+				if table.find(classes, class) == nil then
+					table.insert(classes, class)
+				end
+			end
+		end
+	end
+	return classes
+end
+
 -- Seconds the gym win badge plays before the next portal lights up.
 function EffectsBudget.badgeSeconds(): number
 	local p = EffectsBudget.PROGRESS

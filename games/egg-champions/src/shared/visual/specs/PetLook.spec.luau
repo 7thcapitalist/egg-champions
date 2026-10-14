@@ -62,11 +62,11 @@ return function()
 			end
 		end)
 
-		it("gives fire, electric and water an idle emitter and grass none", function()
-			expect(PetLook.feature("fire").emits).toBeTrue()
-			expect(PetLook.feature("electric").emits).toBeTrue()
-			expect(PetLook.feature("water").emits).toBeTrue()
-			expect(PetLook.feature("grass").emits).toBeFalse()
+		it("gives fire, electric and water an accent and grass none", function()
+			expect(PetLook.feature("fire").accent).toBeTrue()
+			expect(PetLook.feature("electric").accent).toBeTrue()
+			expect(PetLook.feature("water").accent).toBeTrue()
+			expect(PetLook.feature("grass").accent).toBeFalse()
 		end)
 
 		it("keeps normal, shiny and golden looks apart", function()

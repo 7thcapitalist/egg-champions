@@ -13,7 +13,8 @@
 	- body color by type (orange fire, green grass, yellow electric, blue water)
 	- band color by rarity order, lowest first (grey, green, blue, purple, orange)
 	- size grows with rarity order, so a Legendary reads as larger
-	- the elemental feature per type names the attachment point effects use
+	- the elemental feature per type names the attachment point and the small
+	  accent piece shown there
 
 	MODEL_IDS is the asset stage's seam: when a pet has an entry, PetVisual
 	uses that model instead of the placeholder block. Nothing else changes.
@@ -26,9 +27,11 @@ export type RGB = { r: number, g: number, b: number }
 export type Feature = {
 	-- Name of the attachment on the model where elemental effects go.
 	attachment: string,
-	-- Whether the type gets a looping idle emitter.
-	emits: boolean,
-	-- Particle color for the idle emitter.
+	-- Whether the type gets a small accent piece at the attachment. Pets are
+	-- shown in ViewportFrames, where particles never render, so the elemental
+	-- touch is a solid part, not an emitter.
+	accent: boolean,
+	-- Color of the accent piece.
 	color: RGB,
 }
 
@@ -82,17 +85,17 @@ PetLook.SIZE = table.freeze({
 })
 
 -- Elemental feature by type id. Fire, electric and water have a visible
--- feature with an idle emitter; grass has an attachment but no emitter.
+-- accent piece; grass has an attachment but no accent.
 PetLook.FEATURES = table.freeze({
-	fire = table.freeze({ attachment = "Flame", emits = true, color = rgb(255, 140, 40) }),
-	electric = table.freeze({ attachment = "Sparks", emits = true, color = rgb(255, 236, 90) }),
-	water = table.freeze({ attachment = "Droplets", emits = true, color = rgb(120, 200, 255) }),
-	grass = table.freeze({ attachment = "Leaves", emits = false, color = rgb(120, 210, 110) }),
+	fire = table.freeze({ attachment = "Flame", accent = true, color = rgb(255, 140, 40) }),
+	electric = table.freeze({ attachment = "Sparks", accent = true, color = rgb(255, 236, 90) }),
+	water = table.freeze({ attachment = "Droplets", accent = true, color = rgb(120, 200, 255) }),
+	grass = table.freeze({ attachment = "Leaves", accent = false, color = rgb(120, 210, 110) }),
 } :: { [string]: Feature })
 
 PetLook.FALLBACK_FEATURE = table.freeze({
 	attachment = "Feature",
-	emits = false,
+	accent = false,
 	color = rgb(255, 255, 255),
 }) :: Feature
 

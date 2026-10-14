@@ -37,6 +37,7 @@ return {
 	visualSpecs["Effects.spec"],
 	visualSpecs["BattleEffects.spec"],
 	visualSpecs["Progress.spec"],
+	visualSpecs["VariantView.spec"],
 	analyticsSpecs["Events.spec"],
 	testingSpecs["Runner.spec"],
 }
