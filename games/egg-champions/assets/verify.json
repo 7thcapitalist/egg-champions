@@ -1,0 +1,443 @@
+{
+  "checked": "2026-10-14T21:41:49Z",
+  "models_sha256": "91533410a6693833a1b08bf57dadc3e6a3433ad70d6eb11b7eef3081e5c0faed",
+  "universe_id": 10769019206,
+  "place_id": 101737317546942,
+  "task": "universes/10769019206/places/101737317546942/versions/33/luau-execution-sessions/8ffae13f-4035-4f69-a8bb-1c5ea00ea49f/tasks/8ffae13f-4035-4f69-a8bb-1c5ea00ea49f",
+  "ok": 36,
+  "total": 36,
+  "entries": [
+    {
+      "mesh_size": [
+        2.170212745666504,
+        5,
+        5.375436782836914
+      ],
+      "id": "leafpup",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        2.4012818336486816,
+        3,
+        3.8862123489379883
+      ],
+      "id": "puddlet",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        1.946789026260376,
+        5,
+        5.059051990509033
+      ],
+      "id": "emberkit",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        5.525705337524414,
+        8,
+        2.890536308288574
+      ],
+      "id": "abacatudo",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        4,
+        5.524606227874756,
+        4.561195373535156
+      ],
+      "id": "voltibun",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        4.633696556091309,
+        4,
+        0.8738820552825928
+      ],
+      "id": "zapmoth",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        3.043936252593994,
+        4,
+        4.304635047912598
+      ],
+      "id": "mossnail",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        2.2840042114257812,
+        4,
+        5.112260818481445
+      ],
+      "id": "sparkit",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        4.332049369812012,
+        5,
+        5.3675031661987305
+      ],
+      "id": "cinderhog",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        2.389878034591675,
+        6.5,
+        4.388115406036377
+      ],
+      "id": "brookdeer",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        4.717447280883789,
+        4,
+        3.6658339500427246
+      ],
+      "id": "bubblecrab",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        1.5626320838928223,
+        6,
+        2.5816054344177246
+      ],
+      "id": "kelpony",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        4.9750213623046875,
+        4.633609771728516,
+        5
+      ],
+      "id": "zapeel",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        3.5,
+        5.581670761108398,
+        3.3560566902160645
+      ],
+      "id": "pearlotter",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        6.20927095413208,
+        7,
+        6.501920700073242
+      ],
+      "id": "tidewhale",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        7.488297462463379,
+        2.477766990661621,
+        5
+      ],
+      "id": "driftgull",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        5,
+        4.513006210327148,
+        5.068647861480713
+      ],
+      "id": "fuzzbolt",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        3.7968873977661133,
+        8,
+        2.313189744949341
+      ],
+      "id": "bananao",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        4.835545539855957,
+        6,
+        4.829759120941162
+      ],
+      "id": "reefwyrm",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        8,
+        5.701056480407715,
+        7.360118865966797
+      ],
+      "id": "thundrake",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        3.5363082885742188,
+        4,
+        5.469318389892578
+      ],
+      "id": "coalmole",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        4.674850940704346,
+        5,
+        5.219522953033447
+      ],
+      "id": "steamtoad",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        3.650838613510132,
+        7.561704635620117,
+        3
+      ],
+      "id": "moranguete",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        3.6451592445373535,
+        5,
+        6.465433597564697
+      ],
+      "id": "ashwolf",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        4.053889751434326,
+        5,
+        5.718480110168457
+      ],
+      "id": "thornback",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        4.808735370635986,
+        2.8746628761291504,
+        3
+      ],
+      "id": "sootbat",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        3.551287889480591,
+        5,
+        5.971697807312012
+      ],
+      "id": "geyserpup",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        4.694736480712891,
+        3.7159879207611084,
+        6
+      ],
+      "id": "voltscorp",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        2.8282041549682617,
+        4,
+        4.715418338775635
+      ],
+      "id": "lavalynx",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        6.946871280670166,
+        7,
+        1.611809253692627
+      ],
+      "id": "magmaroc",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        2.6854634284973145,
+        4,
+        2.7082321643829346
+      ],
+      "id": "meadow",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        3,
+        3.059762954711914,
+        2.4833498001098633
+      ],
+      "id": "forest",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        2.325213670730591,
+        4,
+        2.334157943725586
+      ],
+      "id": "shell",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        2.9393205642700195,
+        3.999999761581421,
+        2.9480834007263184
+      ],
+      "id": "storm",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        2.944401741027832,
+        4,
+        2.982762336730957
+      ],
+      "id": "ember",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    },
+    {
+      "mesh_size": [
+        2.6431126594543457,
+        4,
+        2.7167391777038574
+      ],
+      "id": "magma",
+      "texture_status": "Success",
+      "mesh_ok": true,
+      "texture_loaded": true,
+      "ok": true
+    }
+  ]
+}

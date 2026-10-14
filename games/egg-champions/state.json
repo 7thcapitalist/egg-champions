@@ -31,10 +31,10 @@
     },
     {
       "id": "assets",
-      "status": "pending",
+      "status": "passed",
       "attempts": 0,
-      "note": "",
-      "updated": null
+      "note": "gate passed in CI run 38642077420",
+      "updated": "2026-10-14T21:41:49Z"
     },
     {
       "id": "worlds",
