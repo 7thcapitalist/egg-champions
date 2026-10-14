@@ -24,10 +24,10 @@
     },
     {
       "id": "built",
-      "status": "pending",
+      "status": "passed",
       "attempts": 21,
-      "note": "follow-up tasks 23 to 25 added after review",
-      "updated": "2026-10-14T02:10:22Z"
+      "note": "all 25 tasks done; built gate passes",
+      "updated": "2026-10-14T18:23:30Z"
     },
     {
       "id": "assets",
