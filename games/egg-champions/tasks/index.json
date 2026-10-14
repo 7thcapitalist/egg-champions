@@ -248,6 +248,33 @@
         "22"
       ],
       "status": "done"
+    },
+    {
+      "id": "26",
+      "title": "A clean main screen",
+      "file": "26-clean-main-screen.md",
+      "depends_on": [
+        "25"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "27",
+      "title": "Egg stands you can read",
+      "file": "27-egg-stands-readable.md",
+      "depends_on": [
+        "25"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "28",
+      "title": "First-time tutorial",
+      "file": "28-first-time-tutorial.md",
+      "depends_on": [
+        "26"
+      ],
+      "status": "pending"
     }
   ]
 }

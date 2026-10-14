@@ -24,10 +24,10 @@
     },
     {
       "id": "built",
-      "status": "passed",
+      "status": "pending",
       "attempts": 21,
-      "note": "all 25 tasks done; built gate passes",
-      "updated": "2026-10-14T18:23:30Z"
+      "note": "playtest fixes 26 to 28",
+      "updated": "2026-10-14T23:03:49Z"
     },
     {
       "id": "assets",
