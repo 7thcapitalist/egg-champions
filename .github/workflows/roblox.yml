@@ -1,0 +1,108 @@
+# Roblox steps of the asset stage, run with the owner's ROBLOX_API_KEY secret.
+# Touches only the TEST place in games/egg-champions/roblox.json.
+# See "CI" in factory/README.md for what each step does and the key scopes.
+name: roblox
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "games/**"
+      - "factory/**"
+
+permissions:
+  contents: write
+
+# One run at a time, so two runs never upload or publish side by side.
+concurrency:
+  group: roblox-test-place
+  cancel-in-progress: false
+
+env:
+  GAME_DIR: games/egg-champions
+  ROJO_VERSION: 7.7.1
+
+jobs:
+  assets:
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install rojo
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -sSfL -o "$RUNNER_TEMP/rojo.zip" \
+            "https://github.com/rojo-rbx/rojo/releases/download/v${ROJO_VERSION}/rojo-${ROJO_VERSION}-linux-x86_64.zip"
+          unzip -o "$RUNNER_TEMP/rojo.zip" -d "$RUNNER_TEMP/bin"
+          chmod +x "$RUNNER_TEMP/bin/rojo"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Build the model table
+        run: python factory/tools/build_models.py "$GAME_DIR"
+
+      - name: Save pending EditableImage textures
+        id: textures
+        continue-on-error: true
+        env:
+          ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
+        run: python factory/tools/texture_jobs.py "$GAME_DIR" --wait 600
+
+      - name: Verify every model on Roblox
+        id: verify
+        continue-on-error: true
+        env:
+          ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
+        run: python factory/tools/verify_assets.py "$GAME_DIR" --wait 600 --if-stale
+
+      - name: Assets gate
+        id: gate
+        continue-on-error: true
+        run: python factory/tools/gate.py "$GAME_DIR" assets
+
+      - name: Record the assets stage
+        if: ${{ steps.gate.outcome == 'success' }}
+        run: |
+          status=$(python -c "import json,sys; s=json.load(open(sys.argv[1])); print(next(x['status'] for x in s['stages'] if x['id']=='assets'))" "$GAME_DIR/state.json")
+          if [ "$status" != "passed" ]; then
+            python factory/tools/state.py set "$GAME_DIR" assets passed --note "gate passed in CI run $GITHUB_RUN_ID"
+          fi
+
+      - name: Publish to the test place
+        id: publish
+        if: ${{ steps.gate.outcome == 'success' }}
+        env:
+          ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
+        run: python factory/tools/publish_test.py "$GAME_DIR"
+
+      - name: Commit results back
+        if: ${{ !cancelled() }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898118+github-actions[bot]@users.noreply.github.com"
+          git add "$GAME_DIR/assets/manifest.json" "$GAME_DIR/assets/models.json" "$GAME_DIR/state.json"
+          if [ -f "$GAME_DIR/assets/verify.json" ]; then git add "$GAME_DIR/assets/verify.json"; fi
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git commit -m "Assets: results from CI run $GITHUB_RUN_ID [skip ci]"
+          for try in 1 2 3; do
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then exit 0; fi
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+          done
+          exit 1
+
+      - name: Fail when a Roblox step failed
+        if: ${{ steps.textures.outcome == 'failure' || steps.verify.outcome == 'failure' || steps.gate.outcome == 'failure' }}
+        run: |
+          echo "texture_jobs: ${{ steps.textures.outcome }}, verify_assets: ${{ steps.verify.outcome }}, gate: ${{ steps.gate.outcome }}"
+          exit 1

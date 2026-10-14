@@ -96,6 +96,52 @@ Three files in `<game-dir>/assets/`:
 
   Exit 2 means the task is still running; run it again to resume it.
 
+## CI
+
+The Roblox steps run in GitHub Actions on the owner's repo
+(`.github/workflows/roblox.yml`), with the API key in the repo secret
+`ROBLOX_API_KEY`. The key reaches each step only as an environment variable
+and is never echoed. It runs on `workflow_dispatch` and on a push to `main`
+that touches `games/**` or `factory/**`; a commit whose message contains
+`[skip ci]` does not start it. One run at a time.
+
+Steps, all on `games/egg-champions` and its TEST place only:
+1. Install rojo 7.7.1 (`rojo-7.7.1-linux-x86_64.zip` from the rojo release).
+2. `build_models.py` rebuilds `assets/models.json`.
+3. `texture_jobs.py` saves each texture in `assets/texture_jobs.json` whose
+   manifest entry still has `needs_texture_save`: a Luau Execution task reads
+   the snippet from the place, runs it, and uploads the EditableImage with
+   `AssetService:CreateAssetAsync`. The new id goes into the manifest.
+4. `verify_assets.py --if-stale` checks every model on Roblox, unless
+   `verify.json` already covers this exact `models.json` with every entry ok.
+5. `gate.py <game-dir> assets`. If it passes, the `assets` stage is recorded
+   (only when not already passed) and `publish_test.py` publishes the rojo
+   build to the test place. It refuses while a texture job is pending,
+   because publishing replaces the place content the job reads.
+6. Any change to `manifest.json`, `models.json`, `verify.json` or
+   `state.json` is committed back to `main` by `github-actions[bot]` with a
+   message ending in `[skip ci]`. The run fails if a texture job, the check
+   or the gate failed.
+
+Reruns are safe: a saved texture is never uploaded again, a current
+`verify.json` is not rechecked, and nothing is committed when nothing changed.
+Each successful gate does publish a new test place version.
+
+The API key (Creator Dashboard, Open Cloud API keys) needs, for the TEST
+universe only:
+
+| Step | Scope | Source |
+| --- | --- | --- |
+| Luau Execution tasks (verify, texture jobs) | `universe.place.luau-execution-session:write` | create.roblox.com/docs/cloud/reference/features/luau-execution |
+| Asset upload from a task (`CreateAssetAsync`) | `asset:write` (the `assets` API system, Write) | create.roblox.com/docs/cloud/guides/usage-assets |
+| Place publishing | `universe-places:write` | create.roblox.com/docs/cloud/reference/features/places |
+
+The AssetService reference says `CreateAssetAsync` works in the Luau
+Execution context when `CreatorId` and `CreatorType` are given, but names no
+key scope; `asset:write` is the scope Open Cloud uses for creating assets.
+If the key has accepted IP addresses set, Actions runners need `0.0.0.0/0`,
+since their addresses change from run to run.
+
 ## Build a game
 
     rojo build <game-dir> -o <game-dir>/build/game.rbxl

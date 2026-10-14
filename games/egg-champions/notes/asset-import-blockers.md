@@ -58,3 +58,11 @@ resumes the same task on the next run.
   runs it as a second task on the TEST place. The new id goes into the manifest's
   moranguete `texture_asset_id`.
 - Brief step 5 (the Studio plugin route) and step 6 (camera rule).
+
+## Update: the Roblox steps move to GitHub Actions
+
+The owner chose to run them in his own repo's Actions with the repo secret
+`ROBLOX_API_KEY` (see "CI" in `factory/README.md`). Blockers 1 and 2 then do
+not apply. What is left: give the key the three scopes listed there, then run
+the `roblox` workflow. `factory/tools/texture_jobs.py` replaces the
+`upload_editable_texture` plan above.
