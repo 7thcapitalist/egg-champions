@@ -70,6 +70,10 @@ local loaded: { [Player]: Profile } = {}
 -- Per loaded player: playSeconds when the session began, and when it began.
 local sessionClock: { [Player]: { base: number, startedAt: number } } = {}
 local loadedListeners: { (Player, Profile) -> () } = {}
+-- Studio play sessions where the save store cannot be reached (Studio Access
+-- to API Services off). They play on a temporary profile that is never saved,
+-- instead of being kicked.
+local offlineUsers: { [number]: boolean } = {}
 local leavingListeners: { (Player, Profile) -> () } = {}
 
 local Profiles = {}
@@ -173,6 +177,14 @@ local function load(player: Player): (Profile?, string?)
 		task.wait(LOCK_RETRY_SECONDS)
 	end
 	if outcome == "failed" then
+		if RunService:IsStudio() then
+			log(
+				userId,
+				"save store unreachable in Studio; playing on a temporary profile that is not saved"
+			)
+			offlineUsers[userId] = true
+			return Profile.new(), nil
+		end
 		return nil, "Your save could not be loaded right now. Please rejoin."
 	end
 
@@ -208,6 +220,12 @@ end
 -- Writes the profile and refreshes (or releases) the lock. Refuses to write
 -- when another server has taken the lock, so a stale server never overwrites.
 local function save(userId: number, profile: Profile, release: boolean): boolean
+	if offlineUsers[userId] then
+		if release then
+			offlineUsers[userId] = nil
+		end
+		return true
+	end
 	local lost = false
 	local ok = update(
 		userId,
