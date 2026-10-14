@@ -8,6 +8,11 @@ Luau Execution (create.roblox.com/docs/cloud/reference/features/luau-execution):
   creations per minute per key owner, 10 unfinished tasks per place, task
   kept 24 hours.
 
+Place publishing (create.roblox.com/docs/cloud/guides/usage-place-publishing):
+- POST https://apis.roblox.com/universes/v1/{u}/places/{p}/versions?versionType=Published
+  with the .rbxl as application/octet-stream; scope universe-places:write;
+  30 requests per minute per key owner.
+
 The API key comes only from the environment variable that roblox.json names
 in `api_key_secret`. Nothing here reads a file for it, and nothing here
 prints it. Every call targets the test place; the production ids in
@@ -54,15 +59,28 @@ def api_key(secret_name):
     return key
 
 
-def call(method, url, key, body=None):
-    data = None if body is None else json.dumps(body).encode("utf-8")
+def call(method, url, key, body=None, raw=None, content_type=None, timeout=30):
+    """Make one request and return its JSON (or {"text": ...} if not JSON).
+
+    `body` is sent as JSON; `raw` is sent as bytes with `content_type`. An
+    HTTP error raises CloudError with the status and the start of the body.
+    The key goes only into the x-api-key header and is never in a message.
+    """
+    if raw is not None:
+        data = raw
+    else:
+        data = None if body is None else json.dumps(body).encode("utf-8")
     req = urllib.request.Request(url, data=data, method=method)
     req.add_header("x-api-key", key)
     if data is not None:
-        req.add_header("Content-Type", "application/json")
+        req.add_header("Content-Type", content_type or "application/json")
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            return json.loads(resp.read().decode("utf-8") or "{}")
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            text = resp.read().decode("utf-8", "replace")
+            try:
+                return json.loads(text or "{}")
+            except ValueError:
+                return {"text": text}
     except urllib.error.HTTPError as err:
         text = err.read().decode("utf-8", "replace")[:600]
         raise CloudError("HTTP %d from %s %s: %s" % (err.code, method, url, text)) from None

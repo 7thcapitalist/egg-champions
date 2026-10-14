@@ -17,6 +17,9 @@ loaded. Exits 1 otherwise, or on any error. Exits 2 when the task is still
 running after --wait seconds (default 290); run it again and it resumes the
 same task (its path is kept in <game-dir>/build/verify-task.json).
 
+--if-stale skips the check, and exits 0, when verify.json already covers this
+exact models.json with every entry ok, so CI reruns change nothing.
+
 The API key is read only from the environment variable named by
 `api_key_secret` in roblox.json. Load .env into the environment before
 running; this tool never opens it. Standard library only.
@@ -76,13 +79,32 @@ def judge(result):
     return result
 
 
+def current_and_ok(game, models_path):
+    try:
+        report = json.loads((game / "assets" / "verify.json").read_text(encoding="utf-8"))
+        digest = hashlib.sha256(models_path.read_bytes()).hexdigest()
+    except (OSError, ValueError):
+        return False
+    entries = report.get("entries") or []
+    return (
+        report.get("models_sha256") == digest
+        and len(entries) > 0
+        and all(e.get("ok") for e in entries)
+    )
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("game_dir")
     parser.add_argument("--wait", type=float, default=290)
+    parser.add_argument("--if-stale", action="store_true")
     args = parser.parse_args(argv)
     game = Path(args.game_dir)
     models_path = game / "assets" / "models.json"
+
+    if args.if_stale and current_and_ok(game, models_path):
+        print("verify_assets: verify.json already covers this models.json, all ok; skipped")
+        return 0
 
     try:
         raw = models_path.read_bytes()

@@ -1,0 +1,8 @@
+[
+  {
+    "id": "moranguete",
+    "source": "workspace.MorangueteFix.RepaintNewface_source",
+    "return_edit": "partB.TextureContent=Content.fromObject(imgB)",
+    "name": "Moranguete face texture"
+  }
+]
