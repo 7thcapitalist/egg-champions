@@ -563,13 +563,23 @@ function Battle.mount(
 		block.BackgroundColor3 = colors.panel
 		block.BackgroundTransparency = if shown.hp > 0 then 0 else 0.6
 		local key = PetVisual.key(shown.pet, shown.variant, shown.type)
+		local fainted = shown.hp <= 0
 		local view = block:FindFirstChild("PetView")
-		if block:GetAttribute("PetKey") ~= key or view == nil then
+		-- Rebuild when the pet or its fainted state changes, so a pet that
+		-- is up again gets its variant layers back at full strength.
+		if
+			block:GetAttribute("PetKey") ~= key
+			or block:GetAttribute("Fainted") ~= fainted
+			or view == nil
+		then
 			view = PetVisual.view(block, shown.pet, shown.variant, shown.type)
 			block:SetAttribute("PetKey", key)
+			block:SetAttribute("Fainted", fainted)
 		end
-		if view ~= nil and view:IsA("ViewportFrame") then
-			view.ImageTransparency = if shown.hp > 0 then 0 else 0.6
+		if fainted and view ~= nil and view:IsA("ViewportFrame") then
+			-- The model and its shiny or golden layers dim together. A pet
+			-- that is up was just built at full strength, so it needs none.
+			PetVisual.fade(view, 0.6)
 		end
 	end
 

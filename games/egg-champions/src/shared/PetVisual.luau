@@ -18,7 +18,8 @@
 	- Golden: gold Foil body, a warm gold stroke, a slow glow pulse and a
 	  broad warm shimmer.
 	The material goes on the model; the stroke, shimmer, pulse and twinkles
-	are UI layered on the ViewportFrame itself, so they show at any size.
+	are UI layered on the ViewportFrame itself by VariantFx, so they show at
+	any size. PetVisual.fade dims the model and those layers together.
 
 	Every model carries an attachment named for its elemental feature (Flame,
 	Sparks, Droplets, Leaves). Fire, electric and water pets get a small solid
@@ -36,6 +37,7 @@ local TweenService = game:GetService("TweenService")
 
 local EffectsBudget = require(script.Parent.visual.EffectsBudget)
 local PetLook = require(script.Parent.visual.PetLook)
+local VariantFx = require(script.Parent.visual.VariantFx)
 
 local PetVisual = {}
 
@@ -195,129 +197,87 @@ end
 
 -- Variant UI on the frame
 
--- A looping tween, cancelled when the view goes away.
-local function loop(view: ViewportFrame, target: Instance, info: TweenInfo, goal: { [string]: any })
-	local tween = TweenService:Create(target, info, goal)
-	tween:Play()
-	view.Destroying:Connect(function()
-		tween:Cancel()
-	end)
+-- What each live view's variant layers need to fade: its looping tweens and
+-- the layers VariantFx built. Cleared when the view goes away.
+type Live = { tweens: { Tween }, layers: { VariantFx.Layer } }
+local live: { [ViewportFrame]: Live } = setmetatable({}, { __mode = "k" }) :: any
+
+-- The engine side of VariantFx: real instances, colors and tweens.
+local function kitFor(state: Live): VariantFx.Kit
+	local animate = RunService:IsClient()
+	local function loopTween(target: any, info: VariantFx.LoopInfo, goal: { [string]: any })
+		local tween = TweenService:Create(
+			target,
+			TweenInfo.new(
+				info.seconds,
+				(Enum.EasingStyle :: any)[info.style],
+				(Enum.EasingDirection :: any)[info.direction],
+				-1,
+				info.reverses,
+				info.delay
+			),
+			goal
+		)
+		tween:Play()
+		table.insert(state.tweens, tween)
+	end
+	return {
+		new = function(className: string): any
+			return Instance.new(className :: any)
+		end,
+		color = color,
+		scale = UDim2.fromScale,
+		vector2 = Vector2.new,
+		sequence = function(points: { { number } }): any
+			local keys = {}
+			for _, point in points do
+				table.insert(keys, NumberSequenceKeypoint.new(point[1], point[2]))
+			end
+			return NumberSequence.new(keys)
+		end,
+		strokeBorder = Enum.ApplyStrokeMode.Border,
+		loop = if animate then loopTween else nil,
+	}
 end
 
 -- Layers the variant's stroke, shimmer, pulse and twinkles on the view.
--- Only UI objects, which render over a ViewportFrame at any size.
-local function variantFx(view: ViewportFrame, variant: string?)
-	local look = EffectsBudget.variantView(variant)
-	if look.stroke == nil and look.shimmer == nil and look.twinkles == nil then
+local function variantFx(view: ViewportFrame, card: GuiObject, variant: string?)
+	local state: Live = { tweens = {}, layers = {} }
+	state.layers = VariantFx.build(view, card, variant, kitFor(state))
+	live[view] = state
+	view.Destroying:Connect(function()
+		for _, tween in state.tweens do
+			tween:Cancel()
+		end
+		live[view] = nil
+	end)
+end
+
+-- Fades a view's model and its variant layers together: `amount` 0 is as
+-- built, 1 is gone. With `seconds` it tweens; without, it sets at once.
+-- The variant's looping tweens stop, so a fainted pet stops shimmering.
+function PetVisual.fade(view: ViewportFrame, amount: number, seconds: number?)
+	local function set(target: Instance, goal: { [string]: any })
+		if seconds ~= nil and seconds > 0 then
+			TweenService:Create(target, TweenInfo.new(seconds), goal):Play()
+		else
+			for property, value in goal do
+				(target :: any)[property] = value
+			end
+		end
+	end
+	set(view, { ImageTransparency = math.clamp(amount, 0, 1) })
+	local state = live[view]
+	if state == nil then
 		return
 	end
-	local animate = RunService:IsClient()
-
-	local fx = Instance.new("Frame")
-	fx.Name = "VariantFx"
-	fx.BackgroundTransparency = 1
-	fx.BorderSizePixel = 0
-	fx.Size = UDim2.fromScale(1, 1)
-	fx.ZIndex = view.ZIndex
-	fx.Parent = view
-
-	local stroke: UIStroke? = nil
-	if look.stroke ~= nil then
-		local s = look.stroke :: EffectsBudget.VariantStroke
-		local made = Instance.new("UIStroke")
-		made.Name = "VariantStroke"
-		made.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		made.Color = color(s.color)
-		made.Thickness = s.thickness
-		made.Transparency = s.transparency
-		made.Parent = fx
-		stroke = made
+	for _, tween in state.tweens do
+		tween:Cancel()
 	end
-
-	if look.shimmer ~= nil then
-		local sh = look.shimmer :: EffectsBudget.VariantShimmer
-		fx.BackgroundColor3 = color(sh.color)
-		fx.BackgroundTransparency = sh.transparency
-		local half = sh.width / 2
-		local gradient = Instance.new("UIGradient")
-		gradient.Name = "Shimmer"
-		gradient.Rotation = 30
-		gradient.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 1),
-			NumberSequenceKeypoint.new(math.max(0.5 - half, 0.001), 1),
-			NumberSequenceKeypoint.new(0.5, 0),
-			NumberSequenceKeypoint.new(math.min(0.5 + half, 0.999), 1),
-			NumberSequenceKeypoint.new(1, 1),
-		})
-		gradient.Offset = Vector2.new(-1, 0)
-		gradient.Parent = fx
-		if animate then
-			loop(
-				view,
-				gradient,
-				TweenInfo.new(sh.seconds, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1),
-				{ Offset = Vector2.new(1, 0) }
-			)
-		end
+	table.clear(state.tweens)
+	for _, layer in state.layers do
+		set(layer.target, { [layer.property] = VariantFx.faded(layer.base, amount) })
 	end
-
-	if look.pulse ~= nil and animate then
-		local p = look.pulse :: EffectsBudget.VariantPulse
-		local info =
-			TweenInfo.new(p.seconds, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
-		if stroke ~= nil then
-			stroke.Transparency = p.low
-			loop(view, stroke, info, { Transparency = p.high })
-		end
-		if look.shimmer ~= nil then
-			local base = fx.BackgroundTransparency
-			loop(view, fx, info, { BackgroundTransparency = base + (1 - base) * p.high })
-		end
-	end
-
-	if look.twinkles ~= nil then
-		local t = look.twinkles :: EffectsBudget.VariantTwinkles
-		for i, spot in t.spots do
-			local star = Instance.new("ImageLabel")
-			star.Name = "Twinkle" .. i
-			star.BackgroundTransparency = 1
-			star.Image = t.image
-			star.ImageColor3 = color(t.color)
-			star.AnchorPoint = Vector2.new(0.5, 0.5)
-			star.Position = UDim2.fromScale(spot.x, spot.y)
-			star.Size = UDim2.fromScale(t.size, t.size)
-			star.ZIndex = view.ZIndex + 1
-			star.Parent = view
-			if animate then
-				star.Size = UDim2.fromScale(0, 0)
-				loop(
-					view,
-					star,
-					TweenInfo.new(
-						t.seconds / 2,
-						Enum.EasingStyle.Quad,
-						Enum.EasingDirection.Out,
-						-1,
-						true,
-						t.stagger * (i - 1)
-					),
-					{ Size = UDim2.fromScale(t.size, t.size) }
-				)
-			end
-		end
-	end
-
-	-- Callers may raise the view's ZIndex after building it (the hatch
-	-- reveal does); keep the layers on top of it either way.
-	local function follow()
-		fx.ZIndex = view.ZIndex
-		for _, child in view:GetChildren() do
-			if child:IsA("ImageLabel") then
-				child.ZIndex = view.ZIndex + 1
-			end
-		end
-	end
-	view:GetPropertyChangedSignal("ZIndex"):Connect(follow)
 end
 
 -- One pet, with the variant the server sent (nil for a normal pet).
@@ -369,7 +329,7 @@ function PetVisual.view(
 	camera.CFrame = CFrame.lookAt(eye, Vector3.zero)
 	camera.Parent = viewport
 	viewport.CurrentCamera = camera
-	variantFx(viewport, look.variant)
+	variantFx(viewport, parent, look.variant)
 	viewport.Parent = parent
 	return viewport
 end

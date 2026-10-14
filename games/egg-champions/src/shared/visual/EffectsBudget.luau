@@ -285,7 +285,10 @@ local function rgb(r: number, g: number, b: number): RGB
 	return table.freeze({ r = r, g = g, b = b })
 end
 
-local SPARKLE_IMAGE = "rbxasset://textures/particles/sparkles_main.dds"
+-- The twinkle image. An ImageLabel needs a plain image file: the .dds
+-- particle textures are made for ParticleEmitter and may not load in one.
+-- This is a soft white dot shipped with the client, tinted by `color`.
+local SPARKLE_IMAGE = "rbxasset://textures/whiteCircle.png"
 
 EffectsBudget.VARIANT_VIEW = table.freeze({
 	normal = table.freeze({}),
@@ -333,7 +336,10 @@ EffectsBudget.ACCENT = table.freeze({
 
 -- The instance classes each part of a variant view is made of, so the tests
 -- can prove no view depends on something a ViewportFrame cannot render.
+-- `base` is the overlay frame every non-normal look sits in, with a UICorner
+-- copied from the card around the view so the stroke follows its corners.
 EffectsBudget.VIEW_CLASSES = table.freeze({
+	base = table.freeze({ "Frame", "UICorner" }),
 	stroke = table.freeze({ "UIStroke" }),
 	shimmer = table.freeze({ "Frame", "UIGradient" }),
 	pulse = table.freeze({ "UIStroke", "Frame" }),
@@ -358,8 +364,10 @@ end
 function EffectsBudget.variantClasses(variant: string?): { string }
 	local view = EffectsBudget.variantView(variant)
 	local classes: { string } = {}
-	for _, piece in { "stroke", "shimmer", "pulse", "twinkles" } do
-		if (view :: any)[piece] ~= nil then
+	local layered = view.stroke ~= nil or view.shimmer ~= nil or view.twinkles ~= nil
+	for _, piece in { "base", "stroke", "shimmer", "pulse", "twinkles" } do
+		local used = if piece == "base" then layered else (view :: any)[piece] ~= nil
+		if used then
 			for _, class in EffectsBudget.VIEW_CLASSES[piece] do
 				if table.find(classes, class) == nil then
 					table.insert(classes, class)

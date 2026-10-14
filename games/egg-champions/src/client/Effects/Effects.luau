@@ -832,7 +832,8 @@ local function faint(side: SideFx)
 	fx(side.block, BATTLE.faintSeconds, { BackgroundTransparency = 1 })
 	local view = side.block:FindFirstChild("PetView")
 	if view ~= nil and view:IsA("ViewportFrame") then
-		fx(view, BATTLE.faintSeconds, { ImageTransparency = 1 })
+		-- The model and its shiny or golden layers fade together.
+		PetVisual.fade(view, 1, BATTLE.faintSeconds)
 	end
 end
 
