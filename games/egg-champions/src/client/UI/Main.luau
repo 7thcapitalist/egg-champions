@@ -30,11 +30,14 @@
 	  SKIP that sends SkipTutorial, and UI/Pointer outlines the thing to use.
 	  The tutorial's gym step waits while NextGoal has a small goal before
 	  the gym (more pets, a full team, the next egg): the card shows that
-	  goal, and Guide holds the gym pointer back until it is done. Under a
-	  small goal a muted second line names the gym and its fee
-	  (NextGoal.nextLine); tapping it turns on the beam and edge arrow to
-	  the gym, which also turn on by themselves once the team is full
-	  (NextGoal.gymBeam, shown by Guide).
+	  goal, and Guide leads to it with Tutorial.heldCard until it is done.
+	  During the tutorial the pointer is the only call to action: the card
+	  shows no OPEN EGGS or OPEN PETS button. Under a small goal a muted
+	  second line names the gym and its fee (NextGoal.nextLine); tapping it
+	  turns on the beam and edge arrow to the gym, which also turn on by
+	  themselves once the team is full (NextGoal.gymBeam, shown by Guide).
+	  While the goal waits on coins, that line says "Click anywhere to earn
+	  coins" instead (NextGoal.clickHint).
 	- Team bar at the bottom (bottom left on compact screens): hidden until
 	  the player equips a pet, then one slot per equipped pet up to
 	  constants.team_size (HudLayout.teamSlots). Each slot shows the pet's
@@ -92,10 +95,12 @@ local Z_PANEL = 2
 local SKIP_WIDTH = 56
 local SKIP_GAP = 6
 
--- The goal card button for each tutorial step that opens a screen.
-local TUTORIAL_ACTION: { [number]: { label: string, screen: string } } = {
-	[Tutorial.steps.hatch] = { label = "Open eggs", screen = Screens.names.Eggs },
-	[Tutorial.steps.equip] = { label = "Open pets", screen = Screens.names.Pets },
+-- While the tutorial runs, the pointer is the one call to action for a
+-- screen: the goal card shows no OPEN EGGS or OPEN PETS button then.
+local SCREEN_ACTIONS: { [string]: boolean } = {
+	pets = true,
+	team = true,
+	egg = true,
 }
 
 -- The screen each HudLayout.MENU entry opens. Shop is the accent button once
@@ -396,6 +401,9 @@ local function buildGoal(parent: Instance): GoalCard
 	nextLine.ZIndex = Z_PANEL
 	nextLine.Parent = goal
 	nextLine.Activated:Connect(function()
+		if nextLine:GetAttribute("Link") ~= true then
+			return
+		end
 		local tapped = onNextTapped
 		if tapped ~= nil then
 			tapped()
@@ -769,11 +777,20 @@ function Main.mount(
 		local picked = NextGoal.pick(goalState, number(derived.rebirthCost))
 		tutorialStep = profile.tutorialStep
 		local holdGym = NextGoal.beforeGym(picked)
-		Guide.setHoldGym(holdGym)
-		local tutorial = Tutorial.card(tutorialStep, { eggsOpen = false, petsOpen = false })
+		local closedScreens: Tutorial.Screens = { eggsOpen = false, petsOpen = false }
+		local tutorial = Tutorial.card(tutorialStep, closedScreens)
+		-- The small goal the tutorial's gym step waits on, and the card that
+		-- leads to it meanwhile (Guide shows its pointer and screen bar).
+		local held: Tutorial.Held? = nil
+		local heldCard: Tutorial.Card? = nil
 		if tutorial ~= nil and tutorial.step == Tutorial.steps.gym and holdGym then
 			tutorial = nil
+			local waiting: Tutorial.Held =
+				{ kind = picked.kind, id = picked.id, ready = picked.ready }
+			held = waiting
+			heldCard = Tutorial.heldCard(closedScreens, waiting)
 		end
+		Guide.setHeld(held)
 		local skipWanted = tutorial ~= nil and skipTutorial ~= nil
 		if goal.skip.Visible ~= skipWanted then
 			goal.skip.Visible = skipWanted
@@ -782,7 +799,13 @@ function Main.mount(
 		updatePointer()
 
 		local action = GOAL_ACTION[picked.kind]
+		if onboarding and SCREEN_ACTIONS[picked.kind] == true then
+			action = nil
+		end
 		local nextText: string? = nil
+		-- The short "Click anywhere to earn coins" line, while the goal waits
+		-- on coins. It takes the second line's place.
+		local hintText: string? = nil
 		-- The labelled bar shown in the button's place, when there is one.
 		local progress: { label: string, have: number, need: number }? = nil
 		if tutorial ~= nil then
@@ -795,8 +818,11 @@ function Main.mount(
 					have = math.min(coins, price),
 					need = price,
 				}
-			elseif TUTORIAL_ACTION[tutorial.step] ~= nil then
-				action = TUTORIAL_ACTION[tutorial.step]
+			elseif
+				tutorial.step == Tutorial.steps.hatch or tutorial.step == Tutorial.steps.equip
+			then
+				-- The pointer is the call to action: no button here.
+				action = nil
 				picked.ready = true
 			else
 				-- The gym step: the first world's gym fee, or the gym itself
@@ -806,6 +832,7 @@ function Main.mount(
 				action = GOAL_ACTION.gym
 				picked.ready = paid or coins >= fee
 				if not picked.ready then
+					hintText = Tutorial.CLICK_LINE
 					progress = {
 						label = "Coins for the gym fee",
 						have = math.min(coins, fee),
@@ -816,6 +843,7 @@ function Main.mount(
 		else
 			goal.line.Text = picked.title
 			nextText = NextGoal.nextLine(goalState, picked)
+			hintText = NextGoal.clickHint(goalState, picked)
 			if not picked.ready then
 				local counted = if picked.kind == "pets" or picked.kind == "team"
 					then "Pets"
@@ -823,8 +851,11 @@ function Main.mount(
 				progress = { label = counted, have = picked.have, need = picked.need }
 			end
 		end
-		local nextShown = nextText ~= nil
-		goal.nextLine.Text = nextText or ""
+		local secondText = hintText or nextText
+		local nextShown = secondText ~= nil
+		goal.nextLine.Text = secondText or ""
+		goal.nextLine:SetAttribute("Link", hintText == nil and nextText ~= nil)
+		goal.nextLine.TextColor3 = if hintText ~= nil then colors.text else colors.muted
 		if goal.nextLine.Visible ~= nextShown then
 			goal.nextLine.Visible = nextShown
 			applyLayout()
@@ -855,6 +886,10 @@ function Main.mount(
 					Format.abbreviate(shown.have),
 					Format.abbreviate(shown.need)
 				)
+			elseif onboarding then
+				-- The pointer leads the way; the button row stays empty.
+				goal.action.Visible = false
+				goal.bar.Visible = false
 			else
 				goal.action.Visible = true
 				goal.bar.Visible = false
@@ -933,7 +968,8 @@ function Main.mount(
 		local goalReady = goal.action.Visible and goalScreen ~= nil
 		local gold = HudLayout.goldParts({
 			onboarding = onboarding,
-			pointer = tutorial ~= nil and tutorial.target ~= nil,
+			pointer = (tutorial ~= nil and tutorial.target ~= nil)
+				or (heldCard ~= nil and heldCard.target ~= nil),
 			goalBar = goal.bar.Visible,
 			goalReady = goalReady,
 			menu = menuShown,

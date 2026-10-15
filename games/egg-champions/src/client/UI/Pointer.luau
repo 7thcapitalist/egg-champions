@@ -9,6 +9,10 @@
 	ground from the player's feet to the gym floor, and an arrow at the
 	screen edge whenever the gym is off camera (placed by shared/ui/EdgeArrow).
 
+	A button gets a 6 px gold outline that pulses between opaque and a
+	little lighter (never faint), plus a gold arrow beside it that bounces
+	toward it (placed by EdgeArrow.beside, drawn above every screen).
+
 	Pointer.set picks the current target, or nil for none. A button that is
 	registered again (such as EQUIP, rebuilt with the pets detail) gets the
 	outline again. The pulse timing below is display timing, not a game number.
@@ -29,8 +33,19 @@ local Theme = require(script.Parent:WaitForChild("Theme"))
 
 local OUTLINE_NAME = "TutorialPointer"
 local OUTLINE_GROW = 6
-local OUTLINE_THICKNESS = 3
+-- Outline: thickness in pixels at the two ends of the pulse, and its
+-- transparency at the light end (the other end is fully opaque).
+local OUTLINE_THICKNESS = 6
+local OUTLINE_THICKNESS_PULSE = 5
+local OUTLINE_PULSE_TRANSPARENCY = 0.3
 local PULSE_SECONDS = 0.6
+-- Bouncing arrow beside a button: size, gap to the button, bounce distance
+-- and one bounce in seconds, all in pixels. Drawn above every screen.
+local POINT_ARROW_SIZE = 44
+local POINT_ARROW_GAP = 6
+local POINT_ARROW_BOUNCE = 12
+local POINT_ARROW_SECONDS = 0.7
+local POINT_ARROW_ORDER = 50
 local GYM_PREFIX = "gym:"
 -- How often a gym that is not in the world yet is looked for again.
 local GYM_RETRY_SECONDS = 1
@@ -86,6 +101,69 @@ local function pulseOn(instance: Instance, goal: { [string]: any })
 	pulse = tween
 end
 
+-- True when target and every GuiObject above it are visible and its
+-- ScreenGui is enabled, so the arrow only shows beside a button on screen.
+local function onScreen(target: GuiObject): boolean
+	local node: Instance? = target
+	while node ~= nil do
+		if node:IsA("GuiObject") and not node.Visible then
+			return false
+		end
+		if node:IsA("LayerCollector") then
+			return node.Enabled
+		end
+		node = node.Parent
+	end
+	return false
+end
+
+-- The gold arrow beside a button, bouncing toward it.
+local function pointArrow(target: GuiObject)
+	local playerGui = Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
+	if playerGui == nil then
+		return
+	end
+	local gui = Instance.new("ScreenGui")
+	gui.Name = OUTLINE_NAME .. "Point"
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = true
+	gui.DisplayOrder = POINT_ARROW_ORDER
+	local arrow = Instance.new("TextLabel")
+	arrow.Name = "Arrow"
+	arrow.BackgroundTransparency = 1
+	arrow.AnchorPoint = Vector2.new(0.5, 0.5)
+	arrow.Size = UDim2.fromOffset(POINT_ARROW_SIZE, POINT_ARROW_SIZE)
+	arrow.FontFace = Theme.fonts.heading
+	arrow.Text = ">"
+	arrow.TextScaled = true
+	arrow.TextColor3 = Theme.colors.gold
+	arrow.TextStrokeColor3 = Theme.colors.panel
+	arrow.TextStrokeTransparency = 0
+	arrow.Visible = false
+	arrow.Active = false
+	arrow.Parent = gui
+	gui.Parent = playerGui
+	table.insert(extras, gui)
+
+	loop = RunService.RenderStepped:Connect(function()
+		if target.Parent == nil or not onScreen(target) then
+			arrow.Visible = false
+			return
+		end
+		local size = gui.AbsoluteSize
+		local wave = (math.sin(os.clock() * 2 * math.pi / POINT_ARROW_SECONDS) + 1) / 2
+		local placed = EdgeArrow.beside({ x = size.X, y = size.Y }, {
+			x = target.AbsolutePosition.X,
+			y = target.AbsolutePosition.Y,
+			w = target.AbsoluteSize.X,
+			h = target.AbsoluteSize.Y,
+		}, POINT_ARROW_SIZE, POINT_ARROW_GAP, wave * POINT_ARROW_BOUNCE)
+		arrow.Visible = placed.visible
+		arrow.Position = UDim2.fromOffset(placed.x, placed.y)
+		arrow.Rotation = placed.angle
+	end)
+end
+
 local function outline(target: GuiObject)
 	local box = Instance.new("Frame")
 	box.Name = OUTLINE_NAME
@@ -102,11 +180,16 @@ local function outline(target: GuiObject)
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = Theme.colors.gold
 	stroke.Thickness = OUTLINE_THICKNESS
+	stroke.Transparency = 0
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	stroke.Parent = box
 	box.Parent = target
 	shown = box
-	pulseOn(stroke, { Transparency = 0.8 })
+	pulseOn(
+		stroke,
+		{ Transparency = OUTLINE_PULSE_TRANSPARENCY, Thickness = OUTLINE_THICKNESS_PULSE }
+	)
+	pointArrow(target)
 end
 
 local function highlightGym(worldId: string)

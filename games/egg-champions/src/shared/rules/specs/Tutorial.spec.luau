@@ -315,6 +315,101 @@ return function()
 			end
 		end)
 
+		describe("from the equip step to the gym step while the team is not full", function()
+			local NextGoal = require(script.Parent.Parent.Parent.ui.NextGoal)
+			local teamSize = Config.constants.team_size
+
+			-- Just equipped the first pet: one pet owned, one on the team.
+			local function afterEquip(coins: number): (number, any)
+				local profile = withPet(at(steps.equip, coins))
+				table.insert(profile.team, "u1")
+				local step = Tutorial.advance(profile, events.equipped)
+				local goal = NextGoal.pick({
+					coins = coins,
+					rebirths = 0,
+					index = {},
+					gymsBeaten = {},
+					feesPaid = {},
+					petCount = 1,
+					teamCount = 1,
+				}, 0)
+				return step, goal
+			end
+
+			it("moves to the gym step, which waits on the small goal", function()
+				if teamSize < 2 then
+					return
+				end
+				local step, goal = afterEquip(0)
+				expect(step).toEqual(steps.gym)
+				expect(NextGoal.beforeGym(goal)).toBeTrue()
+				expect(Tutorial.active(step)).toBeTrue()
+			end)
+
+			it("tells the player in the pets screen to close it and click", function()
+				if teamSize < 2 then
+					return
+				end
+				local _, goal = afterEquip(0)
+				local held = { kind = goal.kind, id = goal.id, ready = goal.ready }
+				expect(held.ready).toEqual(false)
+				local card = Tutorial.heldCard(pets, held)
+				expect(card.screenText).toEqual(
+					"Pet equipped. Close this and click to earn more coins"
+				)
+				expect(card.target).toEqual(nil)
+				local selected = Tutorial.heldCard(petsPicked, held)
+				expect(selected.screenText).toEqual(Tutorial.EQUIPPED_LINE)
+				-- On the main screen there is no bar; the card says to click.
+				local main = Tutorial.heldCard(closed, held)
+				expect(main.screenText).toEqual(nil)
+				expect(main.target).toEqual(nil)
+				expect(main.text).toEqual("Click anywhere to earn coins")
+				-- In the egg shop the bar says to close it and click.
+				local shop = Tutorial.heldCard(eggs, held)
+				expect(shop.screenText ~= nil).toBeTrue()
+				expect(shop.target).toEqual(nil)
+			end)
+
+			it("leads to EGGS and HATCH once the next egg is affordable", function()
+				if teamSize < 2 then
+					return
+				end
+				local price = Config.eggById[Tutorial.firstEggId].price
+				local _, goal = afterEquip(price)
+				local held = { kind = goal.kind, id = goal.id, ready = goal.ready }
+				expect(held.ready).toBeTrue()
+				expect(Tutorial.heldCard(closed, held).target).toEqual("menu:Eggs")
+				local inPets = Tutorial.heldCard(pets, held)
+				expect(inPets.target).toEqual(nil)
+				expect(inPets.screenText).toEqual("Pet equipped. Close this, then open EGGS")
+				local inShop = Tutorial.heldCard(eggs, held)
+				expect(inShop.target).toEqual("hatch:" .. goal.id)
+				expect(inShop.screenText).toEqual(
+					"Tap HATCH on the " .. Config.eggById[goal.id].name
+				)
+			end)
+
+			it("leads to PETS and EQUIP when an owned pet waits to be equipped", function()
+				local held = { kind = "team", id = Tutorial.gymWorldId, ready = true }
+				expect(Tutorial.heldCard(closed, held).target).toEqual("menu:Pets")
+				expect(Tutorial.heldCard(eggs, held).target).toEqual(nil)
+				expect(Tutorial.heldCard(pets, held).target).toEqual(nil)
+				expect(Tutorial.heldCard(petsPicked, held).target).toEqual("equip")
+			end)
+
+			it("always has a bar line while a screen is open", function()
+				for _, ready in { true, false } do
+					for _, kind in { "pets", "egg", "team" } do
+						local held = { kind = kind, id = Tutorial.firstEggId, ready = ready }
+						for _, screens in { eggs, pets, petsPicked } do
+							expect(Tutorial.heldCard(screens, held).screenText ~= nil).toBeTrue()
+						end
+					end
+				end
+			end)
+		end)
+
 		it("closes the egg shop only when the hatch step ends", function()
 			expect(Tutorial.closesEggShop(steps.hatch, steps.equip)).toBeTrue()
 			expect(Tutorial.closesEggShop(steps.hatch, steps.done)).toBeTrue()

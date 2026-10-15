@@ -55,4 +55,39 @@ return function()
 			expect(placed.angle).toBeCloseTo(90, EPSILON)
 		end)
 	end)
+	describe("EdgeArrow.beside", function()
+		local SIZE = 40
+		local GAP = 8
+
+		it("sits right of a button on the left half, pointing left", function()
+			local rect = { x = 20, y = 300, w = 120, h = 40 }
+			local placed = EdgeArrow.beside(SCREEN, rect, SIZE, GAP, 0)
+			expect(placed.visible).toBeTrue()
+			expect(placed.x).toBeCloseTo(20 + 120 + GAP + SIZE / 2, EPSILON)
+			expect(placed.y).toBeCloseTo(320, EPSILON)
+			expect(placed.angle).toBeCloseTo(180, EPSILON)
+		end)
+
+		it("sits left of a button on the right half, pointing right", function()
+			local rect = { x = 1000, y = 100, w = 200, h = 60 }
+			local placed = EdgeArrow.beside(SCREEN, rect, SIZE, GAP, 0)
+			expect(placed.x).toBeCloseTo(1000 - GAP - SIZE / 2, EPSILON)
+			expect(placed.y).toBeCloseTo(130, EPSILON)
+			expect(placed.angle).toBeCloseTo(0, EPSILON)
+		end)
+
+		it("moves away from the button by the bounce", function()
+			local rect = { x = 20, y = 300, w = 120, h = 40 }
+			local still = EdgeArrow.beside(SCREEN, rect, SIZE, GAP, 0)
+			local bounced = EdgeArrow.beside(SCREEN, rect, SIZE, GAP, 10)
+			expect(bounced.x - still.x).toBeCloseTo(10, EPSILON)
+		end)
+
+		it("stays inside the viewport", function()
+			local rect = { x = 1200, y = 700, w = 80, h = 40 }
+			local placed = EdgeArrow.beside(SCREEN, rect, SIZE, GAP, 0)
+			expect(placed.x <= SCREEN.x - SIZE / 2 + EPSILON).toBeTrue()
+			expect(placed.y <= SCREEN.y - SIZE / 2 + EPSILON).toBeTrue()
+		end)
+	end)
 end

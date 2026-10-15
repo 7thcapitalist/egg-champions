@@ -226,7 +226,7 @@ function Tutorial.card(step: any, screens: Screens): Card?
 	if step == steps.click then
 		return {
 			step = step,
-			text = "Click anywhere to earn coins",
+			text = Tutorial.CLICK_LINE,
 			target = nil,
 			screenText = if anyOpen then "Close this screen and click to earn coins" else nil,
 		}
@@ -271,6 +271,75 @@ function Tutorial.card(step: any, screens: Screens): Card?
 		screenText = if anyOpen
 			then "Close this screen and walk to the " .. Tutorial.gymName()
 			else nil,
+	}
+end
+
+-- The small goal shown while the gym step waits (see heldCard): its kind
+-- as shared/ui/NextGoal names it ("pets", "team" or "egg"), its id (an egg
+-- id for "pets" and "egg"), and whether the player can act on it now.
+export type Held = {
+	kind: string,
+	id: string,
+	ready: boolean,
+}
+
+Tutorial.CLICK_LINE = "Click anywhere to earn coins"
+Tutorial.EQUIPPED_LINE = "Pet equipped. Close this and click to earn more coins"
+
+-- The card while the gym step waits on a small goal (the team is not full
+-- yet), so guidance never stops after the equip step. Short of coins, the
+-- bar says to close the screen and click. With coins enough for an egg, the
+-- pointer leads to EGGS and then HATCH; with a pet to equip, to PETS and
+-- then EQUIP. The card line is the goal's own; Main shows NextGoal's title.
+function Tutorial.heldCard(screens: Screens, held: Held): Card
+	local anyOpen = screens.eggsOpen or screens.petsOpen
+	local step = steps.gym
+	if not held.ready then
+		local screenText: string? = nil
+		if screens.petsOpen then
+			screenText = Tutorial.EQUIPPED_LINE
+		elseif anyOpen then
+			screenText = "Close this screen and click to earn coins"
+		end
+		return { step = step, text = Tutorial.CLICK_LINE, target = nil, screenText = screenText }
+	end
+	if held.kind == "team" then
+		if screens.petsOpen then
+			local selected = screens.petSelected == true
+			return {
+				step = step,
+				text = "Equip your pets to your team",
+				target = if selected then "equip" else nil,
+				screenText = if selected
+					then "Tap EQUIP to add it to your team"
+					else "Tap a pet that is not equipped, then EQUIP",
+			}
+		end
+		return {
+			step = step,
+			text = "Equip your pets to your team",
+			target = if anyOpen then nil else "menu:Pets",
+			screenText = if anyOpen then "Close this screen, then open PETS" else nil,
+		}
+	end
+	-- rawget: an id that is not an egg gives no HATCH target instead of an error.
+	local egg: Config.Egg? = rawget(Config.eggById :: any, held.id)
+	if screens.eggsOpen and egg ~= nil then
+		return {
+			step = step,
+			text = "Hatch another pet",
+			target = "hatch:" .. egg.id,
+			screenText = "Tap HATCH on the " .. egg.name,
+		}
+	end
+	local closeLine = if screens.petsOpen
+		then "Pet equipped. Close this, then open EGGS"
+		else "Close this screen, then open EGGS"
+	return {
+		step = step,
+		text = "Hatch another pet",
+		target = if anyOpen then nil else "menu:Eggs",
+		screenText = if anyOpen then closeLine else nil,
 	}
 end
 

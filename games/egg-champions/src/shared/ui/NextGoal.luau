@@ -283,6 +283,29 @@ function NextGoal.nextLine(state: State, goal: Goal): string?
 	return string.format("Next: %s Gym (%s)", world.name, Format.abbreviate(world.gym.fee))
 end
 
+NextGoal.CLICK_HINT = "Click anywhere to earn coins"
+
+-- True when the goal waits on coins the player does not have yet: an egg,
+-- a gym fee or a rebirth short of its price, or more pets to hatch while the
+-- cheapest egg is out of reach. A team goal and a paid gym never wait on
+-- coins.
+function NextGoal.needsCoins(state: State, goal: Goal): boolean
+	if goal.kind == NextGoal.kinds.team then
+		return false
+	end
+	if goal.kind == NextGoal.kinds.pets then
+		local egg: Config.Egg? = rawget(Config.eggById :: any, goal.id)
+		return egg ~= nil and state.coins < egg.price
+	end
+	return not goal.ready and state.coins < goal.need
+end
+
+-- The short "Click anywhere to earn coins" line the goal card keeps while
+-- the goal waits on coins (needsCoins), or nil.
+function NextGoal.clickHint(state: State, goal: Goal): string?
+	return if NextGoal.needsCoins(state, goal) then NextGoal.CLICK_HINT else nil
+end
+
 -- True when every team slot holds a pet.
 function NextGoal.teamFull(state: State): boolean
 	local teamCount = state.teamCount

@@ -11,6 +11,12 @@
 	and its angle (degrees, 0 = pointing right, 90 = pointing down, as a
 	GuiObject's Rotation turns) points that way. A point behind the camera
 	is mirrored through the centre first, since the projection flips it.
+
+	beside places the tutorial's bouncing arrow next to an on-screen button
+	(a rect in screen pixels): on the side with more room, level with the
+	button's middle, pointing at it. bounce pushes it that many pixels
+	further away, so animating bounce makes it bounce toward the button.
+	The arrow is kept inside the viewport.
 ]]
 
 export type Point = { x: number, y: number }
@@ -60,6 +66,32 @@ function EdgeArrow.place(viewport: Point, point: Point, depth: number, margin: n
 		x = cx + dx * scale,
 		y = cy + dy * scale,
 		angle = math.deg(math.atan2(dy, dx)),
+	}
+end
+
+export type Rect = { x: number, y: number, w: number, h: number }
+
+function EdgeArrow.beside(
+	viewport: Point,
+	rect: Rect,
+	size: number,
+	gap: number,
+	bounce: number
+): Placement
+	local half = size / 2
+	local middle = rect.x + rect.w / 2
+	local onRight = middle <= viewport.x / 2
+	local push = gap + half + math.max(bounce, 0)
+	local x = if onRight then rect.x + rect.w + push else rect.x - push
+	local y = rect.y + rect.h / 2
+	x = math.clamp(x, half, math.max(viewport.x - half, half))
+	y = math.clamp(y, half, math.max(viewport.y - half, half))
+	return {
+		visible = true,
+		x = x,
+		y = y,
+		-- On the right it points left (180), on the left it points right (0).
+		angle = if onRight then 180 else 0,
 	}
 end
 

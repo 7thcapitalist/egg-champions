@@ -303,6 +303,59 @@ return function()
 		end)
 	end)
 
+	describe("NextGoal.clickHint", function()
+		it("says to click while the next pet is out of reach after the first equip", function()
+			local egg = NextGoal.cheapestEgg(first)
+			local state = newState(egg.price - 1)
+			state.petCount = 1
+			state.teamCount = 1
+			local goal = NextGoal.pick(state, 0)
+			if Config.constants.team_size >= 2 then
+				expect(goal.kind).toEqual(NextGoal.kinds.pets)
+			end
+			expect(NextGoal.needsCoins(state, goal)).toBeTrue()
+			expect(NextGoal.clickHint(state, goal)).toEqual("Click anywhere to earn coins")
+		end)
+
+		it("drops the line once the coins are there", function()
+			local egg = NextGoal.cheapestEgg(first)
+			local state = newState(egg.price)
+			state.petCount = 1
+			state.teamCount = 1
+			local goal = NextGoal.pick(state, 0)
+			if goal.kind == NextGoal.kinds.pets then
+				expect(NextGoal.clickHint(state, goal)).toEqual(nil)
+			end
+		end)
+
+		it("never shows it for a team goal or a paid gym", function()
+			local state = newState(0)
+			state.petCount = Config.constants.team_size
+			state.teamCount = 0
+			local team = NextGoal.pick(state, 0)
+			expect(team.kind).toEqual(NextGoal.kinds.team)
+			expect(NextGoal.clickHint(state, team)).toEqual(nil)
+
+			local paid = newState(0)
+			paid.feesPaid[first.id] = true
+			expect(NextGoal.clickHint(paid, NextGoal.pick(paid, 0))).toEqual(nil)
+		end)
+
+		it("shows it for an egg or gym fee the player cannot afford yet", function()
+			local state = newState(0)
+			local goal = NextGoal.pick(state, 0)
+			expect(NextGoal.clickHint(state, goal)).toEqual(NextGoal.CLICK_HINT)
+			for _, egg in goalEggs(first) do
+				hatch(state, egg.id)
+			end
+			local gym = NextGoal.pick(state, 0)
+			expect(gym.kind).toEqual(NextGoal.kinds.gym)
+			expect(NextGoal.clickHint(state, gym)).toEqual(NextGoal.CLICK_HINT)
+			state.coins = first.gym.fee
+			expect(NextGoal.clickHint(state, NextGoal.pick(state, 0))).toEqual(nil)
+		end)
+	end)
+
 	describe("NextGoal.gymBeam", function()
 		local teamSize = Config.constants.team_size
 

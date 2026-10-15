@@ -320,3 +320,8 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-15T14:15:20Z | check 41 | pass | stylua --check games/egg-champions/src |
 | 2026-10-15T14:15:20Z | check 41 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
 | 2026-10-15T14:15:20Z | task 41 | passed | checked with --finish |
+| 2026-10-15T14:21:04Z | check 42 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T14:21:04Z | check 42 | pass | selene games/egg-champions/src |
+| 2026-10-15T14:21:04Z | check 42 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T14:21:04Z | check 42 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T14:21:04Z | task 42 | passed | checked with --finish |

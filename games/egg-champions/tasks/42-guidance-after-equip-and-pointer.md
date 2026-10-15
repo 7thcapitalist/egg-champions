@@ -21,6 +21,6 @@ for the same thing (menu pointer and the OPEN button on the card).
    team is not full.
 
 ## Done when
-- [ ] `python factory/tools/run_tests.py games/egg-champions` exits 0.
-- [ ] `selene games/egg-champions/src` and `stylua --check games/egg-champions/src` pass.
-- [ ] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl` succeeds.
+- [x] `python factory/tools/run_tests.py games/egg-champions` exits 0.
+- [x] `selene games/egg-champions/src` and `stylua --check games/egg-champions/src` pass.
+- [x] `rojo build games/egg-champions -o games/egg-champions/build/game.rbxl` succeeds.

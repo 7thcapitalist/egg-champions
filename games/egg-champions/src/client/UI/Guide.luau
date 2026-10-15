@@ -13,8 +13,13 @@
 	  and the reveal card are over (EggShop reports them with setHatching;
 	  shared/ui/HatchReveal.shopCloses decides).
 
-	While Main says a small goal comes before the gym (setHoldGym), the gym
-	step shows nothing here: no pointer, no bar.
+	While Main says a small goal comes before the gym (setHeld), the gym step
+	waits and Tutorial.heldCard leads to that goal instead, so the guidance
+	never stops: short of coins the bar says to close the screen and click,
+	otherwise the pointer leads to EGGS and HATCH, or PETS and EQUIP.
+
+	While the tutorial runs, a screen keeps its bar's slot even when there is
+	no line for a moment (the onShown flag of bar), so the body never jumps.
 
 	When no tutorial target is showing, Main can ask for the beam and edge
 	arrow to a gym (setGymBeam): after the player taps the goal card's "Next"
@@ -41,7 +46,10 @@ local PETS_GUI = "Pets"
 local Guide = {}
 
 local step: any = nil
-local holdGym = false
+-- The small goal the gym step waits on, or nil when it does not wait.
+local held: Tutorial.Held? = nil
+-- True while the tutorial runs, so screens keep the bar's slot.
+local reserved = false
 -- A hatch animation or reveal is playing, and a shop close is waiting on it.
 local hatching = false
 local closePending = false
@@ -53,18 +61,20 @@ local listeners: { (string?) -> () } = {}
 
 -- Works the card out again and updates the pointer and every bar.
 function Guide.refresh()
-	local card = Tutorial.card(step, {
+	local screens: Tutorial.Screens = {
 		eggsOpen = Screens.isShown(EGG_SHOP_GUI),
 		petsOpen = Screens.isShown(PETS_GUI),
 		petSelected = petSelected,
-	})
-	if card ~= nil and card.step == Tutorial.steps.gym and holdGym then
-		card = nil
+	}
+	local card = Tutorial.card(step, screens)
+	local waiting = held
+	if card ~= nil and card.step == Tutorial.steps.gym and waiting ~= nil then
+		card = Tutorial.heldCard(screens, waiting)
 	end
 	local target = if card ~= nil then card.target else nil
 	-- The gym pointer (highlight, beam, edge arrow) is for the world view:
 	-- none of it shows while a screen covers the world.
-	if card ~= nil and card.step == Tutorial.steps.gym and Screens.anyOpen() then
+	if target ~= nil and string.sub(target, 1, 4) == "gym:" and Screens.anyOpen() then
 		target = nil
 	end
 	local beam = beamWorld
@@ -73,8 +83,10 @@ function Guide.refresh()
 	end
 	Pointer.set(target)
 	local line = if card ~= nil then card.screenText else nil
-	if line ~= text then
+	local reserve = Tutorial.active(step)
+	if line ~= text or reserve ~= reserved then
 		text = line
+		reserved = reserve
 		for _, listener in listeners do
 			task.spawn(listener, line)
 		end
@@ -91,9 +103,16 @@ function Guide.onText(listener: (string?) -> ())
 	table.insert(listeners, listener)
 end
 
+-- True while screens should keep the bar's slot: the tutorial runs, even
+-- if there is no line right now.
+function Guide.reserved(): boolean
+	return reserved
+end
+
 -- Builds the one-line bar a screen shows in its header, filled from
 -- onText and hidden while there is no line. The caller places and sizes it.
--- onShown, when given, hears whether the bar shows after every change.
+-- onShown, when given, hears after every change whether the bar's slot is
+-- needed: a line shows, or the tutorial runs (reserved).
 function Guide.bar(parent: Instance, onShown: ((boolean) -> ())?): Frame
 	local bar = Instance.new("Frame")
 	bar.Name = "TutorialBar"
@@ -117,7 +136,7 @@ function Guide.bar(parent: Instance, onShown: ((boolean) -> ())?): Frame
 		line.Text = value or ""
 		bar.Visible = value ~= nil
 		if onShown ~= nil then
-			onShown(value ~= nil)
+			onShown(value ~= nil or reserved)
 		end
 	end
 	show(Guide.text())
@@ -161,10 +180,20 @@ function Guide.setGymBeam(worldId: string?)
 	end
 end
 
--- Whether a small goal comes before the gym, so the gym step waits.
-function Guide.setHoldGym(hold: boolean)
-	if hold ~= holdGym then
-		holdGym = hold
+-- The small goal that comes before the gym, so the gym step waits on it
+-- (heldCard), or nil when the gym is next.
+function Guide.setHeld(goal: Tutorial.Held?)
+	local before = held
+	local same = (before == nil and goal == nil)
+		or (
+			before ~= nil
+			and goal ~= nil
+			and before.kind == goal.kind
+			and before.id == goal.id
+			and before.ready == goal.ready
+		)
+	if not same then
+		held = goal
 		Guide.refresh()
 	end
 end
