@@ -215,6 +215,56 @@ function EggShopView.tripleLook(
 	return if ownsTriple and not locked and affordableThree then "accent" else "muted"
 end
 
+-- True when a card shows HATCH X3 at all: only when the player owns the
+-- Triple Hatch pass (as the server reports it), the tutorial is done, and the
+-- egg is open. Never on a locked card. Hidden, HATCH takes the whole row.
+function EggShopView.showsTriple(tutorialStep: any, ownsTriple: boolean, locked: boolean): boolean
+	return ownsTriple and not locked and not Tutorial.active(tutorialStep)
+end
+
+-- True when a server reply is shown on the card itself. A hatch is shown by
+-- the reveal over the screen, so the card keeps its egg and name; only a
+-- refusal (or no answer) is written on the card.
+function EggShopView.resultOnCard(replyOk: boolean): boolean
+	return not replyOk
+end
+
+-- What a card's egg view shows: the real egg model ("model") when PetModels
+-- holds a Model for the egg whose copy has at least one part and a size the
+-- camera can frame, else the coloured egg shape ("shape"). Never nothing.
+function EggShopView.eggSource(
+	found: boolean,
+	isModel: boolean,
+	partCount: number,
+	cameraDistance: number
+): "model" | "shape"
+	if found and isModel and partCount > 0 and cameraDistance > 0 then
+		return "model"
+	end
+	return "shape"
+end
+
+-- How far the card camera sits from the centre of a model whose bounding box
+-- is sizeX by sizeY by sizeZ studs, so the whole box fits a camera of fov
+-- degrees with `room` times the space around it. 0 when the box or the
+-- camera cannot frame anything (empty, not finite).
+function EggShopView.eggCameraDistance(
+	sizeX: number,
+	sizeY: number,
+	sizeZ: number,
+	fov: number,
+	room: number
+): number
+	local radius = math.sqrt(sizeX * sizeX + sizeY * sizeY + sizeZ * sizeZ) / 2
+	if not (radius > 0 and radius < math.huge) then
+		return 0
+	end
+	if not (fov > 0 and fov < 180 and room > 0) then
+		return 0
+	end
+	return radius / math.tan(math.rad(fov / 2)) * room
+end
+
 -- True when the note under the cards (variants and the pass) shows: not
 -- while the tutorial runs.
 function EggShopView.showsNote(tutorialStep: any): boolean

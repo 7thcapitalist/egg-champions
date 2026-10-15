@@ -9,23 +9,27 @@
 	  check that HATCH is visible without scrolling at 808 x 432 and
 	  1280 x 720. The panel starts below the Roblox top bar and the HUD top
 	  bar (HudLayout contentTop, from UI/HudInsets).
-	- The top of each card holds the egg's real model (ReplicatedStorage.
-	  PetModels, named by egg id; a flat placeholder until it loads), name,
-	  price, HATCH and HATCH X3. The five pets with rarity and hatch chance
+	- The top of each card holds the egg's real model, from the same templates
+	  the world egg stands use (ReplicatedStorage.PetModels, named by egg id),
+	  framed on its bounding box. Until the template and its parts have
+	  arrived, or if its copy has no parts, the card shows a coloured egg
+	  shape (EggShopView.eggSource), never nothing. Then name, price, HATCH
+	  and, only with the Triple Hatch pass after the tutorial and never on a
+	  locked card, HATCH X3 (EggShopView.showsTriple). The five pets with rarity and hatch chance
 	  sit behind "Show odds". The chances are the table the server rolls
 	  with, so the screen cannot drift from the roll.
 	- A locked egg says what unlocks it. An egg the player cannot afford shows
 	  its price muted. Both buttons still send the request: the client only
 	  hints, the server decides and its refusal is shown as a readable message.
 	- Hatch sends BuyEgg with the egg id and a count of 1. Hatch x3 sends the
-	  triple count and is only offered when the server reports the Triple Hatch
-	  pass. Neither ever sends a price.
-	- The result overlays the card's egg and name area (never its buttons) and
-	  shows what hatched, its rarity and its variant, straight from the
-	  server's reply, or why the server refused. The list never moves, so the
-	  scroll position is kept. Effects.playHatch then plays the hatch sequence
-	  over the screen for the same reply; it is skippable by tapping, and the
-	  result underneath already holds the answer. Tapping the result hides it.
+	  triple count. Neither ever sends a price.
+	- A hatch is shown by Effects.playHatch and then the reveal, over the
+	  screen, straight from the server's reply; the card keeps its egg and
+	  name. Only a refusal (or no answer) is written over the card's egg and
+	  name area (never its buttons); tapping it hides it. The list never
+	  moves, so the scroll position is kept.
+	- The list's content is sized from EggShopLayout.canvasHeight, with room
+	  under the last card, so the last card is never cut off.
 
 	EggShop.openAt(eggId) opens the screen scrolled to that egg's card, for the
 	egg stands in the world.
@@ -36,7 +40,6 @@ local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
-local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local Format = require(uiShared:WaitForChild("Format"))
 local EggShopView = require(uiShared:WaitForChild("EggShopView"))
@@ -71,6 +74,10 @@ local MODELS_FOLDER = "PetModels"
 -- and the share of room left around the model. Display only.
 local EGG_FOV = 30
 local EGG_FRAME = 1.15
+-- How long a card waits for its egg template, and its parts, to arrive
+-- before it keeps the egg shape; and how often it looks. Display only.
+local EGG_WAIT_SECONDS = 60
+local EGG_POLL_SECONDS = 0.25
 
 -- Set by mount.
 local opener: ((string?) -> ())? = nil
@@ -90,6 +97,8 @@ type CardView = {
 	result: TextButton,
 	hatch: TextButton,
 	hatchStroke: UIStroke,
+	-- Whether HATCH X3 shows, so HATCH can take its room when it does not.
+	showsTriple: boolean,
 	triple: TextButton,
 	tripleStroke: UIStroke,
 }
@@ -187,45 +196,60 @@ local function place(object: GuiObject, r: EggShopLayout.Rect, originX: number, 
 	object.Size = UDim2.fromOffset(r.w, r.h)
 end
 
--- The egg in a card: its real model from PetModels in a ViewportFrame, or a
--- flat oval placeholder until the asset stage has loaded it.
-local function eggView(slot: Frame, eggId: string)
-	for _, child in slot:GetChildren() do
-		if child:IsA("GuiObject") then
-			child:Destroy()
+local function partCount(root: Instance): number
+	local count = 0
+	for _, item in root:GetDescendants() do
+		if item:IsA("BasePart") then
+			count += 1
 		end
 	end
+	return count
+end
+
+-- The egg's template in PetModels, or nil when it has not arrived.
+local function eggTemplate(eggId: string): Instance?
 	local folder = ReplicatedStorage:FindFirstChild(MODELS_FOLDER)
-	local template = if folder ~= nil then folder:FindFirstChild(eggId) else nil
-	if template ~= nil and template:IsA("Model") then
-		local viewport = Instance.new("ViewportFrame")
-		viewport.Name = "EggView"
-		viewport.BackgroundTransparency = 1
-		viewport.BorderSizePixel = 0
-		viewport.Size = UDim2.fromScale(1, 1)
-		viewport.Ambient = Color3.fromRGB(200, 200, 200)
-		viewport.LightColor = Color3.fromRGB(255, 255, 255)
-		viewport.LightDirection = Vector3.new(-1, -1, -1)
-		local model = (template :: Model):Clone()
-		for _, item in model:GetDescendants() do
-			if item:IsA("BasePart") then
-				item.Anchored = true
-			end
-		end
-		model:PivotTo(CFrame.new())
-		local box, extents = model:GetBoundingBox()
-		model:PivotTo(box:Inverse() * model:GetPivot())
-		model.Parent = viewport
-		local camera = Instance.new("Camera")
-		camera.FieldOfView = EGG_FOV
-		local radius = extents.Magnitude / 2
-		local distance = radius / math.tan(math.rad(EGG_FOV / 2)) * EGG_FRAME
-		camera.CFrame = CFrame.lookAt(Vector3.new(0, radius * 0.3, distance), Vector3.zero)
-		camera.Parent = viewport
-		viewport.CurrentCamera = camera
-		viewport.Parent = slot
-		return
+	return if folder ~= nil then folder:FindFirstChild(eggId) else nil
+end
+
+-- A copy of the template centred on its bounding box, with the camera
+-- distance that frames it, or nil when the copy holds no parts.
+local function eggCopy(template: Instance): (Model?, number)
+	if not template:IsA("Model") then
+		return nil, 0
 	end
+	-- Clone skips anything not Archivable, which would leave an empty Model.
+	template.Archivable = true
+	for _, item in template:GetDescendants() do
+		item.Archivable = true
+	end
+	local copy = (template :: Model):Clone()
+	if copy == nil then
+		return nil, 0
+	end
+	local parts = partCount(copy)
+	for _, item in copy:GetDescendants() do
+		if item:IsA("BasePart") then
+			item.Anchored = true
+		end
+	end
+	local distance = 0
+	if parts > 0 then
+		local box, extents = copy:GetBoundingBox()
+		copy:PivotTo(box:Inverse() * copy:GetPivot())
+		distance =
+			EggShopView.eggCameraDistance(extents.X, extents.Y, extents.Z, EGG_FOV, EGG_FRAME)
+	end
+	if EggShopView.eggSource(true, true, parts, distance) ~= "model" then
+		copy:Destroy()
+		return nil, 0
+	end
+	return copy, distance
+end
+
+-- The coloured egg shape: shown until the real egg arrives, and for good
+-- when it never does.
+local function eggShape(slot: Frame, eggId: string)
 	local shell = frame("EggShell", slot)
 	shell.BackgroundTransparency = 0
 	shell.BackgroundColor3 = shellColor(eggId)
@@ -240,6 +264,58 @@ local function eggView(slot: Frame, eggId: string)
 	stroke.Thickness = 2
 	stroke.Color = colors.border
 	stroke.Parent = shell
+end
+
+-- The egg in a card: its real model in a ViewportFrame, framed on its
+-- bounding box, or the coloured egg shape. Returns true for the real model.
+local function eggView(slot: Frame, eggId: string): boolean
+	for _, child in slot:GetChildren() do
+		if child:IsA("GuiObject") then
+			child:Destroy()
+		end
+	end
+	local template = eggTemplate(eggId)
+	local model: Model?, distance = nil, 0
+	if template ~= nil then
+		model, distance = eggCopy(template)
+	end
+	if model == nil then
+		eggShape(slot, eggId)
+		return false
+	end
+	local viewport = Instance.new("ViewportFrame")
+	viewport.Name = "EggView"
+	viewport.BackgroundTransparency = 1
+	viewport.BorderSizePixel = 0
+	viewport.Size = UDim2.fromScale(1, 1)
+	viewport.Ambient = Color3.fromRGB(200, 200, 200)
+	viewport.LightColor = Color3.fromRGB(255, 255, 255)
+	viewport.LightDirection = Vector3.new(-1, -1, -1)
+	model.Parent = viewport
+	local camera = Instance.new("Camera")
+	camera.FieldOfView = EGG_FOV
+	camera.CFrame = CFrame.lookAt(Vector3.new(0, 0, distance), Vector3.zero)
+	camera.Parent = viewport
+	viewport.CurrentCamera = camera
+	viewport.Parent = slot
+	return true
+end
+
+-- Waits for the egg's template and its parts (a model can arrive before its
+-- mesh part does), then shows it. The shape stays meanwhile. Runs in its own
+-- thread.
+local function loadEgg(slot: Frame, eggId: string)
+	local deadline = os.clock() + EGG_WAIT_SECONDS
+	while os.clock() < deadline do
+		local template = eggTemplate(eggId)
+		if template ~= nil and partCount(template) > 0 then
+			eggView(slot, eggId)
+			return
+		end
+		task.wait(EGG_POLL_SECONDS)
+	end
+	-- Never fully arrived: show whatever there is, which falls back to the shape.
+	eggView(slot, eggId)
 end
 
 -- Builds the screen under playerGui. Call once.
@@ -342,7 +418,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 	scroll.BorderSizePixel = 0
 	scroll.ScrollBarThickness = 6
 	scroll.ScrollBarImageColor3 = colors.border
-	scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	scroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 	scroll.CanvasSize = UDim2.new()
 	scroll.Parent = panel
 	local grid = Instance.new("UIGridLayout")
@@ -400,76 +476,6 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		view.result.Visible = true
 	end
 
-	local function showHatched(eggId: string, reply: any)
-		local view = cards[eggId]
-		if view == nil then
-			return
-		end
-		local lines = EggShopView.hatchLines(reply)
-		if #lines == 0 then
-			showMessage(eggId, "The shop answered, but nothing hatched.")
-			return
-		end
-		clearResults()
-		local s = (layout :: EggShopLayout.Layout).sizes
-		for position, line in lines do
-			local pet = Config.petById[line.petId]
-			local entry = frame("Pet" .. position, view.result)
-			entry.LayoutOrder = position
-			entry.AutomaticSize = Enum.AutomaticSize.XY
-			local entryList = list(entry, Enum.FillDirection.Horizontal, 6)
-			entryList.VerticalAlignment = Enum.VerticalAlignment.Center
-			local block = frame("Block", entry)
-			block.LayoutOrder = 1
-			block.BackgroundTransparency = 0
-			block.BackgroundColor3 = colors.panel
-			block.Size = UDim2.fromOffset(s.resultBlock, s.resultBlock)
-			block.ZIndex = Z_OVERLAY + 1
-			local blockCorner = Instance.new("UICorner")
-			blockCorner.CornerRadius = UDim.new(0, sizes.slotRadius)
-			blockCorner.Parent = block
-			local stroke = Instance.new("UIStroke")
-			stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-			stroke.Thickness = 2
-			stroke.Color = Theme.rarityColor(line.rarity)
-			stroke.Parent = block
-			PetVisual.view(block, pet.id, line.variant, nil).ZIndex = Z_OVERLAY + 2
-			local words = frame("Words", entry)
-			words.LayoutOrder = 2
-			words.AutomaticSize = Enum.AutomaticSize.XY
-			list(words, Enum.FillDirection.Vertical, 0)
-			local nameLabel = Theme.text({
-				name = "Name",
-				text = line.name,
-				font = Theme.fonts.label,
-				size = s.price,
-				parent = words,
-			})
-			nameLabel.LayoutOrder = 1
-			nameLabel.ZIndex = Z_OVERLAY + 1
-			local detail = Theme.label(line.rarityName)
-			if line.variantName ~= nil then
-				detail = Theme.label(line.variantName) .. " " .. detail
-			end
-			if line.newInIndex then
-				detail ..= "  " .. Theme.label("New")
-			end
-			local rarityLabel = Theme.text({
-				name = "Rarity",
-				text = detail,
-				font = Theme.fonts.label,
-				size = textSizes.small,
-				color = if line.variantName ~= nil
-					then colors.gold
-					else Theme.rarityColor(line.rarity),
-				parent = words,
-			})
-			rarityLabel.LayoutOrder = 2
-			rarityLabel.ZIndex = Z_OVERLAY + 1
-		end
-		view.result.Visible = true
-	end
-
 	local function buy(eggId: string, count: number)
 		if busy then
 			return
@@ -485,7 +491,8 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			Guide.setHatching(false)
 			showMessage(eggId, "The shop did not answer. Try again.")
 		elseif reply.ok == true then
-			showHatched(eggId, reply)
+			-- The reveal shows what hatched; the card keeps its egg and name.
+			clearResults()
 			-- Visuals only: the server already decided what hatched.
 			busy = true
 			local lines = EggShopView.hatchLines(reply)
@@ -612,6 +619,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			result = result,
 			hatch = hatch,
 			hatchStroke = hatchStroke,
+			showsTriple = false,
 			triple = triple,
 			tripleStroke = tripleStroke,
 		}
@@ -622,6 +630,9 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			buy(eggId, 1)
 		end)
 		triple.Activated:Connect(function()
+			if not view.showsTriple then
+				return
+			end
 			if ownsTriple then
 				buy(eggId, EggShopView.TRIPLE_COUNT)
 			else
@@ -658,14 +669,15 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		place(header, l.header, p.x, p.y)
 		place(scroll, l.list, p.x, p.y)
 		place(footer, l.footer, p.x, p.y)
-		titleLabel.TextSize = s.title
+		titleLabel.TextSize = EggShopLayout.titleSize(s, textSizes.small)
+		scroll.ScrollBarThickness = math.max(1, s.scrollBar - 2)
 		grid.CellSize = UDim2.fromOffset(l.cardWidth, l.cardHeight)
 		grid.CellPadding = UDim2.fromOffset(s.gap, s.gap)
 		local parts = l.parts
 		for _, view in cards do
 			place(view.eggSlot, parts.egg, 0, 0)
 			place(view.words, parts.words, 0, 0)
-			place(view.hatch, parts.hatch, 0, 0)
+			place(view.hatch, if view.showsTriple then parts.hatch else parts.hatchWide, 0, 0)
 			place(view.triple, parts.triple, 0, 0)
 			place(view.toggle, parts.toggle, 0, 0)
 			place(view.oddsPanel, parts.odds, 0, 0)
@@ -678,24 +690,39 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			end
 		end
 	end
-	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyLayout)
+	-- The list's content height, from the cards shown now.
+	local function sizeCanvas()
+		if layout == nil then
+			return
+		end
+		local count = 0
+		for _, view in cards do
+			if view.frame.Visible then
+				count += 1
+			end
+		end
+		scroll.CanvasSize = UDim2.fromOffset(0, EggShopLayout.canvasHeight(layout, count))
+	end
+	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		applyLayout()
+		sizeCanvas()
+	end)
 	HudInsets.onChange(applyLayout)
 	applyLayout()
 
-	-- An egg model loaded later replaces its card's placeholder.
+	-- Each card waits for its egg (the template and its parts) and swaps the
+	-- shape for it; a template loaded again later is shown again.
+	for eggId, view in cards do
+		task.spawn(loadEgg, view.eggSlot, eggId)
+	end
 	task.spawn(function()
 		local folder = ReplicatedStorage:WaitForChild(MODELS_FOLDER)
 		folder.ChildAdded:Connect(function(child: Instance)
 			local view = cards[child.Name]
-			if view ~= nil and child:IsA("Model") then
-				eggView(view.eggSlot, child.Name)
+			if view ~= nil then
+				task.spawn(loadEgg, view.eggSlot, child.Name)
 			end
 		end)
-		for eggId, view in cards do
-			if folder:FindFirstChild(eggId) ~= nil then
-				eggView(view.eggSlot, eggId)
-			end
-		end
 	end)
 
 	local function render(payload: State.Payload?)
@@ -749,6 +776,16 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 				view.hatch.Text = Theme.label("Hatch")
 				style(view.hatch, view.hatchStroke, "hatch")
 			end
+			local showsTriple =
+				EggShopView.showsTriple(profile.tutorialStep, ownsTriple, data.locked)
+			if showsTriple ~= view.showsTriple then
+				view.showsTriple = showsTriple
+				if layout ~= nil then
+					local parts = (layout :: EggShopLayout.Layout).parts
+					place(view.hatch, if showsTriple then parts.hatch else parts.hatchWide, 0, 0)
+				end
+			end
+			view.triple.Visible = showsTriple
 			local look = EggShopView.tripleLook(
 				profile.tutorialStep,
 				ownsTriple,
@@ -760,6 +797,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		for eggId, view in cards do
 			view.frame.Visible = listed[eggId] == true
 		end
+		sizeCanvas()
 		-- No pass line while the tutorial runs.
 		footer.Visible = EggShopView.showsNote(profile.tutorialStep)
 	end

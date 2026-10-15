@@ -107,6 +107,59 @@ return function()
 			end)
 		end)
 
+		it("gives a card without HATCH X3 a full width HATCH clear of the rest", function()
+			each(function(width, height, inset)
+				local layout = EggShopLayout.compute(width, height, topOf(width, height, inset))
+				local card =
+					{ name = "card", x = 0, y = 0, w = layout.cardWidth, h = layout.cardHeight }
+				local p = layout.parts
+				expect(EggShopLayout.inside(p.hatchWide, card)).toBeTrue()
+				expect(p.hatchWide.w > p.hatch.w).toBeTrue()
+				for _, other in { p.egg, p.words, p.toggle } do
+					expect(EggShopLayout.overlap(p.hatchWide, other)).toBeFalse()
+				end
+				expect(EggShopLayout.overlap(p.result, p.hatchWide)).toBeFalse()
+			end)
+		end)
+
+		it("sizes the list so the last card is fully visible when scrolled down", function()
+			each(function(width, height, inset)
+				local layout = EggShopLayout.compute(width, height, topOf(width, height, inset))
+				for count = 1, 9 do
+					local canvas = EggShopLayout.canvasHeight(layout, count)
+					local maxScroll = math.max(0, canvas - layout.list.h)
+					local last = EggShopLayout.cardRect(layout, count, maxScroll)
+					local where =
+						string.format("%dx%d inset %d count %d", width, height, inset, count)
+					expect(where .. " " .. tostring(EggShopLayout.inside(last, layout.list))).toEqual(
+						where .. " true"
+					)
+					-- Room under the last card.
+					expect(last.y + last.h < layout.list.y + layout.list.h).toBeTrue()
+				end
+				expect(EggShopLayout.canvasHeight(layout, 0)).toEqual(0)
+			end)
+		end)
+
+		it("keeps the cards clear of the scroll bar", function()
+			each(function(width, height, inset)
+				local layout = EggShopLayout.compute(width, height, topOf(width, height, inset))
+				local right = EggShopLayout.cardRect(layout, layout.columns, 0)
+				expect(right.x + right.w <= layout.list.x + layout.list.w - layout.sizes.scrollBar).toBeTrue()
+			end)
+		end)
+
+		it("fits the world name and the title in the header", function()
+			for _, s in { EggShopLayout.SIZES.normal, EggShopLayout.SIZES.compact } do
+				local small = 12
+				local title = EggShopLayout.titleSize(s, small)
+				local used = (small + title) * EggShopLayout.LINE_HEIGHT
+				expect(used <= s.header).toBeTrue()
+				expect(title <= s.title).toBeTrue()
+				expect(title >= 16).toBeTrue()
+			end
+		end)
+
 		it("uses two columns on both screens", function()
 			each(function(width, height, inset)
 				local layout = EggShopLayout.compute(width, height, topOf(width, height, inset))

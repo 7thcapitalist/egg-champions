@@ -222,4 +222,67 @@ return function()
 			expect(EggShopView.showsNote(Tutorial.steps.done)).toBeTrue()
 		end)
 	end)
+	describe("EggShopView card buttons and egg view", function()
+		it("shows HATCH X3 only with the pass, after the tutorial, on open eggs", function()
+			local done = Tutorial.steps.done
+			expect(EggShopView.showsTriple(done, true, false)).toBeTrue()
+			expect(EggShopView.showsTriple(done, false, false)).toBeFalse()
+			expect(EggShopView.showsTriple(done, true, true)).toBeFalse()
+			expect(EggShopView.showsTriple(done, false, true)).toBeFalse()
+			for _, step in
+				{
+					Tutorial.steps.click,
+					Tutorial.steps.hatch,
+					Tutorial.steps.equip,
+					Tutorial.steps.gym,
+				}
+			do
+				expect(EggShopView.showsTriple(step, true, false)).toBeFalse()
+			end
+		end)
+
+		it("never shows HATCH X3 on a locked card, for any player", function()
+			for _, card in EggShopView.cards(newState(0)) do
+				if card.locked then
+					expect(EggShopView.showsTriple(Tutorial.steps.done, true, card.locked)).toBeFalse()
+				end
+			end
+		end)
+
+		it("writes only refusals on the card, never a hatch the reveal shows", function()
+			expect(EggShopView.resultOnCard(true)).toBeFalse()
+			expect(EggShopView.resultOnCard(false)).toBeTrue()
+		end)
+
+		it("shows the real egg only when its copy has parts and can be framed", function()
+			expect(EggShopView.eggSource(true, true, 1, 10)).toEqual("model")
+			expect(EggShopView.eggSource(true, true, 3, 0.5)).toEqual("model")
+		end)
+
+		it("falls back to the egg shape, never nothing", function()
+			-- Not loaded yet, not a Model, an empty Model, or nothing to frame.
+			expect(EggShopView.eggSource(false, false, 0, 0)).toEqual("shape")
+			expect(EggShopView.eggSource(true, false, 2, 10)).toEqual("shape")
+			expect(EggShopView.eggSource(true, true, 0, 10)).toEqual("shape")
+			expect(EggShopView.eggSource(true, true, 2, 0)).toEqual("shape")
+		end)
+
+		it("frames the whole bounding box with room to spare", function()
+			local fov = 30
+			local distance = EggShopView.eggCameraDistance(2, 3, 2, fov, 1.15)
+			local radius = math.sqrt(4 + 9 + 4) / 2
+			-- The box's bounding sphere fits inside the view cone.
+			expect(math.sin(math.rad(fov / 2)) * distance >= radius).toBeTrue()
+			expect(distance > 0).toBeTrue()
+			-- Bigger eggs sit further away.
+			expect(EggShopView.eggCameraDistance(4, 6, 4, fov, 1.15) > distance).toBeTrue()
+		end)
+
+		it("gives no camera distance for an empty or broken box", function()
+			expect(EggShopView.eggCameraDistance(0, 0, 0, 30, 1.15)).toEqual(0)
+			expect(EggShopView.eggCameraDistance(0 / 0, 1, 1, 30, 1.15)).toEqual(0)
+			expect(EggShopView.eggCameraDistance(math.huge, 1, 1, 30, 1.15)).toEqual(0)
+			expect(EggShopView.eggCameraDistance(1, 1, 1, 0, 1.15)).toEqual(0)
+		end)
+	end)
 end

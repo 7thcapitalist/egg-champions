@@ -47,6 +47,10 @@ export type Sizes = {
 	price: number,
 	odds: number,
 	resultBlock: number,
+	-- Room kept for the list's scroll bar at its right edge.
+	scrollBar: number,
+	-- Empty space under the last card, so it is never cut off.
+	listBottom: number,
 	-- Below this list width the cards go one per row.
 	twoColumnsFrom: number,
 }
@@ -56,6 +60,8 @@ export type CardParts = {
 	egg: Rect,
 	words: Rect,
 	hatch: Rect,
+	-- HATCH across the whole row, for a card that does not show HATCH X3.
+	hatchWide: Rect,
 	triple: Rect,
 	toggle: Rect,
 	odds: Rect,
@@ -99,6 +105,8 @@ EggShopLayout.SIZES = table.freeze({
 		price = 18,
 		odds = 15,
 		resultBlock = 44,
+		scrollBar = 8,
+		listBottom = 14,
 		twoColumnsFrom = 560,
 	} :: Sizes),
 	compact = table.freeze({
@@ -119,6 +127,8 @@ EggShopLayout.SIZES = table.freeze({
 		price = 15,
 		odds = 12,
 		resultBlock = 36,
+		scrollBar = 8,
+		listBottom = 10,
 		twoColumnsFrom = 560,
 	} :: Sizes),
 })
@@ -142,6 +152,7 @@ function EggShopLayout.cardParts(s: Sizes, cardWidth: number): CardParts
 		egg = rect("egg", s.cardPadding, s.cardPadding, s.egg, s.egg),
 		words = rect("words", wordsX, s.cardPadding, cardWidth - s.cardPadding - wordsX, s.egg),
 		hatch = rect("hatch", s.cardPadding, buttonsY, hatchWidth, s.button),
+		hatchWide = rect("hatchWide", s.cardPadding, buttonsY, inner, s.button),
 		triple = rect(
 			"triple",
 			s.cardPadding + hatchWidth + s.innerGap,
@@ -180,7 +191,7 @@ function EggShopLayout.compute(width: number, height: number, top: number): Layo
 	local list = rect("list", innerX, listY, innerW, math.max(0, footer.y - s.gap - listY))
 
 	local columns = if list.w >= s.twoColumnsFrom then 2 else 1
-	local cardWidth = math.floor((list.w - s.gap * (columns - 1)) / columns)
+	local cardWidth = math.floor((list.w - s.scrollBar - s.gap * (columns - 1)) / columns)
 	return {
 		compact = compact,
 		sizes = s,
@@ -193,6 +204,28 @@ function EggShopLayout.compute(width: number, height: number, top: number): Layo
 		cardHeight = EggShopLayout.cardHeight(s),
 		parts = EggShopLayout.cardParts(s, cardWidth),
 	}
+end
+
+-- How a heading line is measured: its height is the text size times this.
+EggShopLayout.LINE_HEIGHT = 1.25
+
+-- The title's text size: the size set's title, made smaller when the line
+-- above it (the world name, at smallSize) and the title would not both fit
+-- in the header's height.
+function EggShopLayout.titleSize(s: Sizes, smallSize: number): number
+	local room = s.header - smallSize * EggShopLayout.LINE_HEIGHT
+	local fits = math.floor(room / EggShopLayout.LINE_HEIGHT)
+	return math.max(1, math.min(s.title, fits))
+end
+
+-- The height of the list's scrolling content holding `count` cards: every
+-- row, the gaps between them, and the empty space under the last card.
+function EggShopLayout.canvasHeight(layout: Layout, count: number): number
+	if count <= 0 then
+		return 0
+	end
+	local rows = math.ceil(count / layout.columns)
+	return rows * layout.cardHeight + (rows - 1) * layout.sizes.gap + layout.sizes.listBottom
 end
 
 -- The screen rectangle of the card at `position` (1 based) with the list
