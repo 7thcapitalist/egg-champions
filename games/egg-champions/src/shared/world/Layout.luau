@@ -73,12 +73,17 @@ local ISLAND_SIZE = 200
 local ISLAND_SPACING = 400
 local GRID_COLUMNS = 3
 -- Egg stands stand on an arc around the arrival point, on the -z side, so
--- every stand faces the player as they land. Neighbors sit STAND_GAP apart
--- along the arc's chord; the arc grows its radius past STAND_RADIUS when a
--- world has so many eggs that they would not fit in STAND_MAX_SPREAD.
+-- every stand faces the player as they land. They sit to the two sides of
+-- the path to the gym, never on it: the arc leaves an aisle STAND_AISLE
+-- studs to each side of the center line open, so from the arrival point no
+-- stand or its label sits in front of the gym's sign. Neighbors on one side
+-- sit STAND_GAP apart along the arc's chord; the arc grows its radius past
+-- STAND_RADIUS when a side has so many stands that they would not fit within
+-- STAND_MAX_SPREAD / 2 of straight ahead.
 local STAND_RADIUS = 40
 local STAND_GAP = 18
 local STAND_MIN_GAP = 14
+local STAND_AISLE = 14
 local STAND_MAX_SPREAD = math.rad(120)
 -- The gym stands in front of the arrival point too (the spawn faces -z, so
 -- the default camera looks that way), straight ahead and beyond the stand
@@ -101,6 +106,8 @@ Layout.ISLAND_SIZE = ISLAND_SIZE
 Layout.STAND_MIN_GAP = STAND_MIN_GAP
 Layout.GYM_SIZE = table.freeze(table.clone(GYM_SIZE))
 Layout.STAND_EXTENT = STAND_EXTENT
+-- Half the width of the open aisle the stands leave on the center line.
+Layout.STAND_AISLE = STAND_AISLE
 Layout.PORTAL_EXTENT = PORTAL_EXTENT
 -- The way a player faces on spawning and on arrival: -z.
 Layout.FACING = table.freeze({ x = 0, y = 0, z = -1 })
@@ -142,13 +149,30 @@ function Layout.eggLabel(eggId: string): string
 	return string.format("%s\n%s", Config.eggById[eggId].name, Layout.eggPrice(eggId))
 end
 
+-- How many stands go to the left of the aisle; the rest go to the right.
+local function leftCount(count: number): number
+	return math.ceil(count / 2)
+end
+
+-- The angle from straight ahead of the stand nearest the aisle, and the
+-- angle between neighbors, on an arc of `radius`.
+local function arcAngles(radius: number): (number, number)
+	local open = math.asin(math.min(1, STAND_AISLE / radius))
+	local step = 2 * math.asin(math.min(1, STAND_GAP / (2 * radius)))
+	return open, step
+end
+
 -- The radius of the stand arc for `count` stands.
 function Layout.standRadius(count: number): number
 	local radius = STAND_RADIUS
-	if count > 1 then
-		-- The radius at which count - 1 chords of STAND_GAP span the max spread.
-		local half = STAND_MAX_SPREAD / (2 * (count - 1))
-		radius = math.max(radius, STAND_GAP / (2 * math.sin(half)))
+	local side = leftCount(count)
+	-- Grow a stud at a time until the fuller side fits in half the spread.
+	while radius < ISLAND_SIZE do
+		local open, step = arcAngles(radius)
+		if open + (side - 1) * step <= STAND_MAX_SPREAD / 2 then
+			break
+		end
+		radius += 1
 	end
 	return radius
 end
@@ -165,16 +189,24 @@ function Layout.gymOffset(count: number): Vec
 end
 
 -- Offsets from the arrival point for `count` stands on an arc facing it,
--- left to right as seen from the arrival point looking toward -z.
+-- left to right as seen from the arrival point looking toward -z, with the
+-- aisle to the gym open between the left group and the right group.
 function Layout.standOffsets(count: number): { Vec }
 	local offsets: { Vec } = {}
 	if count <= 0 then
 		return offsets
 	end
 	local radius = Layout.standRadius(count)
-	local step = 2 * math.asin(math.min(1, STAND_GAP / (2 * radius)))
-	for i = 1, count do
-		local angle = (i - (count + 1) / 2) * step
+	local open, step = arcAngles(radius)
+	local left = leftCount(count)
+	local angles: { number } = {}
+	for i = left, 1, -1 do
+		table.insert(angles, -(open + (i - 1) * step))
+	end
+	for i = 1, count - left do
+		table.insert(angles, open + (i - 1) * step)
+	end
+	for _, angle in angles do
 		table.insert(offsets, {
 			x = radius * math.sin(angle),
 			y = 0,

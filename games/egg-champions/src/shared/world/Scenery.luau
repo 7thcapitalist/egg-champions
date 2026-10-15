@@ -71,8 +71,42 @@ Scenery.PATH_WIDTH = 6
 Scenery.EDGE_MARGIN = 3
 -- Where the world's name sign stands, from the island's center: in front of
 -- the arrival point (players face -z on arrival), off to the left of the
--- path to the gym, so it is in view on landing without hiding the gym.
-Scenery.SIGN_OFFSET = table.freeze({ x = -12, y = 0, z = -16 })
+-- path to the gym and wide of the left egg stands, so it is in view on
+-- landing without hiding the gym or a stand label.
+Scenery.SIGN_OFFSET = table.freeze({ x = -20, y = 0, z = -14 })
+-- The name sign's board, in studs: its center height, and the two posts
+-- that stand at its edges, outside the lettering.
+Scenery.SIGN_BOARD = table.freeze({ width = 10, height = 4, y = 7, post = 1 })
+
+-- An egg stand's label, in studs: a plate just above the egg. The stand's
+-- plinth height and how far the egg floats above it place the egg; the
+-- label's bottom sits `gap` above the egg's top.
+Scenery.STAND_LABEL = table.freeze({
+	width = 8,
+	height = 3,
+	gap = 0.5,
+	plinth = 3,
+	hover = 0.5,
+	-- The placeholder egg's height, for an egg with no model height.
+	placeholderEgg = 5,
+})
+
+-- The gym's entrance sign, in studs: its board, its center height, and how
+-- far in front of the gym's center (toward the arrival point) it hangs.
+Scenery.GYM_SIGN = table.freeze({ width = 16, height = 5, y = 13, forward = 12.5 })
+
+-- The camera a player has on arrival: behind the character by `back`, at an
+-- eye height between the two given, looking the way the player faces. A
+-- point is in frame while its sideways offset over its depth is at most
+-- halfWidth (a 16:9 screen at the default field of view, with a little
+-- margin). The specs project the signs with several of these cameras.
+Scenery.ARRIVAL_VIEW = table.freeze({
+	backs = table.freeze({ 0, 12, 20 }),
+	-- Roblox's default camera distance, which a player has on landing.
+	defaultBack = 12.5,
+	heights = table.freeze({ 5, 8, 12 }),
+	halfWidth = math.tan(math.rad(55)),
+})
 Scenery.FENCE_PIECE = 8
 -- A fence runs this far outside the path's edge.
 Scenery.FENCE_OFFSET = 1.5
@@ -128,6 +162,78 @@ end
 
 local function distance(ax: number, az: number, bx: number, bz: number): number
 	return math.sqrt((ax - bx) ^ 2 + (az - bz) ^ 2)
+end
+
+-- The height of the center of an egg stand's label above the stand's base,
+-- for an egg `eggHeight` studs tall (nil for the placeholder).
+function Scenery.standLabelY(eggHeight: number?): number
+	local l = Scenery.STAND_LABEL
+	return l.plinth + l.hover + (eggHeight or l.placeholderEgg) + l.gap + l.height / 2
+end
+
+export type ScreenRect = { left: number, right: number, bottom: number, top: number }
+
+-- Where a point lands on the arrival camera's screen: its sideways offset
+-- and its height over its depth, and the depth. `back` and `eye` pick the
+-- camera (see ARRIVAL_VIEW). Depth is 0 or less behind the camera.
+function Scenery.project(
+	arrival: Layout.Vec,
+	back: number,
+	eye: number,
+	x: number,
+	y: number,
+	z: number
+): (number, number, number)
+	local f = Layout.FACING
+	-- The camera's right, with the player facing f on the ground plane.
+	local rx, rz = -f.z, f.x
+	local ex, ez = arrival.x - f.x * back, arrival.z - f.z * back
+	local depth = (x - ex) * f.x + (z - ez) * f.z
+	local side = (x - ex) * rx + (z - ez) * rz
+	if depth <= 0 then
+		return 0, 0, depth
+	end
+	return side / depth, (y - (arrival.y + eye)) / depth, depth
+end
+
+-- The screen rectangle of a flat label `width` by `height` studs centered at
+-- (x, y, z) and facing the camera, or nil when it is behind the camera.
+function Scenery.screenRect(
+	arrival: Layout.Vec,
+	back: number,
+	eye: number,
+	center: Layout.Vec,
+	width: number,
+	height: number
+): ScreenRect?
+	local u, v, depth = Scenery.project(arrival, back, eye, center.x, center.y, center.z)
+	if depth <= 0 then
+		return nil
+	end
+	local hw, hh = width / 2 / depth, height / 2 / depth
+	return { left = u - hw, right = u + hw, bottom = v - hh, top = v + hh }
+end
+
+function Scenery.rectsOverlap(a: ScreenRect, b: ScreenRect): boolean
+	return a.left < b.right and b.left < a.right and a.bottom < b.top and b.bottom < a.top
+end
+
+-- True when the ground point (x, z) is in the frame of the default camera
+-- a player has on landing.
+function Scenery.inArrivalFrame(arrival: Layout.Vec, x: number, z: number): boolean
+	local u, _, depth = Scenery.project(arrival, Scenery.ARRIVAL_VIEW.defaultBack, 0, x, 0, z)
+	return depth > 0 and math.abs(u) <= Scenery.ARRIVAL_VIEW.halfWidth
+end
+
+-- The center of the gym's entrance sign, for a gym at `gym` facing `arrival`.
+function Scenery.gymSignCenter(gym: Layout.Vec, arrival: Layout.Vec): Layout.Vec
+	local dx, dz = arrival.x - gym.x, arrival.z - gym.z
+	local length = math.sqrt(dx * dx + dz * dz)
+	local forward = Scenery.GYM_SIGN.forward
+	if length > 0 then
+		dx, dz = dx / length * forward, dz / length * forward
+	end
+	return { x = gym.x + dx, y = gym.y + Scenery.GYM_SIGN.y, z = gym.z + dz }
 end
 
 -- The distance from (x, z) to the segment from a to b, on the ground plane.
@@ -239,7 +345,10 @@ local function somewhere(scenery: WorldScenery, random: () -> number, r: number)
 	return o.x + between(random, -reach, reach), o.z + between(random, -reach, reach)
 end
 
-local function addFences(scenery: WorldScenery, path: Segment)
+-- Fences keep out of the arrival camera's frame: a piece cut short by a
+-- clear zone would end there as a lone post and rail. `arrival` is where the
+-- player lands.
+local function addFences(scenery: WorldScenery, path: Segment, arrival: Layout.Vec)
 	local dx, dz = path.b.x - path.a.x, path.b.z - path.a.z
 	local length = math.sqrt(dx * dx + dz * dz)
 	if length <= 0 then
@@ -270,6 +379,15 @@ local function addFences(scenery: WorldScenery, path: Segment)
 						keep = false
 					end
 				end
+			end
+			if
+				keep
+				and (
+					Scenery.inArrivalFrame(arrival, a.x, a.z)
+					or Scenery.inArrivalFrame(arrival, b.x, b.z)
+				)
+			then
+				keep = false
 			end
 			if keep then
 				table.insert(scenery.fences, { a = a, b = b, width = 0 })
@@ -542,7 +660,7 @@ function Scenery.forIsland(plan: Layout.Plan, island: Layout.Island): WorldScene
 
 	if look.features.fences then
 		for _, path in fenced do
-			addFences(scenery, path)
+			addFences(scenery, path, arrival)
 		end
 	end
 	addHills(scenery, look, random)

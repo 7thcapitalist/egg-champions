@@ -336,4 +336,180 @@ return function()
 			expect(Scenery.islandAt(plan, -100000, -100000)).toEqual(nil)
 		end)
 	end)
+
+	describe("The view from the arrival point", function()
+		-- Egg heights to try: the placeholder's, and short to tall eggs.
+		local EGG_HEIGHTS: { number } = { Scenery.STAND_LABEL.placeholderEgg, 2, 5, 8, 10 }
+
+		local function crowdedPlan(): Layout.Plan
+			local crowded = table.clone(Config.worlds)
+			local first = table.clone(crowded[1])
+			local many = {}
+			for _, egg in Config.eggs do
+				table.insert(many, egg.id)
+			end
+			first.eggs = many
+			crowded[1] = first
+			return Layout.plan(crowded)
+		end
+
+		local function plans(): { Layout.Plan }
+			return { Layout.plan(), Layout.plan(withFourthWorld()), crowdedPlan() }
+		end
+
+		-- Calls `check` with every arrival camera the specs try.
+		local function eachCamera(check: (back: number, eye: number) -> ())
+			for _, back in Scenery.ARRIVAL_VIEW.backs do
+				for _, eye in Scenery.ARRIVAL_VIEW.heights do
+					check(back, eye)
+				end
+			end
+		end
+
+		local function gymSignRect(
+			plan: Layout.Plan,
+			worldId: string,
+			back: number,
+			eye: number
+		): Scenery.ScreenRect
+			local arrival = plan.arrivals[worldId]
+			for _, gym in plan.gyms do
+				if gym.worldId == worldId then
+					local g = Scenery.GYM_SIGN
+					local rect = Scenery.screenRect(
+						arrival,
+						back,
+						eye,
+						Scenery.gymSignCenter(gym.position, arrival),
+						g.width,
+						g.height
+					)
+					return rect :: Scenery.ScreenRect
+				end
+			end
+			error("no gym in " .. worldId)
+		end
+
+		local function standRects(
+			plan: Layout.Plan,
+			worldId: string,
+			back: number,
+			eye: number,
+			eggHeight: number?
+		): { Scenery.ScreenRect }
+			local arrival = plan.arrivals[worldId]
+			local rects = {}
+			for _, stand in plan.eggStands do
+				if stand.worldId == worldId then
+					local p = stand.position
+					local center = { x = p.x, y = p.y + Scenery.standLabelY(eggHeight), z = p.z }
+					local l = Scenery.STAND_LABEL
+					local rect = Scenery.screenRect(arrival, back, eye, center, l.width, l.height)
+					expect(rect ~= nil).toBeTrue()
+					table.insert(rects, rect :: Scenery.ScreenRect)
+				end
+			end
+			return rects
+		end
+
+		it("puts each stand label just above its egg, about 8 by 3 studs", function()
+			local l = Scenery.STAND_LABEL
+			expect(l.width).toEqual(8)
+			expect(l.height).toEqual(3)
+			for _, height in EGG_HEIGHTS do
+				local eggTop = l.plinth + l.hover + height
+				local bottom = Scenery.standLabelY(height) - l.height / 2
+				expect(bottom > eggTop).toBeTrue()
+				expect(bottom - eggTop <= 1).toBeTrue()
+			end
+			-- An egg with no model height gets the placeholder's label height.
+			expect(Scenery.standLabelY(nil)).toEqual(Scenery.standLabelY(l.placeholderEgg))
+		end)
+
+		it("never shows an egg stand label over the gym sign", function()
+			for _, plan in plans() do
+				for _, island in plan.islands do
+					eachCamera(function(back: number, eye: number)
+						local gym = gymSignRect(plan, island.worldId, back, eye)
+						for _, height in EGG_HEIGHTS do
+							for _, rect in standRects(plan, island.worldId, back, eye, height) do
+								expect(Scenery.rectsOverlap(rect, gym)).toBeFalse()
+							end
+						end
+					end)
+				end
+			end
+		end)
+
+		it("keeps the stands to the sides of the path to the gym", function()
+			for _, plan in plans() do
+				for _, stand in plan.eggStands do
+					local arrival = plan.arrivals[stand.worldId]
+					local f = Layout.FACING
+					local side = (stand.position.x - arrival.x) * -f.z
+						+ (stand.position.z - arrival.z) * f.x
+					expect(math.abs(side) >= Layout.STAND_AISLE - 0.001).toBeTrue()
+					expect(math.abs(side) - Layout.STAND_EXTENT > Scenery.PATH_WIDTH / 2).toBeTrue()
+				end
+			end
+		end)
+
+		it("shows the world's name sign clear of the gym sign and the stand labels", function()
+			for _, plan in { Layout.plan(), Layout.plan(withFourthWorld()) } do
+				for _, island in plan.islands do
+					local s = Scenery.forIsland(plan, island)
+					local arrival = plan.arrivals[island.worldId]
+					local b = Scenery.SIGN_BOARD
+					local center = { x = s.signSpot.x, y = s.signSpot.y + b.y, z = s.signSpot.z }
+					-- In view on landing.
+					expect(Scenery.inArrivalFrame(arrival, s.signSpot.x, s.signSpot.z)).toBeTrue()
+					for _, back in { 12, 20 } do
+						for _, eye in Scenery.ARRIVAL_VIEW.heights do
+							local sign = Scenery.screenRect(
+								arrival,
+								back,
+								eye,
+								center,
+								b.width + 2 * b.post,
+								b.height
+							) :: Scenery.ScreenRect
+							expect(
+								Scenery.rectsOverlap(
+									sign,
+									gymSignRect(plan, island.worldId, back, eye)
+								)
+							).toBeFalse()
+							for _, height in EGG_HEIGHTS do
+								for _, rect in standRects(plan, island.worldId, back, eye, height) do
+									expect(Scenery.rectsOverlap(rect, sign)).toBeFalse()
+								end
+							end
+						end
+					end
+				end
+			end
+		end)
+
+		it("stands the name sign's posts outside its board", function()
+			local b = Scenery.SIGN_BOARD
+			-- Each post's inner face is at the board's edge or beyond.
+			local inner = (b.width + b.post) / 2 - b.post / 2
+			expect(inner >= b.width / 2).toBeTrue()
+		end)
+
+		it("keeps every fence piece out of the arrival camera's frame", function()
+			local total = 0
+			for _, s in allSceneries() do
+				local plan = Layout.plan(withFourthWorld())
+				local arrival = plan.arrivals[s.worldId]
+				total += #s.fences
+				for _, fence in s.fences do
+					expect(Scenery.inArrivalFrame(arrival, fence.a.x, fence.a.z)).toBeFalse()
+					expect(Scenery.inArrivalFrame(arrival, fence.b.x, fence.b.z)).toBeFalse()
+				end
+			end
+			-- The fenced worlds keep their fences, just out of the frame.
+			expect(total > 0).toBeTrue()
+		end)
+	end)
 end

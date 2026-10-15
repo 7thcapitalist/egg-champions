@@ -22,6 +22,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local ThemeColors = require(Shared:WaitForChild("ui"):WaitForChild("ThemeColors"))
 local WorldNames = require(Shared:WaitForChild("world"):WaitForChild("Names"))
+local Scenery = require(Shared:WaitForChild("world"):WaitForChild("Scenery"))
 
 local Kit = {}
 
@@ -70,6 +71,10 @@ local function newModel(prop: string, name: string?): Model
 	return model
 end
 
+-- The font of every world sign: a heavy face whose letters keep together at
+-- any size, so a word never reads as split ("E gg").
+local SIGN_FONT = Enum.Font.GothamBlack
+
 -- A floating text label above a part, sized in studs (so it scales with
 -- distance like the part does). `height` is how far the label's center sits
 -- above the part's center.
@@ -89,13 +94,14 @@ local function label(adornee: BasePart, text: string, size: Vector2, height: num
 	textLabel.TextColor3 = color
 	textLabel.TextStrokeTransparency = 0.3
 	textLabel.TextScaled = true
-	textLabel.Font = Enum.Font.FredokaOne
+	textLabel.Font = SIGN_FONT
 	textLabel.Parent = gui
 	gui.Parent = adornee
 end
 
 -- Text printed on both faces of a flat board, filling it with a small margin,
--- so it always fits the board it is on.
+-- so it always fits the board it is on. Lines break only where the text says
+-- (at its newlines), never inside a word.
 local BOARD_MARGIN = 0.08
 local function boardText(board: BasePart, text: string, color: Color3)
 	for _, face in { Enum.NormalId.Front, Enum.NormalId.Back } do
@@ -115,39 +121,44 @@ local function boardText(board: BasePart, text: string, color: Color3)
 		textLabel.TextColor3 = color
 		textLabel.TextStrokeTransparency = 0.3
 		textLabel.TextScaled = true
-		textLabel.TextWrapped = true
-		textLabel.Font = Enum.Font.FredokaOne
+		textLabel.TextWrapped = false
+		textLabel.Font = SIGN_FONT
 		textLabel.Parent = gui
 		gui.Parent = board
 	end
 end
 
--- Egg stand signs: a dark plate sized in studs, so it shrinks with distance
--- but stays readable from the spawn point, and hidden past SIGN_MAX_DISTANCE.
-local SIGN_SIZE = UDim2.fromScale(12, 4.5)
+-- Egg stand signs: a dark plate sized in studs (Scenery.STAND_LABEL), just
+-- above the egg, so it shrinks with distance but stays readable from the
+-- spawn point, and hidden past SIGN_MAX_DISTANCE.
+local STAND_LABEL = Scenery.STAND_LABEL
+local SIGN_SIZE = UDim2.fromScale(STAND_LABEL.width, STAND_LABEL.height)
 local SIGN_MAX_DISTANCE = 90
-local SIGN_HEIGHT = 3.5
 local SIGN_PLATE_TRANSPARENCY = 0.2
 local PRICE_GOLD = ThemeColors.gold
-local EGG_HOVER = 0.5
--- The placeholder egg's height, for a stand whose egg has no configured
--- model height.
-local PLACEHOLDER_EGG_HEIGHT = 5
+local EGG_HOVER = STAND_LABEL.hover
 
 Kit.EGG_SPIN_TAG = WorldNames.SPINNING_EGG_TAG
 
-local function line(gui: BillboardGui, text: string, top: number, color: Color3, name: string)
+local function line(
+	gui: BillboardGui,
+	text: string,
+	top: number,
+	height: number,
+	color: Color3,
+	name: string
+)
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Name = name
-	textLabel.Size = UDim2.fromScale(0.9, 0.42)
-	textLabel.Position = UDim2.fromScale(0.05, top)
+	textLabel.Size = UDim2.fromScale(0.92, height)
+	textLabel.Position = UDim2.fromScale(0.04, top)
 	textLabel.BackgroundTransparency = 1
 	textLabel.Text = text
 	textLabel.TextColor3 = color
 	textLabel.TextStrokeTransparency = 0.3
 	textLabel.TextScaled = true
 	textLabel.TextWrapped = false
-	textLabel.Font = Enum.Font.FredokaOne
+	textLabel.Font = SIGN_FONT
 	textLabel.Parent = gui
 end
 
@@ -156,7 +167,6 @@ local function standSign(adornee: BasePart, name: string, price: string, color: 
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "Label"
 	gui.Size = SIGN_SIZE
-	gui.StudsOffsetWorldSpace = Vector3.new(0, SIGN_HEIGHT, 0)
 	gui.AlwaysOnTop = false
 	gui.MaxDistance = SIGN_MAX_DISTANCE
 	gui.LightInfluence = 0
@@ -175,8 +185,8 @@ local function standSign(adornee: BasePart, name: string, price: string, color: 
 	stroke.Thickness = 2
 	stroke.Parent = plate
 	plate.Parent = gui
-	line(gui, name, 0.06, color, "Name")
-	line(gui, price, 0.52, PRICE_GOLD, "Price")
+	line(gui, name, 0.05, 0.5, color, "Name")
+	line(gui, price, 0.56, 0.39, PRICE_GOLD, "Price")
 	gui.Parent = adornee
 end
 
@@ -195,8 +205,8 @@ function Kit.eggStand(
 	local plinth = part(
 		model,
 		"Plinth",
-		Vector3.new(8, 3, 8),
-		base * CFrame.new(0, 1.5, 0),
+		Vector3.new(8, STAND_LABEL.plinth, 8),
+		base * CFrame.new(0, STAND_LABEL.plinth / 2, 0),
 		palette.trim,
 		Enum.Material.Marble
 	)
@@ -218,12 +228,12 @@ function Kit.eggStand(
 	)
 	trigger.Transparency = 0.4
 	trigger.CanCollide = false
-	-- The sign floats above the egg: plinth top, egg, then the sign.
+	-- The sign sits just above the egg: plinth top, egg, then the sign.
 	local signPart = part(
 		model,
 		"SignAnchor",
 		Vector3.new(1, 1, 1),
-		base * CFrame.new(0, 3 + (eggHeight or PLACEHOLDER_EGG_HEIGHT) + 2 * EGG_HOVER + 1, 0),
+		base * CFrame.new(0, Scenery.standLabelY(eggHeight), 0),
 		palette.trim
 	)
 	signPart.Transparency = 1
@@ -614,7 +624,8 @@ local ARENA_FLOOR_DIAMETER = 24
 local ARENA_STEP = 1
 local ARENA_PILLAR_RADIUS = 10.5
 local ARENA_PILLAR_HEIGHT = 11
-local ARENA_GATE_Z = -12.5
+-- The gate and its sign stand toward the arrival point (local -z).
+local ARENA_GATE_Z = -Scenery.GYM_SIGN.forward
 local ARENA_PILLAR_ANGLES = { 55, 105, 155, 205, 255, 305 }
 
 -- The leader's type icon: a round badge in the type color with its name.
@@ -766,8 +777,8 @@ function Kit.gymBuilding(
 	local board = part(
 		model,
 		"SignBoard",
-		Vector3.new(16, 5, 0.6),
-		base * CFrame.new(0, ARENA_STEP + 12, ARENA_GATE_Z),
+		Vector3.new(Scenery.GYM_SIGN.width, Scenery.GYM_SIGN.height, 0.6),
+		base * CFrame.new(0, Scenery.GYM_SIGN.y, ARENA_GATE_Z),
 		palette.accent,
 		Enum.Material.Wood
 	)
@@ -870,27 +881,34 @@ function Kit.portalFrame(base: CFrame, palette: Palette, text: string): Model
 	return model
 end
 
--- 9. Sign: a post and a board with text.
+-- 9. Sign: a board with text on two posts. The posts stand just outside the
+-- board's edges, so neither crosses the lettering.
 function Kit.sign(base: CFrame, palette: Palette, text: string): Model
 	local model = newModel("Sign")
-	local post = part(
-		model,
-		"Post",
-		Vector3.new(1, 6, 1),
-		base * CFrame.new(0, 3, 0),
-		palette.trunk,
-		Enum.Material.Wood
-	)
+	local b = Scenery.SIGN_BOARD
+	local top = b.y + b.height / 2
+	local first: Part? = nil
+	for side = -1, 1, 2 do
+		local post = part(
+			model,
+			if side < 0 then "PostLeft" else "PostRight",
+			Vector3.new(b.post, top, b.post),
+			base * CFrame.new(side * (b.width + b.post) / 2, top / 2, 0),
+			palette.trunk,
+			Enum.Material.Wood
+		)
+		first = first or post
+	end
 	local board = part(
 		model,
 		"Board",
-		Vector3.new(10, 4, 0.5),
-		base * CFrame.new(0, 7, 0),
+		Vector3.new(b.width, b.height, 0.5),
+		base * CFrame.new(0, b.y, 0),
 		palette.trim,
 		Enum.Material.Wood
 	)
 	boardText(board, text, palette.text)
-	model.PrimaryPart = post
+	model.PrimaryPart = first
 	return model
 end
 
