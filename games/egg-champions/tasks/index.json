@@ -365,6 +365,51 @@
         "34"
       ],
       "status": "done"
+    },
+    {
+      "id": "39",
+      "title": "Follower pets beside you, not in front of the camera",
+      "file": "39-followers-off-camera-line.md",
+      "depends_on": [
+        "38"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "40",
+      "title": "The egg shop shows its eggs, and less clutter",
+      "file": "40-egg-shop-eggs-and-clutter.md",
+      "depends_on": [
+        "39"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "41",
+      "title": "Signs that read cleanly from spawn",
+      "file": "41-signs-and-spawn-view.md",
+      "depends_on": [
+        "40"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "42",
+      "title": "Guidance never stops, and the pointer is unmistakable",
+      "file": "42-guidance-after-equip-and-pointer.md",
+      "depends_on": [
+        "41"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "43",
+      "title": "A Pets screen made for a beginner",
+      "file": "43-pets-screen-for-beginners.md",
+      "depends_on": [
+        "42"
+      ],
+      "status": "pending"
     }
   ]
 }
