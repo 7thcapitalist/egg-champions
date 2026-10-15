@@ -15,7 +15,12 @@
 	  area below EQUIP. So EQUIP is never pushed off the panel.
 	- Filter row: the four sort and filter buttons share the content width.
 	  When four do not fit at their minimum width they wrap to two rows of
-	  two (or one per row), so they never run under the detail panel.
+	  two (or one per row), so they never run under the detail panel. With
+	  few pets (PetsView.screenParts) there is no filter row and the grid
+	  starts right under the hint.
+	- EQUIP: the button (equipButton) sits EQUIP_INSET pixels inside its
+	  slot, so its outline, drawn on its border, is never clipped and never
+	  touches the pet picture above.
 	- Grid: 3 columns when the content is under 500 px wide, 4 under 640,
 	  else 5. A tile holds the pet view, the name and up to three marker
 	  lines (Click Power, variant, Equipped), each on its own line. The grid
@@ -73,6 +78,7 @@ export type Layout = {
 	detail: Rect,
 	detailTop: Rect,
 	equip: Rect,
+	equipButton: Rect,
 	detailScroll: Rect,
 	hint: Rect,
 	controls: { Rect },
@@ -202,9 +208,21 @@ function PetsLayout.tileHeight(s: Sizes): number
 		+ (lines - 1) * s.markerGap
 end
 
+-- How far the EQUIP button sits inside its slot on every side: room for
+-- its outline plus padding.
+PetsLayout.EQUIP_INSET = 4
+
 -- The screen for a screen of width x height pixels (inset included),
 -- starting below `top` pixels, with or without the tutorial guide strip.
-function PetsLayout.compute(width: number, height: number, top: number, guide: boolean): Layout
+-- filters false leaves out the sort and filter row (default true).
+function PetsLayout.compute(
+	width: number,
+	height: number,
+	top: number,
+	guide: boolean,
+	filters: boolean?
+): Layout
+	local withFilters = filters ~= false
 	local compact = PetsLayout.isCompact(width, height)
 	local s: Sizes = if compact then PetsLayout.SIZES.compact else PetsLayout.SIZES.normal
 
@@ -232,6 +250,14 @@ function PetsLayout.compute(width: number, height: number, top: number, guide: b
 		rect("detailTop", detailInnerX, detail.y + s.detailPad, detailInnerW, s.detailBlock)
 	local equip =
 		rect("equip", detailInnerX, detailTop.y + detailTop.h + s.detailGap, detailInnerW, s.equip)
+	local inset = PetsLayout.EQUIP_INSET
+	local equipButton = rect(
+		"equipButton",
+		equip.x + inset,
+		equip.y + inset,
+		equip.w - 2 * inset,
+		equip.h - 2 * inset
+	)
 	local scrollY = equip.y + equip.h + s.detailGap
 	local detailScroll = rect(
 		"detailScroll",
@@ -247,7 +273,7 @@ function PetsLayout.compute(width: number, height: number, top: number, guide: b
 	local controlW = math.floor((content.w - (perRow - 1) * s.controlGap) / perRow)
 	local controlsY = hint.y + hint.h + s.controlGap
 	local controls: { Rect } = {}
-	for position, name in PetsLayout.CONTROLS do
+	for position, name in if withFilters then PetsLayout.CONTROLS else {} do
 		local index = position - 1
 		local column = index % perRow
 		local row = index // perRow
@@ -262,8 +288,10 @@ function PetsLayout.compute(width: number, height: number, top: number, guide: b
 			)
 		)
 	end
-	local controlRows = math.ceil(#PetsLayout.CONTROLS / perRow)
-	local gridY = controlsY + controlRows * s.control + (controlRows - 1) * s.controlGap + s.gap
+	local controlRows = if withFilters then math.ceil(#PetsLayout.CONTROLS / perRow) else 0
+	local gridY = if withFilters
+		then controlsY + controlRows * s.control + (controlRows - 1) * s.controlGap + s.gap
+		else hint.y + hint.h + s.gap
 	local grid = rect("grid", content.x, gridY, content.w, content.y + content.h - gridY)
 
 	local columns = PetsLayout.columnsFor(content.w)
@@ -279,6 +307,7 @@ function PetsLayout.compute(width: number, height: number, top: number, guide: b
 		detail = detail,
 		detailTop = detailTop,
 		equip = equip,
+		equipButton = equipButton,
 		detailScroll = detailScroll,
 		hint = hint,
 		controls = controls,

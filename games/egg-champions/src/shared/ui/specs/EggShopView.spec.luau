@@ -3,6 +3,7 @@ local Runner = require(script.Parent.Parent.Parent.testing.Runner)
 local Config = require(script.Parent.Parent.Parent.Config)
 local Hatch = require(script.Parent.Parent.Parent.rules.Hatch)
 local EggShopView = require(script.Parent.Parent.EggShopView)
+local Tutorial = require(script.Parent.Parent.Parent.rules.Tutorial)
 
 local describe = Runner.describe
 local it = Runner.it
@@ -190,6 +191,35 @@ return function()
 
 		it("offers the same triple count the server accepts", function()
 			expect(EggShopView.TRIPLE_COUNT).toEqual(Hatch.TRIPLE_COUNT)
+		end)
+	end)
+	describe("EggShopView during the tutorial", function()
+		it("keeps HATCH X3 neutral while the tutorial runs, even with the pass", function()
+			for _, step in
+				{
+					Tutorial.steps.click,
+					Tutorial.steps.hatch,
+					Tutorial.steps.equip,
+					Tutorial.steps.gym,
+				}
+			do
+				expect(EggShopView.tripleLook(step, true, false, true)).toEqual("muted")
+				expect(EggShopView.tripleLook(step, false, false, false)).toEqual("muted")
+			end
+		end)
+
+		it("shows HATCH X3 in gold after the tutorial only when it would work", function()
+			local done = Tutorial.steps.done
+			expect(EggShopView.tripleLook(done, true, false, true)).toEqual("accent")
+			expect(EggShopView.tripleLook(done, false, false, true)).toEqual("muted")
+			expect(EggShopView.tripleLook(done, true, true, true)).toEqual("muted")
+			expect(EggShopView.tripleLook(done, true, false, false)).toEqual("muted")
+		end)
+
+		it("hides the pass footer line while the tutorial runs", function()
+			expect(EggShopView.showsNote(Tutorial.steps.click)).toBeFalse()
+			expect(EggShopView.showsNote(Tutorial.steps.hatch)).toBeFalse()
+			expect(EggShopView.showsNote(Tutorial.steps.done)).toBeTrue()
 		end)
 	end)
 end

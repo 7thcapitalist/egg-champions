@@ -24,8 +24,11 @@
 	- world: the world name, centred on the screen when the row allows,
 	  otherwise centred between coins and rebirths;
 	- rebirths: the rebirth count, small, at the right of the row;
-	- menu: the four menu buttons on the left edge, below 45% of the screen
-	  height and below the chat window, vertically centred in what is left;
+	- menu: the menu buttons on the left edge, below 45% of the screen
+	  height and below the chat window, vertically centred in what is left.
+	  Only the unlocked ones show (menuShown): EGGS and PETS always, REBIRTH
+	  once the player can afford a rebirth or has beaten a gym, SHOP once
+	  the tutorial is done;
 	- goal: the next-goal card on the right, at most a quarter of the screen
 	  height: a goal line of up to two lines at GOAL_TEXT pixels, then one
 	  button (the tutorial's SKIP shares that row), or a labelled progress
@@ -107,7 +110,8 @@ export type Layout = {
 
 local HudLayout = {}
 
--- The menu entries, in order. The Index is a tab inside the Pets screen.
+-- Every menu entry, in order. The Index is a tab inside the Pets screen.
+-- menuShown picks the ones a player sees.
 HudLayout.MENU = table.freeze({ "Eggs", "Pets", "Rebirth", "Shop" })
 
 -- The goal line's text size in pixels. It is never scaled down.
@@ -272,8 +276,15 @@ function HudLayout.fitsGoal(text: string, sizes: Sizes): boolean
 end
 
 -- The HUD rectangles for a full screen of width x height pixels with slots
--- team slots showing. insets defaults to NO_INSETS.
-function HudLayout.compute(width: number, height: number, slots: number, insets: Insets?): Layout
+-- team slots showing. insets defaults to NO_INSETS. menuCount is how many
+-- menu buttons show (menuShown), every entry of MENU when nil.
+function HudLayout.compute(
+	width: number,
+	height: number,
+	slots: number,
+	insets: Insets?,
+	menuCount: number?
+): Layout
 	local compact = HudLayout.isCompact(width, height)
 	local s: Sizes = if compact then HudLayout.SIZES.compact else HudLayout.SIZES.normal
 	local i: Insets = insets or HudLayout.NO_INSETS
@@ -341,7 +352,7 @@ function HudLayout.compute(width: number, height: number, slots: number, insets:
 	local teamHeight = s.slotHeight + s.teamPad * 2
 	local teamTop = height - s.teamBottom - teamHeight
 
-	local count = #HudLayout.MENU
+	local count = math.clamp(menuCount or #HudLayout.MENU, 1, #HudLayout.MENU)
 	local menuHeight = count * s.menuButton + (count - 1) * s.menuGap
 	local bandTop = math.ceil(height * HudLayout.MENU_BELOW)
 	if chat ~= nil and chat.x < s.gutter + s.menuWidth then
@@ -387,6 +398,79 @@ function HudLayout.compute(width: number, height: number, slots: number, insets:
 		parts = parts,
 		reserved = reserved,
 	}
+end
+
+-- What decides which menu buttons show: the player's coins, the price of
+-- their next rebirth, how many gyms they have beaten, and whether the
+-- tutorial is done.
+export type MenuState = {
+	coins: number,
+	rebirthCost: number,
+	gymsBeaten: number,
+	tutorialDone: boolean,
+}
+
+-- The menu entries a player sees, in HudLayout.MENU order. EGGS and PETS
+-- always; REBIRTH once a rebirth is affordable or the first gym is beaten;
+-- SHOP once the tutorial is done. A first-minute player sees two buttons.
+function HudLayout.menuShown(state: MenuState): { string }
+	local shown: { string } = {}
+	for _, entry in HudLayout.MENU do
+		local visible = true
+		if entry == "Rebirth" then
+			visible = state.gymsBeaten > 0
+				or (state.rebirthCost > 0 and state.coins >= state.rebirthCost)
+		elseif entry == "Shop" then
+			visible = state.tutorialDone
+		end
+		if visible then
+			table.insert(shown, entry)
+		end
+	end
+	return shown
+end
+
+-- What decides which HUD parts are gold. Gold marks what to do next.
+-- onboarding: the tutorial runs. pointer: the tutorial's pointer outlines
+-- something on screen. goalBar: the goal card shows its progress bar.
+-- goalReady: the goal card shows a ready button. menu: the menu entries
+-- shown (menuShown). slots: team slots shown.
+export type GoldState = {
+	onboarding: boolean,
+	pointer: boolean,
+	goalBar: boolean,
+	goalReady: boolean,
+	menu: { string },
+	slots: number,
+}
+
+-- The HUD parts drawn in gold, by name: "pointer", "goalBar" (the fill of
+-- the goal card's bar), "goal" (its button), "menu:Shop", "perClick" and
+-- "slotPowers". While the tutorial runs exactly one thing is gold: the
+-- pointer when it outlines something, otherwise the goal card's bar. The
+-- coin icon is the currency's picture, not a marker, and is not counted.
+function HudLayout.goldParts(state: GoldState): { string }
+	if state.onboarding then
+		if state.pointer then
+			return { "pointer" }
+		end
+		if state.goalBar then
+			return { "goalBar" }
+		end
+		return {}
+	end
+	local gold: { string } = {}
+	if state.goalReady then
+		table.insert(gold, "goal")
+	end
+	if table.find(state.menu, "Shop") ~= nil then
+		table.insert(gold, "menu:Shop")
+	end
+	table.insert(gold, "perClick")
+	if state.slots > 0 then
+		table.insert(gold, "slotPowers")
+	end
+	return gold
 end
 
 -- True when the two rectangles share any area. Touching edges do not count.

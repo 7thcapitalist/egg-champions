@@ -749,14 +749,19 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 				view.hatch.Text = Theme.label("Hatch")
 				style(view.hatch, view.hatchStroke, "hatch")
 			end
-			local tripleReady = ownsTriple
-				and not data.locked
-				and coins >= data.price * EggShopView.TRIPLE_COUNT
-			style(view.triple, view.tripleStroke, if tripleReady then "accent" else "muted")
+			local look = EggShopView.tripleLook(
+				profile.tutorialStep,
+				ownsTriple,
+				data.locked,
+				coins >= data.price * EggShopView.TRIPLE_COUNT
+			)
+			style(view.triple, view.tripleStroke, look)
 		end
 		for eggId, view in cards do
 			view.frame.Visible = listed[eggId] == true
 		end
+		-- No pass line while the tutorial runs.
+		footer.Visible = EggShopView.showsNote(profile.tutorialStep)
 	end
 
 	local function hide()

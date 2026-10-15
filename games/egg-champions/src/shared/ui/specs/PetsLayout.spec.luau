@@ -168,4 +168,38 @@ return function()
 			end)
 		end)
 	end)
+	describe("PetsLayout with few pets", function()
+		it("drops the filter row and starts the grid under the hint", function()
+			for _, screen in SCREENS do
+				local top = topOf(screen.width, screen.height, 58)
+				local full = PetsLayout.compute(screen.width, screen.height, top, false)
+				local simple = PetsLayout.compute(screen.width, screen.height, top, false, false)
+				expect(#full.controls).toEqual(#PetsLayout.CONTROLS)
+				expect(#simple.controls).toEqual(0)
+				expect(simple.controlRows).toEqual(0)
+				expect(simple.grid.y < full.grid.y).toBeTrue()
+				expect(simple.grid.y >= simple.hint.y + simple.hint.h).toBeTrue()
+				expect(simple.grid.y + simple.grid.h).toEqual(full.grid.y + full.grid.h)
+			end
+		end)
+	end)
+
+	describe("PetsLayout EQUIP button", function()
+		it("sits inside its slot with room for its outline on every side", function()
+			each(function(layout)
+				local slot = layout.equip
+				local b = layout.equipButton
+				local inset = PetsLayout.EQUIP_INSET
+				expect(inset >= 2).toBeTrue()
+				expect(b.x - slot.x >= inset).toBeTrue()
+				expect(b.y - slot.y >= inset).toBeTrue()
+				expect(slot.x + slot.w - (b.x + b.w) >= inset).toBeTrue()
+				expect(slot.y + slot.h - (b.y + b.h) >= inset).toBeTrue()
+				expect(b.w > 0 and b.h > 0).toBeTrue()
+				-- Clear of the pet picture above, outline included.
+				local top = layout.detailTop
+				expect(b.y - inset >= top.y + top.h).toBeTrue()
+			end)
+		end)
+	end)
 end

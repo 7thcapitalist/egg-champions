@@ -169,6 +169,25 @@ function PetsView.number(value: number): string
 	return text
 end
 
+-- A whole number, rounded, with thousands separators: 37.5 -> "38".
+function PetsView.whole(value: number): string
+	return Format.commas(math.floor(value + 0.5))
+end
+
+-- Below this many owned pets the screen stays simple: no sort and filter
+-- row, and no Index or Fruit Edition tabs. A size of the interface, not a
+-- game number.
+PetsView.FULL_SCREEN_PETS = 4
+
+-- The parts of the pets screen a player with petCount pets sees: the sort
+-- and filter row, and the tabs in order.
+function PetsView.screenParts(petCount: number): { filters: boolean, tabs: { string } }
+	if petCount < PetsView.FULL_SCREEN_PETS then
+		return { filters = false, tabs = { "pets" } }
+	end
+	return { filters = true, tabs = { "pets", "index", "fruit" } }
+end
+
 -- A tile's Click Power line: "Click +3".
 function PetsView.clickText(power: number): string
 	return "Click +" .. PetsView.number(power)
@@ -565,8 +584,8 @@ function PetsView.detail(petId: string, variant: string?): Detail
 		speed = pet.speed,
 		stats = {
 			{ label = "Click Power", value = PetsView.number(clickPower) },
-			{ label = "HP", value = PetsView.number(hp) },
-			{ label = "Attack", value = PetsView.number(attack) },
+			{ label = "HP", value = PetsView.whole(hp) },
+			{ label = "Attack", value = PetsView.whole(attack) },
 			{ label = "Speed", value = PetsView.number(pet.speed) },
 		},
 		moves = {

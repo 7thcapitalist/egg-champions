@@ -2,6 +2,8 @@
 local Runner = require(script.Parent.Parent.Parent.testing.Runner)
 local Config = require(script.Parent.Parent.Parent.Config)
 local Tutorial = require(script.Parent.Parent.Parent.rules.Tutorial)
+local Profile = require(script.Parent.Parent.Parent.rules.Profile)
+local Rebirth = require(script.Parent.Parent.Parent.rules.Rebirth)
 local HudLayout = require(script.Parent.Parent.HudLayout)
 
 local describe = Runner.describe
@@ -269,6 +271,126 @@ return function()
 			expect(HudLayout.teamSlots(2, 3)).toEqual(2)
 			expect(HudLayout.teamSlots(3, 3)).toEqual(3)
 			expect(HudLayout.teamSlots(40, 3)).toEqual(3)
+		end)
+	end)
+
+	describe("HudLayout.menuShown", function()
+		local cost = Rebirth.cost(0)
+
+		it("shows only EGGS and PETS on minute one", function()
+			local shown = HudLayout.menuShown({
+				coins = 0,
+				rebirthCost = cost,
+				gymsBeaten = 0,
+				tutorialDone = false,
+			})
+			expect(joined(shown)).toEqual("Eggs, Pets")
+		end)
+
+		it("adds SHOP once the tutorial is done", function()
+			local shown = HudLayout.menuShown({
+				coins = 0,
+				rebirthCost = cost,
+				gymsBeaten = 0,
+				tutorialDone = true,
+			})
+			expect(joined(shown)).toEqual("Eggs, Pets, Shop")
+		end)
+
+		it("adds REBIRTH once a rebirth is affordable", function()
+			local below = HudLayout.menuShown({
+				coins = cost - 1,
+				rebirthCost = cost,
+				gymsBeaten = 0,
+				tutorialDone = false,
+			})
+			expect(table.find(below, "Rebirth") == nil).toBeTrue()
+			local shown = HudLayout.menuShown({
+				coins = cost,
+				rebirthCost = cost,
+				gymsBeaten = 0,
+				tutorialDone = false,
+			})
+			expect(joined(shown)).toEqual("Eggs, Pets, Rebirth")
+		end)
+
+		it("adds REBIRTH once the first gym is beaten", function()
+			local shown = HudLayout.menuShown({
+				coins = 0,
+				rebirthCost = cost,
+				gymsBeaten = 1,
+				tutorialDone = true,
+			})
+			expect(joined(shown)).toEqual("Eggs, Pets, Rebirth, Shop")
+		end)
+
+		it("keeps the shorter menu clear of every other part", function()
+			for _, screen in SCREENS do
+				for count = 1, #HudLayout.MENU do
+					local layout = HudLayout.compute(screen.width, screen.height, 3, nil, count)
+					local s = layout.sizes
+					expect(layout.menu.h).toEqual(count * s.menuButton + (count - 1) * s.menuGap)
+					expect(joined(HudLayout.overlaps(layout.parts))).toEqual("")
+					expect(joined(HudLayout.outside(layout.parts, screen.width, screen.height))).toEqual(
+						""
+					)
+				end
+			end
+		end)
+	end)
+
+	describe("HudLayout.goldParts", function()
+		it("puts exactly one gold element on screen for a new profile", function()
+			local profile = Profile.new()
+			local onboarding = Tutorial.active(profile.tutorialStep)
+			local card = Tutorial.card(profile.tutorialStep, { eggsOpen = false, petsOpen = false })
+			local beaten = 0
+			for _ in profile.gymsBeaten do
+				beaten += 1
+			end
+			local menu = HudLayout.menuShown({
+				coins = profile.coins,
+				rebirthCost = Rebirth.cost(profile.rebirths),
+				gymsBeaten = beaten,
+				tutorialDone = not onboarding,
+			})
+			local slots = HudLayout.teamSlots(#profile.team, Config.constants.team_size)
+			local gold = HudLayout.goldParts({
+				onboarding = onboarding,
+				pointer = card ~= nil and card.target ~= nil,
+				-- The first step's card shows the coins-for-the-first-egg bar.
+				goalBar = card ~= nil and card.step == Tutorial.steps.click,
+				goalReady = false,
+				menu = menu,
+				slots = slots,
+			})
+			expect(onboarding).toBeTrue()
+			expect(#menu).toEqual(2)
+			expect(#gold).toEqual(1)
+		end)
+
+		it("keeps the pointer the only gold element while the tutorial runs", function()
+			local gold = HudLayout.goldParts({
+				onboarding = true,
+				pointer = true,
+				goalBar = false,
+				goalReady = true,
+				menu = { "Eggs", "Pets", "Shop" },
+				slots = 2,
+			})
+			expect(joined(gold)).toEqual("pointer")
+		end)
+
+		it("marks the goal, SHOP and click power once the tutorial is done", function()
+			local gold = HudLayout.goldParts({
+				onboarding = false,
+				pointer = false,
+				goalBar = false,
+				goalReady = true,
+				menu = { "Eggs", "Pets", "Shop" },
+				slots = 1,
+			})
+			expect(joined(gold)).toEqual("goal, menu:Shop, perClick, slotPowers")
 		end)
 	end)
 end

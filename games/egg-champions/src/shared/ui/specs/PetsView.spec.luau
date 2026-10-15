@@ -326,4 +326,34 @@ return function()
 			expect(PetsView.number(1500)).toEqual("1,500")
 		end)
 	end)
+	describe("PetsView with few pets", function()
+		it("hides filters and the Index and Fruit Edition tabs below four pets", function()
+			for count = 0, PetsView.FULL_SCREEN_PETS - 1 do
+				local parts = PetsView.screenParts(count)
+				expect(parts.filters).toBeFalse()
+				expect(table.concat(parts.tabs, ",")).toEqual("pets")
+			end
+			local full = PetsView.screenParts(PetsView.FULL_SCREEN_PETS)
+			expect(full.filters).toBeTrue()
+			expect(table.concat(full.tabs, ",")).toEqual("pets,index,fruit")
+		end)
+	end)
+
+	describe("PetsView stats", function()
+		it("shows HP and Attack as whole numbers", function()
+			expect(PetsView.whole(37.5)).toEqual("38")
+			expect(PetsView.whole(12.2)).toEqual("12")
+			expect(PetsView.whole(1500.4)).toEqual("1,500")
+			for _, pet in Config.pets do
+				for _, variant in Config.variants do
+					local detail = PetsView.detail(pet.id, variant.id)
+					for _, stat in detail.stats do
+						if stat.label == "HP" or stat.label == "Attack" then
+							expect(string.find(stat.value, ".", 1, true) == nil).toBeTrue()
+						end
+					end
+				end
+			end
+		end)
+	end)
 end

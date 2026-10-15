@@ -24,6 +24,7 @@ local Config = require(script.Parent.Parent.Config)
 local Hatch = require(script.Parent.Parent.rules.Hatch)
 local Progression = require(script.Parent.Parent.rules.Progression)
 local Format = require(script.Parent.Format)
+local Tutorial = require(script.Parent.Parent.rules.Tutorial)
 
 export type State = {
 	coins: number,
@@ -196,6 +197,28 @@ function EggShopView.shownCards(state: State, options: Options?): { Card }
 		end
 	end
 	return shown
+end
+
+-- How HATCH X3 looks on a card: gold ("accent") only when the player owns
+-- the Triple Hatch pass, the egg is open and three are affordable, and
+-- never while the tutorial runs (tutorialStep as the server sent it), so
+-- the first minutes show no pass button in gold.
+function EggShopView.tripleLook(
+	tutorialStep: any,
+	ownsTriple: boolean,
+	locked: boolean,
+	affordableThree: boolean
+): "accent" | "muted"
+	if Tutorial.active(tutorialStep) then
+		return "muted"
+	end
+	return if ownsTriple and not locked and affordableThree then "accent" else "muted"
+end
+
+-- True when the note under the cards (variants and the pass) shows: not
+-- while the tutorial runs.
+function EggShopView.showsNote(tutorialStep: any): boolean
+	return not Tutorial.active(tutorialStep)
 end
 
 -- The note under the cards: the variant odds and multipliers, from config.

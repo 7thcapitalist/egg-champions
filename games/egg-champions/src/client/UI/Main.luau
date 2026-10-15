@@ -15,8 +15,10 @@
 	  top bar buttons, the world name centred, the rebirth count small on
 	  the right. Game passes are not here; they live only in the Shop
 	  screen (UI/Shop).
-	- Left menu: four compact buttons, Eggs, Pets, Rebirth and Shop, on the
-	  left edge below 45% of the screen height and below the chat window.
+	- Left menu: compact buttons on the left edge below 45% of the screen
+	  height and below the chat window, only the unlocked ones
+	  (HudLayout.menuShown): Eggs and Pets always, Rebirth once a rebirth is
+	  affordable or a gym is beaten, Shop once the tutorial is done.
 	  The Index is a tab inside the Pets screen.
 	- Next-goal card on the right, picked by shared/ui/NextGoal: a goal line
 	  of up to two lines at HudLayout.GOAL_TEXT pixels (never scaled down)
@@ -38,9 +40,10 @@
 	  constants.team_size (HudLayout.teamSlots). Each slot shows the pet's
 	  name and its own click power ("Click +3"); the top bar shows only the
 	  total ("+8 per click").
-	- Gold marks what to do next. While the tutorial runs, the tutorial
-	  pointer is the only gold element: SHOP, the goal button, the per click
-	  line and the slot powers drop their gold until the tutorial is done.
+	- Gold marks what to do next (HudLayout.goldParts). While the tutorial
+	  runs exactly one thing is gold: its pointer, or the goal card's bar
+	  when nothing is pointed at. SHOP, the goal button, the per click line
+	  and the slot powers take their gold once the tutorial is done.
 
 	Click feedback: every click the server credited pulses the coin counter
 	(Main.pulseCoins, called from Effects.onCredited); Effects draws the
@@ -583,6 +586,8 @@ function Main.mount(
 	local panels: { GuiObject } = { top.bar, menu.frame, goal.frame, teamFrame }
 
 	local shownSlots = 0
+	-- How many menu buttons show (HudLayout.menuShown); two on minute one.
+	local shownMenu = 2
 	local goalWanted = true
 	-- The goal state of the last render, and the world whose "Next" line the
 	-- player tapped, for the gym beam.
@@ -605,7 +610,8 @@ function Main.mount(
 		if area.X <= 0 or area.Y <= 0 then
 			return
 		end
-		local layout = HudLayout.compute(area.X, area.Y, shownSlots, HudInsets.read(area))
+		local layout =
+			HudLayout.compute(area.X, area.Y, shownSlots, HudInsets.read(area), shownMenu)
 		local s = layout.sizes
 
 		local barRect = layout.topBar
@@ -731,17 +737,25 @@ function Main.mount(
 			feesPaid = if type(profile.feesPaid) == "table" then profile.feesPaid else {},
 		}
 
-		-- While the tutorial runs, its pointer is the only gold element.
 		local onboarding = Tutorial.active(profile.tutorialStep)
-		local accentColor = if onboarding then colors.text else colors.gold
-		top.perClick.TextColor3 = accentColor
-		for _, b in menu.buttons do
-			local accent = b.Name == MENU_ACCENT and not onboarding
-			b.TextColor3 = if accent then colors.gold else colors.text
-			local stroke = b:FindFirstChildOfClass("UIStroke")
-			if stroke ~= nil then
-				stroke.Color = if accent then colors.gold else colors.border
+		local beaten = 0
+		for _, won in goalState.gymsBeaten do
+			if won == true then
+				beaten += 1
 			end
+		end
+		local menuShown = HudLayout.menuShown({
+			coins = coins,
+			rebirthCost = number(derived.rebirthCost),
+			gymsBeaten = beaten,
+			tutorialDone = not onboarding,
+		})
+		for _, b in menu.buttons do
+			b.Visible = table.find(menuShown, b.Name) ~= nil
+		end
+		if #menuShown ~= shownMenu then
+			shownMenu = #menuShown
+			applyLayout()
 		end
 
 		top.coins.Text = Format.abbreviate(coins)
@@ -823,9 +837,7 @@ function Main.mount(
 			goal.action.Visible = true
 			goal.bar.Visible = false
 			goal.action.Text = Theme.label(action.label)
-			goal.action.TextColor3 = accentColor
 			goal.action.BackgroundColor3 = colors.panel
-			goal.actionStroke.Color = if onboarding then colors.text else colors.gold
 			goal.action.AutoButtonColor = true
 		else
 			goalScreen = nil
@@ -903,7 +915,6 @@ function Main.mount(
 				slot.power.Text = if type(power) == "number"
 					then string.format("Click +%s", Format.abbreviate(power))
 					else ""
-				slot.power.TextColor3 = accentColor
 			else
 				slot.stripe.BackgroundColor3 = colors.border
 				slot.block.BackgroundTransparency = 1
@@ -916,6 +927,39 @@ function Main.mount(
 				slot.name.TextColor3 = colors.muted
 				slot.power.Text = ""
 			end
+		end
+
+		-- Gold marks what to do next; while the tutorial runs, one thing only.
+		local goalReady = goal.action.Visible and goalScreen ~= nil
+		local gold = HudLayout.goldParts({
+			onboarding = onboarding,
+			pointer = tutorial ~= nil and tutorial.target ~= nil,
+			goalBar = goal.bar.Visible,
+			goalReady = goalReady,
+			menu = menuShown,
+			slots = shownSlots,
+		})
+		local function isGold(part: string): boolean
+			return table.find(gold, part) ~= nil
+		end
+		top.perClick.TextColor3 = if isGold("perClick") then colors.gold else colors.text
+		for _, b in menu.buttons do
+			local accent = b.Name == MENU_ACCENT and isGold("menu:" .. MENU_ACCENT)
+			b.TextColor3 = if accent then colors.gold else colors.text
+			local stroke = b:FindFirstChildOfClass("UIStroke")
+			if stroke ~= nil then
+				stroke.Color = if accent then colors.gold else colors.border
+			end
+		end
+		if goalReady then
+			local accent = isGold("goal")
+			goal.action.TextColor3 = if accent then colors.gold else colors.text
+			goal.actionStroke.Color = if accent then colors.gold else colors.text
+		end
+		goal.fill.BackgroundColor3 = if isGold("goalBar") then colors.gold else colors.border
+		local powerColor = if isGold("slotPowers") then colors.gold else colors.text
+		for _, slot in slots do
+			slot.power.TextColor3 = powerColor
 		end
 	end
 

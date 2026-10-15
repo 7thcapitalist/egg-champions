@@ -455,12 +455,20 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 	local fruitScroll = scrolling("Grid", fruitPage)
 
 	-- The layout for the current screen size, worked out before first use.
+	-- The parts a player with this many pets sees (PetsView.screenParts).
+	local function currentParts()
+		local payload = State.get()
+		local owned = if payload ~= nil then ownedTable(payload.profile.pets) else {}
+		return PetsView.screenParts(#PetsView.tiles(owned, {}))
+	end
+	local layoutFilters = true
 	local function computeLayout(): PetsLayout.Layout
+		layoutFilters = currentParts().filters
 		local screen = gui.AbsoluteSize
 		local width = if screen.X > 0 then screen.X else 1280
 		local height = if screen.Y > 0 then screen.Y else 720
 		local hud = HudLayout.compute(width, height, 0, HudInsets.read(Vector2.new(width, height)))
-		return PetsLayout.compute(width, height, hud.contentTop, guideShown)
+		return PetsLayout.compute(width, height, hud.contentTop, guideShown, layoutFilters)
 	end
 	local layout: PetsLayout.Layout = computeLayout()
 
@@ -587,7 +595,11 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			local equipped = teamUids[uid] == true
 			local action =
 				button("Equip", equipSlot, Theme.label(if equipped then "Unequip" else "Equip"))
-			action.Size = UDim2.fromScale(1, 1)
+			-- Inset in its slot, so the outline is never clipped and never
+			-- touches the pet picture above.
+			local inner = layout.equipButton
+			action.Position = UDim2.fromOffset(inner.x - layout.equip.x, inner.y - layout.equip.y)
+			action.Size = UDim2.fromOffset(inner.w, inner.h)
 			if not equipped then
 				action.BackgroundColor3 = colors.raised
 				action.TextColor3 = colors.gold
@@ -713,6 +725,15 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			end
 		end
 
+		-- With few pets: no filter row and no Index or Fruit Edition tabs.
+		local parts = PetsView.screenParts(#PetsView.tiles(pets, {}))
+		if parts.filters ~= layoutFilters then
+			applyLayout()
+			return
+		end
+		if table.find(parts.tabs, tab) == nil then
+			tab = "pets"
+		end
 		local counts = PetsView.tabCounts(pets, index)
 		local labels: { [Tab]: string } = {
 			pets = string.format("My pets  %d", counts.owned),
@@ -720,6 +741,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			fruit = string.format("Fruit Edition  %d / %d", counts.fruitSeen, counts.fruitTotal),
 		}
 		for key, view in tabButtons do
+			view.button.Visible = table.find(parts.tabs, key) ~= nil
 			view.button.Text = Theme.label(labels[key])
 			local active = key == tab
 			view.button.TextColor3 = if active then colors.gold else colors.muted
@@ -872,7 +894,11 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		place(hint, l.hint, c.x, c.y)
 		hint.TextSize = s.text
 		for position, b in controlButtons do
-			place(b, l.controls[position], c.x, c.y)
+			local r = l.controls[position]
+			b.Visible = r ~= nil
+			if r ~= nil then
+				place(b, r, c.x, c.y)
+			end
 		end
 		place(petsScroll, l.grid, c.x, c.y)
 		place(fruitNote, l.hint, c.x, c.y)
