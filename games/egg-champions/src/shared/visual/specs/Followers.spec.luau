@@ -43,23 +43,32 @@ return function()
 	end)
 
 	describe("Followers.offset", function()
-		it("puts a single pet straight behind the player", function()
-			local o = Followers.offset(1, 1, 0)
-			expect(o.x).toBeCloseTo(0)
-			expect(o.z).toBeCloseTo(Followers.LOOK.behind)
+		it("keeps every pet off the camera line, at least 2.5 studs to the side", function()
+			for count = 1, 6 do
+				for index = 1, count do
+					local o = Followers.offset(index, count, 0)
+					expect(math.abs(o.x) >= 2.5).toBeTrue()
+				end
+			end
 		end)
 
-		it("spreads a team on an arc behind, mirrored left and right", function()
-			local left = Followers.offset(1, 3, 0)
-			local middle = Followers.offset(2, 3, 0)
-			local right = Followers.offset(3, 3, 0)
-			expect(left.x < 0).toBeTrue()
-			expect(right.x > 0).toBeTrue()
-			expect(left.x).toBeCloseTo(-right.x)
-			expect(middle.x).toBeCloseTo(0)
-			for _, o in { left, middle, right } do
-				expect(o.z > 0).toBeTrue()
-			end
+		it("alternates left and right, a little behind the player", function()
+			local first = Followers.offset(1, 3, 0)
+			local second = Followers.offset(2, 3, 0)
+			local third = Followers.offset(3, 3, 0)
+			expect(first.x < 0).toBeTrue()
+			expect(second.x > 0).toBeTrue()
+			expect(third.x < 0).toBeTrue()
+			expect(first.x).toBeCloseTo(-second.x)
+			expect(first.z >= 1 and first.z <= 2).toBeTrue()
+			expect(second.z).toBeCloseTo(first.z)
+			expect(third.z > first.z).toBeTrue()
+		end)
+
+		it("puts a single pet beside the player, not straight behind", function()
+			local o = Followers.offset(1, 1, 0)
+			expect(math.abs(o.x) >= 3 and math.abs(o.x) <= 4).toBeTrue()
+			expect(o.z >= 1 and o.z <= 2).toBeTrue()
 		end)
 
 		it("bobs gently around the hover height", function()
@@ -68,6 +77,27 @@ return function()
 				local o = Followers.offset(1, 1, step * 0.1)
 				expect(math.abs(o.y - look.hover) <= look.bob + 1e-6).toBeTrue()
 			end
+		end)
+	end)
+
+	describe("Followers size", function()
+		it("is at most half a standard character", function()
+			local look = Followers.LOOK
+			expect(look.size <= look.characterHeight / 2 + 1e-6).toBeTrue()
+			expect(look.size).toBeCloseTo(2.5)
+		end)
+
+		it("scales any model to the follower size", function()
+			for _, largest in { 1, 2.5, 6, 12 } do
+				expect(largest * Followers.scaleFor(largest)).toBeCloseTo(Followers.LOOK.size)
+			end
+		end)
+
+		it("leaves a model with no size alone", function()
+			expect(Followers.scaleFor(0)).toEqual(1)
+			expect(Followers.scaleFor(-1)).toEqual(1)
+			expect(Followers.scaleFor(0 / 0)).toEqual(1)
+			expect(Followers.scaleFor(math.huge)).toEqual(1)
 		end)
 	end)
 

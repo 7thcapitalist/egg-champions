@@ -464,4 +464,20 @@ function EffectsBudget.sequenceSeconds(rarityIds: { string }): number
 	return seconds
 end
 
+-- Follower pets in the world: placed beside the player, not on the camera
+-- line behind them, and kept small so the avatar stays in view.
+EffectsBudget.FOLLOWER = table.freeze({
+	-- Sideways distance from the root part, in studs. Slots alternate left
+	-- and right, so no pet sits on the line between camera and avatar.
+	side = 3.5,
+	-- How far behind the root part the first pair sits, in studs.
+	behind = 1.5,
+	-- Each further pair sits this much further behind, in studs.
+	rowGap = 2.5,
+	-- The largest dimension of a follower model, in studs.
+	size = 2.5,
+	-- A standard character's height, in studs, for the "half as tall" check.
+	characterHeight = 5,
+})
+
 return EffectsBudget

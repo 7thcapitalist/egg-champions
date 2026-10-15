@@ -8,7 +8,9 @@
 	character is within Followers.LOOK.viewDistance of the camera: the pets
 	are built with PetVisual.create (the PetModels asset when there is one,
 	with the shiny or golden look), kept in a local folder in the Workspace,
-	and moved each frame to a small arc behind the player with a gentle bob.
+	scaled so their largest side is Followers.LOOK.size studs, and moved
+	each frame beside the player (left and right, a little behind) with a
+	gentle bob, never on the camera line straight behind.
 	The server does no work per frame, and the models never replicate.
 ]]
 
@@ -49,6 +51,14 @@ local function build(player: Player, key: string): Entry
 	for _, member in FollowerMath.decode(key) do
 		local ok, model = pcall(PetVisual.create, member.petId, member.variant)
 		if ok and model ~= nil then
+			local extents = model:GetExtentsSize()
+			local largest = math.max(extents.X, extents.Y, extents.Z)
+			local factor = FollowerMath.scaleFor(largest)
+			if factor ~= 1 then
+				pcall(function()
+					model:ScaleTo(model:GetScale() * factor)
+				end)
+			end
 			model.Name = string.format("%s_%s", player.Name, model.Name)
 			model.Parent = folder
 			table.insert(models, model)

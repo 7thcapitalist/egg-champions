@@ -5,8 +5,9 @@
 	The server writes each player's equipped team onto the Player as one
 	string attribute (encode), so every client can see every team without a
 	remote or any work per frame on the server. Each client decodes it and
-	places the pets itself (client/Effects/Followers): a small arc behind the
-	player, at a hover height, with a gentle bob.
+	places the pets itself (client/Effects/Followers): beside the player,
+	alternating left and right a little behind, at a hover height, with a
+	gentle bob. Nothing sits straight behind, on the camera line.
 
 	Everything here is display distance and timing, not game numbers, and
 	nothing here touches the engine.
@@ -25,16 +26,26 @@ export type Offset = {
 	z: number,
 }
 
+local EffectsBudget = require(script.Parent.EffectsBudget)
+
 local Followers = {}
+
+local BUDGET = EffectsBudget.FOLLOWER
 
 -- The Player attribute that carries the equipped team.
 Followers.ATTRIBUTE = "FollowerTeam"
 
 Followers.LOOK = table.freeze({
-	-- How far behind the root part the arc sits, in studs.
-	behind = 5,
-	-- Half the angle the arc spans, in degrees, for a full team.
-	spread = 40,
+	-- Sideways distance from the root part, in studs (left and right).
+	side = BUDGET.side,
+	-- How far behind the root part the first pair sits, in studs.
+	behind = BUDGET.behind,
+	-- Each further pair sits this much further behind, in studs.
+	rowGap = BUDGET.rowGap,
+	-- The largest dimension of a follower model, in studs.
+	size = BUDGET.size,
+	-- A standard character's height, in studs.
+	characterHeight = BUDGET.characterHeight,
 	-- The height of the pets over the root part, in studs.
 	hover = 0.5,
 	-- The bob: its height in studs and its period in seconds.
@@ -94,19 +105,30 @@ function Followers.decode(value: any): { Member }
 	return members
 end
 
--- Where pet `index` of `count` hovers at `seconds`: spread evenly on an arc
--- behind the player, each bobbing a little out of step with the others.
-function Followers.offset(index: number, count: number, seconds: number): Offset
+-- Where pet `index` hovers at `seconds`: odd slots to the left, even
+-- slots to the right, each pair a row further behind, each bobbing a little
+-- out of step with the others. `count` is kept for callers; a slot's spot
+-- does not depend on how many pets there are.
+function Followers.offset(index: number, _count: number, seconds: number): Offset
 	local look = Followers.LOOK
-	local share = if count <= 1 then 0 else (index - 1) / (count - 1) * 2 - 1
-	local angle = math.rad(look.spread) * share
+	local sign = if index % 2 == 1 then -1 else 1
+	local row = math.floor((index - 1) / 2)
 	local phase = (index - 1) * 0.9
 	local bob = math.sin(seconds / look.bobSeconds * 2 * math.pi + phase) * look.bob
 	return {
-		x = math.sin(angle) * look.behind,
+		x = sign * look.side,
 		y = look.hover + bob,
-		z = math.cos(angle) * look.behind,
+		z = look.behind + row * look.rowGap,
 	}
+end
+
+-- The scale that makes a model whose largest dimension is `largest` studs
+-- come out at Followers.LOOK.size. A model with no size keeps scale 1.
+function Followers.scaleFor(largest: number): number
+	if largest ~= largest or largest <= 0 or largest == math.huge then
+		return 1
+	end
+	return Followers.LOOK.size / largest
 end
 
 -- The share of the gap a follower closes in a frame of dt seconds.
