@@ -22,6 +22,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local EdgeArrow =
 	require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ui"):WaitForChild("EdgeArrow"))
 
+local WorldNames =
+	require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("world"):WaitForChild("Names"))
+
 local Theme = require(script.Parent:WaitForChild("Theme"))
 
 local OUTLINE_NAME = "TutorialPointer"
@@ -29,7 +32,6 @@ local OUTLINE_GROW = 6
 local OUTLINE_THICKNESS = 3
 local PULSE_SECONDS = 0.6
 local GYM_PREFIX = "gym:"
-local GYM_MODEL_PREFIX = "Gym_"
 -- How often a gym that is not in the world yet is looked for again.
 local GYM_RETRY_SECONDS = 1
 -- Gym highlight: fill and outline transparency at the two ends of the pulse.
@@ -108,7 +110,7 @@ local function outline(target: GuiObject)
 end
 
 local function highlightGym(worldId: string)
-	local model = workspace:FindFirstChild(GYM_MODEL_PREFIX .. worldId, true)
+	local model = workspace:FindFirstChild(WorldNames.gymModel(worldId), true)
 	if model == nil or not model:IsA("Model") then
 		return
 	end

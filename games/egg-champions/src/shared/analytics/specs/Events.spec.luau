@@ -132,7 +132,7 @@ return function()
 				expect(record.name).toEqual(event.name)
 				expect(record.rebirths).toEqual(2)
 				expect(record.world).toEqual(3)
-				expect(Events.customFields(record).CustomField01).toEqual("rebirths 2, world 3")
+				expect(Events.customFields(record).CustomField01).toEqual("rebirths 2 | world 3")
 			end
 		end)
 
@@ -190,8 +190,8 @@ return function()
 				secondsSinceJoin = 90,
 			}, CONTEXT)
 			expect(Events.customFields(record)).toEqual({
-				CustomField01 = "rebirths 2, world 3",
-				CustomField02 = "2, win",
+				CustomField01 = "rebirths 2 | world 3",
+				CustomField02 = "2 | win",
 				CustomField03 = "90",
 			})
 			expect(Events.value(record)).toEqual(5400)
@@ -210,9 +210,9 @@ return function()
 				CONTEXT
 			)
 			expect(Events.customFields(hatched)).toEqual({
-				CustomField01 = "rebirths 2, world 3",
+				CustomField01 = "rebirths 2 | world 3",
 				CustomField02 = "pet_a",
-				CustomField03 = "rare, normal",
+				CustomField03 = "rare | normal",
 			})
 			local equipped = Events.build(
 				"pet_equipped",
@@ -220,7 +220,7 @@ return function()
 				CONTEXT
 			)
 			expect(Events.customFields(equipped).CustomField02).toEqual("pet_a")
-			expect(Events.customFields(equipped).CustomField03).toEqual("pet_a,pet_b")
+			expect(Events.customFields(equipped).CustomField03).toEqual("pet_a|pet_b")
 			local ended =
 				Events.build("session_end", { lengthSeconds = 600, coinsPerClick = 12 }, CONTEXT)
 			expect(Events.value(ended)).toEqual(600)
@@ -247,7 +247,7 @@ return function()
 				expect(Events.value(record)).toEqual(7200)
 				local found = false
 				for _, text in Events.customFields(record) do
-					if text == "300" or string.find(text, ", 300", 1, true) ~= nil then
+					if text == "300" or string.find(text, " | 300", 1, true) ~= nil then
 						found = true
 					end
 				end
@@ -255,6 +255,29 @@ return function()
 					error(string.format("'%s' does not send secondsSinceJoin", name))
 				end
 			end
+		end)
+
+		it("never sends a comma or a quote in a custom field value", function()
+			local hatched = Events.build(
+				"pet_hatched",
+				{ petId = 'pet,"a"', rarity = "it's rare", variant = "x,y" },
+				CONTEXT
+			)
+			local equipped =
+				Events.build("pet_equipped", { petId = "a", team = { "b,c", '"d"' } }, CONTEXT)
+			for _, record in { hatched, equipped } do
+				for _, text in Events.customFields(record) do
+					expect(string.find(text, "[,\"']") == nil).toBeTrue()
+				end
+			end
+			for _, event in Events.list do
+				local record = Events.build(event.name, sample(event), CONTEXT)
+				for _, text in Events.customFields(record) do
+					expect(string.find(text, "[,\"']") == nil).toBeTrue()
+				end
+			end
+			expect(Events.customFields(equipped).CustomField03).toEqual("b;c|d")
+			expect(Events.clean('a,"b"')).toEqual("a;b")
 		end)
 
 		it("sends every field of every event", function()

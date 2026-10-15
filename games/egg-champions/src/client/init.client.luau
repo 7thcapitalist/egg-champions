@@ -35,6 +35,7 @@ local StarterGui = game:GetService("StarterGui")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local ModelTemplates = require(Shared:WaitForChild("visual"):WaitForChild("ModelTemplates"))
+local WorldNames = require(Shared:WaitForChild("world"):WaitForChild("Names"))
 
 local STAND_TAG = "EggStand"
 local STAND_COOLDOWN_SECONDS = 2
@@ -165,7 +166,7 @@ end)
 -- Egg stands: each egg on a stand turns slowly. The server places it and tags
 -- it; spinning here keeps the per-frame motion off the network. Spin speed is
 -- display timing, not a game number.
-local EGG_SPIN_TAG = "SpinningEgg"
+local EGG_SPIN_TAG = WorldNames.SPINNING_EGG_TAG
 local EGG_SPIN_RADIANS_PER_SECOND = math.rad(40)
 local spinning: { [Model]: CFrame } = {}
 local function addSpin(instance: Instance)

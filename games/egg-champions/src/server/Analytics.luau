@@ -98,6 +98,17 @@ function Analytics.fire(player: Player, eventName: string, fields: { [string]: a
 	end
 end
 
+local function logFailure(item: Pending, err: string)
+	warn(
+		string.format(
+			"[Analytics] dropped %s for user %d: %s",
+			item.record.name,
+			item.player.UserId,
+			err
+		)
+	)
+end
+
 local function send(item: Pending)
 	local record = item.record
 	local event = Events.get(record.name)
@@ -119,21 +130,18 @@ local function send(item: Pending)
 		)
 		return
 	end
-	if event.onboardingStep ~= nil then
-		AnalyticsService:LogOnboardingStepEvent(item.player, event.onboardingStep, record.name)
+	local step = event.onboardingStep
+	if step ~= nil then
+		-- The funnel step is a bonus. If Roblox refuses it, the custom event
+		-- below still records the event, so first_hatch is never lost.
+		local ok, err = pcall(function()
+			AnalyticsService:LogOnboardingStepEvent(item.player, step, record.name)
+		end)
+		if not ok then
+			logFailure(item, "onboarding step not logged, sent as custom only: " .. tostring(err))
+		end
 	end
 	AnalyticsService:LogCustomEvent(item.player, record.name, Events.value(record) or 1, custom)
-end
-
-local function logFailure(item: Pending, err: string)
-	warn(
-		string.format(
-			"[Analytics] dropped %s for user %d: %s",
-			item.record.name,
-			item.player.UserId,
-			err
-		)
-	)
 end
 
 -- Sends everything waiting. Safe to call at any time.

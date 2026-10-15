@@ -27,7 +27,33 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Layout = require(Shared:WaitForChild("world"):WaitForChild("Layout"))
 local WorldPalette = require(Shared:WaitForChild("world"):WaitForChild("WorldPalette"))
+local WorldNames = require(Shared:WaitForChild("world"):WaitForChild("Names"))
 local Kit = require(script.Parent:WaitForChild("Kit"))
+
+-- Each egg's configured model height in studs (GameConfig.models, built from
+-- assets/models.json), so a stand's sign clears its real egg. An egg with no
+-- entry is left out and its stand uses the placeholder height.
+local function eggHeights(): { [string]: number }
+	local heights: { [string]: number } = {}
+	local source = ReplicatedStorage:WaitForChild("GameConfig"):FindFirstChild("models")
+	if source == nil or not source:IsA("ModuleScript") then
+		return heights
+	end
+	local ok, data = pcall(require, source)
+	if not ok or type(data) ~= "table" or type(data.entries) ~= "table" then
+		return heights
+	end
+	for _, entry in data.entries do
+		if
+			entry.kind == "egg"
+			and type(entry.id) == "string"
+			and type(entry.height) == "number"
+		then
+			heights[entry.id] = entry.height
+		end
+	end
+	return heights
+end
 
 type Palette = Kit.Palette
 type Vec = Layout.Vec
@@ -245,6 +271,7 @@ function Builder.buildAll(): Built
 		buildScenery(folder, island, palette, gymSite)
 	end
 
+	local heights = eggHeights()
 	for _, stand in plan.eggStands do
 		local folder = built.folders[stand.worldId]
 		local center = plan.arrivals[stand.worldId]
@@ -253,7 +280,8 @@ function Builder.buildAll(): Built
 			facing(stand.position, center),
 			byWorld[stand.worldId],
 			stand.name,
-			stand.price
+			stand.price,
+			heights[stand.eggId]
 		)
 		model.Name = "EggStand_" .. stand.eggId
 		model:SetAttribute("EggId", stand.eggId)
@@ -271,7 +299,7 @@ function Builder.buildAll(): Built
 			byWorld[gym.worldId],
 			gym.label
 		)
-		model.Name = "Gym_" .. gym.worldId
+		model.Name = WorldNames.gymModel(gym.worldId)
 		model:SetAttribute("WorldId", gym.worldId)
 		-- Stepping on the gym floor opens the battle screen's fee prompt.
 		local floor = model.PrimaryPart :: BasePart

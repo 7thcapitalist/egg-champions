@@ -14,6 +14,12 @@
 	Sizes here are prop geometry, not game numbers.
 ]]
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local ThemeColors = require(Shared:WaitForChild("ui"):WaitForChild("ThemeColors"))
+local WorldNames = require(Shared:WaitForChild("world"):WaitForChild("Names"))
+
 local Kit = {}
 
 export type Palette = {
@@ -58,14 +64,17 @@ local function newModel(prop: string, name: string?): Model
 	return model
 end
 
--- A floating text label above a part.
-local function label(adornee: BasePart, text: string, height: number, color: Color3)
+-- A floating text label above a part, sized in studs (so it scales with
+-- distance like the part does). `height` is how far the label's center sits
+-- above the part's center.
+local function label(adornee: BasePart, text: string, size: Vector2, height: number, color: Color3)
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "Label"
-	gui.Size = UDim2.fromOffset(220, 90)
+	gui.Size = UDim2.fromScale(size.X, size.Y)
 	gui.StudsOffsetWorldSpace = Vector3.new(0, height, 0)
 	gui.AlwaysOnTop = false
 	gui.MaxDistance = 120
+	gui.LightInfluence = 0
 	gui.Adornee = adornee
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Size = UDim2.fromScale(1, 1)
@@ -79,21 +88,53 @@ local function label(adornee: BasePart, text: string, height: number, color: Col
 	gui.Parent = adornee
 end
 
--- Egg stand signs: sized in studs, so they shrink with distance, and hidden
--- past SIGN_MAX_DISTANCE so only the stands near the player show a sign.
-local SIGN_SIZE = UDim2.fromScale(9, 3.2)
-local SIGN_MAX_DISTANCE = 60
-local SIGN_HEIGHT = 3.5
-local PRICE_GOLD = Color3.fromRGB(232, 179, 58)
-local EGG_HOVER = 0.5
+-- Text printed on both faces of a flat board, filling it with a small margin,
+-- so it always fits the board it is on.
+local BOARD_MARGIN = 0.08
+local function boardText(board: BasePart, text: string, color: Color3)
+	for _, face in { Enum.NormalId.Front, Enum.NormalId.Back } do
+		local gui = Instance.new("SurfaceGui")
+		gui.Name = "Label" .. face.Name
+		gui.Face = face
+		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+		gui.PixelsPerStud = 50
+		gui.LightInfluence = 0
+		gui.Adornee = board
+		local textLabel = Instance.new("TextLabel")
+		textLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+		textLabel.Position = UDim2.fromScale(0.5, 0.5)
+		textLabel.Size = UDim2.fromScale(1 - 2 * BOARD_MARGIN, 1 - 2 * BOARD_MARGIN)
+		textLabel.BackgroundTransparency = 1
+		textLabel.Text = text
+		textLabel.TextColor3 = color
+		textLabel.TextStrokeTransparency = 0.3
+		textLabel.TextScaled = true
+		textLabel.TextWrapped = true
+		textLabel.Font = Enum.Font.FredokaOne
+		textLabel.Parent = gui
+		gui.Parent = board
+	end
+end
 
-Kit.EGG_SPIN_TAG = "SpinningEgg"
+-- Egg stand signs: a dark plate sized in studs, so it shrinks with distance
+-- but stays readable from the spawn point, and hidden past SIGN_MAX_DISTANCE.
+local SIGN_SIZE = UDim2.fromScale(12, 4.5)
+local SIGN_MAX_DISTANCE = 90
+local SIGN_HEIGHT = 3.5
+local SIGN_PLATE_TRANSPARENCY = 0.2
+local PRICE_GOLD = ThemeColors.gold
+local EGG_HOVER = 0.5
+-- The placeholder egg's height, for a stand whose egg has no configured
+-- model height.
+local PLACEHOLDER_EGG_HEIGHT = 5
+
+Kit.EGG_SPIN_TAG = WorldNames.SPINNING_EGG_TAG
 
 local function line(gui: BillboardGui, text: string, top: number, color: Color3, name: string)
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Name = name
-	textLabel.Size = UDim2.fromScale(1, 0.5)
-	textLabel.Position = UDim2.fromScale(0, top)
+	textLabel.Size = UDim2.fromScale(0.9, 0.42)
+	textLabel.Position = UDim2.fromScale(0.05, top)
 	textLabel.BackgroundTransparency = 1
 	textLabel.Text = text
 	textLabel.TextColor3 = color
@@ -114,8 +155,22 @@ local function standSign(adornee: BasePart, name: string, price: string, color: 
 	gui.MaxDistance = SIGN_MAX_DISTANCE
 	gui.LightInfluence = 0
 	gui.Adornee = adornee
-	line(gui, name, 0, color, "Name")
-	line(gui, price, 0.5, PRICE_GOLD, "Price")
+	local plate = Instance.new("Frame")
+	plate.Name = "Plate"
+	plate.Size = UDim2.fromScale(1, 1)
+	plate.BackgroundColor3 = ThemeColors.panel
+	plate.BackgroundTransparency = SIGN_PLATE_TRANSPARENCY
+	plate.BorderSizePixel = 0
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0.2, 0)
+	corner.Parent = plate
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = ThemeColors.border
+	stroke.Thickness = 2
+	stroke.Parent = plate
+	plate.Parent = gui
+	line(gui, name, 0.06, color, "Name")
+	line(gui, price, 0.52, PRICE_GOLD, "Price")
 	gui.Parent = adornee
 end
 
@@ -231,7 +286,15 @@ end
 
 -- 6. Egg stand: a plinth, a blocky placeholder egg on top (in a Model named
 -- "Egg" that Kit.setEgg swaps for the real one), a sign, and a Trigger pad.
-function Kit.eggStand(base: CFrame, palette: Palette, name: string, price: string): Model
+-- eggHeight is the egg model's configured height in studs (nil for the
+-- placeholder), so the sign clears the real egg.
+function Kit.eggStand(
+	base: CFrame,
+	palette: Palette,
+	name: string,
+	price: string,
+	eggHeight: number?
+): Model
 	local model = newModel("EggStand")
 	local plinth = part(
 		model,
@@ -264,7 +327,7 @@ function Kit.eggStand(base: CFrame, palette: Palette, name: string, price: strin
 		model,
 		"SignAnchor",
 		Vector3.new(1, 1, 1),
-		base * CFrame.new(0, 3 + 4 + 2 * EGG_HOVER + 1, 0),
+		base * CFrame.new(0, 3 + (eggHeight or PLACEHOLDER_EGG_HEIGHT) + 2 * EGG_HOVER + 1, 0),
 		palette.trim
 	)
 	signPart.Transparency = 1
@@ -304,6 +367,10 @@ function Kit.setEgg(stand: Model, template: Model)
 	end
 	egg.Parent = stand
 end
+
+-- Label sizes in studs (width, height).
+local GYM_LABEL_SIZE = Vector2.new(16, 7)
+local PORTAL_LABEL_SIZE = Vector2.new(12, 4)
 
 -- 7. Gym building: walls, a roof, a door gap, and a label.
 function Kit.gymBuilding(base: CFrame, palette: Palette, text: string): Model
@@ -369,7 +436,9 @@ function Kit.gymBuilding(base: CFrame, palette: Palette, text: string): Model
 		palette.trim,
 		Enum.Material.Slate
 	)
-	label(roof, text, 8, palette.text)
+	-- Sized in studs and sitting fully above the roof, so all three lines
+	-- (name, type, fee) show.
+	label(roof, text, GYM_LABEL_SIZE, roof.Size.Y / 2 + GYM_LABEL_SIZE.Y / 2 + 0.5, palette.text)
 	model.PrimaryPart = floor
 	return model
 end
@@ -417,7 +486,13 @@ function Kit.portalFrame(base: CFrame, palette: Palette, text: string): Model
 	)
 	trigger.Transparency = 0.3
 	trigger.CanCollide = false
-	label(bar, text, 5, palette.text)
+	label(
+		bar,
+		text,
+		PORTAL_LABEL_SIZE,
+		bar.Size.Y / 2 + PORTAL_LABEL_SIZE.Y / 2 + 0.5,
+		palette.text
+	)
 	model.PrimaryPart = floor
 	return model
 end
@@ -441,7 +516,7 @@ function Kit.sign(base: CFrame, palette: Palette, text: string): Model
 		palette.trim,
 		Enum.Material.Wood
 	)
-	label(board, text, 4, palette.text)
+	boardText(board, text, palette.text)
 	model.PrimaryPart = post
 	return model
 end
