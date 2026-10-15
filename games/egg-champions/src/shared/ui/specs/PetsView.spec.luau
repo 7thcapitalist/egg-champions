@@ -356,4 +356,38 @@ return function()
 			end
 		end)
 	end)
+	describe("PetsView beginner detail", function()
+		it("is a beginner while the tutorial runs or with fewer than 4 pets", function()
+			local full = PetsView.FULL_SCREEN_PETS
+			expect(full).toEqual(4)
+			expect(PetsView.beginner(0, false)).toBeTrue()
+			expect(PetsView.beginner(full - 1, false)).toBeTrue()
+			expect(PetsView.beginner(full, false)).toBeFalse()
+			expect(PetsView.beginner(full + 5, true)).toBeTrue()
+		end)
+
+		it("shows only Click Power until Battle stats is opened", function()
+			local pet = Config.pets[1]
+			local info = PetsView.detail(pet.id, nil)
+			local closed = PetsView.detailParts(info, true, false)
+			expect(#closed.stats).toEqual(1)
+			expect(closed.stats[1].label).toEqual("Click Power")
+			expect(closed.moves).toBeFalse()
+			expect(closed.toggle).toEqual(PetsView.BATTLE_TOGGLE.closed)
+			expect(closed.typeLine).toEqual(info.typeName)
+			local open = PetsView.detailParts(info, true, true)
+			expect(#open.stats).toEqual(#info.stats)
+			expect(open.moves).toBeTrue()
+			expect(open.toggle).toEqual(PetsView.BATTLE_TOGGLE.open)
+		end)
+
+		it("shows everything with no toggle to a player past the beginning", function()
+			local pet = Config.pets[1]
+			local info = PetsView.detail(pet.id, nil)
+			local parts = PetsView.detailParts(info, false, false)
+			expect(#parts.stats).toEqual(#info.stats)
+			expect(parts.moves).toBeTrue()
+			expect(parts.toggle).toEqual(nil)
+		end)
+	end)
 end

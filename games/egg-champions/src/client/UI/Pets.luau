@@ -14,6 +14,11 @@
 	- Fruit Edition: the pets whose config edition is set, on their own page.
 	- Detail panel: the selected pet's stats with its variant applied, its
 	  type, rarity and role, both moves, and Equip or Unequip for an owned pet.
+	  A beginner (tutorial running, or fewer than 4 pets, PetsView.beginner)
+	  sees name, rarity, type and Click Power, with battle stats and moves
+	  behind a Battle stats toggle. EQUIP is a filled gold button.
+	- The panel keeps clear of the HUD's left menu, and with few pets it is
+	  narrower and centered with bigger tiles (PetsLayout options).
 	  Equip and Unequip send the remotes; the server decides and a refusal is
 	  shown as a readable message. The team bar on the main screen updates from
 	  the ProfileChanged push the server sends after an accepted change.
@@ -54,7 +59,6 @@ local LAYOUT = table.freeze({
 	tabHeight = 40,
 	eggRowHeight = 32,
 	mark = 12,
-	statRow = 26,
 })
 
 -- The pointer target name of the first owned pet tile (Tutorial.card).
@@ -468,7 +472,18 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		local width = if screen.X > 0 then screen.X else 1280
 		local height = if screen.Y > 0 then screen.Y else 720
 		local hud = HudLayout.compute(width, height, 0, HudInsets.read(Vector2.new(width, height)))
-		return PetsLayout.compute(width, height, hud.contentTop, guideShown, layoutFilters)
+		-- Few pets: bigger tiles and a narrower panel. The panel always keeps
+		-- clear of the left menu, so EGGS and PETS stay pressable.
+		local m = hud.menu
+		local menu: PetsLayout.Rect = { name = "menu", x = m.x, y = m.y, w = m.w, h = m.h }
+		return PetsLayout.compute(
+			width,
+			height,
+			hud.contentTop,
+			guideShown,
+			layoutFilters,
+			{ few = not layoutFilters, menu = menu }
+		)
 	end
 	local layout: PetsLayout.Layout = computeLayout()
 
@@ -478,6 +493,8 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 	local selected: Selection? = nil
 	local message: string? = nil
 	local busy = false
+	-- Beginner detail: battle stats and moves stay behind a toggle.
+	local battleOpen = false
 
 	local render: () -> ()
 
@@ -506,7 +523,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		render()
 	end
 
-	local function renderDetail(teamUids: { [string]: boolean })
+	local function renderDetail(teamUids: { [string]: boolean }, beginner: boolean)
 		clear(detailTop)
 		clear(equipSlot)
 		clear(detailScroll)
@@ -527,6 +544,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			return
 		end
 		local info = PetsView.detail(choice.petId, choice.variant)
+		local parts = PetsView.detailParts(info, beginner, battleOpen)
 		local pet = Config.petById[choice.petId]
 
 		-- Top: the pet view and its name, with the markers beside it.
@@ -558,7 +576,6 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 		-- Two short lines, so the top stays inside its fixed height.
 		local variantName = info.variantName
-		local editionName = info.editionName
 		local wordLines: { { text: string, color: Color3 } } = {
 			{
 				text = if variantName ~= nil
@@ -567,9 +584,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 				color = if variantName ~= nil then colors.gold else Theme.rarityColor(pet.rarity),
 			},
 			{
-				text = info.typeName .. "  " .. info.roleName .. (if editionName ~= nil
-					then "  " .. editionName
-					else ""),
+				text = parts.typeLine,
 				color = colors.muted,
 			},
 		}
@@ -601,8 +616,9 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			action.Position = UDim2.fromOffset(inner.x - layout.equip.x, inner.y - layout.equip.y)
 			action.Size = UDim2.fromOffset(inner.w, inner.h)
 			if not equipped then
-				action.BackgroundColor3 = colors.raised
-				action.TextColor3 = colors.gold
+				-- The primary action: a filled gold button with dark text.
+				action.BackgroundColor3 = colors.gold
+				action.TextColor3 = colors.panel
 				local stroke = action:FindFirstChildOfClass("UIStroke") :: UIStroke
 				stroke.Color = colors.gold
 				Pointer.register("equip", action)
@@ -643,10 +659,11 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		stats.AutomaticSize = Enum.AutomaticSize.Y
 		stats.Size = UDim2.new(1, -8, 0, 0)
 		list(stats, Enum.FillDirection.Vertical, 0)
-		for position, stat in info.stats do
+		for position, stat in parts.stats do
 			local row = frame("Stat" .. position, stats)
 			row.LayoutOrder = position
-			row.Size = UDim2.new(1, 0, 0, LAYOUT.statRow)
+			-- Text size plus padding, so every label fits its row.
+			row.Size = UDim2.new(1, 0, 0, PetsLayout.statRow(s))
 			local rule = frame("Rule", row)
 			rule.BackgroundTransparency = 0
 			rule.BackgroundColor3 = colors.border
@@ -673,8 +690,24 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			value.Position = UDim2.fromScale(1, 0.5)
 		end
 
+		local toggleText = parts.toggle
+		if toggleText ~= nil then
+			local toggle = button("BattleStats", detailScroll, Theme.label(toggleText))
+			toggle.LayoutOrder = 3
+			toggle.TextSize = s.small + 1
+			toggle.TextColor3 = colors.muted
+			toggle.Size = UDim2.new(1, -8, 0, s.small + 2 * s.statPad + 4)
+			toggle.Activated:Connect(function()
+				battleOpen = not battleOpen
+				render()
+			end)
+		end
+		if not parts.moves then
+			return
+		end
+
 		local moves = frame("Moves", detailScroll)
-		moves.LayoutOrder = 3
+		moves.LayoutOrder = 4
 		moves.AutomaticSize = Enum.AutomaticSize.Y
 		moves.Size = UDim2.new(1, -8, 0, 0)
 		list(moves, Enum.FillDirection.Vertical, 4)
@@ -859,7 +892,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			end
 		end
 
-		renderDetail(teamUids)
+		renderDetail(teamUids, PetsView.beginner(#tiles, Guide.reserved()))
 		local now = selected
 		Guide.setPetSelected(now ~= nil and now.uid ~= nil)
 	end
@@ -943,6 +976,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 	opener = function(which: Tab)
 		tab = which
 		message = nil
+		battleOpen = false
 		gui.Enabled = true
 		applyLayout()
 	end

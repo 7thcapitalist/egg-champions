@@ -26,6 +26,15 @@
 	  lines (Click Power, variant, Equipped), each on its own line. The grid
 	  keeps gridPad free around the tiles so the tutorial outline around a
 	  tile is not cut off.
+	- Few pets (fewer than PetsView.FULL_SCREEN_PETS, options.few): a
+	  narrower panel centered on the screen and bigger tiles, whose pet view
+	  is FEW.tileBlock (at least 100 px). Columns are as many as fit that
+	  view, up to FEW.maxColumns.
+	- Menu: given the HUD's left menu rect (options.menu), the panel's left
+	  edge stays right of it by the margin, so the EGGS and PETS buttons are
+	  never covered.
+	- Stat rows: a row is its text size plus statPad above and below
+	  (statRow), so every label fits its row.
 
 	These are pixel sizes of the interface, not game numbers. Nothing here
 	touches the engine.
@@ -50,6 +59,7 @@ export type Sizes = {
 	detailPad: number,
 	detailBlock: number,
 	detailGap: number,
+	statPad: number,
 	equip: number,
 	hint: number,
 	control: number,
@@ -68,8 +78,16 @@ export type Sizes = {
 	small: number,
 }
 
+-- few: the player has few pets (bigger tiles, narrower panel). menu: the
+-- HUD's left menu rect, which the panel keeps clear of.
+export type Options = {
+	few: boolean?,
+	menu: Rect?,
+}
+
 export type Layout = {
 	compact: boolean,
+	few: boolean,
 	sizes: Sizes,
 	panel: Rect,
 	header: Rect,
@@ -119,6 +137,7 @@ PetsLayout.SIZES = table.freeze({
 		detailPad = 16,
 		detailBlock = 88,
 		detailGap = 10,
+		statPad = 8,
 		equip = 48,
 		hint = 20,
 		control = 36,
@@ -147,6 +166,7 @@ PetsLayout.SIZES = table.freeze({
 		detailPad = 10,
 		detailBlock = 56,
 		detailGap = 6,
+		statPad = 6,
 		equip = 44,
 		hint = 16,
 		control = 30,
@@ -164,6 +184,14 @@ PetsLayout.SIZES = table.freeze({
 		text = 13,
 		small = 11,
 	} :: Sizes),
+})
+
+-- With few pets: the panel's widest width and the tile pet view size, by
+-- screen class, and the most grid columns.
+PetsLayout.FEW = table.freeze({
+	normal = table.freeze({ maxWidth = 860, tileBlock = 120 }),
+	compact = table.freeze({ maxWidth = 760, tileBlock = 100 }),
+	maxColumns = 3,
 })
 
 local function rect(name: string, x: number, y: number, w: number, h: number): Rect
@@ -208,6 +236,11 @@ function PetsLayout.tileHeight(s: Sizes): number
 		+ (lines - 1) * s.markerGap
 end
 
+-- A stat row's height: its text size plus statPad above and below.
+function PetsLayout.statRow(s: Sizes): number
+	return s.text + 2 * s.statPad
+end
+
 -- How far the EQUIP button sits inside its slot on every side: room for
 -- its outline plus padding.
 PetsLayout.EQUIP_INSET = 4
@@ -215,19 +248,37 @@ PetsLayout.EQUIP_INSET = 4
 -- The screen for a screen of width x height pixels (inset included),
 -- starting below `top` pixels, with or without the tutorial guide strip.
 -- filters false leaves out the sort and filter row (default true).
+-- options: few pets and the HUD menu rect to keep clear of (Options).
 function PetsLayout.compute(
 	width: number,
 	height: number,
 	top: number,
 	guide: boolean,
-	filters: boolean?
+	filters: boolean?,
+	options: Options?
 ): Layout
 	local withFilters = filters ~= false
+	local few = options ~= nil and options.few == true
+	local menu = if options ~= nil then options.menu else nil
 	local compact = PetsLayout.isCompact(width, height)
 	local s: Sizes = if compact then PetsLayout.SIZES.compact else PetsLayout.SIZES.normal
+	if few then
+		local fewSizes = if compact then PetsLayout.FEW.compact else PetsLayout.FEW.normal
+		local copy = table.clone(s)
+		copy.maxWidth = fewSizes.maxWidth
+		copy.tileBlock = fewSizes.tileBlock
+		s = copy
+	end
 
 	local panelWidth = math.min(s.maxWidth, width - 2 * s.margin)
 	local panelX = math.floor((width - panelWidth) / 2)
+	if menu ~= nil then
+		local leftLimit = math.max(s.margin, menu.x + menu.w + s.margin)
+		if panelX < leftLimit then
+			panelX = leftLimit
+			panelWidth = math.min(panelWidth, width - s.margin - leftLimit)
+		end
+	end
 	local panelY = top + s.margin
 	local panel = rect("panel", panelX, panelY, panelWidth, height - panelY - s.margin)
 
@@ -294,11 +345,24 @@ function PetsLayout.compute(
 		else hint.y + hint.h + s.gap
 	local grid = rect("grid", content.x, gridY, content.w, content.y + content.h - gridY)
 
+	local free = grid.w - s.scrollBar - 2 * s.gridPad
+	local function widthFor(count: number): number
+		return math.floor((free - (count - 1) * s.tileGap) / count)
+	end
 	local columns = PetsLayout.columnsFor(content.w)
-	local tileWidth =
-		math.floor((grid.w - s.scrollBar - 2 * s.gridPad - (columns - 1) * s.tileGap) / columns)
+	if few then
+		columns = 1
+		for count = PetsLayout.FEW.maxColumns, 1, -1 do
+			if widthFor(count) - 2 * s.tilePad >= s.tileBlock then
+				columns = count
+				break
+			end
+		end
+	end
+	local tileWidth = widthFor(columns)
 	return {
 		compact = compact,
+		few = few,
 		sizes = s,
 		panel = panel,
 		header = header,

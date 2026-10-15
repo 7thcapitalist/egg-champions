@@ -188,6 +188,53 @@ function PetsView.screenParts(petCount: number): { filters: boolean, tabs: { str
 	return { filters = true, tabs = { "pets", "index", "fruit" } }
 end
 
+-- True when the pets screen shows its beginner detail: while the tutorial
+-- runs or while the player owns fewer than FULL_SCREEN_PETS pets.
+function PetsView.beginner(petCount: number, tutorialActive: boolean): boolean
+	return tutorialActive or petCount < PetsView.FULL_SCREEN_PETS
+end
+
+-- The label of the toggle that shows or hides battle stats and moves.
+PetsView.BATTLE_TOGGLE = table.freeze({ closed = "Battle stats", open = "Hide battle stats" })
+
+export type DetailParts = {
+	-- The second line under the name.
+	typeLine: string,
+	stats: { { label: string, value: string } },
+	moves: boolean,
+	-- The toggle label, or nil when there is no toggle.
+	toggle: string?,
+}
+
+-- What the detail panel shows of info. A beginner sees name, rarity, type
+-- and Click Power, with battle stats and moves behind the toggle
+-- (battleOpen). Everyone else sees everything and no toggle.
+function PetsView.detailParts(info: Detail, beginner: boolean, battleOpen: boolean): DetailParts
+	if not beginner then
+		local editionName = info.editionName
+		return {
+			typeLine = info.typeName .. "  " .. info.roleName .. (if editionName ~= nil
+				then "  " .. editionName
+				else ""),
+			stats = info.stats,
+			moves = true,
+			toggle = nil,
+		}
+	end
+	local stats = {}
+	for _, stat in info.stats do
+		if battleOpen or stat.label == "Click Power" then
+			table.insert(stats, stat)
+		end
+	end
+	return {
+		typeLine = info.typeName,
+		stats = stats,
+		moves = battleOpen,
+		toggle = if battleOpen then PetsView.BATTLE_TOGGLE.open else PetsView.BATTLE_TOGGLE.closed,
+	}
+end
+
 -- A tile's Click Power line: "Click +3".
 function PetsView.clickText(power: number): string
 	return "Click +" .. PetsView.number(power)

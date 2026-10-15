@@ -409,7 +409,7 @@
       "depends_on": [
         "42"
       ],
-      "status": "pending"
+      "status": "done"
     }
   ]
 }

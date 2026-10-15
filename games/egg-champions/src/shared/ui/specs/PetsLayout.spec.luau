@@ -2,16 +2,19 @@
 local Runner = require(script.Parent.Parent.Parent.testing.Runner)
 local PetsLayout = require(script.Parent.Parent.PetsLayout)
 local HudLayout = require(script.Parent.Parent.HudLayout)
+local PetsView = require(script.Parent.Parent.PetsView)
+local Config = require(script.Parent.Parent.Parent.Config)
 
 local describe = Runner.describe
 local it = Runner.it
 local expect = Runner.expect
 
--- The playtest phone and the design size, with the Roblox top bar insets the
+-- The playtest phone, the design size and the playtest laptop, with the Roblox top bar insets the
 -- engine uses (none, the old bar and the current one).
 local SCREENS = {
 	{ width = 808, height = 432 },
 	{ width = 1280, height = 720 },
+	{ width = 1348, height = 672 },
 }
 local INSETS = { 0, 36, 58 }
 
@@ -19,6 +22,13 @@ local INSETS = { 0, 36, 58 }
 -- same sum the client uses.
 local function topOf(width: number, height: number, inset: number): number
 	return inset + HudLayout.compute(width, height - inset, 0).topBar.h
+end
+
+-- The HUD's left menu, the same rect the client passes in.
+local function menuOf(width: number, height: number, inset: number): PetsLayout.Rect
+	local insets: HudLayout.Insets = { top = inset, left = 0, right = 0 }
+	local menu = HudLayout.compute(width, height, 0, insets).menu
+	return { name = "menu", x = menu.x, y = menu.y, w = menu.w, h = menu.h }
 end
 
 local function each(check: (
@@ -34,7 +44,9 @@ local function each(check: (
 					screen.width,
 					screen.height,
 					topOf(screen.width, screen.height, inset),
-					guide
+					guide,
+					true,
+					{ menu = menuOf(screen.width, screen.height, inset) }
 				)
 				local where = string.format(
 					"%dx%d inset %d guide %s",
@@ -200,6 +212,151 @@ return function()
 				local top = layout.detailTop
 				expect(b.y - inset >= top.y + top.h).toBeTrue()
 			end)
+		end)
+	end)
+	describe("PetsLayout and the menu", function()
+		it("keeps the panel's left edge right of the menu, with any number of pets", function()
+			for _, screen in SCREENS do
+				for _, inset in INSETS do
+					for _, few in { false, true } do
+						local menu = menuOf(screen.width, screen.height, inset)
+						local layout = PetsLayout.compute(
+							screen.width,
+							screen.height,
+							topOf(screen.width, screen.height, inset),
+							false,
+							not few,
+							{ few = few, menu = menu }
+						)
+						local where = string.format(
+							"%dx%d inset %d few %s",
+							screen.width,
+							screen.height,
+							inset,
+							tostring(few)
+						)
+						expectApart(where, layout.panel, menu)
+						local clear = layout.panel.x >= menu.x + menu.w
+						expect(where .. " " .. tostring(clear)).toEqual(where .. " true")
+						local screenRect: PetsLayout.Rect =
+							{ name = "screen", x = 0, y = 0, w = screen.width, h = screen.height }
+						expectInside(where, layout.panel, screenRect)
+					end
+				end
+			end
+		end)
+
+		it("checks the playtest sizes 1280 x 720 and 1348 x 672", function()
+			for _, size in { { 1280, 720 }, { 1348, 672 } } do
+				local menu = menuOf(size[1], size[2], 58)
+				local layout = PetsLayout.compute(
+					size[1],
+					size[2],
+					topOf(size[1], size[2], 58),
+					true,
+					true,
+					{ menu = menu }
+				)
+				expect(layout.panel.x >= menu.x + menu.w + layout.sizes.margin).toBeTrue()
+				expect(layout.panel.x + layout.panel.w <= size[1] - layout.sizes.margin).toBeTrue()
+			end
+		end)
+	end)
+
+	describe("PetsLayout with fewer than 4 pets", function()
+		it("uses bigger tiles with a pet view of at least 100 px that fit the grid", function()
+			for _, screen in SCREENS do
+				for _, inset in INSETS do
+					local layout = PetsLayout.compute(
+						screen.width,
+						screen.height,
+						topOf(screen.width, screen.height, inset),
+						true,
+						false,
+						{ few = true, menu = menuOf(screen.width, screen.height, inset) }
+					)
+					local s = layout.sizes
+					local where =
+						string.format("%dx%d inset %d", screen.width, screen.height, inset)
+					expect(layout.few).toBeTrue()
+					expect(where .. " " .. tostring(s.tileBlock >= 100)).toEqual(where .. " true")
+					local roomy = layout.tileWidth - 2 * s.tilePad >= s.tileBlock
+					expect(where .. " " .. tostring(roomy)).toEqual(where .. " true")
+					local used = layout.columns * layout.tileWidth
+						+ (layout.columns - 1) * s.tileGap
+					expect(used <= layout.grid.w - s.scrollBar - 2 * s.gridPad).toBeTrue()
+					expect(layout.columns >= 1 and layout.columns <= PetsLayout.FEW.maxColumns).toBeTrue()
+					expect(layout.tileHeight).toEqual(PetsLayout.tileHeight(s))
+					expect(layout.grid.h > 0).toBeTrue()
+					expectInside(where, layout.equip, layout.detail)
+				end
+			end
+		end)
+
+		it("narrows the panel and centers it on the playtest sizes", function()
+			for _, size in { { 1280, 720 }, { 1348, 672 } } do
+				local top = topOf(size[1], size[2], 58)
+				local menu = menuOf(size[1], size[2], 58)
+				local full = PetsLayout.compute(size[1], size[2], top, false, true, { menu = menu })
+				local few = PetsLayout.compute(
+					size[1],
+					size[2],
+					top,
+					false,
+					false,
+					{ few = true, menu = menu }
+				)
+				expect(few.panel.w < full.panel.w).toBeTrue()
+				local left = few.panel.x
+				local right = size[1] - (few.panel.x + few.panel.w)
+				expect(math.abs(left - right) <= 1).toBeTrue()
+				expect(few.tileWidth > full.tileWidth).toBeTrue()
+			end
+		end)
+	end)
+
+	describe("PetsLayout stat rows", function()
+		it("sizes a row from its text size plus padding", function()
+			for _, s in { PetsLayout.SIZES.normal, PetsLayout.SIZES.compact } do
+				expect(PetsLayout.statRow(s)).toEqual(s.text + 2 * s.statPad)
+				expect(s.statPad >= 4).toBeTrue()
+			end
+		end)
+
+		it("fits every stat label and value on its row", function()
+			local widest = 0
+			for _, pet in Config.pets do
+				for _, stat in PetsView.detail(pet.id, nil).stats do
+					widest = math.max(widest, #stat.label + #stat.value)
+				end
+				for _, variant in Config.variants do
+					for _, stat in PetsView.detail(pet.id, variant.id).stats do
+						widest = math.max(widest, #stat.label + #stat.value)
+					end
+				end
+			end
+			for _, screen in SCREENS do
+				local layout = PetsLayout.compute(
+					screen.width,
+					screen.height,
+					topOf(screen.width, screen.height, 58),
+					false,
+					true,
+					{ menu = menuOf(screen.width, screen.height, 58) }
+				)
+				local s = layout.sizes
+				for _, pet in Config.pets do
+					for _, stat in PetsView.detail(pet.id, nil).stats do
+						local need = HudLayout.textWidth(stat.label, s.text)
+							+ HudLayout.textWidth(stat.value, s.text)
+							+ 2 * s.statPad
+						expect(need <= layout.detailScroll.w - 8).toBeTrue()
+					end
+				end
+				-- Room for the longest label and value pair at upper case width.
+				local worst = widest * HudLayout.GLYPH.upper * s.text + 2 * s.statPad
+				expect(worst <= layout.detailScroll.w - 8).toBeTrue()
+			end
 		end)
 	end)
 end
