@@ -230,5 +230,13 @@ return function()
 			local _, remaining = Profile.repair(profile)
 			expect(kindsOf(remaining)).toEqual({ Profile.problems.negativeCoins })
 		end)
+
+		it("knows the save store errors that mean Studio has no API access", function()
+			expect(Profile.isNoAccessError("StudioAccessToApisNotAllowed: no")).toBeTrue()
+			expect(Profile.isNoAccessError("Error: API access is not enabled for this place")).toBeTrue()
+			expect(Profile.isNoAccessError("403: Forbidden")).toBeTrue()
+			expect(Profile.isNoAccessError("502: API Services rejected request")).toBeFalse()
+			expect(Profile.isNoAccessError("error 403: later in the text")).toBeFalse()
+		end)
 	end)
 end

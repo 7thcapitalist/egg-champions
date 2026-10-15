@@ -19,12 +19,18 @@
 	AUTO_CLICK_SECONDS, through the callback start() is given. The client
 	has no say in the rate.
 
+	Playtest mode: in Studio only, when ServerScriptService has the attribute
+	PlaytestNoPasses = true, every pass counts as not owned, so a test plays
+	like a new player. Outside Studio the attribute is ignored.
+
 	Nothing here touches battle. PassEffects says what each pass does.
 ]]
 
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
@@ -146,16 +152,28 @@ local function checkAll(player: Player)
 	end
 end
 
--- True when the player owns the pass with this config id.
-function PassService.owns(player: Player, passId: string): boolean
-	local entry = byPlayer[player]
-	return entry ~= nil and entry.owned[passId] == true
+-- True in Studio when ServerScriptService has PlaytestNoPasses = true.
+-- Always false outside Studio.
+function PassService.playtestNoPasses(): boolean
+	return PassEffects.playtestNoPasses(
+		RunService:IsStudio(),
+		ServerScriptService:GetAttribute("PlaytestNoPasses")
+	)
 end
 
--- A copy of the player's owned set, keyed by config pass id.
+-- A copy of the player's owned set, keyed by config pass id. Empty in
+-- playtest mode.
 function PassService.owned(player: Player): PassEffects.Owned
 	local entry = byPlayer[player]
-	return if entry ~= nil then table.clone(entry.owned) else {}
+	return PassEffects.effective(
+		if entry ~= nil then entry.owned else nil,
+		PassService.playtestNoPasses()
+	)
+end
+
+-- True when the player owns the pass with this config id.
+function PassService.owns(player: Player, passId: string): boolean
+	return PassService.owned(player)[passId] == true
 end
 
 -- What the main screen shows: each pass, whether it is owned, and the
@@ -235,8 +253,8 @@ function PassService.start(onAutoClick: (Player, Profile) -> ())
 	task.spawn(function()
 		while true do
 			task.wait(AUTO_CLICK_SECONDS)
-			for player, entry in byPlayer do
-				if PassEffects.autoClick(entry.owned) then
+			for player in byPlayer do
+				if PassEffects.autoClick(PassService.owned(player)) then
 					local profile = Profiles.get(player)
 					if profile ~= nil and player.Parent ~= nil then
 						task.spawn(onAutoClick, player, profile)

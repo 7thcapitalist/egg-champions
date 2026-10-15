@@ -100,6 +100,22 @@ function PassEffects.autoClick(owned: Owned?): boolean
 end
 
 -- An owned set with every handled pass on, for tests and tools.
+-- Playtest mode: true only in Studio with the PlaytestNoPasses attribute set
+-- to true. Outside Studio the flag is ignored, so live players always keep
+-- their passes.
+function PassEffects.playtestNoPasses(isStudio: boolean, flag: any): boolean
+	return isStudio == true and flag == true
+end
+
+-- The owned set the game uses: empty in playtest mode, so a test plays like a
+-- new player; otherwise a copy of what the player owns.
+function PassEffects.effective(owned: Owned?, noPasses: boolean): Owned
+	if noPasses or owned == nil then
+		return {}
+	end
+	return table.clone(owned)
+end
+
 function PassEffects.all(): Owned
 	local owned: Owned = {}
 	for _, id in PassEffects.HANDLED do

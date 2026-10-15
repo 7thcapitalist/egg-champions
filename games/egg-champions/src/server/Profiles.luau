@@ -63,13 +63,11 @@ local CALL_BACKOFF_SECONDS = 2
 
 local store = DataStoreService:GetDataStore(STORE_NAME)
 
--- The text in a DataStore error when Studio may not use API services. Retrying
--- can not fix it, so the first such error ends the retries.
-local STUDIO_NO_ACCESS = "StudioAccessToApisNotAllowed"
-
--- True when this error means Studio has API access turned off.
+-- True when this error means Studio has API access turned off. Retrying can
+-- not fix it, so the first such error ends the retries and the player gets
+-- the temporary profile.
 local function studioAccessDenied(err: any): boolean
-	return RunService:IsStudio() and string.find(tostring(err), STUDIO_NO_ACCESS, 1, true) ~= nil
+	return RunService:IsStudio() and Profile.isNoAccessError(err)
 end
 
 -- Studio servers share the empty JobId, so give each one its own id.

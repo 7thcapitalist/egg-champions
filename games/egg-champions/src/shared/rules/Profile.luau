@@ -105,6 +105,16 @@ local function deepCopy(value: any): any
 end
 
 -- The empty profile a brand new player starts with.
+-- True when a save store error means Studio has no access to API services:
+-- Roblox's "StudioAccessToApisNotAllowed", "API access is not enabled", or
+-- an error that starts with "403:". Retrying can not fix these.
+function Profile.isNoAccessError(err: any): boolean
+	local text = tostring(err)
+	return string.find(text, "StudioAccessToApisNotAllowed", 1, true) ~= nil
+		or string.find(text, "API access is not enabled", 1, true) ~= nil
+		or string.sub(text, 1, 4) == "403:"
+end
+
 function Profile.new(): Profile
 	local state = Progression.newState()
 	return {

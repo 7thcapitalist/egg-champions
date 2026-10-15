@@ -135,7 +135,7 @@ local function send(item: Pending)
 		-- The funnel step is a bonus. If Roblox refuses it, the custom event
 		-- below still records the event, so first_hatch is never lost.
 		local ok, err = pcall(function()
-			AnalyticsService:LogOnboardingStepEvent(item.player, step, record.name)
+			AnalyticsService:LogOnboardingFunnelStepEvent(item.player, step, record.name)
 		end)
 		if not ok then
 			logFailure(item, "onboarding step not logged, sent as custom only: " .. tostring(err))
