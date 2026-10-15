@@ -80,7 +80,16 @@ local STAND_RADIUS = 40
 local STAND_GAP = 18
 local STAND_MIN_GAP = 14
 local STAND_MAX_SPREAD = math.rad(120)
-local GYM_OFFSET: Vec = { x = 0, y = 0, z = 50 }
+-- The gym stands in front of the arrival point too (the spawn faces -z, so
+-- the default camera looks that way), straight ahead and beyond the stand
+-- arc: GYM_CLEARANCE studs of open ground between the stands and the gym's
+-- front wall. GYM_SIZE matches the footprint of Kit.gymBuilding, and
+-- STAND_EXTENT and PORTAL_EXTENT are the half sizes of the stand and portal
+-- props, so the specs can check that nothing overlaps.
+local GYM_SIZE = { width = 24, depth = 18 }
+local GYM_CLEARANCE = 8
+local STAND_EXTENT = 6
+local PORTAL_EXTENT = 7
 local PORTAL_OFFSET: Vec = { x = 60, y = 0, z = 0 }
 local ARRIVAL_OFFSET: Vec = { x = 0, y = 0, z = 0 }
 
@@ -89,6 +98,11 @@ local Layout = {}
 Layout.ISLAND_SIZE = ISLAND_SIZE
 -- No two egg stands are planned closer than this, in studs.
 Layout.STAND_MIN_GAP = STAND_MIN_GAP
+Layout.GYM_SIZE = table.freeze(table.clone(GYM_SIZE))
+Layout.STAND_EXTENT = STAND_EXTENT
+Layout.PORTAL_EXTENT = PORTAL_EXTENT
+-- The way a player faces on spawning and on arrival: -z.
+Layout.FACING = table.freeze({ x = 0, y = 0, z = -1 })
 
 local function add(a: Vec, b: Vec): Vec
 	return { x = a.x + b.x, y = a.y + b.y, z = a.z + b.z }
@@ -127,6 +141,28 @@ function Layout.eggLabel(eggId: string): string
 	return string.format("%s\n%s", Config.eggById[eggId].name, Layout.eggPrice(eggId))
 end
 
+-- The radius of the stand arc for `count` stands.
+function Layout.standRadius(count: number): number
+	local radius = STAND_RADIUS
+	if count > 1 then
+		-- The radius at which count - 1 chords of STAND_GAP span the max spread.
+		local half = STAND_MAX_SPREAD / (2 * (count - 1))
+		radius = math.max(radius, STAND_GAP / (2 * math.sin(half)))
+	end
+	return radius
+end
+
+-- The gym's offset from the arrival point for a world with `count` eggs:
+-- straight ahead, past the stand arc with GYM_CLEARANCE to spare.
+function Layout.gymOffset(count: number): Vec
+	local distance = Layout.standRadius(count) + STAND_EXTENT + GYM_CLEARANCE + GYM_SIZE.depth / 2
+	return {
+		x = Layout.FACING.x * distance,
+		y = 0,
+		z = Layout.FACING.z * distance,
+	}
+end
+
 -- Offsets from the arrival point for `count` stands on an arc facing it,
 -- left to right as seen from the arrival point looking toward -z.
 function Layout.standOffsets(count: number): { Vec }
@@ -134,12 +170,7 @@ function Layout.standOffsets(count: number): { Vec }
 	if count <= 0 then
 		return offsets
 	end
-	local radius = STAND_RADIUS
-	if count > 1 then
-		-- The radius at which count - 1 chords of STAND_GAP span the max spread.
-		local half = STAND_MAX_SPREAD / (2 * (count - 1))
-		radius = math.max(radius, STAND_GAP / (2 * math.sin(half)))
-	end
+	local radius = Layout.standRadius(count)
 	local step = 2 * math.asin(math.min(1, STAND_GAP / (2 * radius)))
 	for i = 1, count do
 		local angle = (i - (count + 1) / 2) * step
@@ -218,7 +249,7 @@ function Layout.plan(worldList: { Config.World }?): Plan
 			worldId = world.id,
 			worldIndex = world.index,
 			label = Layout.gymLabel(world),
-			position = add(origin, GYM_OFFSET),
+			position = add(arrival, Layout.gymOffset(#world.eggs)),
 		})
 
 		local nextWorld = byIndex[world.index + 1]

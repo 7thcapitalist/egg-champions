@@ -18,6 +18,9 @@
 	  While the first-time tutorial runs (shared/rules/Tutorial, step sent by
 	  the server), the card shows the tutorial line instead, with a small
 	  SKIP that sends SkipTutorial, and UI/Pointer outlines the thing to use.
+	  The tutorial's gym step waits while NextGoal has a small goal before
+	  the gym (more pets, a full team, the next egg): the card shows that
+	  goal, and Guide holds the gym pointer back until it is done.
 	- Team bar at the bottom: hidden until the player owns a pet, then one
 	  slot per owned pet up to constants.team_size (HudLayout.teamSlots).
 
@@ -78,6 +81,8 @@ local MENU_SCREEN: { [string]: string } = {
 local MENU_ACCENT = "Shop"
 
 local GOAL_ACTION: { [string]: { label: string, screen: string } } = {
+	pets = { label = "Open eggs", screen = Screens.names.Eggs },
+	team = { label = "Open pets", screen = Screens.names.Pets },
 	egg = { label = "Open eggs", screen = Screens.names.Eggs },
 	gym = { label = "To the gym", screen = Screens.names.Battle },
 	rebirth = { label = "Rebirth", screen = Screens.names.Rebirth },
@@ -551,7 +556,17 @@ function Main.mount(
 		local derived = payload.derived
 		local coins = number(profile.coins)
 		local rebirths = number(profile.rebirths)
+		local petCount = 0
+		if type(profile.pets) == "table" then
+			for _, pet in profile.pets do
+				if type(pet) == "table" and type(pet.uid) == "string" then
+					petCount += 1
+				end
+			end
+		end
 		local goalState: NextGoal.State = {
+			petCount = petCount,
+			teamCount = if type(profile.team) == "table" then #profile.team else 0,
 			coins = coins,
 			rebirths = rebirths,
 			index = if type(profile.index) == "table" then profile.index else {},
@@ -569,7 +584,12 @@ function Main.mount(
 
 		local picked = NextGoal.pick(goalState, number(derived.rebirthCost))
 		tutorialStep = profile.tutorialStep
+		local holdGym = NextGoal.beforeGym(picked)
+		Guide.setHoldGym(holdGym)
 		local tutorial = Tutorial.card(tutorialStep, { eggsOpen = false, petsOpen = false })
+		if tutorial ~= nil and tutorial.step == Tutorial.steps.gym and holdGym then
+			tutorial = nil
+		end
 		local skipWanted = tutorial ~= nil and skipTutorial ~= nil
 		if goal.skip.Visible ~= skipWanted then
 			goal.skip.Visible = skipWanted

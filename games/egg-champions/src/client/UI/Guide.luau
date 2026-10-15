@@ -12,6 +12,9 @@
 	  never targets a button hidden behind it. The wait lets the player see
 	  the pet hatch first; it is display timing, not a game number.
 
+	While Main says a small goal comes before the gym (setHoldGym), the gym
+	step shows nothing here: no pointer, no bar.
+
 	The client decides nothing here: the step only ever comes from the server.
 ]]
 
@@ -34,6 +37,7 @@ local CLOSE_EGGS_AFTER = 1.5
 local Guide = {}
 
 local step: any = nil
+local holdGym = false
 local petSelected = false
 local text: string? = nil
 local listeners: { (string?) -> () } = {}
@@ -45,7 +49,16 @@ function Guide.refresh()
 		petsOpen = Screens.isShown(PETS_GUI),
 		petSelected = petSelected,
 	})
-	Pointer.set(if card ~= nil then card.target else nil)
+	if card ~= nil and card.step == Tutorial.steps.gym and holdGym then
+		card = nil
+	end
+	local target = if card ~= nil then card.target else nil
+	-- The gym pointer (highlight, beam, edge arrow) is for the world view:
+	-- none of it shows while a screen covers the world.
+	if card ~= nil and card.step == Tutorial.steps.gym and Screens.anyOpen() then
+		target = nil
+	end
+	Pointer.set(target)
 	local line = if card ~= nil then card.screenText else nil
 	if line ~= text then
 		text = line
@@ -113,6 +126,14 @@ function Guide.setStep(newStep: any)
 		end)
 	end
 	Guide.refresh()
+end
+
+-- Whether a small goal comes before the gym, so the gym step waits.
+function Guide.setHoldGym(hold: boolean)
+	if hold ~= holdGym then
+		holdGym = hold
+		Guide.refresh()
+	end
 end
 
 -- Whether an owned pet is selected on the pets screen.

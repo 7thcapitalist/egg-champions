@@ -157,6 +157,98 @@ return function()
 			expect(goal.progress).toBeCloseTo(0.5, EPSILON)
 		end)
 
+		it(
+			"runs the first minutes as small goals: more pets, a full team, the next egg, the gym",
+			function()
+				local teamSize = Config.constants.team_size
+				local cheapest = NextGoal.cheapestEgg(first)
+				local eggs = goalEggs(first)
+
+				-- Right after the tutorial: one pet hatched and equipped.
+				local state = newState(0)
+				hatch(state, cheapest.id)
+				state.petCount = 1
+				state.teamCount = 1
+
+				local goal = NextGoal.pick(state, 0)
+				expect(goal.kind).toEqual(NextGoal.kinds.pets)
+				expect(goal.title).toEqual(string.format("Hatch %d more pets", teamSize - 1))
+				expect(goal.have).toEqual(1)
+				expect(goal.need).toEqual(teamSize)
+				expect(goal.progress).toBeCloseTo(1 / teamSize, EPSILON)
+				expect(goal.ready).toBeFalse()
+				expect(NextGoal.beforeGym(goal)).toBeTrue()
+				state.coins = cheapest.price
+				expect(NextGoal.pick(state, 0).ready).toBeTrue()
+
+				-- Enough pets, but only one on the team.
+				state.petCount = teamSize
+				goal = NextGoal.pick(state, 0)
+				expect(goal.kind).toEqual(NextGoal.kinds.team)
+				expect(goal.title).toEqual(string.format("Fill your team of %d", teamSize))
+				expect(goal.have).toEqual(1)
+				expect(goal.need).toEqual(teamSize)
+				expect(goal.ready).toBeTrue()
+				expect(NextGoal.beforeGym(goal)).toBeTrue()
+
+				-- A full team: save for the next egg of the world, by its price.
+				state.teamCount = teamSize
+				goal = NextGoal.pick(state, 0)
+				if #eggs >= 2 then
+					expect(goal.kind).toEqual(NextGoal.kinds.egg)
+					expect(goal.id).toEqual(eggs[2].id)
+					expect(goal.title).toEqual("Save for the " .. eggs[2].name)
+					expect(goal.need).toEqual(eggs[2].price)
+					expect(NextGoal.beforeGym(goal)).toBeTrue()
+					hatch(state, eggs[2].id)
+					goal = NextGoal.pick(state, 0)
+				end
+
+				-- Then the gym, which the tutorial's gym step waits for.
+				expect(goal.kind).toEqual(NextGoal.kinds.gym)
+				expect(goal.need).toEqual(first.gym.fee)
+				expect(NextGoal.beforeGym(goal)).toBeFalse()
+			end
+		)
+
+		it("says one more pet in the singular", function()
+			local teamSize = Config.constants.team_size
+			if teamSize < 2 then
+				return
+			end
+			local state = newState(0)
+			state.petCount = teamSize - 1
+			state.teamCount = teamSize - 1
+			expect(NextGoal.pick(state, 0).title).toEqual("Hatch 1 more pet")
+		end)
+
+		it("only asks to fill the team with pets the player owns", function()
+			local teamSize = Config.constants.team_size
+			local state = newState(0)
+			state.petCount = teamSize + 2
+			state.teamCount = teamSize
+			expect(NextGoal.pick(state, 0).kind ~= NextGoal.kinds.team).toBeTrue()
+			state.teamCount = 0
+			expect(NextGoal.pick(state, 0).kind).toEqual(NextGoal.kinds.team)
+		end)
+
+		it("skips the pet and team goals once the fee is paid", function()
+			local state = newState(0)
+			state.feesPaid[first.id] = true
+			state.petCount = 0
+			state.teamCount = 0
+			expect(NextGoal.pick(state, 0).kind).toEqual(NextGoal.kinds.gym)
+		end)
+
+		it("picks the cheapest egg of a world", function()
+			for _, world in worlds do
+				local egg = NextGoal.cheapestEgg(world)
+				for _, eggId in world.eggs do
+					expect(Config.eggById[eggId].price >= egg.price).toBeTrue()
+				end
+			end
+		end)
+
 		it("leaves the state it is given untouched", function()
 			local state = newState(10)
 			state.feesPaid[first.id] = true

@@ -179,6 +179,71 @@ return function()
 			end
 		end)
 
+		it(
+			"puts each gym in front of the arrival point, clear of stands, portal and edge",
+			function()
+				local function flat(a: Layout.Vec, b: Layout.Vec): number
+					return math.sqrt((a.x - b.x) ^ 2 + (a.z - b.z) ^ 2)
+				end
+				local gymReach =
+					math.sqrt((Layout.GYM_SIZE.width / 2) ^ 2 + (Layout.GYM_SIZE.depth / 2) ^ 2)
+				local function check(plan: Layout.Plan)
+					for _, gym in plan.gyms do
+						local arrival = plan.arrivals[gym.worldId]
+						local ahead = (gym.position.x - arrival.x) * Layout.FACING.x
+							+ (gym.position.z - arrival.z) * Layout.FACING.z
+						local away = flat(gym.position, arrival)
+						-- Straight ahead of the way the player faces, so the
+						-- default camera sees it.
+						expect(ahead > 0).toBeTrue()
+						expect(ahead / away > math.cos(math.rad(20))).toBeTrue()
+						for _, stand in plan.eggStands do
+							if stand.worldId == gym.worldId then
+								-- Beyond the stands, and not touching any of them.
+								local standAhead = (stand.position.x - arrival.x) * Layout.FACING.x
+									+ (stand.position.z - arrival.z) * Layout.FACING.z
+								expect(ahead > standAhead).toBeTrue()
+								expect(
+									ahead - Layout.GYM_SIZE.depth / 2
+										> standAhead + Layout.STAND_EXTENT
+								).toBeTrue()
+							end
+						end
+						for _, portal in plan.portals do
+							if portal.worldId == gym.worldId then
+								expect(
+									flat(gym.position, portal.position)
+										> gymReach + Layout.PORTAL_EXTENT
+								).toBeTrue()
+							end
+						end
+						for _, island in plan.islands do
+							if island.worldId == gym.worldId then
+								-- The gym faces the arrival point straight ahead, so
+								-- its footprint lines up with the island's sides.
+								local half = island.size / 2
+								local dx = math.abs(gym.position.x - island.origin.x)
+								local dz = math.abs(gym.position.z - island.origin.z)
+								expect(dx + Layout.GYM_SIZE.width / 2 < half).toBeTrue()
+								expect(dz + Layout.GYM_SIZE.depth / 2 < half).toBeTrue()
+							end
+						end
+					end
+				end
+				check(Layout.plan())
+				check(Layout.plan(withFourthWorld()))
+				local crowded = table.clone(Config.worlds)
+				local first = table.clone(crowded[1])
+				local many = {}
+				for _, egg in Config.eggs do
+					table.insert(many, egg.id)
+				end
+				first.eggs = many
+				crowded[1] = first
+				check(Layout.plan(crowded))
+			end
+		)
+
 		it("gives every egg in every world a stand with its name and price", function()
 			local plan = Layout.plan()
 			local standFor: { [string]: Layout.EggStand } = {}

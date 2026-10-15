@@ -57,6 +57,8 @@ local PORTAL_TAG = "Portal"
 local WATER_SIZE = Layout.ISLAND_SIZE + 140
 local SCENERY_RADIUS = 68
 local SCENERY_SLOTS = 12
+-- Open ground kept between a scenery prop and the gym's corners, in studs.
+local GYM_SCENERY_GAP = 6
 local LIGHT_RADIUS = 52
 local SIGN_OFFSET: Vec = { x = -22, y = 0, z = 14 }
 
@@ -125,7 +127,22 @@ function Builder.clear()
 	end
 end
 
-local function buildScenery(folder: Folder, island: Layout.Island, palette: Palette)
+-- True when a scenery prop at (x, z) would stand on or crowd the gym.
+local function nearGym(gym: Layout.GymSite?, x: number, z: number): boolean
+	if gym == nil then
+		return false
+	end
+	local half = Layout.GYM_SIZE
+	local reach = math.sqrt((half.width / 2) ^ 2 + (half.depth / 2) ^ 2) + GYM_SCENERY_GAP
+	return (x - gym.position.x) ^ 2 + (z - gym.position.z) ^ 2 < reach * reach
+end
+
+local function buildScenery(
+	folder: Folder,
+	island: Layout.Island,
+	palette: Palette,
+	gym: Layout.GymSite?
+)
 	local scenery = Instance.new("Folder")
 	scenery.Name = "Scenery"
 	scenery.Parent = folder
@@ -133,15 +150,16 @@ local function buildScenery(folder: Folder, island: Layout.Island, palette: Pale
 	local o = island.origin
 	for slot = 1, SCENERY_SLOTS do
 		-- Slot 1 points along +x, where the portal stands; leave it clear.
-		if slot ~= 1 then
-			local angle = (slot - 1) / SCENERY_SLOTS * math.pi * 2
-			local radius = SCENERY_RADIUS - rng:NextNumber(0, 6)
-			local base = CFrame.new(
-				o.x + math.cos(angle) * radius,
-				o.y,
-				o.z + math.sin(angle) * radius
-			) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
-			local scale = rng:NextNumber(0.9, 1.3)
+		-- Slots that would crowd the gym are left clear too. The random numbers
+		-- are drawn either way, so the other props keep their places.
+		local angle = (slot - 1) / SCENERY_SLOTS * math.pi * 2
+		local radius = SCENERY_RADIUS - rng:NextNumber(0, 6)
+		local x = o.x + math.cos(angle) * radius
+		local z = o.z + math.sin(angle) * radius
+		local turn = rng:NextNumber(0, math.pi * 2)
+		local scale = rng:NextNumber(0.9, 1.3)
+		if slot ~= 1 and not nearGym(gym, x, z) then
+			local base = CFrame.new(x, o.y, z) * CFrame.Angles(0, turn, 0)
 			local kind = slot % 3
 			local prop = if kind == 0
 				then Kit.rock(base, palette, scale)
@@ -218,7 +236,13 @@ function Builder.buildAll(): Built
 		if island.worldIndex ~= plan.islands[1].worldIndex then
 			Kit.arrivalPad(at(plan.arrivals[island.worldId]), palette).Parent = folder
 		end
-		buildScenery(folder, island, palette)
+		local gymSite: Layout.GymSite? = nil
+		for _, gym in plan.gyms do
+			if gym.worldId == island.worldId then
+				gymSite = gym
+			end
+		end
+		buildScenery(folder, island, palette, gymSite)
 	end
 
 	for _, stand in plan.eggStands do

@@ -4,8 +4,10 @@
 
 	Screens register the buttons the tutorial can point at under a name (see
 	Tutorial.card for the names): "menu:<entry>", "hatch:<eggId>", "equip".
-	A "gym:<worldId>" target is the gym model in the world, found by name, and
-	gets a pulsing Highlight instead of an outline.
+	A "gym:<worldId>" target is the gym model in the world, found by name. It
+	gets a pulsing Highlight instead of an outline, a gold Beam along the
+	ground from the player's feet to the gym floor, and an arrow at the
+	screen edge whenever the gym is off camera (placed by shared/ui/EdgeArrow).
 
 	Pointer.set picks the current target, or nil for none. A button that is
 	registered again (such as EQUIP, rebuilt with the pets detail) gets the
@@ -13,6 +15,12 @@
 ]]
 
 local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local EdgeArrow =
+	require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ui"):WaitForChild("EdgeArrow"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
 
@@ -24,6 +32,19 @@ local GYM_PREFIX = "gym:"
 local GYM_MODEL_PREFIX = "Gym_"
 -- How often a gym that is not in the world yet is looked for again.
 local GYM_RETRY_SECONDS = 1
+-- Gym highlight: fill and outline transparency at the two ends of the pulse.
+local GYM_FILL = 0.6
+local GYM_FILL_PULSE = 0.8
+local GYM_OUTLINE_PULSE = 0.4
+-- Gym beam: width in studs, how far below the root part it starts (the
+-- feet), and how far above the gym floor it ends.
+local BEAM_WIDTH = 1.2
+local BEAM_DROP = 2.6
+local BEAM_LIFT = 0.6
+local BEAM_TRANSPARENCY = 0.25
+-- Screen-edge arrow: size and distance from the screen edge, in pixels.
+local ARROW_SIZE = 56
+local ARROW_MARGIN = 48
 
 local Pointer = {}
 
@@ -32,8 +53,19 @@ local current: string? = nil
 local shown: Instance? = nil
 local pulse: Tween? = nil
 local lastLook = -math.huge
+-- The beam, the arrow and their per-frame loop while a gym is the target.
+local extras: { Instance } = {}
+local loop: RBXScriptConnection? = nil
 
 local function clear()
+	if loop ~= nil then
+		loop:Disconnect()
+		loop = nil
+	end
+	for _, extra in extras do
+		extra:Destroy()
+	end
+	table.clear(extras)
 	if pulse ~= nil then
 		pulse:Cancel()
 		pulse = nil
@@ -85,12 +117,130 @@ local function highlightGym(worldId: string)
 	highlight.Adornee = model
 	highlight.FillColor = Theme.colors.gold
 	highlight.OutlineColor = Theme.colors.gold
-	highlight.FillTransparency = 0.85
+	highlight.FillTransparency = GYM_FILL
 	highlight.OutlineTransparency = 0
 	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 	highlight.Parent = model
 	shown = highlight
-	pulseOn(highlight, { OutlineTransparency = 0.7, FillTransparency = 1 })
+	pulseOn(
+		highlight,
+		{ OutlineTransparency = GYM_OUTLINE_PULSE, FillTransparency = GYM_FILL_PULSE }
+	)
+
+	-- Where the beam ends: on the gym floor, or the model's pivot.
+	local floor = model:FindFirstChild("Floor", true)
+	local anchorPart: BasePart? = if floor ~= nil and floor:IsA("BasePart")
+		then floor
+		else model:FindFirstChildWhichIsA("BasePart", true)
+	if anchorPart == nil then
+		return
+	end
+	local goal = Instance.new("Attachment")
+	goal.Name = OUTLINE_NAME .. "End"
+	goal.Position = Vector3.new(0, anchorPart.Size.Y / 2 + BEAM_LIFT, 0)
+	goal.Parent = anchorPart
+	table.insert(extras, goal)
+
+	local beam = Instance.new("Beam")
+	beam.Name = OUTLINE_NAME .. "Beam"
+	beam.Attachment1 = goal
+	beam.Color = ColorSequence.new(Theme.colors.gold)
+	beam.Transparency = NumberSequence.new(BEAM_TRANSPARENCY)
+	beam.Width0 = BEAM_WIDTH
+	beam.Width1 = BEAM_WIDTH
+	beam.FaceCamera = true
+	beam.LightEmission = 0.5
+	beam.Segments = 1
+	beam.Parent = anchorPart
+	table.insert(extras, beam)
+
+	local player = Players.LocalPlayer
+	local playerGui = player:WaitForChild("PlayerGui")
+	local gui = Instance.new("ScreenGui")
+	gui.Name = OUTLINE_NAME .. "Arrow"
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = true
+	local holder = Instance.new("Frame")
+	holder.Name = "Holder"
+	holder.AnchorPoint = Vector2.new(0.5, 0.5)
+	holder.Size = UDim2.fromOffset(ARROW_SIZE, ARROW_SIZE)
+	holder.BackgroundColor3 = Theme.colors.panel
+	holder.BackgroundTransparency = 0.15
+	holder.BorderSizePixel = 0
+	holder.Visible = false
+	holder.Parent = gui
+	local round = Instance.new("UICorner")
+	round.CornerRadius = UDim.new(0.5, 0)
+	round.Parent = holder
+	local ring = Instance.new("UIStroke")
+	ring.Color = Theme.colors.gold
+	ring.Thickness = 2
+	ring.Parent = holder
+	local arrow = Instance.new("TextLabel")
+	arrow.Name = "Arrow"
+	arrow.BackgroundTransparency = 1
+	arrow.AnchorPoint = Vector2.new(0.5, 0.5)
+	arrow.Position = UDim2.fromScale(0.5, 0.5)
+	arrow.Size = UDim2.fromScale(1, 1)
+	arrow.FontFace = Theme.fonts.heading
+	arrow.Text = ">"
+	arrow.TextScaled = true
+	arrow.TextColor3 = Theme.colors.gold
+	arrow.Parent = holder
+	local label = Instance.new("TextLabel")
+	label.Name = "Label"
+	label.BackgroundTransparency = 1
+	label.AnchorPoint = Vector2.new(0.5, 0)
+	label.Position = UDim2.new(0.5, 0, 1, 2)
+	label.Size = UDim2.fromOffset(ARROW_SIZE * 2, 18)
+	label.FontFace = Theme.fonts.label
+	label.Text = "GYM"
+	label.TextSize = Theme.textSizes.small
+	label.TextColor3 = Theme.colors.gold
+	label.TextStrokeTransparency = 0.4
+	label.Parent = holder
+	gui.Parent = playerGui
+	table.insert(extras, gui)
+
+	local start: Attachment? = nil
+	loop = RunService.RenderStepped:Connect(function()
+		-- Follow the current character, so a respawn keeps the beam.
+		local character = player.Character
+		local root = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
+		if root ~= nil and root:IsA("BasePart") then
+			if start == nil or start.Parent ~= root then
+				if start ~= nil then
+					start:Destroy()
+				end
+				local made = Instance.new("Attachment")
+				made.Name = OUTLINE_NAME .. "Start"
+				made.Position = Vector3.new(0, -BEAM_DROP, 0)
+				made.Parent = root
+				start = made
+				table.insert(extras, made)
+				beam.Attachment0 = made
+			end
+		end
+
+		local camera = workspace.CurrentCamera
+		if camera == nil or anchorPart.Parent == nil then
+			holder.Visible = false
+			return
+		end
+		local projected = camera:WorldToViewportPoint(anchorPart.Position)
+		local size = camera.ViewportSize
+		local placed = EdgeArrow.place(
+			{ x = size.X, y = size.Y },
+			{ x = projected.X, y = projected.Y },
+			projected.Z,
+			ARROW_MARGIN
+		)
+		holder.Visible = placed.visible
+		if placed.visible then
+			holder.Position = UDim2.fromOffset(placed.x, placed.y)
+			arrow.Rotation = placed.angle
+		end
+	end)
 end
 
 local function refresh()
