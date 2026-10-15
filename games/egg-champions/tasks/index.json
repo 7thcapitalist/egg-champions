@@ -283,7 +283,7 @@
       "depends_on": [
         "28"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "30",

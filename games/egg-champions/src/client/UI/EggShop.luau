@@ -2,26 +2,36 @@
 --[[
 	EggShop: where coins become pets, built to match design/ui/EggShop.dc.html.
 
-	- One card per egg, in config order (shared/ui/EggShopView decides what each
-	  card says), so a new egg needs no code change.
-	- Each card lists its five pets with rarity and hatch chance. The chances
-	  are the table the server rolls with, so the screen cannot drift from the
-	  roll.
+	- One card per egg of an unlocked world, in config order, plus the next
+	  locked egg as a teaser (shared/ui/EggShopView.shownCards decides), so a
+	  new egg needs no code change.
+	- Where everything sits comes from shared/ui/EggShopLayout, whose specs
+	  check that HATCH is visible without scrolling at 808 x 432 and
+	  1280 x 720. The panel starts below the Roblox top bar (GuiService inset)
+	  and the HUD top bar.
+	- The top of each card holds the egg's real model (ReplicatedStorage.
+	  PetModels, named by egg id; a flat placeholder until it loads), name,
+	  price, HATCH and HATCH X3. The five pets with rarity and hatch chance
+	  sit behind "Show odds". The chances are the table the server rolls
+	  with, so the screen cannot drift from the roll.
 	- A locked egg says what unlocks it. An egg the player cannot afford shows
 	  its price muted. Both buttons still send the request: the client only
 	  hints, the server decides and its refusal is shown as a readable message.
 	- Hatch sends BuyEgg with the egg id and a count of 1. Hatch x3 sends the
 	  triple count and is only offered when the server reports the Triple Hatch
 	  pass. Neither ever sends a price.
-	- The result panel shows what hatched, its rarity and its variant, straight
-	  from the server's reply. Effects.playHatch then plays the hatch sequence
+	- The result overlays the card's egg and name area (never its buttons) and
+	  shows what hatched, its rarity and its variant, straight from the
+	  server's reply, or why the server refused. The list never moves, so the
+	  scroll position is kept. Effects.playHatch then plays the hatch sequence
 	  over the screen for the same reply; it is skippable by tapping, and the
-	  result panel underneath already holds the answer.
+	  result underneath already holds the answer. Tapping the result hides it.
 
 	EggShop.openAt(eggId) opens the screen scrolled to that egg's card, for the
 	egg stands in the world.
 ]]
 
+local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -31,6 +41,8 @@ local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local Format = require(uiShared:WaitForChild("Format"))
 local EggShopView = require(uiShared:WaitForChild("EggShopView"))
+local EggShopLayout = require(uiShared:WaitForChild("EggShopLayout"))
+local HudLayout = require(uiShared:WaitForChild("HudLayout"))
 local NextGoal = require(uiShared:WaitForChild("NextGoal"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
@@ -44,30 +56,14 @@ local colors = Theme.colors
 local sizes = Theme.sizes
 local textSizes = Theme.textSizes
 
--- Layout of the mockup, in pixels at 1280 x 720.
-local LAYOUT = table.freeze({
-	panelWidth = 1080,
-	panelHeight = 0.9,
-	padding = 28,
-	gap = 20,
-	cardPadding = 20,
-	cardHeight = 380,
-	eggWidth = 72,
-	eggHeight = 92,
-	eggStroke = 3,
-	oddsRow = 30,
-	buttonHeight = 52,
-	tripleWidth = 150,
-	headerHeight = 56,
-	resultHeight = 84,
-	resultBlock = 44,
-	title = 34,
-	cardTitle = 28,
-	priceSize = 18,
-	odds = 16,
-})
-
 local EggShop = {}
+
+-- Where the asset stage puts each egg's model, named by egg id.
+local MODELS_FOLDER = "PetModels"
+-- How the egg model is framed in its card: camera field of view in degrees,
+-- and the share of room left around the model. Display only.
+local EGG_FOV = 30
+local EGG_FRAME = 1.15
 
 -- Set by mount.
 local opener: ((string?) -> ())? = nil
@@ -75,15 +71,25 @@ local shown: (() -> boolean)? = nil
 
 type CardView = {
 	frame: Frame,
+	eggSlot: Frame,
+	words: Frame,
+	name: TextLabel,
 	price: TextLabel,
 	lock: TextLabel,
 	names: { TextLabel },
 	odds: { TextLabel },
+	oddsPanel: Frame,
+	toggle: TextButton,
+	result: TextButton,
 	hatch: TextButton,
 	hatchStroke: UIStroke,
 	triple: TextButton,
 	tripleStroke: UIStroke,
 }
+
+-- Draw order inside a card: the result and odds overlays sit over the egg,
+-- name and buttons.
+local Z_OVERLAY = 5
 
 local function frame(name: string, parent: Instance?): Frame
 	local f = Instance.new("Frame")
@@ -169,6 +175,66 @@ local function flags(value: any): { [string]: boolean }
 	return if type(value) == "table" then value else {}
 end
 
+local function place(object: GuiObject, r: EggShopLayout.Rect, originX: number, originY: number)
+	object.Position = UDim2.fromOffset(r.x - originX, r.y - originY)
+	object.Size = UDim2.fromOffset(r.w, r.h)
+end
+
+-- The egg in a card: its real model from PetModels in a ViewportFrame, or a
+-- flat oval placeholder until the asset stage has loaded it.
+local function eggView(slot: Frame, eggId: string)
+	for _, child in slot:GetChildren() do
+		if child:IsA("GuiObject") then
+			child:Destroy()
+		end
+	end
+	local folder = ReplicatedStorage:FindFirstChild(MODELS_FOLDER)
+	local template = if folder ~= nil then folder:FindFirstChild(eggId) else nil
+	if template ~= nil and template:IsA("Model") then
+		local viewport = Instance.new("ViewportFrame")
+		viewport.Name = "EggView"
+		viewport.BackgroundTransparency = 1
+		viewport.BorderSizePixel = 0
+		viewport.Size = UDim2.fromScale(1, 1)
+		viewport.Ambient = Color3.fromRGB(200, 200, 200)
+		viewport.LightColor = Color3.fromRGB(255, 255, 255)
+		viewport.LightDirection = Vector3.new(-1, -1, -1)
+		local model = (template :: Model):Clone()
+		for _, item in model:GetDescendants() do
+			if item:IsA("BasePart") then
+				item.Anchored = true
+			end
+		end
+		model:PivotTo(CFrame.new())
+		local box, extents = model:GetBoundingBox()
+		model:PivotTo(box:Inverse() * model:GetPivot())
+		model.Parent = viewport
+		local camera = Instance.new("Camera")
+		camera.FieldOfView = EGG_FOV
+		local radius = extents.Magnitude / 2
+		local distance = radius / math.tan(math.rad(EGG_FOV / 2)) * EGG_FRAME
+		camera.CFrame = CFrame.lookAt(Vector3.new(0, radius * 0.3, distance), Vector3.zero)
+		camera.Parent = viewport
+		viewport.CurrentCamera = camera
+		viewport.Parent = slot
+		return
+	end
+	local shell = frame("EggShell", slot)
+	shell.BackgroundTransparency = 0
+	shell.BackgroundColor3 = shellColor(eggId)
+	shell.AnchorPoint = Vector2.new(0.5, 0.5)
+	shell.Position = UDim2.fromScale(0.5, 0.5)
+	shell.Size = UDim2.fromScale(0.78, 1)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0.5, 0)
+	corner.Parent = shell
+	local stroke = Instance.new("UIStroke")
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Thickness = 2
+	stroke.Color = colors.border
+	stroke.Parent = shell
+end
+
 -- Builds the screen under playerGui. Call once.
 function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 	local gui = Instance.new("ScreenGui")
@@ -194,19 +260,13 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 	panel.BackgroundTransparency = 0
 	panel.BackgroundColor3 = colors.panel
 	panel.Active = true
-	panel.AnchorPoint = Vector2.new(0.5, 0.5)
-	panel.Position = UDim2.fromScale(0.5, 0.5)
-	panel.Size = UDim2.fromScale(0.92, LAYOUT.panelHeight)
-	local limit = Instance.new("UISizeConstraint")
-	limit.MaxSize = Vector2.new(LAYOUT.panelWidth, math.huge)
-	limit.Parent = panel
 	Theme.panel(panel, sizes.radius + 2)
-	pad(panel, LAYOUT.padding)
 
 	-- Header: world name, title, coins and Close.
 	local header = frame("Header", panel)
-	header.Size = UDim2.new(1, 0, 0, LAYOUT.headerHeight)
 	local titles = frame("Titles", header)
+	titles.AnchorPoint = Vector2.new(0, 0.5)
+	titles.Position = UDim2.fromScale(0, 0.5)
 	titles.AutomaticSize = Enum.AutomaticSize.XY
 	list(titles, Enum.FillDirection.Vertical, 0)
 	local worldLabel = Theme.text({
@@ -217,20 +277,19 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		parent = titles,
 	})
 	worldLabel.LayoutOrder = 1
-	Theme.text({
+	local titleLabel = Theme.text({
 		name = "Title",
 		text = Theme.label("Eggs"),
 		font = Theme.fonts.heading,
-		size = LAYOUT.title,
 		parent = titles,
-	}).LayoutOrder =
-		2
+	})
+	titleLabel.LayoutOrder = 2
 
 	local right = frame("Right", header)
 	right.AnchorPoint = Vector2.new(1, 0.5)
 	right.Position = UDim2.fromScale(1, 0.5)
 	right.AutomaticSize = Enum.AutomaticSize.XY
-	local rightList = list(right, Enum.FillDirection.Horizontal, 16)
+	local rightList = list(right, Enum.FillDirection.Horizontal, 12)
 	rightList.VerticalAlignment = Enum.VerticalAlignment.Center
 	local coin = frame("Coin", right)
 	coin.LayoutOrder = 1
@@ -244,7 +303,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		name = "Coins",
 		text = "0",
 		font = Theme.fonts.heading,
-		size = textSizes.coins - 8,
+		size = textSizes.heading,
 		parent = right,
 	})
 	coinsLabel.LayoutOrder = 2
@@ -261,20 +320,8 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 	close.TextColor3 = colors.text
 	close.BackgroundColor3 = colors.raised
 
-	-- Result strip: what the server says hatched, or why it refused.
-	local result = frame("Result", panel)
-	result.Position = UDim2.fromOffset(0, LAYOUT.headerHeight + LAYOUT.gap)
-	result.Size = UDim2.new(1, 0, 0, LAYOUT.resultHeight)
-	result.BackgroundTransparency = 0
-	result.BackgroundColor3 = colors.raised
-	result.Visible = false
-	Theme.panel(result)
-	pad(result, 12)
-	local resultList = list(result, Enum.FillDirection.Horizontal, 12)
-	resultList.VerticalAlignment = Enum.VerticalAlignment.Center
-
-	-- The cards, two per row, scrolling when there are more than fit.
-	local footerHeight = textSizes.body + 8
+	-- The cards, two per row, scrolling when there are more than fit. Nothing
+	-- above the list ever changes height, so the scroll position is kept.
 	local scroll = Instance.new("ScrollingFrame")
 	scroll.Name = "Cards"
 	scroll.BackgroundTransparency = 1
@@ -286,81 +333,84 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 	scroll.Parent = panel
 	local grid = Instance.new("UIGridLayout")
 	grid.SortOrder = Enum.SortOrder.LayoutOrder
-	grid.CellPadding = UDim2.fromOffset(LAYOUT.gap, LAYOUT.gap)
-	grid.CellSize = UDim2.new(0.5, -LAYOUT.gap, 0, LAYOUT.cardHeight)
 	grid.Parent = scroll
 
 	local footer = Theme.text({
 		name = "Note",
 		text = EggShopView.variantNote(),
+		size = textSizes.small,
 		color = colors.muted,
 		parent = panel,
 	})
-	footer.AnchorPoint = Vector2.new(0, 1)
-	footer.Position = UDim2.fromScale(0, 1)
 	footer.AutomaticSize = Enum.AutomaticSize.None
-	footer.Size = UDim2.new(1, 0, 0, footerHeight)
-	footer.TextWrapped = true
+	footer.TextTruncate = Enum.TextTruncate.AtEnd
 	footer.TextXAlignment = Enum.TextXAlignment.Left
-
-	local function fitScroll()
-		local top = LAYOUT.headerHeight + LAYOUT.gap
-		if result.Visible then
-			top += LAYOUT.resultHeight + LAYOUT.gap
-		end
-		scroll.Position = UDim2.fromOffset(0, top)
-		scroll.Size = UDim2.new(1, 0, 1, -(top + footerHeight + LAYOUT.gap))
-	end
-	fitScroll()
+	footer.TextYAlignment = Enum.TextYAlignment.Center
 
 	local cards: { [string]: CardView } = {}
 	local busy = false
 	local ownsTriple = false
+	local layout: EggShopLayout.Layout? = nil
 
-	local function clearResult()
-		for _, child in result:GetChildren() do
+	local function clearResult(view: CardView)
+		for _, child in view.result:GetChildren() do
 			if child:IsA("GuiObject") then
 				child:Destroy()
 			end
 		end
+		view.result.Visible = false
 	end
 
-	local function showMessage(text: string)
-		clearResult()
-		local message = Theme.text({ name = "Message", text = text, parent = result })
-		message.TextWrapped = true
-		result.Visible = true
-		fitScroll()
+	local function clearResults()
+		for _, view in cards do
+			clearResult(view)
+		end
 	end
 
-	local function showHatched(reply: any)
-		clearResult()
-		local lines = EggShopView.hatchLines(reply)
-		if #lines == 0 then
-			showMessage("The shop answered, but nothing hatched.")
+	local function showMessage(eggId: string, text: string)
+		local view = cards[eggId]
+		if view == nil then
 			return
 		end
-		local heading = Theme.text({
-			name = "Heading",
-			text = Theme.label("Hatched"),
-			font = Theme.fonts.label,
+		clearResults()
+		local message = Theme.text({
+			name = "Message",
+			text = text,
 			size = textSizes.small,
-			color = colors.muted,
-			parent = result,
+			parent = view.result,
 		})
-		heading.LayoutOrder = 0
+		message.AutomaticSize = Enum.AutomaticSize.None
+		message.Size = UDim2.fromScale(1, 1)
+		message.TextWrapped = true
+		message.ZIndex = Z_OVERLAY + 1
+		view.result.Visible = true
+	end
+
+	local function showHatched(eggId: string, reply: any)
+		local view = cards[eggId]
+		if view == nil then
+			return
+		end
+		local lines = EggShopView.hatchLines(reply)
+		if #lines == 0 then
+			showMessage(eggId, "The shop answered, but nothing hatched.")
+			return
+		end
+		clearResults()
+		local s = (layout :: EggShopLayout.Layout).sizes
 		for position, line in lines do
 			local pet = Config.petById[line.petId]
-			local entry = frame("Pet" .. position, result)
+			local entry = frame("Pet" .. position, view.result)
 			entry.LayoutOrder = position
 			entry.AutomaticSize = Enum.AutomaticSize.XY
-			local entryList = list(entry, Enum.FillDirection.Horizontal, 10)
+			local entryList = list(entry, Enum.FillDirection.Horizontal, 6)
 			entryList.VerticalAlignment = Enum.VerticalAlignment.Center
 			local block = frame("Block", entry)
 			block.LayoutOrder = 1
 			block.BackgroundTransparency = 0
 			block.BackgroundColor3 = colors.panel
-			block.Size = UDim2.fromOffset(LAYOUT.resultBlock, LAYOUT.resultBlock)
+			block.Size = UDim2.fromOffset(s.resultBlock, s.resultBlock)
+			block.ZIndex = Z_OVERLAY + 1
 			local blockCorner = Instance.new("UICorner")
 			blockCorner.CornerRadius = UDim.new(0, sizes.slotRadius)
 			blockCorner.Parent = block
@@ -369,19 +419,20 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			stroke.Thickness = 2
 			stroke.Color = Theme.rarityColor(line.rarity)
 			stroke.Parent = block
-			PetVisual.view(block, pet.id, line.variant, nil)
+			PetVisual.view(block, pet.id, line.variant, nil).ZIndex = Z_OVERLAY + 2
 			local words = frame("Words", entry)
 			words.LayoutOrder = 2
 			words.AutomaticSize = Enum.AutomaticSize.XY
 			list(words, Enum.FillDirection.Vertical, 0)
-			Theme.text({
+			local nameLabel = Theme.text({
 				name = "Name",
 				text = line.name,
 				font = Theme.fonts.label,
-				size = textSizes.petName,
+				size = s.price,
 				parent = words,
-			}).LayoutOrder =
-				1
+			})
+			nameLabel.LayoutOrder = 1
+			nameLabel.ZIndex = Z_OVERLAY + 1
 			local detail = Theme.label(line.rarityName)
 			if line.variantName ~= nil then
 				detail = Theme.label(line.variantName) .. " " .. detail
@@ -389,7 +440,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			if line.newInIndex then
 				detail ..= "  " .. Theme.label("New")
 			end
-			Theme.text({
+			local rarityLabel = Theme.text({
 				name = "Rarity",
 				text = detail,
 				font = Theme.fonts.label,
@@ -398,11 +449,11 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 					then colors.gold
 					else Theme.rarityColor(line.rarity),
 				parent = words,
-			}).LayoutOrder =
-				2
+			})
+			rarityLabel.LayoutOrder = 2
+			rarityLabel.ZIndex = Z_OVERLAY + 1
 		end
-		result.Visible = true
-		fitScroll()
+		view.result.Visible = true
 	end
 
 	local function buy(eggId: string, count: number)
@@ -415,16 +466,16 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		end)
 		busy = false
 		if not ok or type(reply) ~= "table" then
-			showMessage("The shop did not answer. Try again.")
+			showMessage(eggId, "The shop did not answer. Try again.")
 		elseif reply.ok == true then
-			showHatched(reply)
+			showHatched(eggId, reply)
 			-- Visuals only: the server already decided what hatched.
 			busy = true
 			Effects.playHatch(gui, shellColor(eggId), EggShopView.hatchLines(reply), function()
 				busy = false
 			end)
 		else
-			showMessage(EggShopView.reasonText(reply.reason))
+			showMessage(eggId, EggShopView.reasonText(reply.reason))
 		end
 	end
 
@@ -433,45 +484,26 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		card.LayoutOrder = position
 		card.BackgroundTransparency = 0
 		card.BackgroundColor3 = colors.raised
+		card.Visible = false
 		Theme.panel(card)
-		pad(card, LAYOUT.cardPadding)
-		list(card, Enum.FillDirection.Vertical, 14)
 
-		local top = frame("Top", card)
-		top.LayoutOrder = 1
-		top.Size = UDim2.new(1, 0, 0, LAYOUT.eggHeight)
-		local topList = list(top, Enum.FillDirection.Horizontal, 16)
-		topList.VerticalAlignment = Enum.VerticalAlignment.Center
-		local shell = frame("Egg", top)
-		shell.LayoutOrder = 1
-		shell.BackgroundTransparency = 0
-		shell.BackgroundColor3 = shellColor(egg.id)
-		shell.Size = UDim2.fromOffset(LAYOUT.eggWidth, LAYOUT.eggHeight)
-		local shellCorner = Instance.new("UICorner")
-		shellCorner.CornerRadius = UDim.new(0.5, 0)
-		shellCorner.Parent = shell
-		local shellStroke = Instance.new("UIStroke")
-		shellStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		shellStroke.Thickness = LAYOUT.eggStroke
-		shellStroke.Color = colors.border
-		shellStroke.Parent = shell
+		local eggSlot = frame("Egg", card)
+		eggView(eggSlot, egg.id)
 
-		local words = frame("Words", top)
-		words.LayoutOrder = 2
-		words.AutomaticSize = Enum.AutomaticSize.XY
-		list(words, Enum.FillDirection.Vertical, 2)
-		Theme.text({
+		local words = frame("Words", card)
+		words.ClipsDescendants = true
+		local wordsList = list(words, Enum.FillDirection.Vertical, 0)
+		wordsList.VerticalAlignment = Enum.VerticalAlignment.Center
+		local nameLabel = Theme.text({
 			name = "Name",
 			text = Theme.label(egg.name),
 			font = Theme.fonts.heading,
-			size = LAYOUT.cardTitle,
 			parent = words,
-		}).LayoutOrder =
-			1
+		})
+		nameLabel.LayoutOrder = 1
 		local priceLabel = Theme.text({
 			name = "Price",
 			font = Theme.fonts.label,
-			size = LAYOUT.priceSize,
 			color = colors.gold,
 			parent = words,
 		})
@@ -485,45 +517,82 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		})
 		lock.LayoutOrder = 3
 
-		local oddsFrame = frame("Odds", card)
-		oddsFrame.LayoutOrder = 2
-		oddsFrame.AutomaticSize = Enum.AutomaticSize.Y
-		oddsFrame.Size = UDim2.fromScale(1, 0)
-		list(oddsFrame, Enum.FillDirection.Vertical, 0)
+		local hatch, hatchStroke = button("Hatch", card)
+		local triple, tripleStroke = button("HatchTriple", card)
+		triple.Text = Theme.label(string.format("Hatch x%d", EggShopView.TRIPLE_COUNT))
+
+		local toggle = Instance.new("TextButton")
+		toggle.Name = "ShowOdds"
+		toggle.BackgroundTransparency = 1
+		toggle.BorderSizePixel = 0
+		toggle.FontFace = Theme.fonts.label
+		toggle.TextSize = textSizes.small
+		toggle.TextColor3 = colors.muted
+		toggle.Text = Theme.label("Show odds")
+		toggle.Parent = card
+
+		-- The odds, over the card above the toggle, hidden until asked for.
+		local oddsPanel = frame("Odds", card)
+		oddsPanel.BackgroundTransparency = 0
+		oddsPanel.BackgroundColor3 = colors.raised
+		oddsPanel.ZIndex = Z_OVERLAY
+		oddsPanel.Visible = false
+		Theme.panel(oddsPanel)
+		pad(oddsPanel, 8)
+		list(oddsPanel, Enum.FillDirection.Vertical, 0)
+		local rows = #Config.rarities
 		local names: { TextLabel } = {}
 		local odds: { TextLabel } = {}
-		for row = 1, #Config.rarities do
-			local line = frame("Row" .. row, oddsFrame)
+		for row = 1, rows do
+			local line = frame("Row" .. row, oddsPanel)
 			line.LayoutOrder = row
-			line.Size = UDim2.new(1, 0, 0, LAYOUT.oddsRow)
-			if row < #Config.rarities then
-				local rule = frame("Rule", line)
-				rule.BackgroundTransparency = 0
-				rule.BackgroundColor3 = colors.border
-				rule.AnchorPoint = Vector2.new(0, 1)
-				rule.Position = UDim2.fromScale(0, 1)
-				rule.Size = UDim2.new(1, 0, 0, sizes.border)
-			end
-			local nameLabel = Theme.text({ name = "Pet", size = LAYOUT.odds, parent = line })
-			nameLabel.AnchorPoint = Vector2.new(0, 0.5)
-			nameLabel.Position = UDim2.fromScale(0, 0.5)
-			local chanceLabel = Theme.text({ name = "Chance", size = LAYOUT.odds, parent = line })
-			chanceLabel.AnchorPoint = Vector2.new(1, 0.5)
-			chanceLabel.Position = UDim2.fromScale(1, 0.5)
-			table.insert(names, nameLabel)
-			table.insert(odds, chanceLabel)
+			line.Size = UDim2.fromScale(1, 1 / rows)
+			line.ZIndex = Z_OVERLAY
+			local nameText = Theme.text({ name = "Pet", parent = line })
+			nameText.AnchorPoint = Vector2.new(0, 0.5)
+			nameText.Position = UDim2.fromScale(0, 0.5)
+			nameText.ZIndex = Z_OVERLAY + 1
+			local chanceText = Theme.text({ name = "Chance", parent = line })
+			chanceText.AnchorPoint = Vector2.new(1, 0.5)
+			chanceText.Position = UDim2.fromScale(1, 0.5)
+			chanceText.ZIndex = Z_OVERLAY + 1
+			table.insert(names, nameText)
+			table.insert(odds, chanceText)
 		end
 
-		local buttons = frame("Buttons", card)
-		buttons.LayoutOrder = 3
-		buttons.Size = UDim2.new(1, 0, 0, LAYOUT.buttonHeight)
-		local hatch, hatchStroke = button("Hatch", buttons)
-		hatch.Size = UDim2.new(1, -(LAYOUT.tripleWidth + 10), 1, 0)
-		local triple, tripleStroke = button("HatchTriple", buttons)
-		triple.AnchorPoint = Vector2.new(1, 0)
-		triple.Position = UDim2.fromScale(1, 0)
-		triple.Size = UDim2.new(0, LAYOUT.tripleWidth, 1, 0)
-		triple.Text = Theme.label(string.format("Hatch x%d", EggShopView.TRIPLE_COUNT))
+		-- The hatch result, over the egg and name only. Tapping hides it.
+		local result = Instance.new("TextButton")
+		result.Name = "Result"
+		result.Text = ""
+		result.AutoButtonColor = false
+		result.BorderSizePixel = 0
+		result.BackgroundColor3 = colors.raised
+		result.ZIndex = Z_OVERLAY
+		result.ClipsDescendants = true
+		result.Visible = false
+		result.Parent = card
+		Theme.panel(result)
+		pad(result, 8)
+		local resultList = list(result, Enum.FillDirection.Horizontal, 10)
+		resultList.VerticalAlignment = Enum.VerticalAlignment.Center
+
+		local view: CardView = {
+			frame = card,
+			eggSlot = eggSlot,
+			words = words,
+			name = nameLabel,
+			price = priceLabel,
+			lock = lock,
+			names = names,
+			odds = odds,
+			oddsPanel = oddsPanel,
+			toggle = toggle,
+			result = result,
+			hatch = hatch,
+			hatchStroke = hatchStroke,
+			triple = triple,
+			tripleStroke = tripleStroke,
+		}
 
 		local eggId = egg.id
 		Pointer.register("hatch:" .. eggId, hatch)
@@ -534,26 +603,78 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			if ownsTriple then
 				buy(eggId, EggShopView.TRIPLE_COUNT)
 			else
-				showMessage(EggShopView.reasonText("no_triple_hatch_pass"))
+				showMessage(eggId, EggShopView.reasonText("no_triple_hatch_pass"))
 			end
 		end)
-
-		return {
-			frame = card,
-			price = priceLabel,
-			lock = lock,
-			names = names,
-			odds = odds,
-			hatch = hatch,
-			hatchStroke = hatchStroke,
-			triple = triple,
-			tripleStroke = tripleStroke,
-		}
+		toggle.Activated:Connect(function()
+			oddsPanel.Visible = not oddsPanel.Visible
+			toggle.Text = Theme.label(if oddsPanel.Visible then "Hide odds" else "Show odds")
+		end)
+		result.Activated:Connect(function()
+			clearResult(view)
+		end)
+		return view
 	end
 
 	for position, egg in Config.eggs do
 		cards[egg.id] = buildCard(egg, position)
 	end
+
+	-- Places the panel and every card part from EggShopLayout for the
+	-- current screen size, below the Roblox and HUD top bars.
+	local function applyLayout()
+		local screen = gui.AbsoluteSize
+		if screen.X <= 0 or screen.Y <= 0 then
+			return
+		end
+		local inset = GuiService:GetGuiInset().Y
+		local hud = HudLayout.compute(screen.X, screen.Y - inset, 0)
+		local l = EggShopLayout.compute(screen.X, screen.Y, inset + hud.topBar.h)
+		layout = l
+		local s = l.sizes
+		local p = l.panel
+		place(panel, p, 0, 0)
+		place(header, l.header, p.x, p.y)
+		place(scroll, l.list, p.x, p.y)
+		place(footer, l.footer, p.x, p.y)
+		titleLabel.TextSize = s.title
+		grid.CellSize = UDim2.fromOffset(l.cardWidth, l.cardHeight)
+		grid.CellPadding = UDim2.fromOffset(s.gap, s.gap)
+		local parts = l.parts
+		for _, view in cards do
+			place(view.eggSlot, parts.egg, 0, 0)
+			place(view.words, parts.words, 0, 0)
+			place(view.hatch, parts.hatch, 0, 0)
+			place(view.triple, parts.triple, 0, 0)
+			place(view.toggle, parts.toggle, 0, 0)
+			place(view.oddsPanel, parts.odds, 0, 0)
+			place(view.result, parts.result, 0, 0)
+			view.name.TextSize = s.cardTitle
+			view.price.TextSize = s.price
+			for row = 1, #view.names do
+				view.names[row].TextSize = s.odds
+				view.odds[row].TextSize = s.odds
+			end
+		end
+	end
+	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyLayout)
+	applyLayout()
+
+	-- An egg model loaded later replaces its card's placeholder.
+	task.spawn(function()
+		local folder = ReplicatedStorage:WaitForChild(MODELS_FOLDER)
+		folder.ChildAdded:Connect(function(child: Instance)
+			local view = cards[child.Name]
+			if view ~= nil and child:IsA("Model") then
+				eggView(view.eggSlot, child.Name)
+			end
+		end)
+		for eggId, view in cards do
+			if folder:FindFirstChild(eggId) ~= nil then
+				eggView(view.eggSlot, eggId)
+			end
+		end
+	end)
 
 	local function render(payload: State.Payload?)
 		local profile = if payload ~= nil then payload.profile else {}
@@ -573,7 +694,9 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		worldLabel.Text = Theme.label(world.name)
 
 		local state: EggShopView.State = { coins = coins, gymsBeaten = gymsBeaten }
-		for _, data in EggShopView.cards(state, { luckyEggs = passes.luckyEggs == true }) do
+		local listed: { [string]: boolean } = {}
+		for _, data in EggShopView.shownCards(state, { luckyEggs = passes.luckyEggs == true }) do
+			listed[data.eggId] = true
 			local view = cards[data.eggId]
 			view.price.Text = data.priceText
 			view.price.TextColor3 = if data.affordable and not data.locked
@@ -609,6 +732,9 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 				and coins >= data.price * EggShopView.TRIPLE_COUNT
 			style(view.triple, view.tripleStroke, if tripleReady then "accent" else "muted")
 		end
+		for eggId, view in cards do
+			view.frame.Visible = listed[eggId] == true
+		end
 	end
 
 	local function hide()
@@ -617,26 +743,29 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 
 	-- Scrolls so the card of eggId sits at the top of the list.
 	local function scrollTo(eggId: string?)
-		if eggId == nil or cards[eggId] == nil then
+		local view = if eggId ~= nil then cards[eggId] else nil
+		if view == nil or not view.frame.Visible then
 			scroll.CanvasPosition = Vector2.zero
 			return
 		end
 		-- Wait a frame so the grid has laid out the newly shown cards.
 		RunService.Heartbeat:Wait()
-		local card = cards[eggId].frame
+		local card = view.frame
 		local offset = card.AbsolutePosition.Y - scroll.AbsolutePosition.Y + scroll.CanvasPosition.Y
 		scroll.CanvasPosition = Vector2.new(0, math.max(0, offset))
 	end
 
 	opener = function(eggId: string?)
-		if not gui.Enabled then
-			clearResult()
-			result.Visible = false
-			fitScroll()
+		local wasOpen = gui.Enabled
+		if not wasOpen then
+			clearResults()
 		end
 		render(State.get())
 		gui.Enabled = true
-		task.spawn(scrollTo, eggId)
+		applyLayout()
+		if not wasOpen or eggId ~= nil then
+			task.spawn(scrollTo, eggId)
+		end
 	end
 
 	close.Activated:Connect(hide)
@@ -644,6 +773,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 
 	render(nil)
 	gui.Parent = playerGui
+	applyLayout()
 	State.subscribe(render)
 	Screens.track(gui)
 	Screens.register(Screens.names.Eggs, function()

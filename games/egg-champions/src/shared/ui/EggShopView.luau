@@ -12,6 +12,8 @@
 	  reports) the card shows the boosted table the server then rolls.
 	- A locked egg (Progression.eggUnlocked) says what unlocks it: beating the
 	  gym of the world before.
+	- The shop lists only eggs of unlocked worlds plus the next locked egg as
+	  a teaser (shownCards).
 	- An egg the player cannot afford is marked so the screen can mute it. It
 	  is only a hint; the server decides every purchase.
 
@@ -54,6 +56,9 @@ export type Card = {
 	affordable: boolean,
 	-- Coins still needed for one egg, 0 when affordable.
 	short: number,
+	-- True for the one locked egg the shop shows as a preview of what comes
+	-- next (see shownCards).
+	teaser: boolean,
 }
 
 export type HatchLine = {
@@ -167,9 +172,28 @@ function EggShopView.cards(state: State, options: Options?): { Card }
 			unlockText = if locked then EggShopView.unlockText(egg.id) else nil,
 			affordable = short == 0,
 			short = short,
+			teaser = false,
 		})
 	end
 	return cards
+end
+
+-- The cards the shop lists: every egg of an unlocked world, in config order,
+-- plus the first locked egg as one teaser card. The rest stay hidden so the
+-- list never fills with eggs the player cannot use yet.
+function EggShopView.shownCards(state: State, options: Options?): { Card }
+	local shown: { Card } = {}
+	local teased = false
+	for _, card in EggShopView.cards(state, options) do
+		if not card.locked then
+			table.insert(shown, card)
+		elseif not teased then
+			teased = true
+			card.teaser = true
+			table.insert(shown, card)
+		end
+	end
+	return shown
 end
 
 -- The note under the cards: the variant odds and multipliers, from config.

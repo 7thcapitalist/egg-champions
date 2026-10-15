@@ -149,6 +149,45 @@ return function()
 			expect(type(EggShopView.reasonText("something_new"))).toEqual("string")
 		end)
 
+		it("lists unlocked eggs plus the next locked egg as one teaser", function()
+			local first = firstWorld()
+			local shown = EggShopView.shownCards(newState(0))
+			local unlocked = 0
+			local teasers = 0
+			for _, card in shown do
+				if card.locked then
+					teasers += 1
+					expect(card.teaser).toBeTrue()
+				else
+					unlocked += 1
+					expect(card.teaser).toBeFalse()
+					expect(card.worldId).toEqual(first.id)
+				end
+			end
+			expect(teasers).toEqual(1)
+			expect(unlocked).toEqual(#first.eggs)
+			expect(#shown < #Config.eggs).toBeTrue()
+			-- The teaser is the first locked egg in config order.
+			for _, card in EggShopView.cards(newState(0)) do
+				if card.locked then
+					expect(shown[#shown].eggId).toEqual(card.eggId)
+					break
+				end
+			end
+		end)
+
+		it("shows no teaser once every egg is unlocked", function()
+			local state = newState(0)
+			for _, world in Config.worlds do
+				state.gymsBeaten[world.id] = true
+			end
+			local shown = EggShopView.shownCards(state)
+			expect(#shown).toEqual(#Config.eggs)
+			for _, card in shown do
+				expect(card.teaser).toBeFalse()
+			end
+		end)
+
 		it("offers the same triple count the server accepts", function()
 			expect(EggShopView.TRIPLE_COUNT).toEqual(Hatch.TRIPLE_COUNT)
 		end)

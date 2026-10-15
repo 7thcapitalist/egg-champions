@@ -32,6 +32,7 @@ return {
 	uiSpecs["Format.spec"],
 	uiSpecs["NextGoal.spec"],
 	uiSpecs["EggShopView.spec"],
+	uiSpecs["EggShopLayout.spec"],
 	uiSpecs["PetsView.spec"],
 	uiSpecs["BattleView.spec"],
 	uiSpecs["HudLayout.spec"],
