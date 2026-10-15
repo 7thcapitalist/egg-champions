@@ -2,6 +2,7 @@
 local Runner = require(script.Parent.Parent.Parent.testing.Runner)
 local Config = require(script.Parent.Parent.Parent.Config)
 local NextGoal = require(script.Parent.Parent.NextGoal)
+local Format = require(script.Parent.Parent.Format)
 
 local describe = Runner.describe
 local it = Runner.it
@@ -260,6 +261,86 @@ return function()
 				gymsBeaten = {},
 				feesPaid = { [first.id] = true },
 			})
+		end)
+	end)
+
+	describe("NextGoal.nextLine", function()
+		local teamSize = Config.constants.team_size
+
+		it("names the gym and its fee from config under a small goal", function()
+			local state = newState(0)
+			state.petCount = 1
+			state.teamCount = 1
+			local goal = NextGoal.pick(state, 0)
+			expect(NextGoal.beforeGym(goal)).toBeTrue()
+			local expected =
+				string.format("Next: %s Gym (%s)", first.name, Format.abbreviate(first.gym.fee))
+			expect(NextGoal.nextLine(state, goal)).toEqual(expected)
+		end)
+
+		it("reads Next: Green Meadow Gym (50K) for the first world as configured", function()
+			local state = newState(0)
+			state.petCount = 0
+			state.teamCount = 0
+			local line = NextGoal.nextLine(state, NextGoal.pick(state, 0))
+			if first.name == "Green Meadow" and first.gym.fee == 50000 then
+				expect(line).toEqual("Next: Green Meadow Gym (50K)")
+			end
+		end)
+
+		it("shows no second line when the goal is the gym itself or a rebirth", function()
+			local state = newState(0)
+			state.petCount = teamSize
+			state.teamCount = teamSize
+			for _, egg in goalEggs(first) do
+				hatch(state, egg.id)
+			end
+			local goal = NextGoal.pick(state, 0)
+			expect(goal.kind).toEqual("gym")
+			expect(NextGoal.nextLine(state, goal)).toEqual(nil)
+			state.feesPaid[first.id] = true
+			expect(NextGoal.nextLine(state, NextGoal.pick(state, 0))).toEqual(nil)
+		end)
+	end)
+
+	describe("NextGoal.gymBeam", function()
+		local teamSize = Config.constants.team_size
+
+		it("stays off with an open team slot and no tap", function()
+			local state = newState(0)
+			state.petCount = 1
+			state.teamCount = 1
+			expect(NextGoal.gymBeam(state, nil)).toEqual(nil)
+		end)
+
+		it("turns on when the next line was tapped in this world", function()
+			local state = newState(0)
+			state.petCount = 1
+			state.teamCount = 1
+			expect(NextGoal.gymBeam(state, first.id)).toEqual(first.id)
+			-- A tap from another world does not count here.
+			expect(NextGoal.gymBeam(state, last.id == first.id and "elsewhere" or last.id)).toEqual(
+				nil
+			)
+		end)
+
+		it("turns on by itself once the team is full", function()
+			local state = newState(0)
+			state.petCount = teamSize
+			state.teamCount = teamSize
+			expect(NextGoal.teamFull(state)).toBeTrue()
+			expect(NextGoal.gymBeam(state, nil)).toEqual(first.id)
+		end)
+
+		it("turns off once the gym is beaten", function()
+			local state = newState(0)
+			state.petCount = teamSize
+			state.teamCount = teamSize
+			state.gymsBeaten[last.id] = true
+			for _, world in worlds do
+				state.gymsBeaten[world.id] = true
+			end
+			expect(NextGoal.gymBeam(state, NextGoal.currentWorld(state).id)).toEqual(nil)
 		end)
 	end)
 end

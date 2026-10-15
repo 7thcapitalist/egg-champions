@@ -40,6 +40,7 @@ local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local Format = require(uiShared:WaitForChild("Format"))
 local EggShopView = require(uiShared:WaitForChild("EggShopView"))
+local HatchReveal = require(uiShared:WaitForChild("HatchReveal"))
 local EggShopLayout = require(uiShared:WaitForChild("EggShopLayout"))
 local HudLayout = require(uiShared:WaitForChild("HudLayout"))
 local HudInsets = require(script.Parent:WaitForChild("HudInsets"))
@@ -48,6 +49,7 @@ local NextGoal = require(uiShared:WaitForChild("NextGoal"))
 local Theme = require(script.Parent:WaitForChild("Theme"))
 local Pointer = require(script.Parent:WaitForChild("Pointer"))
 local Guide = require(script.Parent:WaitForChild("Guide"))
+local Reveal = require(script.Parent:WaitForChild("Reveal"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
 local Effects =
 	require((script.Parent :: Instance).Parent:WaitForChild("Effects"):WaitForChild("Effects"))
@@ -473,20 +475,28 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			return
 		end
 		busy = true
+		-- The tutorial waits for the reveal before it closes the shop.
+		Guide.setHatching(true)
 		local ok, reply = pcall(function(): any
 			return buyEgg:InvokeServer(eggId, count)
 		end)
 		busy = false
 		if not ok or type(reply) ~= "table" then
+			Guide.setHatching(false)
 			showMessage(eggId, "The shop did not answer. Try again.")
 		elseif reply.ok == true then
 			showHatched(eggId, reply)
 			-- Visuals only: the server already decided what hatched.
 			busy = true
-			Effects.playHatch(gui, shellColor(eggId), EggShopView.hatchLines(reply), function()
-				busy = false
+			local lines = EggShopView.hatchLines(reply)
+			Effects.playHatch(gui, shellColor(eggId), lines, function()
+				Reveal.show(gui, HatchReveal.entries(lines), function()
+					busy = false
+					Guide.setHatching(false)
+				end)
 			end)
 		else
+			Guide.setHatching(false)
 			showMessage(eggId, EggShopView.reasonText(reply.reason))
 		end
 	end

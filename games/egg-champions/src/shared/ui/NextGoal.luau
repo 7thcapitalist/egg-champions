@@ -22,12 +22,18 @@
 	so the first minutes never show only a far away gym fee. Steps 3 and 4
 	need petCount and teamCount in the state; without them they are skipped.
 
+	Under a small goal (steps 3 to 5) the card also shows a muted second line
+	naming the gym it leads to and the gym fee, such as "Next: <world> Gym
+	(50K)" (nextLine). Tapping it turns on the beam to that gym, and the beam
+	turns on by itself once the team is full (gymBeam).
+
 	Every price comes from config or from the server. Nothing here changes the
 	state it is given.
 ]]
 
 local Config = require(script.Parent.Parent.Config)
 local Progression = require(script.Parent.Parent.rules.Progression)
+local Format = require(script.Parent.Format)
 
 export type Kind = "pets" | "team" | "egg" | "gym" | "rebirth"
 
@@ -265,6 +271,36 @@ function NextGoal.pick(state: State, rebirthCost: number): Goal
 	end
 
 	return build(NextGoal.kinds.gym, world.id, world, gymTitle, gymDetail(world), coins, fee, false)
+end
+
+-- The muted second line under a small goal: the gym of the current world
+-- and its fee from config. Nil for any other goal.
+function NextGoal.nextLine(state: State, goal: Goal): string?
+	if not NextGoal.beforeGym(goal) then
+		return nil
+	end
+	local world = NextGoal.currentWorld(state)
+	return string.format("Next: %s Gym (%s)", world.name, Format.abbreviate(world.gym.fee))
+end
+
+-- True when every team slot holds a pet.
+function NextGoal.teamFull(state: State): boolean
+	local teamCount = state.teamCount
+	return teamCount ~= nil and teamCount >= Config.constants.team_size
+end
+
+-- The world whose gym the beam points at, or nil for no beam. The beam is
+-- on when the player tapped the next line in this world (tappedWorldId) or
+-- the team is full, until that world's gym is beaten.
+function NextGoal.gymBeam(state: State, tappedWorldId: string?): string?
+	local world = NextGoal.currentWorld(state)
+	if state.gymsBeaten[world.id] == true then
+		return nil
+	end
+	if tappedWorldId == world.id or NextGoal.teamFull(state) then
+		return world.id
+	end
+	return nil
 end
 
 return NextGoal

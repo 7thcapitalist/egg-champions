@@ -8,12 +8,18 @@
 	- points UI/Pointer at the card's target, a button the player can see;
 	- hands the card's in-screen line to every screen that listens (onText),
 	  so the open screen shows it as a one-line bar in its header;
-	- closes the egg shop shortly after the hatch step ends, so the pointer
-	  never targets a button hidden behind it. The wait lets the player see
-	  the pet hatch first; it is display timing, not a game number.
+	- closes the egg shop after the hatch step ends, so the pointer never
+	  targets a button hidden behind it, but only once the hatch animation
+	  and the reveal card are over (EggShop reports them with setHatching;
+	  shared/ui/HatchReveal.shopCloses decides).
 
 	While Main says a small goal comes before the gym (setHoldGym), the gym
 	step shows nothing here: no pointer, no bar.
+
+	When no tutorial target is showing, Main can ask for the beam and edge
+	arrow to a gym (setGymBeam): after the player taps the goal card's "Next"
+	line, or once the team is full. Like the gym step, it only shows while no
+	screen covers the world.
 
 	The client decides nothing here: the step only ever comes from the server.
 ]]
@@ -22,6 +28,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Tutorial = require(Shared:WaitForChild("rules"):WaitForChild("Tutorial"))
+local HatchReveal = require(Shared:WaitForChild("ui"):WaitForChild("HatchReveal"))
 
 local Pointer = require(script.Parent:WaitForChild("Pointer"))
 local Theme = require(script.Parent:WaitForChild("Theme"))
@@ -31,13 +38,15 @@ local Screens = require(script.Parent:WaitForChild("Screens"))
 local EGG_SHOP_GUI = "EggShop"
 local PETS_GUI = "Pets"
 
--- How long the egg shop stays open after the first hatch, in seconds.
-local CLOSE_EGGS_AFTER = 1.5
-
 local Guide = {}
 
 local step: any = nil
 local holdGym = false
+-- A hatch animation or reveal is playing, and a shop close is waiting on it.
+local hatching = false
+local closePending = false
+-- The world whose gym the beam points at outside the tutorial, or nil.
+local beamWorld: string? = nil
 local petSelected = false
 local text: string? = nil
 local listeners: { (string?) -> () } = {}
@@ -57,6 +66,10 @@ function Guide.refresh()
 	-- none of it shows while a screen covers the world.
 	if card ~= nil and card.step == Tutorial.steps.gym and Screens.anyOpen() then
 		target = nil
+	end
+	local beam = beamWorld
+	if target == nil and beam ~= nil and not Screens.anyOpen() then
+		target = "gym:" .. beam
 	end
 	Pointer.set(target)
 	local line = if card ~= nil then card.screenText else nil
@@ -113,19 +126,39 @@ function Guide.bar(parent: Instance, onShown: ((boolean) -> ())?): Frame
 	return bar
 end
 
+-- Closes the egg shop when the tutorial asked for it and no hatch plays.
+local function closeShopIfDone()
+	if HatchReveal.shopCloses(closePending, hatching, step == Tutorial.steps.hatch) then
+		closePending = false
+		if Screens.isShown(EGG_SHOP_GUI) then
+			Screens.close(EGG_SHOP_GUI)
+		end
+	end
+end
+
 -- The tutorial step the server sent.
 function Guide.setStep(newStep: any)
 	local before = step
 	step = newStep
 	if Tutorial.closesEggShop(before, newStep) and Screens.isShown(EGG_SHOP_GUI) then
-		task.delay(CLOSE_EGGS_AFTER, function()
-			-- Only if the hatch step is still over; a skip also counts.
-			if step ~= Tutorial.steps.hatch then
-				Screens.close(EGG_SHOP_GUI)
-			end
-		end)
+		closePending = true
 	end
+	closeShopIfDone()
 	Guide.refresh()
+end
+
+-- Whether a hatch animation or its reveal is playing in the egg shop.
+function Guide.setHatching(playing: boolean)
+	hatching = playing
+	closeShopIfDone()
+end
+
+-- The world whose gym gets the beam and edge arrow, or nil for none.
+function Guide.setGymBeam(worldId: string?)
+	if worldId ~= beamWorld then
+		beamWorld = worldId
+		Guide.refresh()
+	end
 end
 
 -- Whether a small goal comes before the gym, so the gym step waits.

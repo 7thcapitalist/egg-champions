@@ -28,7 +28,11 @@
 	  SKIP that sends SkipTutorial, and UI/Pointer outlines the thing to use.
 	  The tutorial's gym step waits while NextGoal has a small goal before
 	  the gym (more pets, a full team, the next egg): the card shows that
-	  goal, and Guide holds the gym pointer back until it is done.
+	  goal, and Guide holds the gym pointer back until it is done. Under a
+	  small goal a muted second line names the gym and its fee
+	  (NextGoal.nextLine); tapping it turns on the beam and edge arrow to
+	  the gym, which also turn on by themselves once the team is full
+	  (NextGoal.gymBeam, shown by Guide).
 	- Team bar at the bottom (bottom left on compact screens): hidden until
 	  the player equips a pet, then one slot per equipped pet up to
 	  constants.team_size (HudLayout.teamSlots). Each slot shows the pet's
@@ -341,6 +345,8 @@ end
 type GoalCard = {
 	frame: Frame,
 	line: TextLabel,
+	-- The muted "Next: <world> Gym (fee)" line under a small goal.
+	nextLine: TextButton,
 	action: TextButton,
 	actionStroke: UIStroke,
 	skip: TextButton,
@@ -350,6 +356,8 @@ type GoalCard = {
 }
 
 local goalScreen: string? = nil
+-- Called when the player taps the goal card's "Next" line. Set by mount.
+local onNextTapped: (() -> ())? = nil
 
 local function buildGoal(parent: Instance): GoalCard
 	local goal = panel("NextGoal", parent)
@@ -367,6 +375,29 @@ local function buildGoal(parent: Instance): GoalCard
 	line.TextYAlignment = Enum.TextYAlignment.Center
 	line.TextTruncate = Enum.TextTruncate.AtEnd
 	line.ZIndex = Z_PANEL
+	-- Muted, one line, under the goal line; tapping it shows the way to the
+	-- gym. Hidden while there is no small goal.
+	local nextLine = Instance.new("TextButton")
+	nextLine.Name = "Next"
+	nextLine.AutoButtonColor = false
+	nextLine.BackgroundTransparency = 1
+	nextLine.BorderSizePixel = 0
+	nextLine.FontFace = Theme.fonts.body
+	nextLine.TextSize = textSizes.small + 1
+	nextLine.TextColor3 = colors.muted
+	nextLine.TextXAlignment = Enum.TextXAlignment.Left
+	nextLine.TextYAlignment = Enum.TextYAlignment.Center
+	nextLine.TextTruncate = Enum.TextTruncate.AtEnd
+	nextLine.Text = ""
+	nextLine.Visible = false
+	nextLine.ZIndex = Z_PANEL
+	nextLine.Parent = goal
+	nextLine.Activated:Connect(function()
+		local tapped = onNextTapped
+		if tapped ~= nil then
+			tapped()
+		end
+	end)
 	local action = button("Action", "", goal, false)
 	local actionStroke = action:FindFirstChildOfClass("UIStroke") :: UIStroke
 	action.Activated:Connect(function()
@@ -407,6 +438,7 @@ local function buildGoal(parent: Instance): GoalCard
 	return {
 		frame = goal,
 		line = line,
+		nextLine = nextLine,
 		action = action,
 		actionStroke = actionStroke,
 		skip = skip,
@@ -552,6 +584,18 @@ function Main.mount(
 
 	local shownSlots = 0
 	local goalWanted = true
+	-- The goal state of the last render, and the world whose "Next" line the
+	-- player tapped, for the gym beam.
+	local lastGoalState: NextGoal.State? = nil
+	local tappedWorld: string? = nil
+	onNextTapped = function()
+		local state = lastGoalState
+		if state == nil then
+			return
+		end
+		tappedWorld = NextGoal.currentWorld(state).id
+		Guide.setGymBeam(NextGoal.gymBeam(state, tappedWorld))
+	end
 	-- The tutorial step the server last sent, and whether a skip is in flight.
 	local tutorialStep: any = nil
 	local skipping = false
@@ -588,7 +632,12 @@ function Main.mount(
 		-- The line has the card's full width; SKIP shares the button row.
 		local skipRoom = if goal.skip.Visible then SKIP_WIDTH + SKIP_GAP else 0
 		local lineHeight = s.goalLine * s.goalLines
-		goal.line.Size = UDim2.new(1, -2 * s.goalPad, 0, lineHeight)
+		-- With a "Next" line, the goal line keeps one line and the last line
+		-- of the area holds the muted "Next" line.
+		local titleHeight = if goal.nextLine.Visible then lineHeight - s.goalLine else lineHeight
+		goal.line.Size = UDim2.new(1, -2 * s.goalPad, 0, titleHeight)
+		goal.nextLine.Position = UDim2.fromOffset(s.goalPad, s.goalPad + titleHeight)
+		goal.nextLine.Size = UDim2.new(1, -2 * s.goalPad, 0, s.goalLine)
 		local actionY = s.goalPad + lineHeight + s.goalGap
 		goal.skip.AnchorPoint = Vector2.new(1, 0)
 		goal.skip.Position = UDim2.new(1, -s.goalPad, 0, actionY)
@@ -719,6 +768,7 @@ function Main.mount(
 		updatePointer()
 
 		local action = GOAL_ACTION[picked.kind]
+		local nextText: string? = nil
 		-- The labelled bar shown in the button's place, when there is one.
 		local progress: { label: string, have: number, need: number }? = nil
 		if tutorial ~= nil then
@@ -751,6 +801,7 @@ function Main.mount(
 			end
 		else
 			goal.line.Text = picked.title
+			nextText = NextGoal.nextLine(goalState, picked)
 			if not picked.ready then
 				local counted = if picked.kind == "pets" or picked.kind == "team"
 					then "Pets"
@@ -758,6 +809,15 @@ function Main.mount(
 				progress = { label = counted, have = picked.have, need = picked.need }
 			end
 		end
+		local nextShown = nextText ~= nil
+		goal.nextLine.Text = nextText or ""
+		if goal.nextLine.Visible ~= nextShown then
+			goal.nextLine.Visible = nextShown
+			applyLayout()
+		end
+		lastGoalState = goalState
+		Guide.setGymBeam(NextGoal.gymBeam(goalState, tappedWorld))
+
 		if picked.ready and action ~= nil then
 			goalScreen = action.screen
 			goal.action.Visible = true

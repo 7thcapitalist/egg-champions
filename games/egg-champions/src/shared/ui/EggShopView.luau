@@ -69,6 +69,8 @@ export type HatchLine = {
 	variant: string?,
 	variantName: string?,
 	newInIndex: boolean,
+	-- The pet's Click Power as the server sent it, or nil when it did not.
+	clickPower: number?,
 }
 
 local EggShopView = {}
@@ -248,6 +250,10 @@ function EggShopView.hatchLines(reply: any): { HatchLine }
 					variant = variantId,
 					variantName = variantName,
 					newInIndex = hatched.newInIndex == true,
+					clickPower = if type(hatched.clickPower) == "number"
+							and hatched.clickPower == hatched.clickPower
+						then hatched.clickPower
+						else nil,
 				})
 			end
 		end

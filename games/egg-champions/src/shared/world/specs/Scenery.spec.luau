@@ -171,6 +171,27 @@ return function()
 			end
 		end)
 
+		it(
+			"stands the name sign in front of the arrival point, facing it, off the paths",
+			function()
+				for _, plan in { Layout.plan(), Layout.plan(withFourthWorld()) } do
+					for _, island in plan.islands do
+						local s = Scenery.forIsland(plan, island)
+						local arrival = plan.arrivals[island.worldId]
+						-- Ahead of the player on landing, not behind.
+						local ahead = (s.signSpot.x - arrival.x) * Layout.FACING.x
+							+ (s.signSpot.z - arrival.z) * Layout.FACING.z
+						expect(ahead > 0).toBeTrue()
+						-- Its text faces the arrival point.
+						expect(s.signLook.x).toEqual(arrival.x)
+						expect(s.signLook.z).toEqual(arrival.z)
+						-- The board (10 studs wide) stays off every path.
+						expect(onPath(s, s.signSpot.x, s.signSpot.z, 5)).toBeFalse()
+					end
+				end
+			end
+		)
+
 		it("never puts a prop in a clear zone, on a path, or off the island", function()
 			for _, s in allSceneries() do
 				expect(#s.props > 0).toBeTrue()

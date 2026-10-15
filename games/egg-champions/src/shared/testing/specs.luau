@@ -34,6 +34,7 @@ return {
 	uiSpecs["NextGoal.spec"],
 	uiSpecs["EdgeArrow.spec"],
 	uiSpecs["EggShopView.spec"],
+	uiSpecs["HatchReveal.spec"],
 	uiSpecs["EggShopLayout.spec"],
 	uiSpecs["PetsLayout.spec"],
 	uiSpecs["PetsView.spec"],

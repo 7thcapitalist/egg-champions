@@ -55,6 +55,9 @@ export type WorldScenery = {
 	props: { Prop },
 	fences: { Segment },
 	signSpot: Layout.Vec,
+	-- The point the sign faces: the arrival point, so its text reads toward
+	-- the player who just landed.
+	signLook: Layout.Vec,
 	parts: number,
 }
 
@@ -66,8 +69,10 @@ Scenery.SEED = 34001
 Scenery.PATH_WIDTH = 6
 -- Open ground kept between a feature and the island's edge.
 Scenery.EDGE_MARGIN = 3
--- Where the world's name sign stands, from the island's center.
-Scenery.SIGN_OFFSET = table.freeze({ x = -22, y = 0, z = 14 })
+-- Where the world's name sign stands, from the island's center: in front of
+-- the arrival point (players face -z on arrival), off to the left of the
+-- path to the gym, so it is in view on landing without hiding the gym.
+Scenery.SIGN_OFFSET = table.freeze({ x = -12, y = 0, z = -16 })
 Scenery.FENCE_PIECE = 8
 -- A fence runs this far outside the path's edge.
 Scenery.FENCE_OFFSET = 1.5
@@ -485,6 +490,7 @@ function Scenery.forIsland(plan: Layout.Plan, island: Layout.Island): WorldScene
 		props = {},
 		fences = {},
 		signSpot = signSpot,
+		signLook = { x = arrival.x, y = arrival.y, z = arrival.z },
 		parts = 0,
 	}
 

@@ -269,8 +269,7 @@ function Builder.buildAll(): Built
 
 		local scenery = sceneries[island.worldId]
 		WorldTerrain.build(scenery)
-		local o = island.origin
-		Kit.sign(facing(scenery.signSpot, o), palette, island.name).Parent = folder
+		Kit.sign(facing(scenery.signSpot, scenery.signLook), palette, island.name).Parent = folder
 		if island.worldIndex ~= plan.islands[1].worldIndex then
 			Kit.arrivalPad(at(plan.arrivals[island.worldId]), palette).Parent = folder
 		end
