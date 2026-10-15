@@ -47,6 +47,7 @@ local NextGoal = require(uiShared:WaitForChild("NextGoal"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
 local Pointer = require(script.Parent:WaitForChild("Pointer"))
+local Guide = require(script.Parent:WaitForChild("Guide"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
 local Effects =
 	require((script.Parent :: Instance).Parent:WaitForChild("Effects"):WaitForChild("Effects"))
@@ -55,6 +56,10 @@ local State = require(script.Parent:WaitForChild("State"))
 local colors = Theme.colors
 local sizes = Theme.sizes
 local textSizes = Theme.textSizes
+
+-- Share of the header width the tutorial bar takes, centered between the
+-- title on the left and the coins and Close on the right.
+local GUIDE_WIDTH = 0.44
 
 local EggShop = {}
 
@@ -319,6 +324,13 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 	style(close, closeStroke, "muted")
 	close.TextColor3 = colors.text
 	close.BackgroundColor3 = colors.raised
+
+	-- The tutorial's line for this screen (UI/Guide), between the title and
+	-- the coins, such as "Tap HATCH on the Meadow Egg".
+	local guideBar = Guide.bar(header)
+	guideBar.AnchorPoint = Vector2.new(0.5, 0.5)
+	guideBar.Position = UDim2.fromScale(0.5, 0.5)
+	guideBar.Size = UDim2.new(GUIDE_WIDTH, 0, 0, sizes.minTap - 8)
 
 	-- The cards, two per row, scrolling when there are more than fit. Nothing
 	-- above the list ever changes height, so the scroll position is kept.

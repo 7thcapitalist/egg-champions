@@ -32,6 +32,9 @@ local allEvents = {
 }
 
 local closed: Tutorial.Screens = { eggsOpen = false, petsOpen = false }
+local eggs: Tutorial.Screens = { eggsOpen = true, petsOpen = false }
+local pets: Tutorial.Screens = { eggsOpen = false, petsOpen = true }
+local petsPicked: Tutorial.Screens = { eggsOpen = false, petsOpen = true, petSelected = true }
 
 return function()
 	describe("Tutorial", function()
@@ -242,7 +245,13 @@ return function()
 			expect(equipCard.target).toEqual("menu:Pets")
 			local inPets = Tutorial.card(steps.equip, { eggsOpen = false, petsOpen = true })
 			assert(inPets ~= nil, "expected a card")
-			expect(inPets.target).toEqual("equip")
+			expect(inPets.target).toEqual("pet:first")
+			local picked = Tutorial.card(
+				steps.equip,
+				{ eggsOpen = false, petsOpen = true, petSelected = true }
+			)
+			assert(picked ~= nil, "expected a card")
+			expect(picked.target).toEqual("equip")
 
 			local gymCard = Tutorial.card(steps.gym, closed)
 			assert(gymCard ~= nil, "expected a card")
@@ -251,6 +260,69 @@ return function()
 
 			expect(Tutorial.card(steps.done, closed)).toEqual(nil)
 			expect(Tutorial.card(nil, closed)).toEqual(nil)
+		end)
+
+		it("shows an in-screen bar only while a screen is open", function()
+			for step = steps.click, steps.gym do
+				local card = Tutorial.card(step, closed)
+				assert(card ~= nil, "expected a card")
+				expect(card.screenText).toEqual(nil)
+				for _, screens in { eggs, pets, petsPicked } do
+					local inside = Tutorial.card(step, screens)
+					assert(inside ~= nil, "expected a card")
+					expect(type(inside.screenText)).toEqual("string")
+					expect(#(inside.screenText :: string) > 0).toBeTrue()
+				end
+			end
+		end)
+
+		it("guides the hatch step inside the egg shop", function()
+			local card = Tutorial.card(steps.hatch, eggs)
+			assert(card ~= nil, "expected a card")
+			local egg = Config.eggById[Tutorial.firstEggId]
+			expect(card.screenText).toEqual("Tap HATCH on the " .. egg.name)
+			expect(card.target).toEqual("hatch:" .. egg.id)
+		end)
+
+		it("guides the equip step from the first pet tile to EQUIP", function()
+			local card = Tutorial.card(steps.equip, pets)
+			assert(card ~= nil, "expected a card")
+			expect(card.screenText).toEqual("Tap your new pet, then EQUIP")
+			expect(card.target).toEqual("pet:first")
+			local picked = Tutorial.card(steps.equip, petsPicked)
+			assert(picked ~= nil, "expected a card")
+			expect(picked.target).toEqual("equip")
+		end)
+
+		it("never points at a button hidden behind another screen", function()
+			-- Hatch step with the pets screen open: EGGS is behind it.
+			local hatch = Tutorial.card(steps.hatch, pets)
+			assert(hatch ~= nil, "expected a card")
+			expect(hatch.target).toEqual(nil)
+			-- Equip step with the egg shop still open: PETS is behind it.
+			local equip = Tutorial.card(steps.equip, eggs)
+			assert(equip ~= nil, "expected a card")
+			expect(equip.target).toEqual(nil)
+			for step = steps.click, steps.gym do
+				for _, screens in { eggs, pets, petsPicked } do
+					local card = Tutorial.card(step, screens)
+					assert(card ~= nil, "expected a card")
+					local target = card.target
+					if target ~= nil then
+						expect(string.sub(target, 1, 5) == "menu:").toEqual(false)
+					end
+				end
+			end
+		end)
+
+		it("closes the egg shop only when the hatch step ends", function()
+			expect(Tutorial.closesEggShop(steps.hatch, steps.equip)).toBeTrue()
+			expect(Tutorial.closesEggShop(steps.hatch, steps.done)).toBeTrue()
+			expect(Tutorial.closesEggShop(steps.hatch, steps.hatch)).toEqual(false)
+			expect(Tutorial.closesEggShop(steps.click, steps.equip)).toEqual(false)
+			expect(Tutorial.closesEggShop(steps.equip, steps.gym)).toEqual(false)
+			expect(Tutorial.closesEggShop(nil, steps.equip)).toEqual(false)
+			expect(Tutorial.closesEggShop(steps.hatch, nil)).toEqual(false)
 		end)
 	end)
 end

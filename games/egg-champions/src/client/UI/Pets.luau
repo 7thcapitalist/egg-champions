@@ -17,16 +17,29 @@
 	  Equip and Unequip send the remotes; the server decides and a refusal is
 	  shown as a readable message. The team bar on the main screen updates from
 	  the ProfileChanged push the server sends after an accepted change.
+	- Where everything sits comes from shared/ui/PetsLayout, whose specs check
+	  808 x 432 and 1280 x 720: EQUIP sits right under the pet name and the
+	  rest of the detail panel scrolls; the filter row wraps; tile markers
+	  each get their own line.
+	- Tutorial: the header shows UI/Guide's one-line bar while a step has a
+	  line for this screen. The first owned pet tile registers as the
+	  "pet:first" pointer target, and the selection goes to Guide so the
+	  pointer moves on to EQUIP.
 ]]
 
+local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local PetVisual = require(Shared:WaitForChild("PetVisual"))
-local PetsView = require(Shared:WaitForChild("ui"):WaitForChild("PetsView"))
+local uiShared = Shared:WaitForChild("ui")
+local PetsView = require(uiShared:WaitForChild("PetsView"))
+local PetsLayout = require(uiShared:WaitForChild("PetsLayout"))
+local HudLayout = require(uiShared:WaitForChild("HudLayout"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
+local Guide = require(script.Parent:WaitForChild("Guide"))
 local Pointer = require(script.Parent:WaitForChild("Pointer"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
 local State = require(script.Parent:WaitForChild("State"))
@@ -35,25 +48,17 @@ local colors = Theme.colors
 local sizes = Theme.sizes
 local textSizes = Theme.textSizes
 
--- Layout of the mockup, in pixels at 1280 x 720.
+-- Pixel sizes that do not change with the screen. Everything that does
+-- comes from shared/ui/PetsLayout.
 local LAYOUT = table.freeze({
-	panelWidth = 1140,
-	panelHeight = 0.9,
-	padding = 24,
-	gap = 16,
-	headerHeight = 48,
 	tabHeight = 40,
-	controlsHeight = 36,
-	detailWidth = 340,
-	tileHeight = 116,
-	columns = 5,
-	tileBlock = 44,
 	eggRowHeight = 32,
 	mark = 12,
-	detailBlock = 96,
 	statRow = 26,
-	equipHeight = 48,
 })
+
+-- The pointer target name of the first owned pet tile (Tutorial.card).
+local FIRST_PET_TARGET = "pet:first"
 
 type Tab = "pets" | "index" | "fruit"
 
@@ -136,17 +141,24 @@ local function stripe(parent: Instance, rarity: string)
 	s.BackgroundColor3 = Theme.rarityColor(rarity)
 	s.Size = UDim2.new(1, 0, 0, sizes.stripe)
 	s.ZIndex = 2
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, sizes.stripe)
+	corner.Parent = s
 end
 
 -- A tile button with the shared look: raised panel, rarity stripe, block and
--- name. Returns the button and a frame for the tile's markers.
+-- name. Returns the button and a frame for the tile's markers, which stack
+-- one per line when stacked is true. Tiles do not clip, so the tutorial
+-- outline around one shows in full.
 local function tileButton(
 	parent: Instance,
+	s: PetsLayout.Sizes,
 	name: string,
 	petId: string,
 	rarity: string,
 	order: number,
-	dim: boolean
+	dim: boolean,
+	stacked: boolean
 ): (TextButton, Frame)
 	local tile = Instance.new("TextButton")
 	tile.Name = name
@@ -155,16 +167,16 @@ local function tileButton(
 	tile.BorderSizePixel = 0
 	tile.BackgroundColor3 = colors.raised
 	tile.LayoutOrder = order
-	tile.ClipsDescendants = true
+	tile.ClipsDescendants = false
 	tile.Parent = parent
 	Theme.panel(tile, sizes.radius)
 	stripe(tile, rarity)
 	local body = frame("Body", tile)
 	body.Size = UDim2.fromScale(1, 1)
-	pad(body, 10)
-	local bodyList = list(body, Enum.FillDirection.Vertical, 6)
+	pad(body, s.tilePad)
+	local bodyList = list(body, Enum.FillDirection.Vertical, s.markerGap)
 	bodyList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	local pet = block(body, petId, LAYOUT.tileBlock)
+	local pet = block(body, petId, s.tileBlock)
 	pet.LayoutOrder = 1
 	if dim then
 		pet.BackgroundTransparency = 0.7
@@ -177,17 +189,50 @@ local function tileButton(
 		name = "Name",
 		text = Config.petById[petId].name,
 		font = Theme.fonts.label,
-		size = textSizes.petName,
+		size = s.tileName - 2,
 		color = if dim then colors.muted else colors.text,
 		parent = body,
 	})
 	label.LayoutOrder = 2
+	label.AutomaticSize = Enum.AutomaticSize.None
+	label.Size = UDim2.new(1, 0, 0, s.tileName)
+	label.TextTruncate = Enum.TextTruncate.AtEnd
 	local marks = frame("Marks", body)
 	marks.LayoutOrder = 3
-	marks.AutomaticSize = Enum.AutomaticSize.XY
-	local marksList = list(marks, Enum.FillDirection.Horizontal, 6)
-	marksList.VerticalAlignment = Enum.VerticalAlignment.Center
+	if stacked then
+		marks.AutomaticSize = Enum.AutomaticSize.Y
+		marks.Size = UDim2.fromScale(1, 0)
+		local marksList = list(marks, Enum.FillDirection.Vertical, s.markerGap)
+		marksList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	else
+		marks.AutomaticSize = Enum.AutomaticSize.XY
+		local marksList = list(marks, Enum.FillDirection.Horizontal, 6)
+		marksList.VerticalAlignment = Enum.VerticalAlignment.Center
+	end
 	return tile, marks
+end
+
+-- One marker line on a tile: full width, cut off with an ellipsis rather
+-- than running out of the tile.
+local function tileMarker(
+	parent: Instance,
+	s: PetsLayout.Sizes,
+	text: string,
+	color: Color3,
+	order: number
+)
+	local line = Theme.text({
+		name = "Marker",
+		text = Theme.label(text),
+		font = Theme.fonts.label,
+		size = s.marker - 1,
+		color = color,
+		parent = parent,
+	})
+	line.LayoutOrder = order
+	line.AutomaticSize = Enum.AutomaticSize.None
+	line.Size = UDim2.new(1, 0, 0, s.marker)
+	line.TextTruncate = Enum.TextTruncate.AtEnd
 end
 
 local function marker(parent: Instance, text: string, color: Color3, order: number)
@@ -232,13 +277,35 @@ local function seenMark(parent: Instance, name: string, seen: boolean, color: Co
 		2
 end
 
-local function grid(parent: Instance): UIGridLayout
+local function grid(parent: Instance, layout: PetsLayout.Layout): UIGridLayout
 	local g = Instance.new("UIGridLayout")
 	g.SortOrder = Enum.SortOrder.LayoutOrder
-	g.CellPadding = UDim2.fromOffset(10, 10)
-	g.CellSize = UDim2.new(1 / LAYOUT.columns, -10, 0, LAYOUT.tileHeight)
+	g.CellPadding = UDim2.fromOffset(layout.sizes.tileGap, layout.sizes.tileGap)
+	g.CellSize = UDim2.fromOffset(layout.tileWidth, layout.tileHeight)
 	g.Parent = parent
 	return g
+end
+
+local function place(object: GuiObject, r: PetsLayout.Rect, originX: number, originY: number)
+	object.Position = UDim2.fromOffset(r.x - originX, r.y - originY)
+	object.Size = UDim2.fromOffset(r.w, r.h)
+end
+
+-- Room around the tiles inside a scrolling grid, so the tutorial outline
+-- around a tile is not cut off at the edges.
+local function gridPad(scroll: ScrollingFrame, s: PetsLayout.Sizes)
+	local p = scroll:FindFirstChild("GridPad") :: UIPadding?
+	if p == nil then
+		local made = Instance.new("UIPadding")
+		made.Name = "GridPad"
+		made.Parent = scroll
+		p = made
+	end
+	local padding = p :: UIPadding
+	padding.PaddingTop = UDim.new(0, s.gridPad)
+	padding.PaddingBottom = UDim.new(0, s.gridPad)
+	padding.PaddingLeft = UDim.new(0, s.gridPad)
+	padding.PaddingRight = UDim.new(0, s.gridPad + s.scrollBar)
 end
 
 local function scrolling(name: string, parent: Instance): ScrollingFrame
@@ -283,18 +350,10 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 	panel.BackgroundTransparency = 0
 	panel.BackgroundColor3 = colors.panel
 	panel.Active = true
-	panel.AnchorPoint = Vector2.new(0.5, 0.5)
-	panel.Position = UDim2.fromScale(0.5, 0.5)
-	panel.Size = UDim2.fromScale(0.94, LAYOUT.panelHeight)
-	local limit = Instance.new("UISizeConstraint")
-	limit.MaxSize = Vector2.new(LAYOUT.panelWidth, math.huge)
-	limit.Parent = panel
 	Theme.panel(panel, sizes.radius + 2)
-	pad(panel, LAYOUT.padding)
 
 	-- Header: the three tabs and Close.
 	local header = frame("Header", panel)
-	header.Size = UDim2.new(1, 0, 0, LAYOUT.headerHeight)
 	local tabsFrame = frame("Tabs", header)
 	tabsFrame.AutomaticSize = Enum.AutomaticSize.X
 	tabsFrame.Size = UDim2.fromScale(0, 1)
@@ -320,52 +379,63 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 	close.Position = UDim2.fromScale(1, 0.5)
 	close.Size = UDim2.fromOffset(100, sizes.minTap)
 
+	-- The tutorial's line for this screen, right under the tabs. Showing or
+	-- hiding it moves the body, so the layout is worked out again.
+	local guideShown = false
+	local applyLayout: () -> ()
+	local guideBar = Guide.bar(panel, function(shown: boolean)
+		if shown ~= guideShown then
+			guideShown = shown
+			if applyLayout ~= nil then
+				applyLayout()
+			end
+		end
+	end)
+
 	-- Body: content on the left, the detail panel on the right.
-	local bodyTop = LAYOUT.headerHeight + LAYOUT.gap
 	local content = frame("Content", panel)
-	content.Position = UDim2.fromOffset(0, bodyTop)
-	content.Size = UDim2.new(1, -(LAYOUT.detailWidth + LAYOUT.gap), 1, -bodyTop)
 
 	local detail = frame("Detail", panel)
-	detail.AnchorPoint = Vector2.new(1, 0)
-	detail.Position = UDim2.new(1, 0, 0, bodyTop)
-	detail.Size = UDim2.new(0, LAYOUT.detailWidth, 1, -bodyTop)
 	detail.BackgroundTransparency = 0
 	detail.BackgroundColor3 = colors.raised
 	Theme.panel(detail)
-	pad(detail, 18)
+	-- The pet view and name, EQUIP right under them, then everything else
+	-- in a scrolling area, so EQUIP never leaves the panel.
+	local detailTop = frame("Top", detail)
+	local equipSlot = frame("EquipSlot", detail)
+	local detailScroll = scrolling("More", detail)
 
 	-- My pets page: a hint line, the sort and filter controls, then the grid.
 	local petsPage = frame("MyPets", content)
 	petsPage.Size = UDim2.fromScale(1, 1)
 	local hint = Theme.text({ name = "Hint", color = colors.muted, parent = petsPage })
-	hint.Size = UDim2.new(1, 0, 0, textSizes.body + 4)
 	hint.AutomaticSize = Enum.AutomaticSize.None
 	hint.TextXAlignment = Enum.TextXAlignment.Left
-	local controls = frame("Controls", petsPage)
-	controls.Position = UDim2.fromOffset(0, textSizes.body + 12)
-	controls.Size = UDim2.new(1, 0, 0, LAYOUT.controlsHeight)
-	list(controls, Enum.FillDirection.Horizontal, 8)
-	local function control(name: string, order: number): TextButton
-		local b = button(name, controls, "")
-		b.LayoutOrder = order
+	hint.TextTruncate = Enum.TextTruncate.AtEnd
+	local function control(name: string): TextButton
+		local b = button(name, petsPage, "")
 		b.TextSize = textSizes.small
-		b.AutomaticSize = Enum.AutomaticSize.X
-		b.Size = UDim2.fromScale(0, 1)
+		b.TextScaled = true
+		b.TextTruncate = Enum.TextTruncate.AtEnd
+		local limit = Instance.new("UITextSizeConstraint")
+		limit.MaxTextSize = textSizes.small
+		limit.MinTextSize = 8
+		limit.Parent = b
 		local p = Instance.new("UIPadding")
-		p.PaddingLeft = UDim.new(0, 12)
-		p.PaddingRight = UDim.new(0, 12)
+		p.PaddingLeft = UDim.new(0, 8)
+		p.PaddingRight = UDim.new(0, 8)
 		p.Parent = b
 		return b
 	end
-	local sortButton = control("Sort", 1)
-	local rarityButton = control("Rarity", 2)
-	local typeButton = control("Type", 3)
-	local eggButton = control("Egg", 4)
-	local petsTop = textSizes.body + 12 + LAYOUT.controlsHeight + 10
+	local controlButtons: { TextButton } = {}
+	for _, name in PetsLayout.CONTROLS do
+		table.insert(controlButtons, control(name))
+	end
+	local sortButton = controlButtons[1]
+	local rarityButton = controlButtons[2]
+	local typeButton = controlButtons[3]
+	local eggButton = controlButtons[4]
 	local petsScroll = scrolling("Grid", petsPage)
-	petsScroll.Position = UDim2.fromOffset(0, petsTop)
-	petsScroll.Size = UDim2.new(1, 0, 1, -petsTop)
 
 	-- Index and Fruit Edition pages.
 	local indexScroll = scrolling("Index", content)
@@ -379,13 +449,21 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		text = "A collection line, one per world. The tag never changes a pet's stats.",
 		parent = fruitPage,
 	})
-	fruitNote.Size = UDim2.new(1, 0, 0, textSizes.body + 4)
 	fruitNote.AutomaticSize = Enum.AutomaticSize.None
 	fruitNote.TextXAlignment = Enum.TextXAlignment.Left
+	fruitNote.TextTruncate = Enum.TextTruncate.AtEnd
 	local fruitScroll = scrolling("Grid", fruitPage)
-	fruitScroll.Position = UDim2.fromOffset(0, textSizes.body + 14)
-	fruitScroll.Size = UDim2.new(1, 0, 1, -(textSizes.body + 14))
-	grid(fruitScroll)
+
+	-- The layout for the current screen size, worked out before first use.
+	local function computeLayout(): PetsLayout.Layout
+		local screen = gui.AbsoluteSize
+		local width = if screen.X > 0 then screen.X else 1280
+		local height = if screen.Y > 0 then screen.Y else 720
+		local inset = GuiService:GetGuiInset().Y
+		local hud = HudLayout.compute(width, height - inset, 0)
+		return PetsLayout.compute(width, height, inset + hud.topBar.h, guideShown)
+	end
+	local layout: PetsLayout.Layout = computeLayout()
 
 	local tab: Tab = "pets"
 	local sortKey: PetsView.SortKey = PetsView.DEFAULT_SORT
@@ -422,61 +500,137 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 	end
 
 	local function renderDetail(teamUids: { [string]: boolean })
-		clear(detail)
-		list(detail, Enum.FillDirection.Vertical, 10)
+		clear(detailTop)
+		clear(equipSlot)
+		clear(detailScroll)
+		list(detailScroll, Enum.FillDirection.Vertical, 10)
+		local s = layout.sizes
 		local choice = selected
 		if choice == nil then
 			local empty = Theme.text({
 				name = "Empty",
 				text = "Pick a pet to see its stats and moves.",
 				color = colors.muted,
-				parent = detail,
+				parent = detailTop,
 			})
 			empty.TextWrapped = true
-			empty.AutomaticSize = Enum.AutomaticSize.Y
-			empty.Size = UDim2.fromScale(1, 0)
+			empty.AutomaticSize = Enum.AutomaticSize.None
+			empty.Size = UDim2.fromScale(1, 1)
+			empty.TextXAlignment = Enum.TextXAlignment.Left
 			return
 		end
 		local info = PetsView.detail(choice.petId, choice.variant)
 		local pet = Config.petById[choice.petId]
 
-		local top = frame("Top", detail)
-		top.LayoutOrder = 1
-		top.Size = UDim2.new(1, 0, 0, LAYOUT.detailBlock)
-		local topList = list(top, Enum.FillDirection.Horizontal, 14)
+		-- Top: the pet view and its name, with the markers beside it.
+		local topList = list(detailTop, Enum.FillDirection.Horizontal, 12)
 		topList.VerticalAlignment = Enum.VerticalAlignment.Center
-		local big = block(top, choice.petId, LAYOUT.detailBlock, choice.variant)
+		local big = block(detailTop, choice.petId, s.detailBlock, choice.variant)
 		big.LayoutOrder = 1
 		local bigStroke = Instance.new("UIStroke")
 		bigStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 		bigStroke.Thickness = 2
 		bigStroke.Color = Theme.rarityColor(pet.rarity)
 		bigStroke.Parent = big
-		local words = frame("Words", top)
+		local words = frame("Words", detailTop)
 		words.LayoutOrder = 2
-		words.AutomaticSize = Enum.AutomaticSize.XY
-		list(words, Enum.FillDirection.Vertical, 4)
-		Theme.text({
+		words.Size = UDim2.new(1, -(s.detailBlock + 12), 1, 0)
+		local wordsList = list(words, Enum.FillDirection.Vertical, 2)
+		wordsList.VerticalAlignment = Enum.VerticalAlignment.Center
+		local nameLabel = Theme.text({
 			name = "Name",
 			text = Theme.label(info.name),
 			font = Theme.fonts.heading,
-			size = textSizes.heading,
+			size = s.title,
 			parent = words,
-		}).LayoutOrder =
-			1
-		if info.variantName ~= nil then
-			marker(words, info.variantName, colors.gold, 2)
-		end
-		marker(words, info.rarityName, Theme.rarityColor(pet.rarity), 3)
-		marker(words, info.typeName .. "  " .. info.roleName, colors.muted, 4)
-		if info.editionName ~= nil then
-			marker(words, info.editionName, colors.gold, 5)
+		})
+		nameLabel.LayoutOrder = 1
+		nameLabel.AutomaticSize = Enum.AutomaticSize.None
+		nameLabel.Size = UDim2.new(1, 0, 0, s.title + 2)
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		-- Two short lines, so the top stays inside its fixed height.
+		local variantName = info.variantName
+		local editionName = info.editionName
+		local wordLines: { { text: string, color: Color3 } } = {
+			{
+				text = if variantName ~= nil
+					then variantName .. "  " .. info.rarityName
+					else info.rarityName,
+				color = if variantName ~= nil then colors.gold else Theme.rarityColor(pet.rarity),
+			},
+			{
+				text = info.typeName .. "  " .. info.roleName .. (if editionName ~= nil
+					then "  " .. editionName
+					else ""),
+				color = colors.muted,
+			},
+		}
+		for position, line in wordLines do
+			local label = Theme.text({
+				name = "Marker",
+				text = Theme.label(line.text),
+				font = Theme.fonts.label,
+				size = s.small,
+				color = line.color,
+				parent = words,
+			})
+			label.LayoutOrder = position + 1
+			label.AutomaticSize = Enum.AutomaticSize.None
+			label.Size = UDim2.new(1, 0, 0, s.small + 2)
+			label.TextXAlignment = Enum.TextXAlignment.Left
+			label.TextTruncate = Enum.TextTruncate.AtEnd
 		end
 
-		local stats = frame("Stats", detail)
+		-- EQUIP, at its fixed place right under the name.
+		local uid = choice.uid
+		if uid ~= nil then
+			local equipped = teamUids[uid] == true
+			local action =
+				button("Equip", equipSlot, Theme.label(if equipped then "Unequip" else "Equip"))
+			action.Size = UDim2.fromScale(1, 1)
+			if not equipped then
+				action.BackgroundColor3 = colors.raised
+				action.TextColor3 = colors.gold
+				local stroke = action:FindFirstChildOfClass("UIStroke") :: UIStroke
+				stroke.Color = colors.gold
+				Pointer.register("equip", action)
+			end
+			action.Activated:Connect(function()
+				-- The client never decides: both go to the server as they are.
+				send(if equipped then unequip else equip, uid)
+			end)
+		else
+			local note = Theme.text({
+				name = "NotOwned",
+				text = Theme.label("Not owned in this form"),
+				font = Theme.fonts.label,
+				size = textSizes.small,
+				color = colors.muted,
+				parent = equipSlot,
+			})
+			note.AutomaticSize = Enum.AutomaticSize.None
+			note.Size = UDim2.fromScale(1, 1)
+		end
+
+		-- The rest scrolls: a refusal message first, then stats and moves.
+		if message ~= nil then
+			local note = Theme.text({
+				name = "Message",
+				text = message,
+				color = colors.gold,
+				parent = detailScroll,
+			})
+			note.LayoutOrder = 1
+			note.TextWrapped = true
+			note.AutomaticSize = Enum.AutomaticSize.Y
+			note.Size = UDim2.new(1, -8, 0, 0)
+		end
+
+		local stats = frame("Stats", detailScroll)
 		stats.LayoutOrder = 2
 		stats.AutomaticSize = Enum.AutomaticSize.Y
-		stats.Size = UDim2.fromScale(1, 0)
+		stats.Size = UDim2.new(1, -8, 0, 0)
 		list(stats, Enum.FillDirection.Vertical, 0)
 		for position, stat in info.stats do
 			local row = frame("Stat" .. position, stats)
@@ -491,6 +645,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			local name = Theme.text({
 				name = "Label",
 				text = stat.label,
+				size = s.text,
 				color = colors.muted,
 				parent = row,
 			})
@@ -499,6 +654,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			local value = Theme.text({
 				name = "Value",
 				text = stat.value,
+				size = s.text,
 				font = Theme.fonts.label,
 				parent = row,
 			})
@@ -506,16 +662,16 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			value.Position = UDim2.fromScale(1, 0.5)
 		end
 
-		local moves = frame("Moves", detail)
+		local moves = frame("Moves", detailScroll)
 		moves.LayoutOrder = 3
 		moves.AutomaticSize = Enum.AutomaticSize.Y
-		moves.Size = UDim2.fromScale(1, 0)
+		moves.Size = UDim2.new(1, -8, 0, 0)
 		list(moves, Enum.FillDirection.Vertical, 4)
 		for position, move in info.moves do
 			local line = Theme.text({
 				name = "Move" .. position,
-				text = string.format("%s (%s): %s", move.name, move.kind, move.text),
-				size = textSizes.small + 1,
+				text = string.format("%s: %s", move.name, move.text),
+				size = s.small + 1,
 				parent = moves,
 			})
 			line.LayoutOrder = position
@@ -524,47 +680,19 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			line.AutomaticSize = Enum.AutomaticSize.Y
 			line.Size = UDim2.fromScale(1, 0)
 		end
-
-		local uid = choice.uid
-		if uid ~= nil then
-			local equipped = teamUids[uid] == true
-			local action =
-				button("Equip", detail, Theme.label(if equipped then "Unequip" else "Equip"))
-			action.LayoutOrder = 4
-			action.Size = UDim2.new(1, 0, 0, LAYOUT.equipHeight)
-			if not equipped then
-				action.BackgroundColor3 = colors.raised
-				action.TextColor3 = colors.gold
-				local stroke = action:FindFirstChildOfClass("UIStroke") :: UIStroke
-				stroke.Color = colors.gold
-			end
-			if not equipped then
-				Pointer.register("equip", action)
-			end
-			action.Activated:Connect(function()
-				-- The client never decides: both go to the server as they are.
-				send(if equipped then unequip else equip, uid)
-			end)
-		else
-			marker(detail, "Not owned in this form", colors.muted, 4)
-		end
-		if message ~= nil then
-			local note = Theme.text({
-				name = "Message",
-				text = message,
-				color = colors.gold,
-				parent = detail,
-			})
-			note.LayoutOrder = 5
-			note.TextWrapped = true
-			note.AutomaticSize = Enum.AutomaticSize.Y
-			note.Size = UDim2.fromScale(1, 0)
-		end
 	end
 
 	local function indexTile(parent: Instance, tile: PetsView.IndexTile, order: number)
-		local b, marks =
-			tileButton(parent, tile.petId, tile.petId, tile.rarity, order, not tile.seenAny)
+		local b, marks = tileButton(
+			parent,
+			layout.sizes,
+			tile.petId,
+			tile.petId,
+			tile.rarity,
+			order,
+			not tile.seenAny,
+			false
+		)
 		seenMark(marks, "Normal", tile.seen.normal, colors.text, 1)
 		seenMark(marks, "Shiny", tile.seen.shiny, colors.gold, 2)
 		seenMark(marks, "Golden", tile.seen.golden, colors.gold, 3)
@@ -629,16 +757,29 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			typeButton.Text = Theme.label("Type: " .. PetsView.filterName("type", filter.type))
 			eggButton.Text = Theme.label("Egg: " .. PetsView.filterName("egg", filter.egg))
 			clear(petsScroll)
-			grid(petsScroll)
+			grid(petsScroll, layout)
+			local s = layout.sizes
 			for position, tile in PetsView.arrange(tiles, sortKey, filter) do
-				local b, marks =
-					tileButton(petsScroll, tile.uid, tile.petId, tile.rarity, position, false)
-				marker(marks, tile.clickPowerText, colors.muted, 1)
+				local b, marks = tileButton(
+					petsScroll,
+					s,
+					tile.uid,
+					tile.petId,
+					tile.rarity,
+					position,
+					false,
+					true
+				)
+				-- Each marker on its own line: "Click +3", variant, Equipped.
+				tileMarker(marks, s, tile.clickPowerText, colors.muted, 1)
 				if tile.variantName ~= nil then
-					marker(marks, tile.variantName, colors.gold, 2)
+					tileMarker(marks, s, tile.variantName, colors.gold, 2)
 				end
 				if tile.equipped then
-					marker(marks, "Equipped", colors.gold, 3)
+					tileMarker(marks, s, "Equipped", colors.gold, 3)
+				end
+				if position == 1 then
+					Pointer.register(FIRST_PET_TARGET, b)
 				end
 				local chosen = selected
 				if chosen ~= nil and chosen.uid == tile.uid then
@@ -684,20 +825,65 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 				cells.LayoutOrder = 2
 				cells.AutomaticSize = Enum.AutomaticSize.Y
 				cells.Size = UDim2.fromScale(1, 0)
-				grid(cells)
+				grid(cells, layout)
 				for order, tile in row.tiles do
 					indexTile(cells, tile, order)
 				end
 			end
 		else
 			clear(fruitScroll)
-			grid(fruitScroll)
+			grid(fruitScroll, layout)
 			for order, tile in PetsView.fruitTiles(index) do
 				indexTile(fruitScroll, tile, order)
 			end
 		end
 
 		renderDetail(teamUids)
+		local now = selected
+		Guide.setPetSelected(now ~= nil and now.uid ~= nil)
+	end
+
+	-- Places every part from PetsLayout for the current screen size and
+	-- guide strip, then rebuilds the grids for the new tile size.
+	applyLayout = function()
+		layout = computeLayout()
+		local l = layout
+		local s = l.sizes
+		local p = l.panel
+		place(panel, p, 0, 0)
+		place(header, l.header, p.x, p.y)
+		local tabHeight = math.min(LAYOUT.tabHeight, s.header)
+		for _, view in tabButtons do
+			view.button.Size = UDim2.fromOffset(0, tabHeight)
+			view.button.TextSize = if l.compact then textSizes.small + 1 else textSizes.button
+		end
+		close.Size =
+			UDim2.fromOffset(if l.compact then 80 else 100, math.min(sizes.minTap, s.header))
+		local strip = l.guide
+		if strip ~= nil then
+			place(guideBar, strip, p.x, p.y)
+		end
+		local c = l.content
+		place(content, c, p.x, p.y)
+		local d = l.detail
+		place(detail, d, p.x, p.y)
+		place(detailTop, l.detailTop, d.x, d.y)
+		place(equipSlot, l.equip, d.x, d.y)
+		place(detailScroll, l.detailScroll, d.x, d.y)
+		place(hint, l.hint, c.x, c.y)
+		hint.TextSize = s.text
+		for position, b in controlButtons do
+			place(b, l.controls[position], c.x, c.y)
+		end
+		place(petsScroll, l.grid, c.x, c.y)
+		place(fruitNote, l.hint, c.x, c.y)
+		fruitNote.TextSize = s.text
+		local fruitTop = l.hint.h + s.controlGap
+		fruitScroll.Position = UDim2.fromOffset(0, fruitTop)
+		fruitScroll.Size = UDim2.new(1, 0, 1, -fruitTop)
+		gridPad(petsScroll, s)
+		gridPad(fruitScroll, s)
+		render()
 	end
 
 	sortButton.Activated:Connect(function()
@@ -732,11 +918,16 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 	opener = function(which: Tab)
 		tab = which
 		message = nil
-		render()
 		gui.Enabled = true
+		applyLayout()
 	end
 
-	render()
+	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		if gui.Enabled then
+			applyLayout()
+		end
+	end)
+	applyLayout()
 	gui.Parent = playerGui
 	State.subscribe(function()
 		if gui.Enabled then

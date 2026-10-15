@@ -10,8 +10,11 @@
 		  the first egg.
 		2 hatch: "Open EGGS and hatch your first pet". Points at the EGGS
 		  button, then at the first egg's HATCH button once the shop is open.
+		  The client closes the egg shop shortly after this step ends
+		  (closesEggShop), so the pointer never targets a hidden button.
 		3 equip: "Equip your new pet to your team". Points at PETS, then at
-		  EQUIP once the pets screen is open.
+		  the first owned pet tile once the pets screen is open, then at
+		  EQUIP once a pet is selected.
 		4 gym: "Earn more and challenge the <type> Gym". Points at the first
 		  world's gym.
 		5 done: the card shows normal goals again.
@@ -50,6 +53,8 @@ export type State = {
 export type Screens = {
 	eggsOpen: boolean,
 	petsOpen: boolean,
+	-- True when an owned pet is selected on the pets screen.
+	petSelected: boolean?,
 }
 
 export type Card = {
@@ -57,8 +62,12 @@ export type Card = {
 	text: string,
 	-- The pointer target name, or nil for no pointer. Names:
 	-- "menu:<entry>" for a left menu button, "hatch:<eggId>" for an egg's
-	-- HATCH button, "equip" for the EQUIP button, "gym:<worldId>" for a gym.
+	-- HATCH button, "pet:first" for the first owned pet tile, "equip" for
+	-- the EQUIP button, "gym:<worldId>" for a gym.
 	target: string?,
+	-- The one-line bar shown in the header of the open screen, or nil when
+	-- no screen is open.
+	screenText: string?,
 }
 
 local Tutorial = {}
@@ -206,31 +215,69 @@ function Tutorial.active(step: any): boolean
 	return Tutorial.isStep(step) and step ~= steps.done
 end
 
--- The card line and pointer target for a step, or nil once it is done.
+-- The card line, pointer target and in-screen bar line for a step, or nil
+-- once it is done. A target is only ever a button the player can see: with
+-- the wrong screen open it is nil and the bar says what to do instead.
 function Tutorial.card(step: any, screens: Screens): Card?
 	if not Tutorial.active(step) then
 		return nil
 	end
+	local anyOpen = screens.eggsOpen or screens.petsOpen
 	if step == steps.click then
-		return { step = step, text = "Click anywhere to earn coins", target = nil }
+		return {
+			step = step,
+			text = "Click anywhere to earn coins",
+			target = nil,
+			screenText = if anyOpen then "Close this screen and click to earn coins" else nil,
+		}
 	elseif step == steps.hatch then
+		if screens.eggsOpen then
+			return {
+				step = step,
+				text = "Open EGGS and hatch your first pet",
+				target = "hatch:" .. firstEgg.id,
+				screenText = "Tap HATCH on the " .. firstEgg.name,
+			}
+		end
 		return {
 			step = step,
 			text = "Open EGGS and hatch your first pet",
-			target = if screens.eggsOpen then "hatch:" .. firstEgg.id else "menu:Eggs",
+			target = if anyOpen then nil else "menu:Eggs",
+			screenText = if anyOpen then "Close this screen, then open EGGS" else nil,
 		}
 	elseif step == steps.equip then
+		if screens.petsOpen then
+			local selected = screens.petSelected == true
+			return {
+				step = step,
+				text = "Equip your new pet to your team",
+				target = if selected then "equip" else "pet:first",
+				screenText = if selected
+					then "Tap EQUIP to add it to your team"
+					else "Tap your new pet, then EQUIP",
+			}
+		end
 		return {
 			step = step,
 			text = "Equip your new pet to your team",
-			target = if screens.petsOpen then "equip" else "menu:Pets",
+			target = if anyOpen then nil else "menu:Pets",
+			screenText = if anyOpen then "Your pet hatched. Next, open PETS" else nil,
 		}
 	end
 	return {
 		step = step,
 		text = "Earn more and challenge the " .. Tutorial.gymName(),
 		target = "gym:" .. firstWorld.id,
+		screenText = if anyOpen
+			then "Close this screen and walk to the " .. Tutorial.gymName()
+			else nil,
 	}
+end
+
+-- True when the client should close an open egg shop: the hatch step has
+-- just ended (from the step before to the step now).
+function Tutorial.closesEggShop(before: any, now: any): boolean
+	return before == steps.hatch and Tutorial.isStep(now) and now ~= steps.hatch
 end
 
 return Tutorial

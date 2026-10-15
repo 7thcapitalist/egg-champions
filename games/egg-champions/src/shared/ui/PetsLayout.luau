@@ -1,0 +1,306 @@
+--!strict
+--[[
+	PetsLayout: where every part of the pets screen sits, as plain rectangles
+	in screen pixels, for a given screen size.
+
+	The pets screen (client/UI/Pets) places its panel, filter row, grid and
+	detail panel from compute(), and the specs check the same rectangles at a
+	808 x 432 phone and at 1280 x 720.
+
+	- The panel starts below `top`: the Roblox top bar plus the HUD top bar.
+	- The header holds the tabs and Close. While the tutorial has a line for
+	  this screen, a one-line guide strip sits right under it.
+	- Detail panel: the pet view and name at the top, EQUIP right under them
+	  at a fixed place, and the rest (stats, moves, messages) in a scrolling
+	  area below EQUIP. So EQUIP is never pushed off the panel.
+	- Filter row: the four sort and filter buttons share the content width.
+	  When four do not fit at their minimum width they wrap to two rows of
+	  two (or one per row), so they never run under the detail panel.
+	- Grid: 3 columns when the content is under 500 px wide, 4 under 640,
+	  else 5. A tile holds the pet view, the name and up to three marker
+	  lines (Click Power, variant, Equipped), each on its own line. The grid
+	  keeps gridPad free around the tiles so the tutorial outline around a
+	  tile is not cut off.
+
+	These are pixel sizes of the interface, not game numbers. Nothing here
+	touches the engine.
+]]
+
+export type Rect = {
+	name: string,
+	x: number,
+	y: number,
+	w: number,
+	h: number,
+}
+
+export type Sizes = {
+	margin: number,
+	maxWidth: number,
+	padding: number,
+	header: number,
+	guide: number,
+	gap: number,
+	detailWidth: number,
+	detailPad: number,
+	detailBlock: number,
+	detailGap: number,
+	equip: number,
+	hint: number,
+	control: number,
+	controlGap: number,
+	controlMin: number,
+	scrollBar: number,
+	gridPad: number,
+	tileGap: number,
+	tilePad: number,
+	tileBlock: number,
+	tileName: number,
+	marker: number,
+	markerGap: number,
+	title: number,
+	text: number,
+	small: number,
+}
+
+export type Layout = {
+	compact: boolean,
+	sizes: Sizes,
+	panel: Rect,
+	header: Rect,
+	guide: Rect?,
+	content: Rect,
+	detail: Rect,
+	detailTop: Rect,
+	equip: Rect,
+	detailScroll: Rect,
+	hint: Rect,
+	controls: { Rect },
+	controlRows: number,
+	grid: Rect,
+	columns: number,
+	tileWidth: number,
+	tileHeight: number,
+}
+
+local PetsLayout = {}
+
+-- Below either of these the screen uses its compact sizes (phones).
+PetsLayout.COMPACT_BELOW = table.freeze({ width = 1000, height = 600 })
+
+-- The sort and filter buttons, in order.
+PetsLayout.CONTROLS = table.freeze({ "Sort", "Rarity", "Type", "Egg" })
+
+-- Most marker lines a tile shows: Click Power, variant, Equipped.
+PetsLayout.MARKER_LINES = 3
+
+-- Grid columns by content width: under 500 px 3, under 640 px 4, else 5.
+PetsLayout.COLUMNS = table.freeze({
+	{ below = 500, columns = 3 },
+	{ below = 640, columns = 4 },
+})
+PetsLayout.MAX_COLUMNS = 5
+
+PetsLayout.SIZES = table.freeze({
+	normal = table.freeze({
+		margin = 16,
+		maxWidth = 1140,
+		padding = 20,
+		header = 48,
+		guide = 30,
+		gap = 14,
+		detailWidth = 340,
+		detailPad = 16,
+		detailBlock = 88,
+		detailGap = 10,
+		equip = 48,
+		hint = 20,
+		control = 36,
+		controlGap = 8,
+		controlMin = 150,
+		scrollBar = 8,
+		gridPad = 10,
+		tileGap = 10,
+		tilePad = 8,
+		tileBlock = 44,
+		tileName = 18,
+		marker = 14,
+		markerGap = 2,
+		title = 24,
+		text = 15,
+		small = 12,
+	} :: Sizes),
+	compact = table.freeze({
+		margin = 8,
+		maxWidth = 1140,
+		padding = 10,
+		header = 40,
+		guide = 24,
+		gap = 8,
+		detailWidth = 280,
+		detailPad = 10,
+		detailBlock = 56,
+		detailGap = 6,
+		equip = 44,
+		hint = 16,
+		control = 30,
+		controlGap = 6,
+		controlMin = 130,
+		scrollBar = 6,
+		gridPad = 10,
+		tileGap = 8,
+		tilePad = 6,
+		tileBlock = 36,
+		tileName = 14,
+		marker = 12,
+		markerGap = 2,
+		title = 18,
+		text = 13,
+		small = 11,
+	} :: Sizes),
+})
+
+local function rect(name: string, x: number, y: number, w: number, h: number): Rect
+	return { name = name, x = x, y = y, w = math.max(0, w), h = math.max(0, h) }
+end
+
+function PetsLayout.isCompact(width: number, height: number): boolean
+	return width < PetsLayout.COMPACT_BELOW.width or height < PetsLayout.COMPACT_BELOW.height
+end
+
+-- Grid columns for a content width.
+function PetsLayout.columnsFor(contentWidth: number): number
+	for _, row in PetsLayout.COLUMNS do
+		if contentWidth < row.below then
+			return row.columns
+		end
+	end
+	return PetsLayout.MAX_COLUMNS
+end
+
+-- Buttons per filter row: all four when they fit at their minimum width,
+-- else two, else one.
+function PetsLayout.controlsPerRow(s: Sizes, width: number): number
+	local count = #PetsLayout.CONTROLS
+	for _, perRow in { count, 2, 1 } do
+		if perRow * s.controlMin + (perRow - 1) * s.controlGap <= width then
+			return perRow
+		end
+	end
+	return 1
+end
+
+-- A tile's height: padding, pet view, name and every marker line.
+function PetsLayout.tileHeight(s: Sizes): number
+	local lines = PetsLayout.MARKER_LINES
+	return 2 * s.tilePad
+		+ s.tileBlock
+		+ s.markerGap
+		+ s.tileName
+		+ s.markerGap
+		+ lines * s.marker
+		+ (lines - 1) * s.markerGap
+end
+
+-- The screen for a screen of width x height pixels (inset included),
+-- starting below `top` pixels, with or without the tutorial guide strip.
+function PetsLayout.compute(width: number, height: number, top: number, guide: boolean): Layout
+	local compact = PetsLayout.isCompact(width, height)
+	local s: Sizes = if compact then PetsLayout.SIZES.compact else PetsLayout.SIZES.normal
+
+	local panelWidth = math.min(s.maxWidth, width - 2 * s.margin)
+	local panelX = math.floor((width - panelWidth) / 2)
+	local panelY = top + s.margin
+	local panel = rect("panel", panelX, panelY, panelWidth, height - panelY - s.margin)
+
+	local innerX = panel.x + s.padding
+	local innerW = panel.w - 2 * s.padding
+	local header = rect("header", innerX, panel.y + s.padding, innerW, s.header)
+	local below = header.y + header.h
+	local guideRect: Rect? = nil
+	if guide then
+		guideRect = rect("guide", innerX, below + s.controlGap, innerW, s.guide)
+		below = below + s.controlGap + s.guide
+	end
+	local bodyY = below + s.gap
+	local bodyH = panel.y + panel.h - s.padding - bodyY
+
+	local detail = rect("detail", innerX + innerW - s.detailWidth, bodyY, s.detailWidth, bodyH)
+	local detailInnerX = detail.x + s.detailPad
+	local detailInnerW = detail.w - 2 * s.detailPad
+	local detailTop =
+		rect("detailTop", detailInnerX, detail.y + s.detailPad, detailInnerW, s.detailBlock)
+	local equip =
+		rect("equip", detailInnerX, detailTop.y + detailTop.h + s.detailGap, detailInnerW, s.equip)
+	local scrollY = equip.y + equip.h + s.detailGap
+	local detailScroll = rect(
+		"detailScroll",
+		detailInnerX,
+		scrollY,
+		detailInnerW,
+		detail.y + detail.h - s.detailPad - scrollY
+	)
+
+	local content = rect("content", innerX, bodyY, innerW - s.detailWidth - s.gap, bodyH)
+	local hint = rect("hint", content.x, content.y, content.w, s.hint)
+	local perRow = PetsLayout.controlsPerRow(s, content.w)
+	local controlW = math.floor((content.w - (perRow - 1) * s.controlGap) / perRow)
+	local controlsY = hint.y + hint.h + s.controlGap
+	local controls: { Rect } = {}
+	for position, name in PetsLayout.CONTROLS do
+		local index = position - 1
+		local column = index % perRow
+		local row = index // perRow
+		table.insert(
+			controls,
+			rect(
+				name,
+				content.x + column * (controlW + s.controlGap),
+				controlsY + row * (s.control + s.controlGap),
+				controlW,
+				s.control
+			)
+		)
+	end
+	local controlRows = math.ceil(#PetsLayout.CONTROLS / perRow)
+	local gridY = controlsY + controlRows * s.control + (controlRows - 1) * s.controlGap + s.gap
+	local grid = rect("grid", content.x, gridY, content.w, content.y + content.h - gridY)
+
+	local columns = PetsLayout.columnsFor(content.w)
+	local tileWidth =
+		math.floor((grid.w - s.scrollBar - 2 * s.gridPad - (columns - 1) * s.tileGap) / columns)
+	return {
+		compact = compact,
+		sizes = s,
+		panel = panel,
+		header = header,
+		guide = guideRect,
+		content = content,
+		detail = detail,
+		detailTop = detailTop,
+		equip = equip,
+		detailScroll = detailScroll,
+		hint = hint,
+		controls = controls,
+		controlRows = controlRows,
+		grid = grid,
+		columns = columns,
+		tileWidth = tileWidth,
+		tileHeight = PetsLayout.tileHeight(s),
+	}
+end
+
+-- True when inner lies wholly inside outer.
+function PetsLayout.inside(inner: Rect, outer: Rect): boolean
+	return inner.x >= outer.x
+		and inner.y >= outer.y
+		and inner.x + inner.w <= outer.x + outer.w
+		and inner.y + inner.h <= outer.y + outer.h
+end
+
+-- True when a and b share area (touching edges do not count).
+function PetsLayout.overlap(a: Rect, b: Rect): boolean
+	return a.x < b.x + b.w and b.x < a.x + a.w and a.y < b.y + b.h and b.y < a.y + a.h
+end
+
+return PetsLayout

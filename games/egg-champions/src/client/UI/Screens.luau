@@ -75,6 +75,15 @@ function Screens.isShown(guiName: string): boolean
 	return false
 end
 
+-- Closes the tracked ScreenGui with this name, if it is open.
+function Screens.close(guiName: string)
+	for _, gui in tracked do
+		if gui.Name == guiName then
+			gui.Enabled = false
+		end
+	end
+end
+
 -- Calls listener whenever a tracked screen opens or closes.
 function Screens.onChange(listener: () -> ())
 	table.insert(changeListeners, listener)

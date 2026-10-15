@@ -240,11 +240,70 @@ return function()
 				expect(detail.moves[1].kind).toEqual("basic")
 				local special = Config.specialById[pet.special]
 				expect(detail.moves[2].name).toEqual(special.name)
-				expect(string.find(detail.moves[2].text, special.effect, 1, true) ~= nil).toBeTrue()
+				expect(detail.moves[2].text).toEqual(
+					PetsView.specialText(
+						special,
+						Config.typeById[pet.type].name,
+						if pet.special_off_type ~= nil
+							then Config.typeById[pet.special_off_type].name
+							else nil
+					)
+				)
 				expect(detail.typeName).toEqual(Config.typeById[pet.type].name)
 				expect(detail.roleName).toEqual(Config.roleById[pet.role].name)
 				expect(detail.editionName ~= nil).toEqual(pet.edition ~= nil)
 			end
+		end)
+
+		it("shows special moves with their real numbers from config", function()
+			local cooldown = tostring(Config.constants.special_cooldown_turns)
+			local function has(text: string, part: string): boolean
+				return string.find(text, part, 1, true) ~= nil
+			end
+			for _, special in Config.specials do
+				local text = PetsView.specialText(special, "Fire", "Water")
+				expect(has(text, "after " .. cooldown .. " turns")).toBeTrue()
+				if special.kind == "heal" then
+					expect(
+						has(
+							text,
+							"restores " .. PetsView.number(special.value * 100) .. "% of max HP"
+						)
+					).toBeTrue()
+				elseif special.kind == "guard" or special.kind == "speed" then
+					expect(has(text, PetsView.number(special.value * 100) .. "%")).toBeTrue()
+				elseif special.kind == "drain" then
+					expect(has(text, PetsView.number(special.power) .. " power")).toBeTrue()
+					expect(has(text, PetsView.number(special.value * 100) .. "%")).toBeTrue()
+				elseif special.kind == "attack" then
+					expect(
+						has(text, "Fire attack with " .. PetsView.number(special.power) .. " power")
+					).toBeTrue()
+				elseif special.kind == "offtype" then
+					expect(
+						has(
+							text,
+							"Water attack with " .. PetsView.number(special.power) .. " power"
+						)
+					).toBeTrue()
+				end
+			end
+			local heal = Config.specialById.heal
+			if heal ~= nil and heal.value == 0.3 then
+				expect(PetsView.specialText(heal, "Fire", nil)).toEqual(
+					"restores 30% of max HP. Ready again after " .. cooldown .. " turns"
+				)
+			end
+		end)
+
+		it("labels a tile's Click Power", function()
+			expect(PetsView.clickText(3)).toEqual("Click +3")
+			expect(PetsView.clickText(2.5)).toEqual("Click +2.5")
+			local pet = Config.pets[1]
+			local tiles = PetsView.tiles({ { uid = "a", petId = pet.id } }, {})
+			expect(tiles[1].clickPowerText).toEqual(
+				"Click +" .. PetsView.number(Coins.clickPowerOf({ petId = pet.id, variant = nil }))
+			)
 		end)
 
 		it("turns server refusals into readable messages", function()

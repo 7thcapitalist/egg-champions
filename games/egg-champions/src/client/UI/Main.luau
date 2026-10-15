@@ -46,6 +46,7 @@ local Tutorial = require(Shared:WaitForChild("rules"):WaitForChild("Tutorial"))
 local Theme = require(script.Parent:WaitForChild("Theme"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
 local State = require(script.Parent:WaitForChild("State"))
+local Guide = require(script.Parent:WaitForChild("Guide"))
 local Pointer = require(script.Parent:WaitForChild("Pointer"))
 
 local colors = Theme.colors
@@ -60,10 +61,6 @@ local Z_PANEL = 2
 -- Display sizes, not game numbers.
 local SKIP_WIDTH = 56
 local SKIP_GAP = 6
-
--- The ScreenGui names of the screens the tutorial pointer looks into.
-local EGG_SHOP_GUI = "EggShop"
-local PETS_GUI = "Pets"
 
 -- The goal card button for each tutorial step that opens a screen.
 local TUTORIAL_ACTION: { [number]: { label: string, screen: string } } = {
@@ -511,13 +508,10 @@ function Main.mount(
 		end
 	end
 
-	-- Points at the thing the current tutorial step asks for, or at nothing.
+	-- Points at the thing the current tutorial step asks for, inside a
+	-- screen or on the main screen (UI/Guide), or at nothing.
 	local function updatePointer()
-		local card = Tutorial.card(tutorialStep, {
-			eggsOpen = Screens.isShown(EGG_SHOP_GUI),
-			petsOpen = Screens.isShown(PETS_GUI),
-		})
-		Pointer.set(if card ~= nil then card.target else nil)
+		Guide.setStep(tutorialStep)
 	end
 
 	content:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyLayout)

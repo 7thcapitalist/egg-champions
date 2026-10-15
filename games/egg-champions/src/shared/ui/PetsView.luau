@@ -16,7 +16,8 @@
 	- Detail: a pet's stats with its variant multipliers applied the way the
 	  rule modules apply them (Coins.clickPowerOf for Click Power,
 	  Battle.playerMultiplier with no rebirths for HP and Attack), its type,
-	  rarity and role, and both moves with the special's effect from config.
+	  rarity and role, and both moves with their real numbers from config
+	  (specialText).
 
 	Nothing here decides an equip. The server does, and reasonText only turns
 	its refusal into words. Nothing here changes the state it is given.
@@ -168,6 +169,66 @@ function PetsView.number(value: number): string
 	return text
 end
 
+-- A tile's Click Power line: "Click +3".
+function PetsView.clickText(power: number): string
+	return "Click +" .. PetsView.number(power)
+end
+
+-- A fraction as a whole-number-ish percent: 0.3 -> "30%".
+local function percent(fraction: number): string
+	return PetsView.number(fraction * 100) .. "%"
+end
+
+-- What a special move does, with its real numbers from config/specials.json
+-- (and the basic move power and cooldown from constants), worded the way
+-- shared/rules/Battle applies them. offTypeName is the pet's off-type name
+-- for an off-type move.
+function PetsView.specialText(
+	special: Config.Special,
+	typeName: string,
+	offTypeName: string?
+): string
+	local basic = Config.constants.basic_move_power
+	local text: string
+	if special.kind == "attack" then
+		text = string.format(
+			"%s attack with %s power (basic is %s)",
+			typeName,
+			PetsView.number(special.power),
+			PetsView.number(basic)
+		)
+	elseif special.kind == "drain" then
+		text = string.format(
+			"%s attack with %s power that heals %s of the damage dealt",
+			typeName,
+			PetsView.number(special.power),
+			percent(special.value)
+		)
+	elseif special.kind == "heal" then
+		text = string.format("restores %s of max HP", percent(special.value))
+	elseif special.kind == "guard" then
+		text = string.format("the next hit taken does %s of its damage", percent(special.value))
+	elseif special.kind == "speed" then
+		text = string.format(
+			"raises own Speed by %s for the rest of the battle",
+			percent(special.value)
+		)
+	elseif special.kind == "offtype" then
+		text = string.format(
+			"%s attack with %s power",
+			offTypeName or "Off-type",
+			PetsView.number(special.power)
+		)
+	else
+		text = special.effect
+	end
+	return string.format(
+		"%s. Ready again after %d turns",
+		text,
+		Config.constants.special_cooldown_turns
+	)
+end
+
 local function knownPet(petId: any): Config.Pet?
 	if type(petId) ~= "string" then
 		return nil
@@ -223,7 +284,7 @@ function PetsView.tiles(pets: any, team: any): { Tile }
 					variant = if variant ~= nil then variant.id else nil,
 					variantName = if variant ~= nil then variant.name else nil,
 					clickPower = power,
-					clickPowerText = PetsView.number(power),
+					clickPowerText = PetsView.clickText(power),
 					equipped = equipped[owned.uid] == true,
 				})
 			end
@@ -483,11 +544,12 @@ function PetsView.detail(petId: string, variant: string?): Detail
 	local attack = pet.attack * battleMult
 	local petType = Config.typeById[pet.type]
 	local special = Config.specialById[pet.special]
-	local specialText = special.effect
 	local offType = pet.special_off_type
-	if offType ~= nil then
-		specialText = string.format("%s: %s", specialText, Config.typeById[offType].name)
-	end
+	local specialText = PetsView.specialText(
+		special,
+		petType.name,
+		if offType ~= nil then Config.typeById[offType].name else nil
+	)
 	return {
 		petId = pet.id,
 		name = pet.name,
@@ -511,7 +573,11 @@ function PetsView.detail(petId: string, variant: string?): Detail
 			{
 				name = petType.name .. " Strike",
 				kind = "basic",
-				text = string.format("Basic %s attack, every turn", petType.name),
+				text = string.format(
+					"basic %s attack with %s power, every turn",
+					petType.name,
+					PetsView.number(Config.constants.basic_move_power)
+				),
 			},
 			{
 				name = special.name,

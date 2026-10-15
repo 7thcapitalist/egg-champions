@@ -255,3 +255,8 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-15T02:50:22Z | check 29 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
 | 2026-10-15T02:50:22Z | task 29 | passed | checked with --finish |
 | 2026-10-15T02:50:30Z | task 29 | committed | dcb3607 |
+| 2026-10-15T03:01:12Z | check 30 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T03:01:12Z | check 30 | pass | selene games/egg-champions/src |
+| 2026-10-15T03:01:12Z | check 30 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T03:01:12Z | check 30 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T03:01:12Z | task 30 | passed | checked with --finish |
