@@ -8,14 +8,14 @@
 	Steps, in order:
 		1 click: "Click anywhere to earn coins", until the player can afford
 		  the first egg.
-		2 hatch: "Open EGGS and hatch your first pet". Points at the EGGS
+		2 hatch: "Open EGGS and hatch a pet". Points at the EGGS
 		  button, then at the first egg's HATCH button once the shop is open.
 		  The client closes the egg shop shortly after this step ends
 		  (closesEggShop), so the pointer never targets a hidden button.
-		3 equip: "Equip your new pet to your team". Points at PETS, then at
+		3 equip: "Equip your pet to your team". Points at PETS, then at
 		  the first owned pet tile once the pets screen is open, then at
 		  EQUIP once a pet is selected.
-		4 gym: "Earn more and challenge the <type> Gym". Points at the first
+		4 gym: "Challenge the <type> Gym". Points at the first
 		  world's gym.
 		5 done: the card shows normal goals again.
 
@@ -234,14 +234,14 @@ function Tutorial.card(step: any, screens: Screens): Card?
 		if screens.eggsOpen then
 			return {
 				step = step,
-				text = "Open EGGS and hatch your first pet",
+				text = "Open EGGS and hatch a pet",
 				target = "hatch:" .. firstEgg.id,
 				screenText = "Tap HATCH on the " .. firstEgg.name,
 			}
 		end
 		return {
 			step = step,
-			text = "Open EGGS and hatch your first pet",
+			text = "Open EGGS and hatch a pet",
 			target = if anyOpen then nil else "menu:Eggs",
 			screenText = if anyOpen then "Close this screen, then open EGGS" else nil,
 		}
@@ -250,7 +250,7 @@ function Tutorial.card(step: any, screens: Screens): Card?
 			local selected = screens.petSelected == true
 			return {
 				step = step,
-				text = "Equip your new pet to your team",
+				text = "Equip your pet to your team",
 				target = if selected then "equip" else "pet:first",
 				screenText = if selected
 					then "Tap EQUIP to add it to your team"
@@ -259,14 +259,14 @@ function Tutorial.card(step: any, screens: Screens): Card?
 		end
 		return {
 			step = step,
-			text = "Equip your new pet to your team",
+			text = "Equip your pet to your team",
 			target = if anyOpen then nil else "menu:Pets",
 			screenText = if anyOpen then "Your pet hatched. Next, open PETS" else nil,
 		}
 	end
 	return {
 		step = step,
-		text = "Earn more and challenge the " .. Tutorial.gymName(),
+		text = "Challenge the " .. Tutorial.gymName(),
 		target = "gym:" .. firstWorld.id,
 		screenText = if anyOpen
 			then "Close this screen and walk to the " .. Tutorial.gymName()

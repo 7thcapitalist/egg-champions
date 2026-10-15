@@ -7,8 +7,8 @@
 	  new egg needs no code change.
 	- Where everything sits comes from shared/ui/EggShopLayout, whose specs
 	  check that HATCH is visible without scrolling at 808 x 432 and
-	  1280 x 720. The panel starts below the Roblox top bar (GuiService inset)
-	  and the HUD top bar.
+	  1280 x 720. The panel starts below the Roblox top bar and the HUD top
+	  bar (HudLayout contentTop, from UI/HudInsets).
 	- The top of each card holds the egg's real model (ReplicatedStorage.
 	  PetModels, named by egg id; a flat placeholder until it loads), name,
 	  price, HATCH and HATCH X3. The five pets with rarity and hatch chance
@@ -31,7 +31,6 @@
 	egg stands in the world.
 ]]
 
-local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -43,6 +42,7 @@ local Format = require(uiShared:WaitForChild("Format"))
 local EggShopView = require(uiShared:WaitForChild("EggShopView"))
 local EggShopLayout = require(uiShared:WaitForChild("EggShopLayout"))
 local HudLayout = require(uiShared:WaitForChild("HudLayout"))
+local HudInsets = require(script.Parent:WaitForChild("HudInsets"))
 local NextGoal = require(uiShared:WaitForChild("NextGoal"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
@@ -639,9 +639,8 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		if screen.X <= 0 or screen.Y <= 0 then
 			return
 		end
-		local inset = GuiService:GetGuiInset().Y
-		local hud = HudLayout.compute(screen.X, screen.Y - inset, 0)
-		local l = EggShopLayout.compute(screen.X, screen.Y, inset + hud.topBar.h)
+		local hud = HudLayout.compute(screen.X, screen.Y, 0, HudInsets.read(screen))
+		local l = EggShopLayout.compute(screen.X, screen.Y, hud.contentTop)
 		layout = l
 		local s = l.sizes
 		local p = l.panel
@@ -670,6 +669,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		end
 	end
 	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyLayout)
+	HudInsets.onChange(applyLayout)
 	applyLayout()
 
 	-- An egg model loaded later replaces its card's placeholder.

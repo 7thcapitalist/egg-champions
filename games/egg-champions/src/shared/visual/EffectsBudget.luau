@@ -58,6 +58,13 @@ EffectsBudget.CLICK = table.freeze({
 	-- Clicks waiting for the server's credited amount.
 	pendingMax = 24,
 	pendingSeconds = 1.5,
+	-- The coin counter pulses on each credited click.
+	pulseScale = 1.12,
+	pulseSeconds = 0.08,
+	-- A short coin sound, at most once per soundGap seconds.
+	sound = "rbxasset://sounds/electronicpingshort.wav",
+	soundVolume = 0.35,
+	soundGap = 0.06,
 })
 
 -- Hatch sequence, shared by every rarity.

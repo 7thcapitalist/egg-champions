@@ -15,7 +15,8 @@
 	- builds the gym battle screen (UI/Battle), which pays the fee, starts the
 	  battle and sends each move choice, then plays the server's events;
 	- mounts Effects, which pops the coins the server credited (ClickCredited)
-	  at each world click and plays the hatch sequence in the egg shop;
+	  at each world click with a coin sound, pulses Main's coin counter, and
+	  plays the hatch sequence in the egg shop;
 	- mounts Progress, the gym win, rebirth and world unlock effects, which
 	  shows every portal open or locked from ProfileChanged;
 	- builds the rebirth prompt (UI/Rebirth), which sends Rebirth and plays
@@ -67,6 +68,9 @@ Progress.mount(player:WaitForChild("PlayerGui") :: PlayerGui)
 Followers.mount()
 WorldLighting.mount()
 Main.onWorldClick(Effects.clicked)
+Effects.onCredited(function()
+	Main.pulseCoins()
+end)
 Main.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
 	remotes:WaitForChild(Remotes.names.Click) :: RemoteEvent,

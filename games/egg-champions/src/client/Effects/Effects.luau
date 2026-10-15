@@ -16,6 +16,10 @@
 	- The server answers each accepted click with ClickCredited and the coins
 	  it added. That amount pops up at the oldest waiting click, rises and
 	  fades, and a small coin burst plays in the world at the same point.
+	  The pop is drawn above the HUD (a higher DisplayOrder than UI/Main).
+	- Each credited click also plays a short coin sound (at most one per
+	  CLICK.soundGap seconds) and calls the onCredited listeners, which is
+	  how Main pulses the coin counter.
 	- Labels and burst emitters come from pools capped by the budget, so 20
 	  clicks a second recycle the same instances and never queue more.
 
@@ -92,6 +96,9 @@ local pops: Pool.Pool<Pop>? = nil
 local bursts: Pool.Pool<Burst>? = nil
 local pending: Pool.Queue<Vector2> = Pool.newQueue(CLICK.pendingMax)
 local popLayer: ScreenGui? = nil
+local coinSound: Sound? = nil
+local lastSound = -math.huge
+local creditedListeners: { (amount: number) -> () } = {}
 
 local function newPop(parent: Instance): Pop
 	local label = Theme.text({
@@ -208,6 +215,21 @@ function Effects.credited(amount: number)
 	local at = position :: Vector2
 	playPop(at, amount)
 	playBurst(at)
+	local sound = coinSound
+	local now = os.clock()
+	if sound ~= nil and now - lastSound >= CLICK.soundGap then
+		lastSound = now
+		sound.TimePosition = 0
+		sound:Play()
+	end
+	for _, listener in creditedListeners do
+		task.spawn(listener, amount)
+	end
+end
+
+-- Calls listener with the amount of every credited click.
+function Effects.onCredited(listener: (amount: number) -> ())
+	table.insert(creditedListeners, listener)
 end
 
 -- Builds the pools and listens for credited clicks. Call once.
@@ -219,6 +241,13 @@ function Effects.mount(playerGui: PlayerGui, clickCredited: RemoteEvent)
 	gui.DisplayOrder = 5
 	gui.Parent = playerGui
 	popLayer = gui
+
+	local sound = Instance.new("Sound")
+	sound.Name = "CoinSound"
+	sound.SoundId = CLICK.sound
+	sound.Volume = CLICK.soundVolume
+	sound.Parent = gui
+	coinSound = sound
 
 	pops = Pool.new(CLICK.maxLive, function(): Pop
 		return newPop(gui)

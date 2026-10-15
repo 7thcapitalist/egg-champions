@@ -27,7 +27,6 @@
 	  pointer moves on to EQUIP.
 ]]
 
-local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -37,6 +36,7 @@ local uiShared = Shared:WaitForChild("ui")
 local PetsView = require(uiShared:WaitForChild("PetsView"))
 local PetsLayout = require(uiShared:WaitForChild("PetsLayout"))
 local HudLayout = require(uiShared:WaitForChild("HudLayout"))
+local HudInsets = require(script.Parent:WaitForChild("HudInsets"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
 local Guide = require(script.Parent:WaitForChild("Guide"))
@@ -459,9 +459,8 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		local screen = gui.AbsoluteSize
 		local width = if screen.X > 0 then screen.X else 1280
 		local height = if screen.Y > 0 then screen.Y else 720
-		local inset = GuiService:GetGuiInset().Y
-		local hud = HudLayout.compute(width, height - inset, 0)
-		return PetsLayout.compute(width, height, inset + hud.topBar.h, guideShown)
+		local hud = HudLayout.compute(width, height, 0, HudInsets.read(Vector2.new(width, height)))
+		return PetsLayout.compute(width, height, hud.contentTop, guideShown)
 	end
 	local layout: PetsLayout.Layout = computeLayout()
 
@@ -922,11 +921,13 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		applyLayout()
 	end
 
-	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+	local function relayout()
 		if gui.Enabled then
 			applyLayout()
 		end
-	end)
+	end
+	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(relayout)
+	HudInsets.onChange(relayout)
 	applyLayout()
 	gui.Parent = playerGui
 	State.subscribe(function()

@@ -1,26 +1,42 @@
 --!strict
 --[[
 	HudLayout: where every part of the main screen HUD sits, as plain
-	rectangles, for a given screen size.
+	rectangles, for a given screen size and the space Roblox itself uses.
 
-	The main screen (client/UI/Main) places its panels from compute(), and the
-	specs run overlaps() on the same rectangles at 1280 x 720, 1920 x 1080 and
-	a 844 x 390 phone, so a layout that collides is caught before a playtest.
+	All rectangles are in full screen pixels (ScreenGuis with IgnoreGuiInset),
+	so they line up with the inputs, which come from the engine:
+	- the top-bar inset (GuiService.TopbarInset): the free part of Roblox's
+	  top bar, right of its logo, menu, chat and voice buttons and left of
+	  its right-hand buttons;
+	- the chat rect: where Roblox's chat window sits (top left, below the
+	  Roblox top bar), or nil when chat is off. The client reads it from
+	  TextChatService's ChatWindowConfiguration, or uses chatEstimate.
+
+	The Roblox buttons and the chat window are reserved: no HUD part may
+	overlap them. The main screen (client/UI/Main) places its panels from
+	compute(), and the specs run overlaps() on parts plus reserved at
+	808 x 432, 844 x 390, 1092 x 432, 1280 x 720 and 1920 x 1080 with
+	several insets, so a layout that collides is caught before a playtest.
 
 	The parts:
-	- coins: coins and coins per click, top left;
-	- world: the world name, centred in the top bar on its own;
-	- rebirths: the rebirth count, small, top right;
-	- menu: the four menu buttons on the left;
+	- coins: coins and coins per click, starting 8 px right of the inset's
+	  left edge, inside Roblox's top bar row;
+	- world: the world name, centred on the screen when the row allows,
+	  otherwise centred between coins and rebirths;
+	- rebirths: the rebirth count, small, at the right of the row;
+	- menu: the four menu buttons on the left edge, below 45% of the screen
+	  height and below the chat window, vertically centred in what is left;
 	- goal: the next-goal card on the right, at most a quarter of the screen
-	  height: a goal line of up to two lines at GOAL_TEXT pixels or more,
-	  then one button, or a labelled progress bar in the button's place;
+	  height: a goal line of up to two lines at GOAL_TEXT pixels, then one
+	  button (the tutorial's SKIP shares that row), or a labelled progress
+	  bar in the button's place. Every card text must fit (fitsGoal);
 	- team: the team bar, only when at least one pet is equipped. It sits
 	  at the bottom centre, and on compact screens at the bottom left, short
 	  and narrow, so it never covers the character in the middle.
 
-	The top bar itself spans the screen and holds coins, world and rebirths,
-	so it is returned apart (topBar) and not counted as an overlap.
+	The top bar holds coins, world and rebirths, so it is returned apart
+	(topBar) and not counted as an overlap. When Roblox shows no top bar row
+	tall enough (or too narrow) the HUD bar spans the screen right below it.
 
 	These are pixel sizes of the interface, not game numbers. Nothing here
 	touches the engine.
@@ -32,6 +48,15 @@ export type Rect = {
 	y: number,
 	w: number,
 	h: number,
+}
+
+-- The engine inputs. left and right are TopbarInset.Min.X and Max.X, top
+-- is TopbarInset.Max.Y. chat is the chat window rect, nil when chat is off.
+export type Insets = {
+	left: number,
+	right: number,
+	top: number,
+	chat: Rect?,
 }
 
 export type Sizes = {
@@ -55,20 +80,29 @@ export type Sizes = {
 	slotGap: number,
 	teamPad: number,
 	teamBottom: number,
+	chatWidth: number,
+	chatHeight: number,
 }
 
 export type Layout = {
 	compact: boolean,
 	sizes: Sizes,
+	-- True when coins, world and rebirths sit inside Roblox's top bar row.
+	inRow: boolean,
 	topBar: Rect,
+	-- The first y below every top bar: where screens like the egg shop start.
+	contentTop: number,
 	coins: Rect,
 	world: Rect,
 	rebirths: Rect,
 	menu: Rect,
 	goal: Rect,
 	team: Rect?,
+	chat: Rect?,
 	-- Every HUD part that must not overlap another, team included when shown.
 	parts: { Rect },
+	-- Space Roblox uses: its top bar buttons and the chat window.
+	reserved: { Rect },
 }
 
 local HudLayout = {}
@@ -78,6 +112,29 @@ HudLayout.MENU = table.freeze({ "Eggs", "Pets", "Rebirth", "Shop" })
 
 -- The goal line's text size in pixels. It is never scaled down.
 HudLayout.GOAL_TEXT = 18
+
+-- Coins start this far right of the top-bar inset's left edge.
+HudLayout.INSET_GAP = 8
+
+-- The menu never starts above this share of the screen height, so the chat
+-- window (top left) never covers it.
+HudLayout.MENU_BELOW = 0.45
+
+-- Below this, Roblox's top bar row is too short to hold the coins.
+HudLayout.MIN_ROW = 30
+
+-- The narrowest the world name may get before the bar leaves the row.
+HudLayout.MIN_WORLD = 90
+
+-- Average glyph widths, as a share of the text size, for the label font.
+-- Generous on purpose, so a line that fits here fits on screen.
+HudLayout.GLYPH = table.freeze({
+	upper = 0.7,
+	lower = 0.55,
+	digit = 0.58,
+	space = 0.28,
+	other = 0.4,
+})
 
 -- Below either of these the HUD switches to its compact sizes (phones).
 HudLayout.COMPACT_BELOW = table.freeze({ width = 1000, height = 600 })
@@ -93,7 +150,7 @@ HudLayout.SIZES = table.freeze({
 		menuButton = 46,
 		menuGap = 6,
 		menuTop = 24,
-		goalWidth = 260,
+		goalWidth = 280,
 		goalPad = 12,
 		goalLine = 22,
 		goalLines = 2,
@@ -104,6 +161,8 @@ HudLayout.SIZES = table.freeze({
 		slotGap = 8,
 		teamPad = 8,
 		teamBottom = 20,
+		chatWidth = 400,
+		chatHeight = 230,
 	} :: Sizes),
 	compact = table.freeze({
 		topBar = 48,
@@ -112,10 +171,10 @@ HudLayout.SIZES = table.freeze({
 		worldWidth = 200,
 		rebirthsWidth = 100,
 		menuWidth = 104,
-		menuButton = 44,
-		menuGap = 6,
+		menuButton = 34,
+		menuGap = 4,
 		menuTop = 10,
-		goalWidth = 200,
+		goalWidth = 220,
 		goalPad = 6,
 		goalLine = 20,
 		goalLines = 2,
@@ -126,8 +185,13 @@ HudLayout.SIZES = table.freeze({
 		slotGap = 4,
 		teamPad = 4,
 		teamBottom = 10,
+		chatWidth = 320,
+		chatHeight = 100,
 	} :: Sizes),
 })
+
+-- No Roblox top bar and no chat.
+HudLayout.NO_INSETS = table.freeze({ left = 0, right = 0, top = 0, chat = nil }) :: Insets
 
 local function rect(name: string, x: number, y: number, w: number, h: number): Rect
 	return { name = name, x = x, y = y, w = w, h = h }
@@ -147,33 +211,162 @@ function HudLayout.teamSlots(equippedPets: number, teamSize: number): number
 	return math.min(math.floor(equippedPets), math.floor(teamSize))
 end
 
--- The HUD rectangles for a screen of width x height pixels (the area below
--- the Roblox top bar), with slots team slots showing.
-function HudLayout.compute(width: number, height: number, slots: number): Layout
+-- Where Roblox's chat window is expected when the engine has not reported
+-- its size yet: top left, right below Roblox's top bar.
+function HudLayout.chatEstimate(width: number, height: number, top: number): Rect
+	local s: Sizes = if HudLayout.isCompact(width, height)
+		then HudLayout.SIZES.compact
+		else HudLayout.SIZES.normal
+	local w = math.min(s.chatWidth, math.floor(width * 0.4))
+	return rect("chat", HudLayout.INSET_GAP, top + HudLayout.INSET_GAP, w, s.chatHeight)
+end
+
+-- The estimated pixel width of one line of text at size.
+function HudLayout.textWidth(text: string, size: number): number
+	local g = HudLayout.GLYPH
+	local total = 0
+	for i = 1, #text do
+		local c = string.sub(text, i, i)
+		local share = g.other
+		if string.match(c, "%u") then
+			share = g.upper
+		elseif string.match(c, "%l") then
+			share = g.lower
+		elseif string.match(c, "%d") then
+			share = g.digit
+		elseif c == " " then
+			share = g.space
+		end
+		total += share * size
+	end
+	return total
+end
+
+-- How many lines text takes when word wrapped to width pixels at size. A
+-- word wider than the line counts as the lines it would need on its own.
+function HudLayout.lineCount(text: string, width: number, size: number): number
+	local function span(line: string): number
+		return math.max(1, math.ceil(HudLayout.textWidth(line, size) / width))
+	end
+	local lines = 0
+	local current = ""
+	for word in string.gmatch(text, "%S+") do
+		local candidate = if current == "" then word else current .. " " .. word
+		if current ~= "" and HudLayout.textWidth(candidate, size) > width then
+			lines += span(current)
+			current = word
+		else
+			current = candidate
+		end
+	end
+	if current ~= "" then
+		lines += span(current)
+	end
+	return lines
+end
+
+-- True when text fits the goal card's line area at GOAL_TEXT.
+function HudLayout.fitsGoal(text: string, sizes: Sizes): boolean
+	local width = sizes.goalWidth - 2 * sizes.goalPad
+	return HudLayout.lineCount(text, width, HudLayout.GOAL_TEXT) <= sizes.goalLines
+end
+
+-- The HUD rectangles for a full screen of width x height pixels with slots
+-- team slots showing. insets defaults to NO_INSETS.
+function HudLayout.compute(width: number, height: number, slots: number, insets: Insets?): Layout
 	local compact = HudLayout.isCompact(width, height)
 	local s: Sizes = if compact then HudLayout.SIZES.compact else HudLayout.SIZES.normal
+	local i: Insets = insets or HudLayout.NO_INSETS
+	local gap = HudLayout.INSET_GAP
+	local rowTop = math.max(0, i.top)
+	local rowLeft = math.clamp(i.left, 0, width)
+	local rowRight = if i.right > rowLeft then math.min(i.right, width) else width
 
-	local topBar = rect("topBar", 0, 0, width, s.topBar)
-	local coins = rect("coins", s.gutter, 0, s.coinsWidth, s.topBar)
-	local world = rect("world", math.floor((width - s.worldWidth) / 2), 0, s.worldWidth, s.topBar)
-	local rebirths =
-		rect("rebirths", width - s.gutter - s.rebirthsWidth, 0, s.rebirthsWidth, s.topBar)
+	local reserved: { Rect } = {}
 
-	local below = s.topBar + s.menuTop
+	-- Coins, world and rebirths inside Roblox's row when it is tall and wide
+	-- enough; otherwise a bar of their own right below it.
+	local inRow = false
+	local topBar, coins, world, rebirths
+	if rowTop >= HudLayout.MIN_ROW then
+		local coinsX = rowLeft + gap
+		local rebirthsX = rowRight - gap - s.rebirthsWidth
+		local lo = coinsX + s.coinsWidth + gap
+		local hi = rebirthsX - gap
+		if hi - lo >= HudLayout.MIN_WORLD then
+			inRow = true
+			local ww = math.min(s.worldWidth, hi - lo)
+			local wx = math.clamp(math.floor((width - ww) / 2), lo, hi - ww)
+			topBar = rect("topBar", rowLeft, 0, rowRight - rowLeft, rowTop)
+			coins = rect("coins", coinsX, 0, s.coinsWidth, rowTop)
+			world = rect("world", wx, 0, ww, rowTop)
+			rebirths = rect("rebirths", rebirthsX, 0, s.rebirthsWidth, rowTop)
+			if rowLeft > 0 then
+				table.insert(reserved, rect("robloxLeft", 0, 0, rowLeft, rowTop))
+			end
+			if rowRight < width then
+				table.insert(reserved, rect("robloxRight", rowRight, 0, width - rowRight, rowTop))
+			end
+		end
+	end
+	if not inRow then
+		-- A chat window reaching into the bar pushes coins right of it.
+		local coinsX = s.gutter
+		local c = i.chat
+		if c ~= nil and HudLayout.intersects(c, rect("bar", 0, rowTop, width, s.topBar)) then
+			coinsX = math.max(coinsX, c.x + c.w + gap)
+		end
+		local rebirthsX = width - s.gutter - s.rebirthsWidth
+		local lo = coinsX + s.coinsWidth + gap
+		local hi = rebirthsX - gap
+		local ww = math.max(0, math.min(s.worldWidth, hi - lo))
+		local wx = math.clamp(math.floor((width - ww) / 2), lo, math.max(lo, hi - ww))
+		topBar = rect("topBar", 0, rowTop, width, s.topBar)
+		coins = rect("coins", coinsX, rowTop, s.coinsWidth, s.topBar)
+		world = rect("world", wx, rowTop, ww, s.topBar)
+		rebirths = rect("rebirths", rebirthsX, rowTop, s.rebirthsWidth, s.topBar)
+		if rowTop > 0 then
+			table.insert(reserved, rect("robloxBar", 0, 0, width, rowTop))
+		end
+	end
+	local contentTop = topBar.y + topBar.h
+
+	local chat = i.chat
+	if chat ~= nil then
+		table.insert(reserved, chat)
+	end
+
+	-- The team bar's height, also used to keep the menu clear of it on
+	-- compact screens whether or not it shows yet.
+	local teamHeight = s.slotHeight + s.teamPad * 2
+	local teamTop = height - s.teamBottom - teamHeight
+
 	local count = #HudLayout.MENU
-	local menu =
-		rect("menu", s.gutter, below, s.menuWidth, count * s.menuButton + (count - 1) * s.menuGap)
+	local menuHeight = count * s.menuButton + (count - 1) * s.menuGap
+	local bandTop = math.ceil(height * HudLayout.MENU_BELOW)
+	if chat ~= nil and chat.x < s.gutter + s.menuWidth then
+		bandTop = math.max(bandTop, chat.y + chat.h + s.menuGap)
+	end
+	bandTop = math.max(bandTop, contentTop + s.menuTop)
+	local bandBottom = if compact then teamTop - s.menuGap else height - s.gutter
+	local menuY = bandTop + math.max(0, math.floor((bandBottom - bandTop - menuHeight) / 2))
+	local menu = rect("menu", s.gutter, menuY, s.menuWidth, menuHeight)
 
 	local goalHeight = s.goalPad * 2 + s.goalLine * s.goalLines + s.goalGap + s.goalButton
-	local goal = rect("goal", width - s.gutter - s.goalWidth, below, s.goalWidth, goalHeight)
+	local goal = rect(
+		"goal",
+		width - s.gutter - s.goalWidth,
+		contentTop + s.menuTop,
+		s.goalWidth,
+		goalHeight
+	)
 
 	local parts = { coins, world, rebirths, menu, goal }
 	local team: Rect? = nil
 	if slots > 0 then
 		local teamWidth = slots * s.slotWidth + (slots - 1) * s.slotGap + s.teamPad * 2
-		local teamHeight = s.slotHeight + s.teamPad * 2
 		local teamX = if compact then s.gutter else math.floor((width - teamWidth) / 2)
-		local t = rect("team", teamX, height - s.teamBottom - teamHeight, teamWidth, teamHeight)
+		local t = rect("team", teamX, teamTop, teamWidth, teamHeight)
 		team = t
 		table.insert(parts, t)
 	end
@@ -181,14 +374,18 @@ function HudLayout.compute(width: number, height: number, slots: number): Layout
 	return {
 		compact = compact,
 		sizes = s,
+		inRow = inRow,
 		topBar = topBar,
+		contentTop = contentTop,
 		coins = coins,
 		world = world,
 		rebirths = rebirths,
 		menu = menu,
 		goal = goal,
 		team = team,
+		chat = chat,
 		parts = parts,
+		reserved = reserved,
 	}
 end
 
@@ -200,10 +397,23 @@ end
 -- Every pair of rectangles that overlap, as "a/b" in input order.
 function HudLayout.overlaps(rects: { Rect }): { string }
 	local found = {}
-	for i = 1, #rects do
-		for j = i + 1, #rects do
-			if HudLayout.intersects(rects[i], rects[j]) then
-				table.insert(found, rects[i].name .. "/" .. rects[j].name)
+	for a = 1, #rects do
+		for b = a + 1, #rects do
+			if HudLayout.intersects(rects[a], rects[b]) then
+				table.insert(found, rects[a].name .. "/" .. rects[b].name)
+			end
+		end
+	end
+	return found
+end
+
+-- Every HUD part that overlaps a reserved rect, as "part/reserved".
+function HudLayout.blocked(layout: Layout): { string }
+	local found = {}
+	for _, part in layout.parts do
+		for _, r in layout.reserved do
+			if HudLayout.intersects(part, r) then
+				table.insert(found, part.name .. "/" .. r.name)
 			end
 		end
 	end

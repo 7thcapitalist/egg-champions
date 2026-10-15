@@ -5,14 +5,19 @@
 	showing as little as possible at once.
 
 	Every rectangle comes from shared/ui/HudLayout, which the specs check for
-	overlaps at 1280 x 720, 1920 x 1080 and a 844 x 390 phone. The layout is
-	redone whenever the screen size or the number of team slots changes.
+	overlaps at 808 x 432, 1092 x 432, 1280 x 720, 1920 x 1080 and a
+	844 x 390 phone, with Roblox's own buttons and chat window as reserved
+	space (read by UI/HudInsets). The layout is redone whenever the screen
+	size, the top-bar inset, the chat window or the number of team slots
+	changes.
 
-	- Top bar: coins and coins per click on the left, the world name centred
-	  on its own, the rebirth count small on the right. Game passes are not
-	  here; they live only in the Shop screen (UI/Shop).
-	- Left menu: four compact buttons, Eggs, Pets, Rebirth and Shop. The
-	  Index is a tab inside the Pets screen.
+	- Top bar: coins and coins per click on the left, right of Roblox's own
+	  top bar buttons, the world name centred, the rebirth count small on
+	  the right. Game passes are not here; they live only in the Shop
+	  screen (UI/Shop).
+	- Left menu: four compact buttons, Eggs, Pets, Rebirth and Shop, on the
+	  left edge below 45% of the screen height and below the chat window.
+	  The Index is a tab inside the Pets screen.
 	- Next-goal card on the right, picked by shared/ui/NextGoal: a goal line
 	  of up to two lines at HudLayout.GOAL_TEXT pixels (never scaled down)
 	  and one button. When the goal is not reachable yet, a labelled
@@ -33,6 +38,10 @@
 	  pointer is the only gold element: SHOP, the goal button, the per click
 	  line and the slot powers drop their gold until the tutorial is done.
 
+	Click feedback: every click the server credited pulses the coin counter
+	(Main.pulseCoins, called from Effects.onCredited); Effects draws the
+	"+N" at the cursor above this screen and plays the coin sound.
+
 	Clicking: there is no click button. A full screen transparent button sits
 	behind every panel and fires Click on press. Panels are Active so they
 	swallow their own presses, and a press over any panel is also ignored by
@@ -44,10 +53,11 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local GuiService = game:GetService("GuiService")
+local TweenService = game:GetService("TweenService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local EffectsBudget = require(Shared:WaitForChild("visual"):WaitForChild("EffectsBudget"))
 local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local Format = require(uiShared:WaitForChild("Format"))
@@ -60,6 +70,7 @@ local Screens = require(script.Parent:WaitForChild("Screens"))
 local State = require(script.Parent:WaitForChild("State"))
 local Guide = require(script.Parent:WaitForChild("Guide"))
 local Pointer = require(script.Parent:WaitForChild("Pointer"))
+local HudInsets = require(script.Parent:WaitForChild("HudInsets"))
 
 local colors = Theme.colors
 local sizes = Theme.sizes
@@ -110,11 +121,40 @@ export type ClickListener = (position: Vector2) -> ()
 local Main = {}
 
 local clickListeners: { ClickListener } = {}
+-- Scales the coin counter for the pulse on each credited click.
+local coinPulse: UIScale? = nil
+local pulseTween: Tween? = nil
 
 -- Called with the screen position of every world click, for the coin pop.
 -- The server decides the amount.
 function Main.onWorldClick(listener: ClickListener)
 	table.insert(clickListeners, listener)
+end
+
+-- Pulses the coin counter once. Called for every click the server credited.
+function Main.pulseCoins()
+	local scale = coinPulse
+	if scale == nil then
+		return
+	end
+	local previous = pulseTween
+	if previous ~= nil then
+		previous:Cancel()
+	end
+	scale.Scale = 1
+	local t = TweenService:Create(
+		scale,
+		TweenInfo.new(
+			EffectsBudget.CLICK.pulseSeconds,
+			Enum.EasingStyle.Quad,
+			Enum.EasingDirection.Out,
+			0,
+			true
+		),
+		{ Scale = EffectsBudget.CLICK.pulseScale }
+	)
+	pulseTween = t
+	t:Play()
 end
 
 local function frame(name: string, parent: Instance?): Frame
@@ -190,6 +230,12 @@ end
 
 local function place(g: GuiObject, r: HudLayout.Rect)
 	g.Position = UDim2.fromOffset(r.x, r.y)
+	g.Size = UDim2.fromOffset(r.w, r.h)
+end
+
+-- Places g at r, given in screen pixels, inside a parent at origin.
+local function placeIn(g: GuiObject, r: HudLayout.Rect, origin: HudLayout.Rect)
+	g.Position = UDim2.fromOffset(r.x - origin.x, r.y - origin.y)
 	g.Size = UDim2.fromOffset(r.w, r.h)
 end
 
@@ -488,14 +534,17 @@ function Main.mount(
 	clickLayer.Selectable = false
 	clickLayer.Parent = gui
 
-	-- Everything else sits below the Roblox top bar.
+	-- Everything else, in full screen pixels. HudLayout keeps it clear of
+	-- Roblox's own buttons and chat window.
 	local content = frame("Content", gui)
 	content.ZIndex = Z_PANEL
-	local inset = GuiService:GetGuiInset()
-	content.Position = UDim2.fromOffset(0, inset.Y)
-	content.Size = UDim2.new(1, 0, 1, -inset.Y)
+	content.Size = UDim2.fromScale(1, 1)
 
 	local top = buildTopBar(content)
+	local pulse = Instance.new("UIScale")
+	pulse.Name = "Pulse"
+	pulse.Parent = top.coinsBox
+	coinPulse = pulse
 	local menu = buildMenu(content)
 	local goal = buildGoal(content)
 	local teamFrame, teamLayout, teamPadding, slots = buildTeam(content)
@@ -512,16 +561,20 @@ function Main.mount(
 		if area.X <= 0 or area.Y <= 0 then
 			return
 		end
-		local layout = HudLayout.compute(area.X, area.Y, shownSlots)
+		local layout = HudLayout.compute(area.X, area.Y, shownSlots, HudInsets.read(area))
 		local s = layout.sizes
 
-		top.bar.Size = UDim2.new(1, 0, 0, layout.topBar.h)
-		place(top.coinsBox, layout.coins)
-		place(top.world, layout.world)
+		local barRect = layout.topBar
+		place(top.bar, barRect)
+		placeIn(top.coinsBox, layout.coins, barRect)
+		placeIn(top.world, layout.world, barRect)
 		local rebirthRect = layout.rebirths
-		top.rebirths.Position = UDim2.fromOffset(rebirthRect.x, rebirthRect.y + rebirthRect.h * 0.3)
+		top.rebirths.Position = UDim2.fromOffset(
+			rebirthRect.x - barRect.x,
+			rebirthRect.y - barRect.y + rebirthRect.h * 0.3
+		)
 		top.rebirths.Size = UDim2.fromOffset(rebirthRect.w, rebirthRect.h * 0.4)
-		local coinSize = math.min(sizes.coin, layout.coins.h - 16)
+		local coinSize = math.max(12, math.min(sizes.coin, layout.coins.h - 16))
 		top.coin.Size = UDim2.fromOffset(coinSize, coinSize)
 
 		place(menu.frame, layout.menu)
@@ -532,15 +585,16 @@ function Main.mount(
 
 		place(goal.frame, layout.goal)
 		goal.line.Position = UDim2.fromOffset(s.goalPad, s.goalPad)
+		-- The line has the card's full width; SKIP shares the button row.
 		local skipRoom = if goal.skip.Visible then SKIP_WIDTH + SKIP_GAP else 0
 		local lineHeight = s.goalLine * s.goalLines
-		goal.line.Size = UDim2.new(1, -2 * s.goalPad - skipRoom, 0, lineHeight)
-		goal.skip.AnchorPoint = Vector2.new(1, 0)
-		goal.skip.Position = UDim2.new(1, -s.goalPad, 0, s.goalPad)
-		goal.skip.Size = UDim2.fromOffset(SKIP_WIDTH, s.goalLine)
+		goal.line.Size = UDim2.new(1, -2 * s.goalPad, 0, lineHeight)
 		local actionY = s.goalPad + lineHeight + s.goalGap
+		goal.skip.AnchorPoint = Vector2.new(1, 0)
+		goal.skip.Position = UDim2.new(1, -s.goalPad, 0, actionY)
+		goal.skip.Size = UDim2.fromOffset(SKIP_WIDTH, s.goalButton)
 		goal.action.Position = UDim2.fromOffset(s.goalPad, actionY)
-		goal.action.Size = UDim2.new(1, -2 * s.goalPad, 0, s.goalButton)
+		goal.action.Size = UDim2.new(1, -2 * s.goalPad - skipRoom, 0, s.goalButton)
 		goal.bar.Position = goal.action.Position
 		goal.bar.Size = goal.action.Size
 		goal.frame.Visible = goalWanted and not Screens.anyOpen()
@@ -573,6 +627,7 @@ function Main.mount(
 	end
 
 	content:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyLayout)
+	HudInsets.onChange(applyLayout)
 	Screens.onChange(function()
 		goal.frame.Visible = goalWanted and not Screens.anyOpen()
 		updatePointer()
