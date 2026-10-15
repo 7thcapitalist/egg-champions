@@ -883,8 +883,8 @@ This is attempt {attempt} of {total}.""".format(
         self.log("task %s" % tid, "passed", "checked with --finish")
         sha = self.commit("Task %s: %s\n\nBuilt by the coder agent and checked by factory/tools/run_factory.py\n"
                           "--finish. Every check in the brief and the build checks pass." % (tid, task["title"]))
-        self.log("task %s" % tid, "committed", sha)
-        self.commit("Run log for task %s" % tid)
+        # One commit only: a second "run log" commit was cut off by the 45 s
+        # shell limit every time, leaving a staged line and a stale lock.
         print("FINISHED: task %s committed as %s" % (tid, sha))
         return 0
 
