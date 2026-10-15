@@ -13,16 +13,25 @@
 	  here; they live only in the Shop screen (UI/Shop).
 	- Left menu: four compact buttons, Eggs, Pets, Rebirth and Shop. The
 	  Index is a tab inside the Pets screen.
-	- Next-goal card on the right, picked by shared/ui/NextGoal: one line and
-	  one button. Hidden while any menu screen is open (Screens.anyOpen).
+	- Next-goal card on the right, picked by shared/ui/NextGoal: a goal line
+	  of up to two lines at HudLayout.GOAL_TEXT pixels (never scaled down)
+	  and one button. When the goal is not reachable yet, a labelled
+	  progress bar takes the button's place ("Coins for your first egg
+	  34 / 50"). Hidden while any menu screen is open (Screens.anyOpen).
 	  While the first-time tutorial runs (shared/rules/Tutorial, step sent by
 	  the server), the card shows the tutorial line instead, with a small
 	  SKIP that sends SkipTutorial, and UI/Pointer outlines the thing to use.
 	  The tutorial's gym step waits while NextGoal has a small goal before
 	  the gym (more pets, a full team, the next egg): the card shows that
 	  goal, and Guide holds the gym pointer back until it is done.
-	- Team bar at the bottom: hidden until the player owns a pet, then one
-	  slot per owned pet up to constants.team_size (HudLayout.teamSlots).
+	- Team bar at the bottom (bottom left on compact screens): hidden until
+	  the player equips a pet, then one slot per equipped pet up to
+	  constants.team_size (HudLayout.teamSlots). Each slot shows the pet's
+	  name and its own click power ("Click +3"); the top bar shows only the
+	  total ("+8 per click").
+	- Gold marks what to do next. While the tutorial runs, the tutorial
+	  pointer is the only gold element: SHOP, the goal button, the per click
+	  line and the slot powers drop their gold until the tutorial is done.
 
 	Clicking: there is no click button. A full screen transparent button sits
 	behind every panel and fires Click on press. Panels are Active so they
@@ -71,7 +80,8 @@ local TUTORIAL_ACTION: { [number]: { label: string, screen: string } } = {
 	[Tutorial.steps.equip] = { label = "Open pets", screen = Screens.names.Pets },
 }
 
--- The screen each HudLayout.MENU entry opens. Shop is the accent button.
+-- The screen each HudLayout.MENU entry opens. Shop is the accent button once
+-- the tutorial is done.
 local MENU_SCREEN: { [string]: string } = {
 	Eggs = Screens.names.Eggs,
 	Pets = Screens.names.Pets,
@@ -270,7 +280,7 @@ local function buildMenu(parent: Instance): Menu
 	local layout = list(menu, Enum.FillDirection.Vertical, 6)
 	local buttons = {}
 	for position, entry in HudLayout.MENU do
-		local b = button(entry, entry, menu, entry == MENU_ACCENT)
+		local b = button(entry, entry, menu, false)
 		b.LayoutOrder = position
 		local screen = MENU_SCREEN[entry]
 		Pointer.register("menu:" .. entry, b)
@@ -288,18 +298,29 @@ type GoalCard = {
 	action: TextButton,
 	actionStroke: UIStroke,
 	skip: TextButton,
+	bar: Frame,
+	fill: Frame,
+	barLabel: TextLabel,
 }
 
 local goalScreen: string? = nil
 
 local function buildGoal(parent: Instance): GoalCard
 	local goal = panel("NextGoal", parent)
-	local line = fitted({
+	-- A fixed size, wrapping to two lines; never shrunk to fit.
+	local line = Theme.text({
 		name = "Line",
 		parent = goal,
 		font = Theme.fonts.label,
-		maxSize = textSizes.body,
+		size = HudLayout.GOAL_TEXT,
 	})
+	line.AutomaticSize = Enum.AutomaticSize.None
+	line.TextScaled = false
+	line.TextWrapped = true
+	line.TextXAlignment = Enum.TextXAlignment.Left
+	line.TextYAlignment = Enum.TextYAlignment.Center
+	line.TextTruncate = Enum.TextTruncate.AtEnd
+	line.ZIndex = Z_PANEL
 	local action = button("Action", "", goal, false)
 	local actionStroke = action:FindFirstChildOfClass("UIStroke") :: UIStroke
 	action.Activated:Connect(function()
@@ -312,12 +333,40 @@ local function buildGoal(parent: Instance): GoalCard
 	skip.TextSize = textSizes.small
 	skip.TextColor3 = colors.muted
 	skip.Visible = false
+
+	-- The labelled progress bar, in the button's place while the goal is
+	-- out of reach.
+	local bar = frame("Progress", goal)
+	bar.BackgroundTransparency = 0
+	bar.BackgroundColor3 = colors.raised
+	bar.ClipsDescendants = true
+	bar.ZIndex = Z_PANEL
+	bar.Visible = false
+	Theme.panel(bar, sizes.radius)
+	local fill = frame("Fill", bar)
+	fill.BackgroundTransparency = 0
+	fill.BackgroundColor3 = colors.border
+	fill.Size = UDim2.fromScale(0, 1)
+	fill.ZIndex = Z_PANEL
+	local barLabel = fitted({
+		name = "Label",
+		parent = bar,
+		font = Theme.fonts.label,
+		maxSize = textSizes.button,
+		align = Enum.TextXAlignment.Center,
+	})
+	barLabel.Position = UDim2.fromOffset(6, 0)
+	barLabel.Size = UDim2.new(1, -12, 1, 0)
+	barLabel.ZIndex = Z_PANEL + 1
 	return {
 		frame = goal,
 		line = line,
 		action = action,
 		actionStroke = actionStroke,
 		skip = skip,
+		bar = bar,
+		fill = fill,
+		barLabel = barLabel,
 	}
 end
 
@@ -484,12 +533,16 @@ function Main.mount(
 		place(goal.frame, layout.goal)
 		goal.line.Position = UDim2.fromOffset(s.goalPad, s.goalPad)
 		local skipRoom = if goal.skip.Visible then SKIP_WIDTH + SKIP_GAP else 0
-		goal.line.Size = UDim2.new(1, -2 * s.goalPad - skipRoom, 0, s.goalLine)
+		local lineHeight = s.goalLine * s.goalLines
+		goal.line.Size = UDim2.new(1, -2 * s.goalPad - skipRoom, 0, lineHeight)
 		goal.skip.AnchorPoint = Vector2.new(1, 0)
 		goal.skip.Position = UDim2.new(1, -s.goalPad, 0, s.goalPad)
 		goal.skip.Size = UDim2.fromOffset(SKIP_WIDTH, s.goalLine)
-		goal.action.Position = UDim2.fromOffset(s.goalPad, s.goalPad + s.goalLine + s.goalGap)
+		local actionY = s.goalPad + lineHeight + s.goalGap
+		goal.action.Position = UDim2.fromOffset(s.goalPad, actionY)
 		goal.action.Size = UDim2.new(1, -2 * s.goalPad, 0, s.goalButton)
+		goal.bar.Position = goal.action.Position
+		goal.bar.Size = goal.action.Size
 		goal.frame.Visible = goalWanted and not Screens.anyOpen()
 
 		local teamRect = layout.team
@@ -574,6 +627,19 @@ function Main.mount(
 			feesPaid = if type(profile.feesPaid) == "table" then profile.feesPaid else {},
 		}
 
+		-- While the tutorial runs, its pointer is the only gold element.
+		local onboarding = Tutorial.active(profile.tutorialStep)
+		local accentColor = if onboarding then colors.text else colors.gold
+		top.perClick.TextColor3 = accentColor
+		for _, b in menu.buttons do
+			local accent = b.Name == MENU_ACCENT and not onboarding
+			b.TextColor3 = if accent then colors.gold else colors.text
+			local stroke = b:FindFirstChildOfClass("UIStroke")
+			if stroke ~= nil then
+				stroke.Color = if accent then colors.gold else colors.border
+			end
+		end
+
 		top.coins.Text = Format.abbreviate(coins)
 		top.perClick.Text = Theme.label(
 			string.format("+%s per click", Format.abbreviate(number(derived.coinsPerClick)))
@@ -598,17 +664,18 @@ function Main.mount(
 		updatePointer()
 
 		local action = GOAL_ACTION[picked.kind]
-		local progressText: string? = nil
+		-- The labelled bar shown in the button's place, when there is one.
+		local progress: { label: string, have: number, need: number }? = nil
 		if tutorial ~= nil then
 			goal.line.Text = tutorial.text
 			if tutorial.step == Tutorial.steps.click then
 				local price = Tutorial.firstEggPrice()
 				action = nil
-				progressText = string.format(
-					"%s / %s",
-					Format.abbreviate(math.min(coins, price)),
-					Format.abbreviate(price)
-				)
+				progress = {
+					label = "Coins for your first egg",
+					have = math.min(coins, price),
+					need = price,
+				}
 			elseif TUTORIAL_ACTION[tutorial.step] ~= nil then
 				action = TUTORIAL_ACTION[tutorial.step]
 				picked.ready = true
@@ -620,56 +687,90 @@ function Main.mount(
 				action = GOAL_ACTION.gym
 				picked.ready = paid or coins >= fee
 				if not picked.ready then
-					progressText =
-						string.format("%s / %s", Format.abbreviate(coins), Format.abbreviate(fee))
+					progress = {
+						label = "Coins for the gym fee",
+						have = math.min(coins, fee),
+						need = fee,
+					}
 				end
 			end
 		else
-			goal.line.Text = string.format(
-				"%s  %s / %s",
-				Theme.label(picked.title),
-				Format.abbreviate(picked.have),
-				Format.abbreviate(picked.need)
-			)
+			goal.line.Text = picked.title
+			if not picked.ready then
+				local counted = if picked.kind == "pets" or picked.kind == "team"
+					then "Pets"
+					else "Coins"
+				progress = { label = counted, have = picked.have, need = picked.need }
+			end
 		end
 		if picked.ready and action ~= nil then
 			goalScreen = action.screen
+			goal.action.Visible = true
+			goal.bar.Visible = false
 			goal.action.Text = Theme.label(action.label)
-			goal.action.TextColor3 = colors.gold
+			goal.action.TextColor3 = accentColor
 			goal.action.BackgroundColor3 = colors.panel
-			goal.actionStroke.Color = colors.gold
+			goal.actionStroke.Color = if onboarding then colors.text else colors.gold
 			goal.action.AutoButtonColor = true
 		else
 			goalScreen = nil
-			goal.action.Text = Theme.label(progressText or "Not enough coins")
-			goal.action.TextColor3 = colors.muted
-			goal.action.BackgroundColor3 = colors.raised
-			goal.actionStroke.Color = colors.border
-			goal.action.AutoButtonColor = false
+			local shown = progress
+			if shown ~= nil then
+				goal.action.Visible = false
+				goal.bar.Visible = true
+				local share = if shown.need > 0
+					then math.clamp(shown.have / shown.need, 0, 1)
+					else 1
+				goal.fill.Size = UDim2.fromScale(share, 1)
+				goal.barLabel.Text = string.format(
+					"%s %s / %s",
+					shown.label,
+					Format.abbreviate(shown.have),
+					Format.abbreviate(shown.need)
+				)
+			else
+				goal.action.Visible = true
+				goal.bar.Visible = false
+				goal.action.Text = Theme.label("Not enough coins")
+				goal.action.TextColor3 = colors.muted
+				goal.action.BackgroundColor3 = colors.raised
+				goal.actionStroke.Color = colors.border
+				goal.action.AutoButtonColor = false
+			end
 		end
 
 		local owned: { [string]: any } = {}
-		local ownedCount = 0
 		if type(profile.pets) == "table" then
 			for _, pet in profile.pets do
 				if type(pet) == "table" and type(pet.uid) == "string" then
 					owned[pet.uid] = pet
-					ownedCount += 1
 				end
 			end
 		end
-		local slotCount = HudLayout.teamSlots(ownedCount, Config.constants.team_size)
+		local team = if type(profile.team) == "table" then profile.team else {}
+		local equipped = 0
+		for _, uid in team do
+			if owned[uid] ~= nil then
+				equipped += 1
+			end
+		end
+		local slotCount = HudLayout.teamSlots(equipped, Config.constants.team_size)
 		if slotCount ~= shownSlots then
 			shownSlots = slotCount
 			applyLayout()
 		end
 
-		local team = if type(profile.team) == "table" then profile.team else {}
 		local powers = if type(derived.teamClickPower) == "table"
 			then derived.teamClickPower
 			else {}
+		local equippedUids = {}
+		for _, uid in team do
+			if owned[uid] ~= nil then
+				table.insert(equippedUids, uid)
+			end
+		end
 		for position, slot in slots do
-			local uid = team[position]
+			local uid = equippedUids[position]
 			local pet = if uid ~= nil then owned[uid] else nil
 			local data = if pet ~= nil then petsById[pet.petId] else nil
 			if data ~= nil and uid ~= nil then
@@ -685,8 +786,9 @@ function Main.mount(
 				slot.name.TextColor3 = colors.text
 				local power = powers[uid]
 				slot.power.Text = if type(power) == "number"
-					then Theme.label(string.format("+%s click", Format.abbreviate(power)))
+					then string.format("Click +%s", Format.abbreviate(power))
 					else ""
+				slot.power.TextColor3 = accentColor
 			else
 				slot.stripe.BackgroundColor3 = colors.border
 				slot.block.BackgroundTransparency = 1
@@ -695,7 +797,7 @@ function Main.mount(
 					view:Destroy()
 				end
 				slot.block:SetAttribute("PetKey", nil)
-				slot.name.Text = "Empty"
+				slot.name.Text = ""
 				slot.name.TextColor3 = colors.muted
 				slot.power.Text = ""
 			end

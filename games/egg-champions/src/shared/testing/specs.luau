@@ -44,6 +44,7 @@ return {
 	visualSpecs["Progress.spec"],
 	visualSpecs["VariantView.spec"],
 	visualSpecs["ModelTemplates.spec"],
+	visualSpecs["Followers.spec"],
 	analyticsSpecs["Events.spec"],
 	testingSpecs["Runner.spec"],
 }

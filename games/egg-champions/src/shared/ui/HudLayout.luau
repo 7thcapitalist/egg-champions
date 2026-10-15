@@ -13,8 +13,11 @@
 	- rebirths: the rebirth count, small, top right;
 	- menu: the four menu buttons on the left;
 	- goal: the next-goal card on the right, at most a quarter of the screen
-	  height;
-	- team: the team bar at the bottom, only when it shows at least one slot.
+	  height: a goal line of up to two lines at GOAL_TEXT pixels or more,
+	  then one button, or a labelled progress bar in the button's place;
+	- team: the team bar, only when at least one pet is equipped. It sits
+	  at the bottom centre, and on compact screens at the bottom left, short
+	  and narrow, so it never covers the character in the middle.
 
 	The top bar itself spans the screen and holds coins, world and rebirths,
 	so it is returned apart (topBar) and not counted as an overlap.
@@ -44,6 +47,7 @@ export type Sizes = {
 	goalWidth: number,
 	goalPad: number,
 	goalLine: number,
+	goalLines: number,
 	goalGap: number,
 	goalButton: number,
 	slotWidth: number,
@@ -72,6 +76,9 @@ local HudLayout = {}
 -- The menu entries, in order. The Index is a tab inside the Pets screen.
 HudLayout.MENU = table.freeze({ "Eggs", "Pets", "Rebirth", "Shop" })
 
+-- The goal line's text size in pixels. It is never scaled down.
+HudLayout.GOAL_TEXT = 18
+
 -- Below either of these the HUD switches to its compact sizes (phones).
 HudLayout.COMPACT_BELOW = table.freeze({ width = 1000, height = 600 })
 
@@ -89,6 +96,7 @@ HudLayout.SIZES = table.freeze({
 		goalWidth = 260,
 		goalPad = 12,
 		goalLine = 22,
+		goalLines = 2,
 		goalGap = 8,
 		goalButton = 44,
 		slotWidth = 168,
@@ -108,14 +116,15 @@ HudLayout.SIZES = table.freeze({
 		menuGap = 6,
 		menuTop = 10,
 		goalWidth = 200,
-		goalPad = 8,
-		goalLine = 18,
-		goalGap = 6,
-		goalButton = 44,
-		slotWidth = 132,
-		slotHeight = 44,
-		slotGap = 6,
-		teamPad = 6,
+		goalPad = 6,
+		goalLine = 20,
+		goalLines = 2,
+		goalGap = 4,
+		goalButton = 40,
+		slotWidth = 116,
+		slotHeight = 36,
+		slotGap = 4,
+		teamPad = 4,
 		teamBottom = 10,
 	} :: Sizes),
 })
@@ -128,13 +137,14 @@ function HudLayout.isCompact(width: number, height: number): boolean
 	return width < HudLayout.COMPACT_BELOW.width or height < HudLayout.COMPACT_BELOW.height
 end
 
--- How many team slots the bar shows: none until the player owns a pet, then
--- one per owned pet, up to the team size.
-function HudLayout.teamSlots(ownedPets: number, teamSize: number): number
-	if ownedPets <= 0 or teamSize <= 0 then
+-- How many team slots the bar shows: none until the player equips a pet,
+-- then one per equipped pet, up to the team size. An owned pet that is not
+-- equipped never shows as an empty slot.
+function HudLayout.teamSlots(equippedPets: number, teamSize: number): number
+	if equippedPets <= 0 or teamSize <= 0 then
 		return 0
 	end
-	return math.min(math.floor(ownedPets), math.floor(teamSize))
+	return math.min(math.floor(equippedPets), math.floor(teamSize))
 end
 
 -- The HUD rectangles for a screen of width x height pixels (the area below
@@ -154,7 +164,7 @@ function HudLayout.compute(width: number, height: number, slots: number): Layout
 	local menu =
 		rect("menu", s.gutter, below, s.menuWidth, count * s.menuButton + (count - 1) * s.menuGap)
 
-	local goalHeight = s.goalPad * 2 + s.goalLine + s.goalGap + s.goalButton
+	local goalHeight = s.goalPad * 2 + s.goalLine * s.goalLines + s.goalGap + s.goalButton
 	local goal = rect("goal", width - s.gutter - s.goalWidth, below, s.goalWidth, goalHeight)
 
 	local parts = { coins, world, rebirths, menu, goal }
@@ -162,13 +172,8 @@ function HudLayout.compute(width: number, height: number, slots: number): Layout
 	if slots > 0 then
 		local teamWidth = slots * s.slotWidth + (slots - 1) * s.slotGap + s.teamPad * 2
 		local teamHeight = s.slotHeight + s.teamPad * 2
-		local t = rect(
-			"team",
-			math.floor((width - teamWidth) / 2),
-			height - s.teamBottom - teamHeight,
-			teamWidth,
-			teamHeight
-		)
+		local teamX = if compact then s.gutter else math.floor((width - teamWidth) / 2)
+		local t = rect("team", teamX, height - s.teamBottom - teamHeight, teamWidth, teamHeight)
 		team = t
 		table.insert(parts, t)
 	end

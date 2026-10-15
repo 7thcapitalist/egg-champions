@@ -13,6 +13,7 @@ local SCREENS = {
 	{ width = 1280, height = 720 },
 	{ width = 1920, height = 1080 },
 	{ width = 844, height = 390 },
+	{ width = 808, height = 432 },
 }
 local INSETS = { 0, 36, 58 }
 
@@ -67,6 +68,23 @@ return function()
 						expect(layout.goal.h <= screen.height / 4).toBeTrue()
 					end
 				)
+				it(
+					string.format("keeps the team bar low and off the character at %s", label),
+					function()
+						local layout = HudLayout.compute(width, height, teamSize)
+						local team = layout.team :: HudLayout.Rect
+						-- The bottom quarter of the screen.
+						expect(team.y >= height * 0.75).toBeTrue()
+						if layout.compact then
+							-- Bottom left, ending before the middle of the screen.
+							expect(team.x).toEqual(layout.sizes.gutter)
+							expect(team.x + team.w <= width / 2).toBeTrue()
+						else
+							local centre = team.x + team.w / 2
+							expect(math.abs(centre - width / 2) <= 1).toBeTrue()
+						end
+					end
+				)
 				it(string.format("centres the world name at %s", label), function()
 					local layout = HudLayout.compute(width, height, teamSize)
 					local centre = layout.world.x + layout.world.w / 2
@@ -75,8 +93,18 @@ return function()
 			end
 		end
 
+		it("gives the goal line two lines of at least 18 px text", function()
+			expect(HudLayout.GOAL_TEXT >= 18).toBeTrue()
+			for _, kind in { "normal", "compact" } do
+				local s = (HudLayout.SIZES :: any)[kind] :: HudLayout.Sizes
+				expect(s.goalLines).toEqual(2)
+				expect(s.goalLine >= HudLayout.GOAL_TEXT).toBeTrue()
+			end
+		end)
+
 		it("uses compact sizes on the phone only", function()
 			expect(HudLayout.compute(844, 390, 0).compact).toBeTrue()
+			expect(HudLayout.compute(808, 432, 0).compact).toBeTrue()
 			expect(HudLayout.compute(1280, 720, 0).compact).toBeFalse()
 			expect(HudLayout.compute(1920, 1080, 0).compact).toBeFalse()
 		end)
@@ -93,11 +121,11 @@ return function()
 	end)
 
 	describe("HudLayout.teamSlots", function()
-		it("shows nothing before the first pet", function()
+		it("shows nothing before the first pet is equipped", function()
 			expect(HudLayout.teamSlots(0, 3)).toEqual(0)
 		end)
 
-		it("shows one slot per owned pet up to the team size", function()
+		it("shows one slot per equipped pet up to the team size", function()
 			expect(HudLayout.teamSlots(1, 3)).toEqual(1)
 			expect(HudLayout.teamSlots(2, 3)).toEqual(2)
 			expect(HudLayout.teamSlots(3, 3)).toEqual(3)

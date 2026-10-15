@@ -28,6 +28,7 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local Requests = require(Shared:WaitForChild("net"):WaitForChild("Requests"))
 local Profile = require(Shared:WaitForChild("rules"):WaitForChild("Profile"))
 local Profiles = require(script.Parent:WaitForChild("Profiles"))
+local Followers = require(Shared:WaitForChild("visual"):WaitForChild("Followers"))
 
 type Profile = Profile.Profile
 
@@ -82,7 +83,8 @@ function Guard.addDerived(field: string, compute: (Player, Profile) -> any)
 	derivedFields[field] = compute
 end
 
--- Sends the player's current state down through ProfileChanged.
+-- Sends the player's current state down through ProfileChanged, and keeps
+-- the player's FollowerTeam attribute (shared/visual/Followers) in step.
 function Guard.push(player: Player)
 	local profile = Profiles.get(player)
 	if profile == nil or player.Parent == nil then
@@ -99,6 +101,12 @@ function Guard.push(player: Player)
 	end
 	local event = remote(Remotes.names.ProfileChanged) :: RemoteEvent
 	event:FireClient(player, { profile = deepCopy(profile), derived = derived })
+	-- The equipped team, for every client's pet followers. Roblox only
+	-- replicates the attribute when the string changes.
+	local team = Followers.encode(profile.pets, profile.team)
+	if player:GetAttribute(Followers.ATTRIBUTE) ~= team then
+		player:SetAttribute(Followers.ATTRIBUTE, team)
+	end
 end
 
 -- Sends the player a short message through Notice, such as why a portal

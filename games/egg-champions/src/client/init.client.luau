@@ -20,7 +20,9 @@
 	  shows every portal open or locked from ProfileChanged;
 	- builds the rebirth prompt (UI/Rebirth), which sends Rebirth and plays
 	  the rebirth effect only when the server confirms it;
-	- builds the shop (UI/Shop), the only place game passes are offered.
+	- builds the shop (UI/Shop), the only place game passes are offered;
+	- mounts Followers, which shows every nearby player's equipped pets
+	  hovering behind them.
 
 	The cooldown below is touch debounce timing, not a game number.
 ]]
@@ -50,6 +52,7 @@ local Rebirth = require(UI:WaitForChild("Rebirth"))
 local Shop = require(UI:WaitForChild("Shop"))
 local Effects = require(script:WaitForChild("Effects"):WaitForChild("Effects"))
 local Progress = require(script:WaitForChild("Effects"):WaitForChild("Progress"))
+local Followers = require(script:WaitForChild("Effects"):WaitForChild("Followers"))
 
 State.start(remotes:WaitForChild(Remotes.names.ProfileChanged) :: RemoteEvent)
 Effects.mount(
@@ -57,6 +60,7 @@ Effects.mount(
 	remotes:WaitForChild(Remotes.names.ClickCredited) :: RemoteEvent
 )
 Progress.mount(player:WaitForChild("PlayerGui") :: PlayerGui)
+Followers.mount()
 Main.onWorldClick(Effects.clicked)
 Main.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
