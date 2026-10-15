@@ -329,6 +329,42 @@
         "33"
       ],
       "status": "done"
+    },
+    {
+      "id": "35",
+      "title": "HUD clear of Roblox's own buttons and chat, with click feedback",
+      "file": "35-hud-clear-of-roblox-ui.md",
+      "depends_on": [
+        "34"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "36",
+      "title": "A hatch you can see, and a gym you know about",
+      "file": "36-hatch-reveal-and-gym-goal.md",
+      "depends_on": [
+        "35"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "37",
+      "title": "Less on screen in the first minute",
+      "file": "37-first-minute-declutter.md",
+      "depends_on": [
+        "36"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "38",
+      "title": "Studio save bug, analytics funnel, and a playtest mode",
+      "file": "38-bugs-and-playtest-mode.md",
+      "depends_on": [
+        "34"
+      ],
+      "status": "pending"
     }
   ]
 }
