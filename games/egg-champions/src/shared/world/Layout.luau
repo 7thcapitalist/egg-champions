@@ -69,7 +69,7 @@ export type Plan = {
 }
 
 -- Geometry, in studs. Ground tops sit at y = 0.
-local ISLAND_SIZE = 160
+local ISLAND_SIZE = 200
 local ISLAND_SPACING = 400
 local GRID_COLUMNS = 3
 -- Egg stands stand on an arc around the arrival point, on the -z side, so
@@ -83,10 +83,11 @@ local STAND_MAX_SPREAD = math.rad(120)
 -- The gym stands in front of the arrival point too (the spawn faces -z, so
 -- the default camera looks that way), straight ahead and beyond the stand
 -- arc: GYM_CLEARANCE studs of open ground between the stands and the gym's
--- front wall. GYM_SIZE matches the footprint of Kit.gymBuilding, and
+-- front steps. GYM_SIZE matches the footprint of Kit.gymBuilding (a round
+-- arena with steps, inside this square), and
 -- STAND_EXTENT and PORTAL_EXTENT are the half sizes of the stand and portal
 -- props, so the specs can check that nothing overlaps.
-local GYM_SIZE = { width = 24, depth = 18 }
+local GYM_SIZE = { width = 28, depth = 28 }
 local GYM_CLEARANCE = 8
 local STAND_EXTENT = 6
 local PORTAL_EXTENT = 7

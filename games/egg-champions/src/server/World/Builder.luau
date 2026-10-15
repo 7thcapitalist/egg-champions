@@ -3,11 +3,16 @@
 	Builder: generates every world from the world table. Nothing is placed by hand.
 
 	Builder.buildAll reads the plan from shared/world/Layout (which reads
-	Config.worlds) and builds, for each world, one island: ground, cliffs,
-	water, scenery, lights, a name sign, one egg stand per egg, one gym building
-	and one portal. Each world's instances go under one folder in Workspace,
+	Config.worlds) and the scenery plan from shared/world/Scenery, and builds,
+	for each world, one island: terrain (ground, shores, water, hills, ponds,
+	lava, paths, from server/World/Terrain), scenery props (trees, rocks,
+	fences, lights), a name sign, one egg stand per egg, one gym arena and one
+	portal. Each world's instances go under one folder in Workspace,
 	"World_<id>", tagged with the Generated attribute, so a rebuild clears and
-	regenerates those folders and touches nothing else.
+	regenerates those folders and the terrain, and touches nothing else.
+
+	Every part is anchored. Each world's part count is checked against
+	Scenery.PART_BUDGET after the build and stored on its folder.
 
 	It also removes the placeholder Baseplate from the Rojo project (the
 	generated ground replaces it) and moves the SpawnLocation onto world 1.
@@ -25,10 +30,15 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config = require(Shared:WaitForChild("Config"))
 local Layout = require(Shared:WaitForChild("world"):WaitForChild("Layout"))
+local Scenery = require(Shared:WaitForChild("world"):WaitForChild("Scenery"))
+local WorldLook = require(Shared:WaitForChild("world"):WaitForChild("WorldLook"))
+local PetLook = require(Shared:WaitForChild("visual"):WaitForChild("PetLook"))
 local WorldPalette = require(Shared:WaitForChild("world"):WaitForChild("WorldPalette"))
 local WorldNames = require(Shared:WaitForChild("world"):WaitForChild("Names"))
 local Kit = require(script.Parent:WaitForChild("Kit"))
+local WorldTerrain = require(script.Parent:WaitForChild("Terrain"))
 
 -- Each egg's configured model height in studs (GameConfig.models, built from
 -- assets/models.json), so a stand's sign clears its real egg. An egg with no
@@ -80,13 +90,9 @@ export type Built = {
 
 local GENERATED_ATTRIBUTE = "GeneratedWorld"
 local PORTAL_TAG = "Portal"
-local WATER_SIZE = Layout.ISLAND_SIZE + 140
-local SCENERY_RADIUS = 68
-local SCENERY_SLOTS = 12
--- Open ground kept between a scenery prop and the gym's corners, in studs.
-local GYM_SCENERY_GAP = 6
-local LIGHT_RADIUS = 52
-local SIGN_OFFSET: Vec = { x = -22, y = 0, z = 14 }
+-- How far a prop sinks into the ground, so it never floats on the voxel
+-- terrain of a hill.
+local PROP_SINK = 0.4
 
 local function color(c: WorldPalette.RGB): Color3
 	return Color3.fromRGB(c.r, c.g, c.b)
@@ -96,6 +102,7 @@ end
 local converted: { [WorldPalette.Palette]: Palette } = {}
 local function paletteFor(worldId: string, environment: string): Palette
 	local row = WorldPalette.forWorld(worldId, environment)
+	local look = WorldLook.forWorld(worldId, environment)
 	local done = converted[row]
 	if done ~= nil then
 		return done
@@ -113,7 +120,15 @@ local function paletteFor(worldId: string, environment: string): Palette
 		trim = color(row.trim),
 		glow = color(row.glow),
 		text = color(row.text),
+		greens = {},
+		flowers = {},
 	}
+	for _, c in look.greens do
+		table.insert(made.greens, color(c))
+	end
+	for _, c in look.flowers do
+		table.insert(made.flowers, color(c))
+	end
 	converted[row] = made
 	return made
 end
@@ -144,68 +159,66 @@ local function triggerOf(model: Model): BasePart
 	return trigger
 end
 
--- Removes every folder a previous build made, and nothing else.
+-- Removes every folder a previous build made, and the terrain, and nothing
+-- else.
 function Builder.clear()
 	for _, child in Workspace:GetChildren() do
 		if child:IsA("Folder") and child:GetAttribute(GENERATED_ATTRIBUTE) == true then
 			child:Destroy()
 		end
 	end
+	WorldTerrain.clear()
 end
 
--- True when a scenery prop at (x, z) would stand on or crowd the gym.
-local function nearGym(gym: Layout.GymSite?, x: number, z: number): boolean
-	if gym == nil then
-		return false
+type PropBuilder = (CFrame, Palette, number, number) -> Model
+
+local PROP_BUILDERS: { [string]: PropBuilder } = {
+	tree = Kit.tree,
+	palm = Kit.palm,
+	deadTree = Kit.deadTree,
+	rock = Kit.rock,
+	boulder = Kit.boulder,
+	bush = Kit.bush,
+	flower = Kit.flower,
+}
+
+local function buildScenery(folder: Folder, scenery: Scenery.WorldScenery, palette: Palette)
+	local holder = Instance.new("Folder")
+	holder.Name = "Scenery"
+	holder.Parent = folder
+	for _, prop in scenery.props do
+		local make = PROP_BUILDERS[prop.kind]
+		if make == nil then
+			error("Builder: no Kit builder for prop kind " .. prop.kind)
+		end
+		local base = CFrame.new(prop.x, prop.y - PROP_SINK, prop.z) * CFrame.Angles(0, prop.turn, 0)
+		make(base, palette, prop.scale, prop.variant).Parent = holder
 	end
-	local half = Layout.GYM_SIZE
-	local reach = math.sqrt((half.width / 2) ^ 2 + (half.depth / 2) ^ 2) + GYM_SCENERY_GAP
-	return (x - gym.position.x) ^ 2 + (z - gym.position.z) ^ 2 < reach * reach
+	for _, fence in scenery.fences do
+		Kit.fence(
+			Vector3.new(fence.a.x, 0, fence.a.z),
+			Vector3.new(fence.b.x, 0, fence.b.z),
+			palette
+		).Parent =
+			holder
+	end
+	local look = WorldLook.LOOKS[scenery.theme]
+	local glow = color(look.streamGlow)
+	for _, light in scenery.lights do
+		Kit.glow(Vector3.new(light.x, light.y, light.z), glow).Parent = holder
+	end
 end
 
-local function buildScenery(
-	folder: Folder,
-	island: Layout.Island,
-	palette: Palette,
-	gym: Layout.GymSite?
-)
-	local scenery = Instance.new("Folder")
-	scenery.Name = "Scenery"
-	scenery.Parent = folder
-	local rng = Random.new(island.worldIndex)
-	local o = island.origin
-	for slot = 1, SCENERY_SLOTS do
-		-- Slot 1 points along +x, where the portal stands; leave it clear.
-		-- Slots that would crowd the gym are left clear too. The random numbers
-		-- are drawn either way, so the other props keep their places.
-		local angle = (slot - 1) / SCENERY_SLOTS * math.pi * 2
-		local radius = SCENERY_RADIUS - rng:NextNumber(0, 6)
-		local x = o.x + math.cos(angle) * radius
-		local z = o.z + math.sin(angle) * radius
-		local turn = rng:NextNumber(0, math.pi * 2)
-		local scale = rng:NextNumber(0.9, 1.3)
-		if slot ~= 1 and not nearGym(gym, x, z) then
-			local base = CFrame.new(x, o.y, z) * CFrame.Angles(0, turn, 0)
-			local kind = slot % 3
-			local prop = if kind == 0
-				then Kit.rock(base, palette, scale)
-				elseif kind == 1 then Kit.filler(base, palette, scale)
-				else Kit.tree(base, palette, scale)
-			prop.Parent = scenery
+-- Anchors every part in a world and returns how many there are.
+local function settle(folder: Folder): number
+	local count = 0
+	for _, item in folder:GetDescendants() do
+		if item:IsA("BasePart") then
+			item.Anchored = true
+			count += 1
 		end
 	end
-	for corner = 0, 3 do
-		local angle = math.pi / 4 + corner * math.pi / 2
-		local light = Kit.light(
-			CFrame.new(
-				o.x + math.cos(angle) * LIGHT_RADIUS,
-				o.y,
-				o.z + math.sin(angle) * LIGHT_RADIUS
-			),
-			palette
-		)
-		light.Parent = scenery
-	end
+	return count
 end
 
 local function countProps(folders: { [string]: Folder }, prop: string): number
@@ -224,7 +237,9 @@ end
 -- folders first.
 function Builder.buildAll(): Built
 	local plan = Layout.plan()
+	local sceneries = Scenery.planAll(plan)
 	Builder.clear()
+	WorldTerrain.paint()
 
 	local baseplate = Workspace:FindFirstChild("Baseplate")
 	if baseplate ~= nil and baseplate:IsA("BasePart") then
@@ -252,23 +267,14 @@ function Builder.buildAll(): Built
 		folder:SetAttribute("WorldIndex", island.worldIndex)
 		built.folders[island.worldId] = folder
 
-		local base = at(island.origin)
-		Kit.ground(island.size, base, palette).Parent = folder
-		Kit.cliff(island.size, base, palette).Parent = folder
-		Kit.water(WATER_SIZE, base, palette).Parent = folder
+		local scenery = sceneries[island.worldId]
+		WorldTerrain.build(scenery)
 		local o = island.origin
-		local signSpot = { x = o.x + SIGN_OFFSET.x, y = o.y, z = o.z + SIGN_OFFSET.z }
-		Kit.sign(facing(signSpot, o), palette, island.name).Parent = folder
+		Kit.sign(facing(scenery.signSpot, o), palette, island.name).Parent = folder
 		if island.worldIndex ~= plan.islands[1].worldIndex then
 			Kit.arrivalPad(at(plan.arrivals[island.worldId]), palette).Parent = folder
 		end
-		local gymSite: Layout.GymSite? = nil
-		for _, gym in plan.gyms do
-			if gym.worldId == island.worldId then
-				gymSite = gym
-			end
-		end
-		buildScenery(folder, island, palette, gymSite)
+		buildScenery(folder, scenery, palette)
 	end
 
 	local heights = eggHeights()
@@ -294,10 +300,13 @@ function Builder.buildAll(): Built
 
 	for _, gym in plan.gyms do
 		local folder = built.folders[gym.worldId]
+		local leaderType = Config.worldById[gym.worldId].gym.leader_type
 		local model = Kit.gymBuilding(
 			facing(gym.position, plan.arrivals[gym.worldId]),
 			byWorld[gym.worldId],
-			gym.label
+			gym.label,
+			color(PetLook.typeColor(leaderType)),
+			Config.typeById[leaderType].name
 		)
 		model.Name = WorldNames.gymModel(gym.worldId)
 		model:SetAttribute("WorldId", gym.worldId)
@@ -331,7 +340,19 @@ function Builder.buildAll(): Built
 	end
 
 	-- Parent the folders last, so each world appears whole.
-	for _, folder in built.folders do
+	for worldId, folder in built.folders do
+		local parts = settle(folder)
+		folder:SetAttribute("PartCount", parts)
+		if parts > Scenery.PART_BUDGET then
+			warn(
+				string.format(
+					"[World] %s has %d parts, over the budget of %d",
+					worldId,
+					parts,
+					Scenery.PART_BUDGET
+				)
+			)
+		end
 		folder.Parent = Workspace
 	end
 

@@ -4,12 +4,15 @@
 
 	Each builder returns a Model made from plain parts, anchored, with a
 	PrimaryPart, placed at the CFrame it is given (the CFrame is the prop's
-	base, resting on the ground). No meshes, no uploaded assets: final art is
-	the world stage's job, and it replaces this kit.
+	base, resting on the ground). No meshes, no uploaded assets.
 
 	Builders that a player interacts with (egg stand, portal) carry a part named
 	"Trigger" that the builder wires up. Every Model gets a "Prop" attribute
 	naming its builder, so what was built can be counted.
+
+	Scenery props (trees, palms, rocks, bushes, flowers, fences) are built
+	from Ball, Cylinder and Wedge parts. The ground itself is terrain, built
+	by server/World/Terrain.
 
 	Sizes here are prop geometry, not game numbers.
 ]]
@@ -34,6 +37,9 @@ export type Palette = {
 	trim: Color3,
 	glow: Color3,
 	text: Color3,
+	-- Foliage greens and flower colors, picked per prop by its variant.
+	greens: { Color3 },
+	flowers: { Color3 },
 }
 
 local function part(
@@ -174,116 +180,6 @@ local function standSign(adornee: BasePart, name: string, price: string, color: 
 	gui.Parent = adornee
 end
 
--- 1. Ground: the flat top of an island. The base CFrame is the top center.
-function Kit.ground(size: number, base: CFrame, palette: Palette): Model
-	local model = newModel("Ground")
-	local depth = 20
-	local top = part(
-		model,
-		"Top",
-		Vector3.new(size, depth, size),
-		base * CFrame.new(0, -depth / 2, 0),
-		palette.ground,
-		palette.groundMaterial
-	)
-	model.PrimaryPart = top
-	return model
-end
-
--- 2. Cliff: the island's sides, a skirt that tapers below the ground.
-function Kit.cliff(size: number, base: CFrame, palette: Palette): Model
-	local model = newModel("Cliff")
-	local layers = 3
-	local layerHeight = 8
-	local first: Part? = nil
-	for i = 1, layers do
-		local width = size - i * 12
-		local p = part(
-			model,
-			"Layer" .. i,
-			Vector3.new(width, layerHeight, width),
-			base * CFrame.new(0, -20 - (i - 0.5) * layerHeight, 0),
-			palette.cliff,
-			Enum.Material.Slate
-		)
-		first = first or p
-	end
-	model.PrimaryPart = first
-	return model
-end
-
--- 3. Tree: a trunk and two blocky leaf layers.
-function Kit.tree(base: CFrame, palette: Palette, scale: number): Model
-	local model = newModel("Tree")
-	local trunk = part(
-		model,
-		"Trunk",
-		Vector3.new(2, 8, 2) * scale,
-		base * CFrame.new(0, 4 * scale, 0),
-		palette.trunk,
-		Enum.Material.Wood
-	)
-	part(
-		model,
-		"Leaves",
-		Vector3.new(8, 5, 8) * scale,
-		base * CFrame.new(0, 9.5 * scale, 0),
-		palette.leaf,
-		Enum.Material.Grass
-	)
-	part(
-		model,
-		"LeavesTop",
-		Vector3.new(5, 3, 5) * scale,
-		base * CFrame.new(0, 13.5 * scale, 0) * CFrame.Angles(0, math.rad(45), 0),
-		palette.leaf,
-		Enum.Material.Grass
-	)
-	model.PrimaryPart = trunk
-	return model
-end
-
--- 4. Rock: two tilted blocks.
-function Kit.rock(base: CFrame, palette: Palette, scale: number): Model
-	local model = newModel("Rock")
-	local big = part(
-		model,
-		"Big",
-		Vector3.new(6, 4, 5) * scale,
-		base * CFrame.new(0, 1.5 * scale, 0) * CFrame.Angles(0.1, 0.4, 0.05),
-		palette.rock,
-		Enum.Material.Rock
-	)
-	part(
-		model,
-		"Small",
-		Vector3.new(3, 2.5, 3) * scale,
-		base * CFrame.new(3 * scale, 1 * scale, 2 * scale) * CFrame.Angles(0, 1.1, 0.15),
-		palette.rock,
-		Enum.Material.Rock
-	)
-	model.PrimaryPart = big
-	return model
-end
-
--- 5. Water plane: a wide flat sheet around the island, just under the ground top.
-function Kit.water(size: number, base: CFrame, palette: Palette): Model
-	local model = newModel("Water")
-	local sheet = part(
-		model,
-		"Sheet",
-		Vector3.new(size, 1, size),
-		base * CFrame.new(0, -6, 0),
-		palette.water,
-		Enum.Material.Glass
-	)
-	sheet.Transparency = 0.35
-	sheet.CanCollide = false
-	sheet.CanQuery = false
-	model.PrimaryPart = sheet
-	return model
-end
-
 -- 6. Egg stand: a plinth, a blocky placeholder egg on top (in a Model named
 -- "Egg" that Kit.setEgg swaps for the real one), a sign, and a Trigger pad.
 -- eggHeight is the egg model's configured height in studs (nil for the
@@ -368,132 +264,609 @@ function Kit.setEgg(stand: Model, template: Model)
 	egg.Parent = stand
 end
 
--- Label sizes in studs (width, height).
-local GYM_LABEL_SIZE = Vector2.new(16, 7)
-local PORTAL_LABEL_SIZE = Vector2.new(12, 4)
+-- Turns a Cylinder part's length (its X axis) to point up.
+local UPRIGHT = CFrame.Angles(0, 0, math.pi / 2)
 
--- 7. Gym building: walls, a roof, a door gap, and a label.
-function Kit.gymBuilding(base: CFrame, palette: Palette, text: string): Model
+local function ball(
+	model: Instance,
+	name: string,
+	diameter: number,
+	cframe: CFrame,
+	color: Color3,
+	material: Enum.Material?
+): Part
+	local p = Instance.new("Part")
+	p.Shape = Enum.PartType.Ball
+	p.Name = name
+	p.Anchored = true
+	p.Size = Vector3.new(diameter, diameter, diameter)
+	p.CFrame = cframe
+	p.Color = color
+	p.Material = material or Enum.Material.SmoothPlastic
+	p.Parent = model
+	return p
+end
+
+-- A cylinder whose length runs along the CFrame's X axis.
+local function cylinder(
+	model: Instance,
+	name: string,
+	length: number,
+	diameter: number,
+	cframe: CFrame,
+	color: Color3,
+	material: Enum.Material?
+): Part
+	local p = Instance.new("Part")
+	p.Shape = Enum.PartType.Cylinder
+	p.Name = name
+	p.Anchored = true
+	p.Size = Vector3.new(length, diameter, diameter)
+	p.CFrame = cframe
+	p.Color = color
+	p.Material = material or Enum.Material.SmoothPlastic
+	p.Parent = model
+	return p
+end
+
+local function wedge(
+	model: Instance,
+	name: string,
+	size: Vector3,
+	cframe: CFrame,
+	color: Color3,
+	material: Enum.Material
+): WedgePart
+	local p = Instance.new("WedgePart")
+	p.Name = name
+	p.Anchored = true
+	p.Size = size
+	p.CFrame = cframe
+	p.Color = color
+	p.Material = material
+	p.Parent = model
+	return p
+end
+
+-- Picks one color of a list by a prop's variant number.
+local function pick(colors: { Color3 }, variant: number): Color3
+	return colors[(variant - 1) % #colors + 1]
+end
+
+-- Scenery props. Each takes its base CFrame (on the ground, turned), the
+-- palette, a scale and a variant number that picks its colors, and has the
+-- part count Scenery.PROPS lists for it.
+
+-- Tree: a round trunk and layered rounded foliage in two or three greens.
+function Kit.tree(base: CFrame, palette: Palette, scale: number, variant: number): Model
+	local model = newModel("Tree")
+	local height = 7 * scale
+	local trunk = cylinder(
+		model,
+		"Trunk",
+		height,
+		1.6 * scale,
+		base * CFrame.new(0, height / 2, 0) * UPRIGHT,
+		palette.trunk,
+		Enum.Material.Wood
+	)
+	local g = palette.greens
+	ball(model, "Crown", 7 * scale, base * CFrame.new(0, height + 1.5 * scale, 0), pick(g, variant))
+	ball(
+		model,
+		"CrownLeft",
+		5.5 * scale,
+		base * CFrame.new(1.9 * scale, height + 0.2 * scale, 0.8 * scale),
+		pick(g, variant + 1)
+	)
+	ball(
+		model,
+		"CrownRight",
+		5 * scale,
+		base * CFrame.new(-1.7 * scale, height + 0.6 * scale, -1.2 * scale),
+		pick(g, variant + 2)
+	)
+	ball(
+		model,
+		"CrownTop",
+		4 * scale,
+		base * CFrame.new(0.3 * scale, height + 4.4 * scale, 0.2 * scale),
+		pick(g, variant + 1)
+	)
+	model.PrimaryPart = trunk
+	return model
+end
+
+-- Palm: a leaning trunk in three pieces, a coconut cluster and four fronds.
+function Kit.palm(base: CFrame, palette: Palette, scale: number, variant: number): Model
+	local model = newModel("Palm")
+	local piece = 3.4 * scale
+	local at = base
+	local first: Part? = nil
+	for i = 1, 3 do
+		at = at * CFrame.Angles(0, 0, 0.12)
+		local p = cylinder(
+			model,
+			"Trunk" .. i,
+			piece,
+			(1.5 - 0.15 * i) * scale,
+			at * CFrame.new(0, piece / 2, 0) * UPRIGHT,
+			palette.trunk,
+			Enum.Material.Wood
+		)
+		first = first or p
+		at = at * CFrame.new(0, piece * 0.95, 0)
+	end
+	ball(model, "Coconuts", 1.6 * scale, at, Color3.fromRGB(110, 80, 50))
+	for i = 1, 4 do
+		local frond = part(
+			model,
+			"Frond" .. i,
+			Vector3.new(1.8, 0.3, 5.5) * scale,
+			at
+				* CFrame.Angles(0, i * math.pi / 2 + variant * 0.3, 0)
+				* CFrame.Angles(-0.35, 0, 0)
+				* CFrame.new(0, 0, -2.6 * scale),
+			pick(palette.greens, variant + i)
+		)
+		frond.CanCollide = false
+	end
+	model.PrimaryPart = first
+	return model
+end
+
+-- Dead tree: a bare trunk with three crooked branches.
+function Kit.deadTree(base: CFrame, palette: Palette, scale: number, variant: number): Model
+	local model = newModel("DeadTree")
+	local height = 6 * scale
+	local trunk = cylinder(
+		model,
+		"Trunk",
+		height,
+		1.2 * scale,
+		base * CFrame.new(0, height / 2, 0) * UPRIGHT,
+		palette.trunk,
+		Enum.Material.Wood
+	)
+	for i = 1, 3 do
+		local length = (2.4 + (i + variant) % 3 * 0.5) * scale
+		cylinder(
+			model,
+			"Branch" .. i,
+			length,
+			0.5 * scale,
+			base
+				* CFrame.new(0, height * (0.55 + 0.15 * i), 0)
+				* CFrame.Angles(0, i * 2.1 + variant, 0)
+				* CFrame.Angles(0, 0, 0.7)
+				* CFrame.new(length / 2, 0, 0),
+			palette.trunk,
+			Enum.Material.Wood
+		)
+	end
+	model.PrimaryPart = trunk
+	return model
+end
+
+-- Rock: a few balls and wedges, turned against each other.
+function Kit.rock(base: CFrame, palette: Palette, scale: number, _variant: number): Model
+	local model = newModel("Rock")
+	local material = Enum.Material.Rock
+	local big = ball(
+		model,
+		"Big",
+		3.6 * scale,
+		base * CFrame.new(0, 1.1 * scale, 0),
+		palette.rock,
+		material
+	)
+	ball(
+		model,
+		"Small",
+		2.6 * scale,
+		base * CFrame.new(1.6 * scale, 0.7 * scale, 0.8 * scale),
+		palette.rock,
+		material
+	)
+	wedge(
+		model,
+		"WedgeA",
+		Vector3.new(3, 2.4, 3.2) * scale,
+		base * CFrame.new(-1.2 * scale, 1.1 * scale, -0.4 * scale) * CFrame.Angles(0, 0.8, 0),
+		palette.rock,
+		material
+	)
+	wedge(
+		model,
+		"WedgeB",
+		Vector3.new(2.4, 1.8, 2.6) * scale,
+		base * CFrame.new(0.4 * scale, 1.2 * scale, -1.5 * scale) * CFrame.Angles(0.1, 2.4, 0),
+		palette.rock,
+		material
+	)
+	model.PrimaryPart = big
+	return model
+end
+
+-- Boulder: one big round stone, a wedge and a smaller stone.
+function Kit.boulder(base: CFrame, palette: Palette, scale: number, _variant: number): Model
+	local model = newModel("Boulder")
+	local material = Enum.Material.Slate
+	local big =
+		ball(model, "Big", 5 * scale, base * CFrame.new(0, 1.8 * scale, 0), palette.rock, material)
+	wedge(
+		model,
+		"Wedge",
+		Vector3.new(4, 3, 4) * scale,
+		base * CFrame.new(1.6 * scale, 1.4 * scale, 0) * CFrame.Angles(0, 1.2, 0),
+		palette.rock,
+		material
+	)
+	ball(
+		model,
+		"Small",
+		3 * scale,
+		base * CFrame.new(-2 * scale, 1 * scale, 1 * scale),
+		palette.rock,
+		material
+	)
+	model.PrimaryPart = big
+	return model
+end
+
+-- Bush: three rounded clumps.
+function Kit.bush(base: CFrame, palette: Palette, scale: number, variant: number): Model
+	local model = newModel("Bush")
+	local g = palette.greens
+	local main =
+		ball(model, "Main", 3.4 * scale, base * CFrame.new(0, 1.2 * scale, 0), pick(g, variant))
+	ball(
+		model,
+		"Left",
+		2.8 * scale,
+		base * CFrame.new(1.4 * scale, 0.9 * scale, 0.4 * scale),
+		pick(g, variant + 1)
+	)
+	ball(
+		model,
+		"Right",
+		2.4 * scale,
+		base * CFrame.new(-1.2 * scale, 0.8 * scale, -0.6 * scale),
+		pick(g, variant + 2)
+	)
+	model.PrimaryPart = main
+	return model
+end
+
+-- Flower: a stem and a bloom.
+function Kit.flower(base: CFrame, palette: Palette, scale: number, variant: number): Model
+	local model = newModel("Flower")
+	local stem = cylinder(
+		model,
+		"Stem",
+		1.6 * scale,
+		0.25 * scale,
+		base * CFrame.new(0, 0.8 * scale, 0) * UPRIGHT,
+		pick(palette.greens, variant)
+	)
+	stem.CanCollide = false
+	local bloom = ball(
+		model,
+		"Bloom",
+		0.9 * scale,
+		base * CFrame.new(0, 1.7 * scale, 0),
+		pick(palette.flowers, variant)
+	)
+	bloom.CanCollide = false
+	model.PrimaryPart = stem
+	return model
+end
+
+-- Fence piece from a to b on the ground: a post at a and two rails.
+function Kit.fence(a: Vector3, b: Vector3, palette: Palette): Model
+	local model = newModel("Fence")
+	local post = part(
+		model,
+		"Post",
+		Vector3.new(0.8, 3, 0.8),
+		CFrame.new(a + Vector3.new(0, 1.5, 0)),
+		palette.trunk,
+		Enum.Material.Wood
+	)
+	local length = (b - a).Magnitude
+	for i, height in { 1.2, 2.3 } do
+		local from = a + Vector3.new(0, height, 0)
+		local to = b + Vector3.new(0, height, 0)
+		part(
+			model,
+			"Rail" .. i,
+			Vector3.new(0.3, 0.4, length),
+			CFrame.lookAt((from + to) / 2, to),
+			palette.trunk,
+			Enum.Material.Wood
+		)
+	end
+	model.PrimaryPart = post
+	return model
+end
+
+-- A soft glow over a lava stream: an invisible part holding a PointLight.
+function Kit.glow(position: Vector3, color: Color3): Model
+	local model = newModel("Glow")
+	local holder = part(model, "Light", Vector3.new(1, 1, 1), CFrame.new(position), color)
+	holder.Transparency = 1
+	holder.CanCollide = false
+	holder.CanQuery = false
+	holder.CanTouch = false
+	local light = Instance.new("PointLight")
+	light.Color = color
+	light.Range = 16
+	light.Brightness = 1.4
+	light.Parent = holder
+	model.PrimaryPart = holder
+	return model
+end
+
+-- The gym arena's sizes, in studs. Its footprint, a circle ARENA_STEP_DIAMETER
+-- across, fits inside Layout.GYM_SIZE.
+local ARENA_STEP_DIAMETER = 28
+local ARENA_FLOOR_DIAMETER = 24
+local ARENA_STEP = 1
+local ARENA_PILLAR_RADIUS = 10.5
+local ARENA_PILLAR_HEIGHT = 11
+local ARENA_GATE_Z = -12.5
+local ARENA_PILLAR_ANGLES = { 55, 105, 155, 205, 255, 305 }
+
+-- The leader's type icon: a round badge in the type color with its name.
+local function typeBadge(board: BasePart, typeColor: Color3, typeName: string, text: Color3)
+	local gui = Instance.new("SurfaceGui")
+	gui.Name = "TypeIcon"
+	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 50
+	gui.LightInfluence = 0
+	gui.Adornee = board
+	local disc = Instance.new("Frame")
+	disc.AnchorPoint = Vector2.new(0.5, 0.5)
+	disc.Position = UDim2.fromScale(0.5, 0.5)
+	disc.Size = UDim2.fromScale(0.9, 0.9)
+	disc.BackgroundColor3 = typeColor
+	disc.BorderSizePixel = 0
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0.5, 0)
+	corner.Parent = disc
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.new(1, 1, 1)
+	stroke.Thickness = 10
+	stroke.Parent = disc
+	local name = Instance.new("TextLabel")
+	name.AnchorPoint = Vector2.new(0.5, 0.5)
+	name.Position = UDim2.fromScale(0.5, 0.5)
+	name.Size = UDim2.fromScale(0.75, 0.4)
+	name.BackgroundTransparency = 1
+	name.Text = string.upper(typeName)
+	name.TextColor3 = text
+	name.TextStrokeTransparency = 0.2
+	name.TextScaled = true
+	name.Font = Enum.Font.FredokaOne
+	name.Parent = disc
+	disc.Parent = gui
+	gui.Parent = board
+end
+
+-- 7. Gym arena: a raised round platform with steps, a ring of pillars open to
+-- the front, a banner in the leader's type color with the type icon, and an
+-- entrance gate whose board carries the gym's sign. The top floor is the
+-- PrimaryPart: the builder tags it, and stepping on it opens the battle.
+function Kit.gymBuilding(
+	base: CFrame,
+	palette: Palette,
+	text: string,
+	typeColor: Color3,
+	typeName: string
+): Model
 	local model = newModel("Gym")
-	local width, depth, height = 24, 18, 14
-	local floor = part(
+	cylinder(
+		model,
+		"StepLow",
+		ARENA_STEP,
+		ARENA_STEP_DIAMETER,
+		base * CFrame.new(0, ARENA_STEP / 2, 0) * UPRIGHT,
+		palette.trim,
+		Enum.Material.Marble
+	)
+	cylinder(
+		model,
+		"StepHigh",
+		ARENA_STEP,
+		ARENA_STEP_DIAMETER - 2,
+		base * CFrame.new(0, ARENA_STEP * 1.5, 0) * UPRIGHT,
+		palette.trim,
+		Enum.Material.Marble
+	)
+	-- A rim in the type color, just under the floor's edge.
+	cylinder(
+		model,
+		"Rim",
+		0.8,
+		ARENA_FLOOR_DIAMETER + 1,
+		base * CFrame.new(0, ARENA_STEP * 2.5, 0) * UPRIGHT,
+		typeColor
+	)
+	local floorTop = ARENA_STEP * 3
+	local floor = cylinder(
 		model,
 		"Floor",
-		Vector3.new(width, 1, depth),
-		base * CFrame.new(0, 0.5, 0),
+		ARENA_STEP,
+		ARENA_FLOOR_DIAMETER,
+		base * CFrame.new(0, floorTop - ARENA_STEP / 2, 0) * UPRIGHT,
 		palette.trim,
 		Enum.Material.Concrete
 	)
-	part(
+	for i, degrees in ARENA_PILLAR_ANGLES do
+		local angle = math.rad(degrees)
+		local x = ARENA_PILLAR_RADIUS * math.sin(angle)
+		local z = -ARENA_PILLAR_RADIUS * math.cos(angle)
+		cylinder(
+			model,
+			"Pillar" .. i,
+			ARENA_PILLAR_HEIGHT,
+			1.8,
+			base * CFrame.new(x, floorTop + ARENA_PILLAR_HEIGHT / 2, z) * UPRIGHT,
+			palette.trim,
+			Enum.Material.Marble
+		)
+		part(
+			model,
+			"Cap" .. i,
+			Vector3.new(2.6, 0.8, 2.6),
+			base * CFrame.new(x, floorTop + ARENA_PILLAR_HEIGHT + 0.4, z),
+			palette.accent
+		)
+	end
+	-- The banner hangs at the back, between the two back pillars.
+	local backZ = ARENA_PILLAR_RADIUS - 0.6
+	cylinder(
 		model,
-		"Back",
-		Vector3.new(width, height, 1),
-		base * CFrame.new(0, height / 2, depth / 2),
-		palette.accent
-	)
-	part(
-		model,
-		"Left",
-		Vector3.new(1, height, depth),
-		base * CFrame.new(-width / 2, height / 2, 0),
-		palette.accent
-	)
-	part(
-		model,
-		"Right",
-		Vector3.new(1, height, depth),
-		base * CFrame.new(width / 2, height / 2, 0),
-		palette.accent
-	)
-	-- The front wall has a door gap in the middle.
-	local side = (width - 8) / 2
-	part(
-		model,
-		"FrontLeft",
-		Vector3.new(side, height, 1),
-		base * CFrame.new(-(4 + side / 2), height / 2, -depth / 2),
-		palette.accent
-	)
-	part(
-		model,
-		"FrontRight",
-		Vector3.new(side, height, 1),
-		base * CFrame.new(4 + side / 2, height / 2, -depth / 2),
-		palette.accent
-	)
-	part(
-		model,
-		"Lintel",
-		Vector3.new(8, 4, 1),
-		base * CFrame.new(0, height - 2, -depth / 2),
-		palette.accent
-	)
-	local roof = part(
-		model,
-		"Roof",
-		Vector3.new(width + 4, 2, depth + 4),
-		base * CFrame.new(0, height + 1, 0),
+		"BannerRod",
+		8,
+		0.5,
+		base * CFrame.new(0, floorTop + ARENA_PILLAR_HEIGHT - 0.4, backZ),
 		palette.trim,
-		Enum.Material.Slate
+		Enum.Material.Metal
 	)
-	-- Sized in studs and sitting fully above the roof, so all three lines
-	-- (name, type, fee) show.
-	label(roof, text, GYM_LABEL_SIZE, roof.Size.Y / 2 + GYM_LABEL_SIZE.Y / 2 + 0.5, palette.text)
+	part(
+		model,
+		"Banner",
+		Vector3.new(6, 9, 0.3),
+		base * CFrame.new(0, floorTop + ARENA_PILLAR_HEIGHT - 5, backZ),
+		typeColor,
+		Enum.Material.Fabric
+	)
+	local badge = part(
+		model,
+		"TypeIconBoard",
+		Vector3.new(4.4, 4.4, 0.2),
+		base * CFrame.new(0, floorTop + ARENA_PILLAR_HEIGHT - 4.5, backZ - 0.3),
+		typeColor
+	)
+	badge.Transparency = 1
+	badge.CanCollide = false
+	typeBadge(badge, typeColor, typeName, palette.text)
+	-- The entrance gate, on the bottom step, facing the arrival point.
+	for side = -1, 1, 2 do
+		part(
+			model,
+			if side < 0 then "GateLeft" else "GateRight",
+			Vector3.new(1.4, 10, 1.4),
+			base * CFrame.new(side * 7, ARENA_STEP + 5, ARENA_GATE_Z),
+			palette.accent
+		)
+	end
+	local board = part(
+		model,
+		"SignBoard",
+		Vector3.new(16, 5, 0.6),
+		base * CFrame.new(0, ARENA_STEP + 12, ARENA_GATE_Z),
+		palette.accent,
+		Enum.Material.Wood
+	)
+	boardText(board, text, palette.text)
 	model.PrimaryPart = floor
 	return model
 end
 
--- 8. Portal frame: two posts, a top bar, and a glowing Trigger in the middle.
+-- Portal sizes, in studs. Its footprint stays inside Layout.PORTAL_EXTENT.
+local PORTAL_POST_X = 5.2
+local PORTAL_POST_HEIGHT = 12
+local PORTAL_STONE = 2.4
+local PORTAL_SWIRL_DIAMETER = 8.4
+local PORTAL_LABEL_SIZE = Vector2.new(12, 4)
+
+-- 8. Portal: a stone arch on a step, with a glowing swirl in the middle that
+-- is the Trigger.
 function Kit.portalFrame(base: CFrame, palette: Palette, text: string): Model
 	local model = newModel("Portal")
-	local width, height = 10, 14
-	local floor = part(
+	local step = part(
 		model,
 		"Step",
-		Vector3.new(width + 4, 1, 6),
+		Vector3.new(14, 1, 6),
 		base * CFrame.new(0, 0.5, 0),
-		palette.trim,
-		Enum.Material.Marble
+		palette.rock,
+		Enum.Material.Slate
 	)
-	part(
-		model,
-		"PostLeft",
-		Vector3.new(2, height, 2),
-		base * CFrame.new(-width / 2, height / 2, 0),
-		palette.trim
-	)
-	part(
-		model,
-		"PostRight",
-		Vector3.new(2, height, 2),
-		base * CFrame.new(width / 2, height / 2, 0),
-		palette.trim
-	)
-	local bar = part(
-		model,
-		"Bar",
-		Vector3.new(width + 2, 2, 2),
-		base * CFrame.new(0, height + 1, 0),
-		palette.trim
-	)
-	local trigger = part(
+	local stoneHeight = PORTAL_POST_HEIGHT / 3
+	for side = -1, 1, 2 do
+		for i = 1, 3 do
+			part(
+				model,
+				string.format("Stone%s%d", if side < 0 then "Left" else "Right", i),
+				Vector3.new(PORTAL_STONE, stoneHeight, PORTAL_STONE),
+				base
+					* CFrame.new(side * PORTAL_POST_X, 1 + stoneHeight * (i - 0.5), 0)
+					* CFrame.Angles(0, side * i * 0.12, 0),
+				palette.rock,
+				Enum.Material.Slate
+			)
+		end
+	end
+	-- The arch: stones on a half circle over the posts.
+	local archY = 1 + PORTAL_POST_HEIGHT
+	local keystone: Part? = nil
+	for k = 1, 5 do
+		local angle = math.pi * k / 6
+		local stone = part(
+			model,
+			if k == 3 then "Keystone" else "Arch" .. k,
+			Vector3.new(PORTAL_STONE, PORTAL_STONE, PORTAL_STONE + 0.2),
+			base
+				* CFrame.new(
+					PORTAL_POST_X * math.cos(angle),
+					archY + PORTAL_POST_X * math.sin(angle),
+					0
+				)
+				* CFrame.Angles(0, 0, angle),
+			palette.rock,
+			Enum.Material.Slate
+		)
+		if k == 3 then
+			keystone = stone
+		end
+	end
+	local trigger = cylinder(
 		model,
 		"Trigger",
-		Vector3.new(width - 2, height - 1, 1),
-		base * CFrame.new(0, height / 2 + 0.5, 0),
+		0.6,
+		PORTAL_SWIRL_DIAMETER,
+		base
+			* CFrame.new(0, 1 + PORTAL_SWIRL_DIAMETER / 2 + 0.8, 0)
+			* CFrame.Angles(0, math.pi / 2, 0),
 		palette.glow,
 		Enum.Material.Neon
 	)
 	trigger.Transparency = 0.3
 	trigger.CanCollide = false
+	local swirl = Instance.new("ParticleEmitter")
+	swirl.Name = "Swirl"
+	swirl.Color = ColorSequence.new(palette.glow)
+	swirl.LightEmission = 1
+	swirl.Rate = 14
+	swirl.Lifetime = NumberRange.new(1.2, 1.8)
+	swirl.Speed = NumberRange.new(0.5, 1)
+	swirl.RotSpeed = NumberRange.new(90, 180)
+	swirl.Rotation = NumberRange.new(0, 360)
+	swirl.Size = NumberSequence.new(1.6, 0)
+	swirl.Transparency = NumberSequence.new(0.2, 1)
+	swirl.Parent = trigger
+	local top = keystone :: Part
 	label(
-		bar,
+		top,
 		text,
 		PORTAL_LABEL_SIZE,
-		bar.Size.Y / 2 + PORTAL_LABEL_SIZE.Y / 2 + 0.5,
+		top.Size.Y / 2 + PORTAL_LABEL_SIZE.Y / 2 + 0.5,
 		palette.text
 	)
-	model.PrimaryPart = floor
+	model.PrimaryPart = step
 	return model
 end
 
@@ -518,51 +891,6 @@ function Kit.sign(base: CFrame, palette: Palette, text: string): Model
 	)
 	boardText(board, text, palette.text)
 	model.PrimaryPart = post
-	return model
-end
-
--- 10. Light: a lamp post with a point light.
-function Kit.light(base: CFrame, palette: Palette): Model
-	local model = newModel("Light")
-	local post =
-		part(model, "Post", Vector3.new(1, 10, 1), base * CFrame.new(0, 5, 0), palette.trim)
-	local lamp = part(
-		model,
-		"Lamp",
-		Vector3.new(2, 2, 2),
-		base * CFrame.new(0, 11, 0),
-		palette.glow,
-		Enum.Material.Neon
-	)
-	local glow = Instance.new("PointLight")
-	glow.Color = palette.glow
-	glow.Range = 24
-	glow.Brightness = 1.5
-	glow.Parent = lamp
-	model.PrimaryPart = post
-	return model
-end
-
--- 11. Filler: a low bush or flower patch for scenery.
-function Kit.filler(base: CFrame, palette: Palette, scale: number): Model
-	local model = newModel("Filler")
-	local bush = part(
-		model,
-		"Bush",
-		Vector3.new(4, 2, 4) * scale,
-		base * CFrame.new(0, 1 * scale, 0),
-		palette.leaf,
-		Enum.Material.Grass
-	)
-	part(
-		model,
-		"Bloom",
-		Vector3.new(1, 1, 1) * scale,
-		base * CFrame.new(0.8 * scale, 2.3 * scale, 0.5 * scale),
-		palette.accent,
-		Enum.Material.Neon
-	)
-	model.PrimaryPart = bush
 	return model
 end
 

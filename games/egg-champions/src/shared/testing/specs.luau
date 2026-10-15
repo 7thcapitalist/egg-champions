@@ -29,6 +29,7 @@ return {
 	ruleSpecs["Tutorial.spec"],
 	netSpecs["Requests.spec"],
 	worldSpecs["Layout.spec"],
+	worldSpecs["Scenery.spec"],
 	uiSpecs["Format.spec"],
 	uiSpecs["NextGoal.spec"],
 	uiSpecs["EdgeArrow.spec"],

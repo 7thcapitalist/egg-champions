@@ -22,7 +22,9 @@
 	  the rebirth effect only when the server confirms it;
 	- builds the shop (UI/Shop), the only place game passes are offered;
 	- mounts Followers, which shows every nearby player's equipped pets
-	  hovering behind them.
+	  hovering behind them;
+	- mounts WorldLighting, which fades the sky, haze and color grade to each
+	  world's look when the player enters it.
 
 	The cooldown below is touch debounce timing, not a game number.
 ]]
@@ -54,6 +56,7 @@ local Shop = require(UI:WaitForChild("Shop"))
 local Effects = require(script:WaitForChild("Effects"):WaitForChild("Effects"))
 local Progress = require(script:WaitForChild("Effects"):WaitForChild("Progress"))
 local Followers = require(script:WaitForChild("Effects"):WaitForChild("Followers"))
+local WorldLighting = require(script:WaitForChild("Effects"):WaitForChild("WorldLighting"))
 
 State.start(remotes:WaitForChild(Remotes.names.ProfileChanged) :: RemoteEvent)
 Effects.mount(
@@ -62,6 +65,7 @@ Effects.mount(
 )
 Progress.mount(player:WaitForChild("PlayerGui") :: PlayerGui)
 Followers.mount()
+WorldLighting.mount()
 Main.onWorldClick(Effects.clicked)
 Main.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
