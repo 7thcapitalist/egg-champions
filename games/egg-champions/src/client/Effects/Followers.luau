@@ -22,6 +22,7 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local FollowerMath = require(Shared:WaitForChild("visual"):WaitForChild("Followers"))
+local PetLook = require(Shared:WaitForChild("visual"):WaitForChild("PetLook"))
 
 local FOLDER_NAME = "PetFollowers"
 
@@ -127,6 +128,46 @@ function Followers.mount()
 	made.Name = FOLDER_NAME
 	made.Parent = Workspace
 	folder = made
+	-- An equipped team can arrive before its templates. Invalidate only
+	-- teams waiting for this asset; the next frame rebuilds their followers.
+	local function watchTemplates(templates: Instance)
+		if templates.Name ~= "PetModels" or not templates:IsA("Folder") then
+			return
+		end
+		local function ready(descendant: Instance)
+			local source = descendant
+			while source.Parent ~= nil and source.Parent ~= templates do
+				source = source.Parent
+			end
+			if source.Parent ~= templates or not source:IsA("Model") then
+				return
+			end
+			if source:FindFirstChildWhichIsA("BasePart", true) == nil then
+				return
+			end
+			PetLook.MODEL_IDS[source.Name] = source.Name
+			for player, entry in entries do
+				for _, model in entry.models do
+					if
+						model:GetAttribute("PetId") == source.Name
+						and model:GetAttribute("UsesAsset") ~= true
+					then
+						clear(player)
+						break
+					end
+				end
+			end
+		end
+		templates.DescendantAdded:Connect(ready)
+		for _, source in templates:GetChildren() do
+			ready(source)
+		end
+	end
+	ReplicatedStorage.ChildAdded:Connect(watchTemplates)
+	local templates = ReplicatedStorage:FindFirstChild("PetModels")
+	if templates ~= nil then
+		watchTemplates(templates)
+	end
 	Players.PlayerRemoving:Connect(clear)
 	RunService.RenderStepped:Connect(step)
 end

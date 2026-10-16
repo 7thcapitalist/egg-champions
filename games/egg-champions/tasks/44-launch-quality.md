@@ -14,6 +14,8 @@ evidence are in `../LAUNCH-WORK.md`.
 4. Save ordering that cannot reopen a released player session.
 5. A scrolling pass shop that fits short screens.
 6. Safe local Studio QA scenarios, Auto Hatch and real gym opponent models.
+7. Refresh equipped world followers when their templates finish loading,
+   including teams restored before assets arrive.
 
 ## Done when
 
