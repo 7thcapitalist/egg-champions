@@ -319,23 +319,27 @@ def gate_built(game):
         return fail("cannot create %s: %s" % (out.as_posix(), mk_err))
 
     checks = [
-        ["rojo", "build", game.as_posix(), "-o", (out / "game.rbxl").as_posix()],
-        ["selene", (game / "src").as_posix()],
-        ["stylua", "--check", (game / "src").as_posix()],
+        ("run_tests", [sys.executable, "-B", str(Path(__file__).with_name("run_tests.py")), game.as_posix()]),
+        ("rojo", ["rojo", "build", game.as_posix(), "-o", (out / "game.rbxl").as_posix()]),
+        ("selene", ["selene", (game / "src").as_posix()]),
+        ("stylua", ["stylua", "--check", (game / "src").as_posix()]),
     ]
-    for cmd in checks:
-        exe = shutil.which(cmd[0])
+    for name, cmd in checks:
+        exe = cmd[0] if name == "run_tests" else shutil.which(cmd[0])
         if exe is None:
-            return fail("%s is not on PATH" % cmd[0])
+            return fail("%s is not on PATH" % name)
         done = subprocess.run([exe] + cmd[1:], capture_output=True, text=True)
         if done.returncode != 0:
-            lines = (done.stderr or done.stdout or "").strip().splitlines()
+            lines = (done.stdout + "\n" + done.stderr).strip().splitlines()
+            reason = next((line for line in lines if line.startswith("FAIL")), None)
+            if reason is None:
+                reason = next((line for line in lines if line.startswith("run_tests:")), None)
             return fail(
                 "%s failed: %s"
-                % (cmd[0], lines[0] if lines else "exit code %d" % done.returncode)
+                % (name, reason or (lines[-1] if lines else "exit code %d" % done.returncode))
             )
 
-    return ok("%d task(s) done, and rojo, selene and stylua all pass" % len(tasks))
+    return ok("%d task(s) done, and run_tests, rojo, selene and stylua all pass" % len(tasks))
 
 
 # --------------------------------------------------------------------- assets

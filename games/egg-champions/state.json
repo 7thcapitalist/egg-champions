@@ -19,15 +19,15 @@
       "id": "planned",
       "status": "passed",
       "attempts": 0,
-      "note": "19 tasks planned, task 01 done, no dependency cycle",
-      "updated": "2026-10-02T20:13:54Z"
+      "note": "2026-10-16: gate passed for 43 tasks, no missing dependencies or cycles",
+      "updated": "2026-10-16T08:45:14Z"
     },
     {
       "id": "built",
-      "status": "pending",
+      "status": "passed",
       "attempts": 21,
-      "note": "playtest 3 fixes 39 to 43",
-      "updated": "2026-10-15T14:00:08Z"
+      "note": "2026-10-16: 43 briefs; 738 Luau tests and 6 self-tests; Rojo, Selene, StyLua passed via built gate",
+      "updated": "2026-10-16T08:45:07Z"
     },
     {
       "id": "assets",

@@ -1,34 +1,22 @@
-# Latest factory run: games/egg-champions
+# Estado verificado da fabrica: Egg Champions
 
-Started 2026-10-13T14:40:07Z, took 0 minute(s), branch `main` (commits not pushed: --no-push). Agent spend about $0.00.
+Verificacao local de 2026-10-16. Este arquivo resume a auditoria no Codex;
+nao representa uma execucao do orquestrador na arvore principal.
 
-**Result:** Stopped at the task limit after 1 task(s).
+## Resultado
 
-## Done this run
+- 43 tarefas no indice, todas `done`.
+- `run_tests.py`: 6 autotestes e 738/738 testes Luau passaram com Luau 0.742.
+- Gates `spec_parsed`, `economy_tuned`, `planned`, `built` e `assets` passaram.
+- O gate `built` agora inclui testes, Rojo, Selene e StyLua.
+- Build local em `build/game-playtest.rbxl` foi aberto e testado parcialmente no Studio.
+- `state.json` foi atualizado por `state.py` apos os gates `planned` e `built`.
 
-| Task | Title | Attempts | Commit |
-| --- | --- | --- | --- |
-| 21 | Gym retry wait survives a rejoin | 1 | 84e988b |
+`worlds`, `playtested` e `published_test` continuam pendentes. O playtest
+comprovou inicializacao, click, hatch, inventario, equipe 3/3 e tutorial
+inicial. Gym, portais, outras resolucoes e save/rejoin
+ainda precisam de validacao. O perfil local do Studio nao salva no DataStore.
 
-## What failed
-
-Nothing.
-
-## State now
-
-- `spec_parsed` passed: config matches the spec's current hash and passes the validator
-- `economy_tuned` passed: all 3 time pacing targets met; rebirths at gym 3 still 4 against a target of 5
-- `planned` passed: 19 tasks planned, task 01 done, no dependency cycle
-- `built` pending: stopped at the limit of 1 task(s) per run; next is task 22
-- `assets` pending
-- `worlds` pending
-- `playtested` pending
-- `published_test` pending
-
-Tasks: 21 done, 1 pending
-
-## Next
-
-Run it again to build task 22 (Shiny and golden looks that actually show).
-
-Every step of every run is in `reports/run-log.md`.
+O executor Codex foi validado em fixture isolada; nao foi executado nesta
+arvore, que contem arquivos importados nao rastreados. Consulte
+`FACTORY-REPORT.md` e `RUN-CODEX.md` na raiz para evidencias e proximos passos.

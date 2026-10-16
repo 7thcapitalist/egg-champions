@@ -19,8 +19,8 @@ arguments.
 | 7 | Playtester | Published test place | Bug report | Not built |
 | 8 | Publisher | A passing build | Live game, icon, thumbnails | Not built |
 
-Agents are Claude Code subagents. Each one's instructions are the body of its
-file in `.claude/agents/`, which is the only copy of that text:
+The local orchestrator starts fresh `codex exec` runs. It loads each role's
+instruction body from the historical `.claude/agents/` files:
 
 | Agent | File |
 | --- | --- |
@@ -58,7 +58,7 @@ regenerated. Stages with no check yet print "no gate yet" and exit 1, so
 | --- | --- |
 | `spec_parsed` | the validator passes and `manifest.json` matches the spec's current hash |
 | `economy_tuned` | the tuning report shows the time pacing targets met |
-| `built` | every brief in the game's task index is ticked, and rojo, selene and stylua pass |
+| `built` | every brief in the game's task index is ticked, and the Luau suite, rojo, selene and stylua pass |
 | `assets` | every pet and egg has a current entry in `assets/models.json`, the project maps it, `rojo build` passes, and `assets/verify.json` checked this exact `models.json` with every entry ok |
 | the rest | no gate yet |
 
@@ -151,20 +151,20 @@ since their addresses change from run to run.
 ## Run the factory
 
 One command builds a game from where its `state.json` says it is, with nobody
-typing:
+typing. Use a clean, isolated checkout; the orchestrator refuses a dirty
+working tree, including unrelated untracked files:
 
     python factory/tools/run_factory.py <game-dir>
 
-or, inside Claude Code, `/build-game <game-dir>`, which runs the same command
-and then summarizes the report. Start from a clean working tree; the
-orchestrator refuses otherwise, so a revert can never take a person's work.
+See [`RUN-CODEX.md`](../RUN-CODEX.md) for the daily Codex procedure and the
+current game's validation commands.
 
 What it does, in order:
 - Works on the first stage that has not passed. A stage whose gate already
   passes is recorded and skipped. `spec_parsed`, `economy_tuned` and
   `planned` run their agent, then the gate, up to 3 tries.
 - `built` walks `<game-dir>/tasks/index.json` in dependency order. Each task
-  gets a fresh headless `claude -p --agent coder` run on its one brief. The
+  gets a fresh headless `codex exec` run on its one brief. The
   coder does not commit. The orchestrator then checks the work itself:
   - only allowed paths changed: `<game-dir>/src/`, `<game-dir>/tasks/`, test
     files (`*.spec.luau`, `factory/tools/run_tests*`), and files the brief
@@ -176,24 +176,25 @@ What it does, in order:
     `stylua`, and `grep ... finds no` checks are rerun; experiment items such
     as "a deliberately broken ..." rely on the coder's tick);
   - the test entry point, `rojo build`, `selene` and `stylua --check` pass.
-- Pass: the task is marked done, committed, and pushed. Fail: the coder gets
+- Pass: the task is marked done and committed locally. Fail: the coder gets
   the failing output and tries again, up to 3 tries in all. Still failing:
   the work is saved to `<game-dir>/reports/blocked/task-<id>.patch`,
   reverted, the task is marked blocked, and the run stops.
 - A stage with no agent yet (today `assets` onward) stops the run.
 
 Limits: `--max-tasks` (default 5) tasks per run, `--task-minutes` (default 60)
-per task across its attempts, `--attempts` (default 3), and an optional
-`--budget-usd` spend cap per agent run. Agents run with
-`--permission-mode dontAsk`, so anything not allowed is denied rather than
-asked, plus deny rules for `.env`, git writes and `rojo upload`. Nothing in
-the loop publishes; publishing is a later stage. `--no-push` keeps commits
-local, for scratch branches.
+per task across its attempts, and `--attempts` (default 3). `--budget-usd` is
+rejected because Codex CLI has no equivalent measured spend cap here. Codex
+runs with `workspace-write` and `approval_policy=never`; the orchestrator's
+path guard and Git preflight enforce the task boundary. It removes
+`ROBLOX_API_KEY` from the agent environment. Nothing in the loop publishes.
+Commits stay local unless `--push` is explicitly supplied. Do not use
+`--push` on `main`: the CI workflow publishes the TEST place on relevant pushes.
 
 Every step adds a line to `<game-dir>/reports/run-log.md`. Every run ends by
 rewriting `<game-dir>/reports/latest.md`: what was done, what failed, the
-state now, and what to do next. Each agent's final report is kept in
-`<game-dir>/reports/agents/`.
+state now, and what to do next. Each agent's final report and JSONL trace are
+kept in `<game-dir>/reports/agents/`.
 
 ### Resume after a blocked task
 
@@ -210,7 +211,7 @@ state now, and what to do next. Each agent's final report is kept in
 A blocked stage other than `built` resumes the same way, after
 `python factory/tools/state.py set <game-dir> <stage> pending`.
 
-`--agent-cmd CMD` swaps `claude` for another command, which gets the prompt
+`--agent-cmd CMD` swaps `codex exec` for another command, which gets the prompt
 on stdin. It exists only to test the orchestrator itself without spending
 agent runs.
 

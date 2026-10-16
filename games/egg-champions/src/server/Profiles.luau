@@ -61,7 +61,23 @@ local LOCK_MAX_WAIT_SECONDS = LOCK_STALE_SECONDS + 60
 local CALL_ATTEMPTS = 5
 local CALL_BACKOFF_SECONDS = 2
 
-local store = DataStoreService:GetDataStore(STORE_NAME)
+-- An unpublished local .rbxl can reject GetDataStore itself, before any
+-- UpdateAsync call. In Studio, use the same temporary profile fallback as a
+-- failed UpdateAsync; never let this fallback run on a live server.
+local store: GlobalDataStore? = nil
+local storeOk, storeResult = pcall(function(): GlobalDataStore
+	return DataStoreService:GetDataStore(STORE_NAME)
+end)
+if storeOk then
+	store = storeResult
+elseif RunService:IsStudio() then
+	warn(
+		"[Profiles] save store unavailable in Studio; temporary profiles will not be saved: "
+			.. tostring(storeResult)
+	)
+else
+	error(storeResult)
+end
 
 -- True when this error means Studio has API access turned off. Retrying can
 -- not fix it, so the first such error ends the retries and the player gets
@@ -95,11 +111,15 @@ end
 
 -- Runs UpdateAsync with a bounded retry. Returns ok and the stored result.
 local function update(userId: number, label: string, transform: (any) -> any): (boolean, any)
+	local availableStore = store
+	if availableStore == nil then
+		return false, nil
+	end
 	local key = keyFor(userId)
 	local lastError: any = nil
 	for attempt = 1, CALL_ATTEMPTS do
 		local ok, result = pcall(function()
-			return store:UpdateAsync(key, transform)
+			return availableStore:UpdateAsync(key, transform)
 		end)
 		if ok then
 			return true, result
