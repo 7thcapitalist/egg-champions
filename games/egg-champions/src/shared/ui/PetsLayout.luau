@@ -83,6 +83,8 @@ export type Sizes = {
 export type Options = {
 	few: boolean?,
 	menu: Rect?,
+	tools: boolean?,
+	actions: boolean?,
 }
 
 export type Layout = {
@@ -92,6 +94,8 @@ export type Layout = {
 	panel: Rect,
 	header: Rect,
 	guide: Rect?,
+	actions: Rect?,
+	search: Rect?,
 	content: Rect,
 	detail: Rect,
 	detailTop: Rect,
@@ -259,6 +263,7 @@ function PetsLayout.compute(
 ): Layout
 	local withFilters = filters ~= false
 	local few = options ~= nil and options.few == true
+	local tools = options ~= nil and options.tools == true
 	local menu = if options ~= nil then options.menu else nil
 	local compact = PetsLayout.isCompact(width, height)
 	local s: Sizes = if compact then PetsLayout.SIZES.compact else PetsLayout.SIZES.normal
@@ -267,6 +272,14 @@ function PetsLayout.compute(
 		local copy = table.clone(s)
 		copy.maxWidth = fewSizes.maxWidth
 		copy.tileBlock = fewSizes.tileBlock
+		s = copy
+	end
+	if tools then
+		local copy = table.clone(s)
+		copy.maxWidth = 1140
+		copy.detailWidth = if compact then 230 else 300
+		copy.tileBlock = if compact then 80 else 104
+		copy.controlMin = if compact then 76 else 120
 		s = copy
 	end
 
@@ -290,6 +303,11 @@ function PetsLayout.compute(
 	if guide then
 		guideRect = rect("guide", innerX, below + s.controlGap, innerW, s.guide)
 		below = below + s.controlGap + s.guide
+	end
+	local actions: Rect? = nil
+	if tools and (options == nil or options.actions ~= false) then
+		actions = rect("actions", innerX, below + s.controlGap, innerW, 44)
+		below = actions.y + actions.h
 	end
 	local bodyY = below + s.gap
 	local bodyH = panel.y + panel.h - s.padding - bodyY
@@ -320,9 +338,15 @@ function PetsLayout.compute(
 
 	local content = rect("content", innerX, bodyY, innerW - s.detailWidth - s.gap, bodyH)
 	local hint = rect("hint", content.x, content.y, content.w, s.hint)
+	local search: Rect? = nil
+	if tools then
+		search = rect("search", content.x, content.y + hint.h + s.controlGap, content.w, 32)
+	end
 	local perRow = PetsLayout.controlsPerRow(s, content.w)
 	local controlW = math.floor((content.w - (perRow - 1) * s.controlGap) / perRow)
-	local controlsY = hint.y + hint.h + s.controlGap
+	local controlsY = if search ~= nil
+		then search.y + search.h + s.controlGap
+		else hint.y + hint.h + s.controlGap
 	local controls: { Rect } = {}
 	for position, name in if withFilters then PetsLayout.CONTROLS else {} do
 		local index = position - 1
@@ -342,7 +366,7 @@ function PetsLayout.compute(
 	local controlRows = if withFilters then math.ceil(#PetsLayout.CONTROLS / perRow) else 0
 	local gridY = if withFilters
 		then controlsY + controlRows * s.control + (controlRows - 1) * s.controlGap + s.gap
-		else hint.y + hint.h + s.gap
+		else (if search ~= nil then search.y + search.h else hint.y + hint.h) + s.gap
 	local grid = rect("grid", content.x, gridY, content.w, content.y + content.h - gridY)
 
 	local free = grid.w - s.scrollBar - 2 * s.gridPad
@@ -350,7 +374,14 @@ function PetsLayout.compute(
 		return math.floor((free - (count - 1) * s.tileGap) / count)
 	end
 	local columns = PetsLayout.columnsFor(content.w)
-	if few then
+	if tools then
+		local minTile = if compact then 104 else 128
+		columns = math.clamp(
+			math.floor((free + s.tileGap) / (minTile + s.tileGap)),
+			1,
+			PetsLayout.MAX_COLUMNS
+		)
+	elseif few then
 		columns = 1
 		for count = PetsLayout.FEW.maxColumns, 1, -1 do
 			if widthFor(count) - 2 * s.tilePad >= s.tileBlock then
@@ -360,6 +391,11 @@ function PetsLayout.compute(
 		end
 	end
 	local tileWidth = widthFor(columns)
+	if tools then
+		local copy = table.clone(s)
+		copy.tileBlock = math.min(s.tileBlock, tileWidth - 2 * s.tilePad)
+		s = copy
+	end
 	return {
 		compact = compact,
 		few = few,
@@ -367,6 +403,8 @@ function PetsLayout.compute(
 		panel = panel,
 		header = header,
 		guide = guideRect,
+		actions = actions,
+		search = search,
 		content = content,
 		detail = detail,
 		detailTop = detailTop,

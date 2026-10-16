@@ -39,6 +39,17 @@ Abra `game.rbxl` pelo menu File > Open from File. O Studio usa perfil
 temporario quando um `.rbxl` local nao consegue acessar DataStore; esse modo
 nao prova save/rejoin. Verifique o painel Output durante o playtest.
 
+Os cenarios locais de QA de inventario, gyms e portais estao documentados em
+[LAUNCH-REPORT.md](games/egg-champions/LAUNCH-REPORT.md). Para construir um:
+
+```powershell
+python -B factory/tools/build_playtest.py games/egg-champions collection
+```
+
+Abra o resultado em `build/playtest/` como arquivo local. Essas fixtures
+exigem Studio e PlaceId zero, nao fazem parte do build de distribuicao e nao
+devem ser publicadas.
+
 ## Continuar tarefas com o executor
 
 Use um checkout Git isolado e limpo para rodar o orquestrador. A copia

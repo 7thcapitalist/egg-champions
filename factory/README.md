@@ -65,6 +65,17 @@ regenerated. Stages with no check yet print "no gate yet" and exit 1, so
 `gate.py` decides; `state.py` only records what it found. Nothing marks a
 stage passed on its own word.
 
+## Local Studio QA
+
+`python -B factory/tools/build_playtest.py <game-dir> <scenario>` builds a
+separate unpublished QA place under `<game-dir>/build/playtest/` without
+changing the shipping project. Scenarios are `beginner`, `collection`,
+`gym1`, `gym2`, `gym3` and `portals`. Gym fixtures read the tuning reference
+team; `portals` physically crosses the generated trigger parts and asserts
+refusal or the target arrival. Open the file in Studio and read Output.
+Fixtures assert Studio and PlaceId zero. Do not publish them. Temporary
+profiles do not validate DataStore persistence or cross-server locking.
+
 ## Run agent 1
 
     python factory/tools/parse_spec.py <game-dir>/spec.md <game-dir>/config

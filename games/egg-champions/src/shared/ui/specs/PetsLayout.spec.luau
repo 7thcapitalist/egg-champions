@@ -77,6 +77,55 @@ local function expectApart(where: string, a: PetsLayout.Rect, b: PetsLayout.Rect
 end
 
 return function()
+	describe("Inventory action toolbar", function()
+		it("keeps team actions, search, equip and a usable grid on phone and desktop", function()
+			for _, screen in { { 808, 432 }, { 844, 390 }, { 1280, 720 }, { 1920, 1080 } } do
+				for _, filters in { false, true } do
+					local width, height = screen[1], screen[2]
+					local l = PetsLayout.compute(
+						width,
+						height,
+						58,
+						height >= 560,
+						filters,
+						{ tools = true }
+					)
+					local actions, search = l.actions, l.search
+					expect(actions ~= nil and search ~= nil).toBeTrue()
+					if actions ~= nil and search ~= nil then
+						expectInside("toolbar", actions, l.panel)
+						expectInside("search", search, l.content)
+						expectApart("toolbar", actions, l.content)
+						expectApart("search", search, l.grid)
+						expect(actions.h >= 44).toBeTrue()
+					end
+					expect(
+						string.format(
+							"%dx%d filters=%s grid=%d",
+							width,
+							height,
+							tostring(filters),
+							l.grid.h
+						)
+							.. " "
+							.. tostring(l.grid.h >= 70)
+					).toEqual(
+						string.format(
+							"%dx%d filters=%s grid=%d",
+							width,
+							height,
+							tostring(filters),
+							l.grid.h
+						) .. " true"
+					)
+					expect(l.sizes.tileBlock >= 72).toBeTrue()
+					expect(l.tileWidth >= l.sizes.tileBlock + 2 * l.sizes.tilePad).toBeTrue()
+					expectInside("detail", l.equip, l.detail)
+					expect(l.detailScroll.h > 0).toBeTrue()
+				end
+			end
+		end)
+	end)
 	describe("PetsLayout", function()
 		it("keeps EQUIP right under the pet name, inside the panel and on screen", function()
 			each(function(layout, where, width, height)

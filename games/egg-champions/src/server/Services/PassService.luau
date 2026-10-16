@@ -55,6 +55,7 @@ local PRODUCT_IDS: { [string]: number } = {
 
 -- How often a failed ownership check is tried again.
 local RETRY_SECONDS = 15
+local localStudio = RunService:IsStudio() and game.PlaceId == 0
 
 -- How often the server clicks for an Auto Click owner. Not a spec number:
 -- the spec only says the pass clicks automatically.
@@ -109,6 +110,9 @@ end
 
 -- Checks one pass. Returns true when the owned set changed.
 local function check(player: Player, passId: string): boolean
+	if localStudio then
+		return false
+	end
 	local productId = PRODUCT_IDS[passId]
 	if productId == nil or productId == 0 then
 		return false
@@ -186,7 +190,7 @@ local function passesView(player: Player, _profile: Profile): any
 			name = pass.name,
 			effect = pass.effect,
 			owned = PassService.owns(player, pass.id),
-			productId = PRODUCT_IDS[pass.id] or 0,
+			productId = if localStudio then 0 else PRODUCT_IDS[pass.id] or 0,
 		})
 	end
 	return list

@@ -19,6 +19,7 @@ local Requests = require(Shared:WaitForChild("net"):WaitForChild("Requests"))
 local Guard = require(script.Parent.Parent:WaitForChild("Guard"))
 local Analytics = require(script.Parent.Parent:WaitForChild("Analytics"))
 local TutorialService = require(script.Parent:WaitForChild("TutorialService"))
+local GymService = require(script.Parent:WaitForChild("GymService"))
 
 type Profile = Profile.Profile
 
@@ -49,6 +50,9 @@ local function teamPetIds(profile: Profile, team: { string }): { string }
 end
 
 local function onEquip(player: Player, profile: Profile, uid: any): (boolean, any)
+	if GymService.inBattle(player) then
+		return false, "in_battle"
+	end
 	if not Requests.isChoiceString(uid) then
 		return false, Requests.reasons.badChoice
 	end
@@ -64,7 +68,10 @@ local function onEquip(player: Player, profile: Profile, uid: any): (boolean, an
 	return true, { team = table.clone(nextTeam) }
 end
 
-local function onUnequip(_player: Player, profile: Profile, uid: any): (boolean, any)
+local function onUnequip(player: Player, profile: Profile, uid: any): (boolean, any)
+	if GymService.inBattle(player) then
+		return false, "in_battle"
+	end
 	if not Requests.isChoiceString(uid) then
 		return false, Requests.reasons.badChoice
 	end
@@ -76,9 +83,39 @@ local function onUnequip(_player: Player, profile: Profile, uid: any): (boolean,
 	return true, { team = table.clone(nextTeam) }
 end
 
+local function onEquipBest(player: Player, profile: Profile, criterion: any): (boolean, any)
+	if GymService.inBattle(player) then
+		return false, "in_battle"
+	end
+	local ok, reason = Requests.checkTeamCriterion(criterion)
+	if not ok then
+		return false, reason
+	end
+	local selected = if criterion == nil then Requests.TEAM_CRITERION_COINS else criterion
+	local nextTeam = if selected == Requests.TEAM_CRITERION_BATTLE
+		then Team.bestForBattle(profile.pets, profile.rebirths)
+		else Team.bestForCoins(profile.pets)
+	profile.team = nextTeam
+	if #nextTeam > 0 then
+		TutorialService.note(profile, "equipped")
+	end
+	return true, { team = table.clone(nextTeam), criterion = selected }
+end
+
+local function onUnequipAll(player: Player, profile: Profile): (boolean, any)
+	if GymService.inBattle(player) then
+		return false, "in_battle"
+	end
+	local nextTeam = Team.unequipAll()
+	profile.team = nextTeam
+	return true, { team = table.clone(nextTeam) }
+end
+
 function TeamService.start()
 	Guard.onInvoke(Remotes.names.Equip, onEquip)
 	Guard.onInvoke(Remotes.names.Unequip, onUnequip)
+	Guard.onInvoke(Remotes.names.EquipBest, onEquipBest)
+	Guard.onInvoke(Remotes.names.UnequipAll, onUnequipAll)
 end
 
 return TeamService

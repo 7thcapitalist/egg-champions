@@ -23,6 +23,8 @@
 	  hints, the server decides and its refusal is shown as a readable message.
 	- Hatch sends BuyEgg with the egg id and a count of 1. Hatch x3 sends the
 	  triple count. Neither ever sends a price.
+	- Auto Hatch repeats one BuyEgg request only after its reveal ends. A Stop
+	  button stays over the reveal, and closing or switching screens stops it.
 	- A hatch is shown by Effects.playHatch and then the reveal, over the
 	  screen, straight from the server's reply; the card keeps its egg and
 	  name. Only a refusal (or no answer) is written over the card's egg and
@@ -97,6 +99,8 @@ type CardView = {
 	result: TextButton,
 	hatch: TextButton,
 	hatchStroke: UIStroke,
+	auto: TextButton,
+	autoStroke: UIStroke,
 	-- Whether HATCH X3 shows, so HATCH can take its room when it does not.
 	showsTriple: boolean,
 	triple: TextButton,
@@ -437,10 +441,73 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 	footer.TextXAlignment = Enum.TextXAlignment.Left
 	footer.TextYAlignment = Enum.TextYAlignment.Center
 
+	-- Stays above the hatch reveal, so stopping auto is always reachable.
+	local stopButton, stopStroke = button("StopAutoHatch", gui)
+	stopButton.AnchorPoint = Vector2.new(1, 1)
+	stopButton.Position = UDim2.new(1, -16, 1, -16)
+	stopButton.Size = UDim2.fromOffset(156, sizes.minTap)
+	stopButton.ZIndex = 100
+	stopButton.Text = Theme.label("Stop Auto")
+	stopButton.Visible = false
+	style(stopButton, stopStroke, "accent")
+
 	local cards: { [string]: CardView } = {}
 	local busy = false
+	local auto = EggShopView.newAutoState()
 	local ownsTriple = false
 	local layout: EggShopLayout.Layout? = nil
+	local autoStep: (() -> ())? = nil
+
+	local function renderAuto()
+		stopButton.Visible = auto.active and gui.Enabled
+		for eggId, view in cards do
+			local selected = auto.active and auto.eggId == eggId
+			view.auto.Text = Theme.label(if selected then "Auto on" else "Auto Hatch")
+			style(view.auto, view.autoStroke, if selected then "accent" else "muted")
+		end
+	end
+
+	local function stopAuto()
+		if auto.active then
+			auto = EggShopView.stopAuto(auto)
+		end
+		renderAuto()
+	end
+
+	local function otherScreenOpen(): boolean
+		for _, name in Screens.names do
+			if name ~= Screens.names.Eggs and Screens.isShown(name) then
+				return true
+			end
+		end
+		return false
+	end
+
+	local function autoEligible(eggId: string): (boolean, string?)
+		if not gui.Enabled or otherScreenOpen() then
+			return false, nil
+		end
+		local payload = State.get()
+		if payload == nil then
+			return false, "no_profile"
+		end
+		local state: EggShopView.State = {
+			coins = number(payload.profile.coins),
+			gymsBeaten = flags(payload.profile.gymsBeaten),
+		}
+		for _, card in EggShopView.cards(state) do
+			if card.eggId == eggId then
+				if card.locked then
+					return false, "egg_locked"
+				end
+				if not card.affordable then
+					return false, "cannot_afford"
+				end
+				return true, nil
+			end
+		end
+		return false, "unknown_choice"
+	end
 
 	local function clearResult(view: CardView)
 		for _, child in view.result:GetChildren() do
@@ -476,7 +543,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		view.result.Visible = true
 	end
 
-	local function buy(eggId: string, count: number)
+	local function buy(eggId: string, count: number, done: ((boolean) -> ())?)
 		if busy then
 			return
 		end
@@ -490,6 +557,9 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		if not ok or type(reply) ~= "table" then
 			Guide.setHatching(false)
 			showMessage(eggId, "The shop did not answer. Try again.")
+			if done ~= nil then
+				done(false)
+			end
 		elseif reply.ok == true then
 			-- The reveal shows what hatched; the card keeps its egg and name.
 			clearResults()
@@ -500,12 +570,44 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 				Reveal.show(gui, HatchReveal.entries(lines), function()
 					busy = false
 					Guide.setHatching(false)
+					if done ~= nil then
+						done(true)
+					end
 				end)
 			end)
 		else
 			Guide.setHatching(false)
 			showMessage(eggId, EggShopView.reasonText(reply.reason))
+			if done ~= nil then
+				done(false)
+			end
 		end
+	end
+
+	autoStep = function()
+		local eggId = auto.eggId
+		if eggId == nil then
+			return
+		end
+		local eligible, reason = autoEligible(eggId)
+		local nextAuto = EggShopView.beginAuto(auto, eggId, eligible)
+		if nextAuto == nil then
+			stopAuto()
+			if reason ~= nil and gui.Enabled then
+				showMessage(eggId, EggShopView.reasonText(reason))
+			end
+			return
+		end
+		auto = nextAuto
+		local token = auto.token
+		buy(eggId, 1, function(succeeded: boolean)
+			local stillEligible = autoEligible(eggId)
+			auto = EggShopView.finishAuto(auto, token, succeeded, stillEligible)
+			renderAuto()
+			if auto.active and autoStep ~= nil then
+				task.defer(autoStep)
+			end
+		end)
 	end
 
 	local function buildCard(egg: Config.Egg, position: number): CardView
@@ -549,6 +651,10 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		local hatch, hatchStroke = button("Hatch", card)
 		local triple, tripleStroke = button("HatchTriple", card)
 		triple.Text = Theme.label(string.format("Hatch x%d", EggShopView.TRIPLE_COUNT))
+		local autoButton, autoStroke = button("AutoHatch", card)
+		autoButton.TextSize = textSizes.small
+		autoButton.Text = Theme.label("Auto Hatch")
+		style(autoButton, autoStroke, "muted")
 
 		local toggle = Instance.new("TextButton")
 		toggle.Name = "ShowOdds"
@@ -619,6 +725,8 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			result = result,
 			hatch = hatch,
 			hatchStroke = hatchStroke,
+			auto = autoButton,
+			autoStroke = autoStroke,
 			showsTriple = false,
 			triple = triple,
 			tripleStroke = tripleStroke,
@@ -627,16 +735,43 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		local eggId = egg.id
 		Pointer.register("hatch:" .. eggId, hatch)
 		hatch.Activated:Connect(function()
-			buy(eggId, 1)
+			stopAuto()
+			buy(eggId, 1, nil)
 		end)
 		triple.Activated:Connect(function()
 			if not view.showsTriple then
 				return
 			end
 			if ownsTriple then
-				buy(eggId, EggShopView.TRIPLE_COUNT)
+				stopAuto()
+				buy(eggId, EggShopView.TRIPLE_COUNT, nil)
 			else
 				showMessage(eggId, EggShopView.reasonText("no_triple_hatch_pass"))
+			end
+		end)
+		autoButton.Activated:Connect(function()
+			if auto.active and auto.eggId == eggId then
+				stopAuto()
+				return
+			end
+			if busy or auto.inFlight then
+				return
+			end
+			local eligible, reason = autoEligible(eggId)
+			if not eligible then
+				if reason ~= nil then
+					showMessage(eggId, EggShopView.reasonText(reason))
+				end
+				return
+			end
+			local nextAuto = EggShopView.startAuto(auto, eggId)
+			if nextAuto ~= nil then
+				auto = nextAuto
+				clearResults()
+				renderAuto()
+				if autoStep ~= nil then
+					task.defer(autoStep)
+				end
 			end
 		end)
 		toggle.Activated:Connect(function()
@@ -679,7 +814,13 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			place(view.words, parts.words, 0, 0)
 			place(view.hatch, if view.showsTriple then parts.hatch else parts.hatchWide, 0, 0)
 			place(view.triple, parts.triple, 0, 0)
-			place(view.toggle, parts.toggle, 0, 0)
+			local autoWidth = math.floor((parts.toggle.w - s.innerGap) / 2)
+			view.auto.Position = UDim2.fromOffset(parts.toggle.x, parts.toggle.y)
+			view.auto.Size = UDim2.fromOffset(autoWidth, parts.toggle.h)
+			view.toggle.Position =
+				UDim2.fromOffset(parts.toggle.x + autoWidth + s.innerGap, parts.toggle.y)
+			view.toggle.Size =
+				UDim2.fromOffset(parts.toggle.w - autoWidth - s.innerGap, parts.toggle.h)
 			place(view.oddsPanel, parts.odds, 0, 0)
 			place(view.result, parts.result, 0, 0)
 			view.name.TextSize = s.cardTitle
@@ -798,11 +939,18 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			view.frame.Visible = listed[eggId] == true
 		end
 		sizeCanvas()
+		if auto.active and auto.eggId ~= nil then
+			local eligible = autoEligible(auto.eggId)
+			if not eligible then
+				stopAuto()
+			end
+		end
 		-- No pass line while the tutorial runs.
 		footer.Visible = EggShopView.showsNote(profile.tutorialStep)
 	end
 
 	local function hide()
+		stopAuto()
 		gui.Enabled = false
 	end
 
@@ -821,12 +969,16 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 	end
 
 	opener = function(eggId: string?)
+		if auto.active and eggId ~= nil and auto.eggId ~= eggId then
+			stopAuto()
+		end
 		local wasOpen = gui.Enabled
 		if not wasOpen then
 			clearResults()
 		end
 		render(State.get())
 		gui.Enabled = true
+		renderAuto()
 		applyLayout()
 		if not wasOpen or eggId ~= nil then
 			task.spawn(scrollTo, eggId)
@@ -835,12 +987,23 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 
 	close.Activated:Connect(hide)
 	backdrop.Activated:Connect(hide)
+	stopButton.Activated:Connect(stopAuto)
+	gui:GetPropertyChangedSignal("Enabled"):Connect(function()
+		if not gui.Enabled then
+			stopAuto()
+		end
+	end)
 
 	render(nil)
 	gui.Parent = playerGui
 	applyLayout()
 	State.subscribe(render)
 	Screens.track(gui)
+	Screens.onChange(function()
+		if auto.active and (not gui.Enabled or otherScreenOpen()) then
+			stopAuto()
+		end
+	end)
 	Screens.register(Screens.names.Eggs, function()
 		EggShop.openAt(nil)
 	end)

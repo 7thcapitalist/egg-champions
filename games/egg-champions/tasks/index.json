@@ -410,6 +410,13 @@
         "42"
       ],
       "status": "done"
+    },
+    {
+      "id": "44",
+      "title": "Launch quality and inventory usability",
+      "file": "44-launch-quality.md",
+      "depends_on": ["43"],
+      "status": "done"
     }
   ]
 }

@@ -45,6 +45,7 @@ type Pending = {
 local FLUSH_SECONDS = 30
 local QUEUE_LIMIT = 1000
 local CURRENCY = "Coins"
+local localStudio = game:GetService("RunService"):IsStudio() and game.PlaceId == 0
 
 local Analytics = {}
 
@@ -110,6 +111,9 @@ local function logFailure(item: Pending, err: string)
 end
 
 local function send(item: Pending)
+	if localStudio then
+		return
+	end
 	local record = item.record
 	local event = Events.get(record.name)
 	local custom = Events.customFields(record)

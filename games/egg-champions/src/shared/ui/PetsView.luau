@@ -41,6 +41,7 @@ export type Filter = {
 	rarity: string?,
 	type: string?,
 	egg: string?,
+	query: string?,
 }
 
 export type Tile = {
@@ -149,6 +150,7 @@ local REASONS: { [string]: string } = {
 	no_profile = "Your save is still loading. Try again in a moment.",
 	server_error = "Something went wrong on the server. Try again.",
 	bad_choice = "The server did not understand that request.",
+	in_battle = "Finish your battle before changing the team.",
 }
 
 function PetsView.reasonText(reason: any): string
@@ -183,7 +185,7 @@ PetsView.FULL_SCREEN_PETS = 4
 -- and filter row, and the tabs in order.
 function PetsView.screenParts(petCount: number): { filters: boolean, tabs: { string } }
 	if petCount < PetsView.FULL_SCREEN_PETS then
-		return { filters = false, tabs = { "pets" } }
+		return { filters = false, tabs = { "pets", "index", "fruit" } }
 	end
 	return { filters = true, tabs = { "pets", "index", "fruit" } }
 end
@@ -390,6 +392,9 @@ end
 function PetsView.arrange(tiles: { Tile }, sortKey: SortKey?, filter: Filter?): { Tile }
 	local key = sortKey or PetsView.DEFAULT_SORT
 	local kept: { Tile } = {}
+	local query = if filter ~= nil and filter.query ~= nil
+		then string.lower((string.gsub(filter.query, "^%s*(.-)%s*$", "%1")))
+		else ""
 	for _, tile in tiles do
 		local keep = filter == nil
 			or (
@@ -397,6 +402,16 @@ function PetsView.arrange(tiles: { Tile }, sortKey: SortKey?, filter: Filter?): 
 				and (filter.type == nil or tile.type == filter.type)
 				and (filter.egg == nil or tile.egg == filter.egg)
 			)
+		if keep and query ~= "" then
+			local searchable = string.lower(table.concat({
+				tile.name,
+				tile.rarityName,
+				tile.typeName,
+				Config.eggById[tile.egg].name,
+				tile.variantName or "normal",
+			}, " "))
+			keep = string.find(searchable, query, 1, true) ~= nil
+		end
 		if keep then
 			table.insert(kept, tile)
 		end
@@ -434,6 +449,36 @@ function PetsView.arrange(tiles: { Tile }, sortKey: SortKey?, filter: Filter?): 
 		return tieBreak(a, b)
 	end)
 	return kept
+end
+
+-- Only fields that change the inventory presentation. Coin/autoclick and
+-- playtime pushes must not rebuild every model preview while browsing.
+function PetsView.signature(profile: any): string
+	if type(profile) ~= "table" then
+		return "loading"
+	end
+	local values = { tostring(profile.tutorialStep) }
+	for _, pet in if type(profile.pets) == "table" then profile.pets else {} do
+		table.insert(
+			values,
+			tostring(pet.uid) .. ":" .. tostring(pet.petId) .. ":" .. tostring(pet.variant)
+		)
+	end
+	table.insert(values, "team")
+	for _, uid in if type(profile.team) == "table" then profile.team else {} do
+		table.insert(values, tostring(uid))
+	end
+	local index = if type(profile.index) == "table" then profile.index else {}
+	for _, pet in Config.pets do
+		for _, variant in { "normal", "shiny", "golden" } do
+			local entry = index[pet.id]
+			table.insert(
+				values,
+				if type(entry) == "table" and entry[variant] == true then "1" else "0"
+			)
+		end
+	end
+	return table.concat(values, "|")
 end
 
 -- The next sort in the cycle.

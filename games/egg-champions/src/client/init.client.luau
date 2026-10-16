@@ -83,7 +83,9 @@ EggShop.mount(
 Pets.mount(
 	player:WaitForChild("PlayerGui") :: PlayerGui,
 	remotes:WaitForChild(Remotes.names.Equip) :: RemoteFunction,
-	remotes:WaitForChild(Remotes.names.Unequip) :: RemoteFunction
+	remotes:WaitForChild(Remotes.names.Unequip) :: RemoteFunction,
+	remotes:WaitForChild(Remotes.names.EquipBest) :: RemoteFunction,
+	remotes:WaitForChild(Remotes.names.UnequipAll) :: RemoteFunction
 )
 
 Battle.mount(

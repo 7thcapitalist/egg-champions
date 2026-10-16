@@ -40,7 +40,6 @@ local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local PetsView = require(uiShared:WaitForChild("PetsView"))
 local PetsLayout = require(uiShared:WaitForChild("PetsLayout"))
-local HudLayout = require(uiShared:WaitForChild("HudLayout"))
 local HudInsets = require(script.Parent:WaitForChild("HudInsets"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
@@ -120,7 +119,7 @@ end
 
 local function clear(parent: Instance)
 	for _, child in parent:GetChildren() do
-		if child:IsA("GuiObject") then
+		if child:IsA("GuiObject") or child:IsA("UIGridStyleLayout") then
 			child:Destroy()
 		end
 	end
@@ -162,7 +161,8 @@ local function tileButton(
 	rarity: string,
 	order: number,
 	dim: boolean,
-	stacked: boolean
+	stacked: boolean,
+	variant: string?
 ): (TextButton, Frame)
 	local tile = Instance.new("TextButton")
 	tile.Name = name
@@ -180,7 +180,7 @@ local function tileButton(
 	pad(body, s.tilePad)
 	local bodyList = list(body, Enum.FillDirection.Vertical, s.markerGap)
 	bodyList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	local pet = block(body, petId, s.tileBlock)
+	local pet = block(body, petId, s.tileBlock, variant)
 	pet.LayoutOrder = 1
 	if dim then
 		pet.BackgroundTransparency = 0.7
@@ -330,7 +330,13 @@ local function ownedTable(value: any): { any }
 end
 
 -- Builds the screen under playerGui. Call once.
-function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: RemoteFunction): ScreenGui
+function Pets.mount(
+	playerGui: PlayerGui,
+	equip: RemoteFunction,
+	unequip: RemoteFunction,
+	equipBest: RemoteFunction,
+	unequipAll: RemoteFunction
+): ScreenGui
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "Pets"
 	gui.ResetOnSpawn = false
@@ -398,6 +404,17 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 
 	-- Body: content on the left, the detail panel on the right.
 	local content = frame("Content", panel)
+	local actions = frame("TeamActions", panel)
+	local bestCoins = button("BestCoins", actions, "BEST COINS")
+	local bestBattle = button("BestBattle", actions, "BEST BATTLE")
+	local clearTeam = button("UnequipAll", actions, "UNEQUIP ALL")
+	bestCoins.BackgroundColor3 = colors.gold
+	bestCoins.TextColor3 = colors.panel
+	local teamActions = { bestCoins, bestBattle, clearTeam }
+	for position, b in teamActions do
+		b.Position = UDim2.new((position - 1) / #teamActions, 3, 0, 0)
+		b.Size = UDim2.new(1 / #teamActions, -6, 1, 0)
+	end
 
 	local detail = frame("Detail", panel)
 	detail.BackgroundTransparency = 0
@@ -439,7 +456,33 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 	local rarityButton = controlButtons[2]
 	local typeButton = controlButtons[3]
 	local eggButton = controlButtons[4]
+	local searchRow = frame("SearchRow", petsPage)
+	local search = Instance.new("TextBox")
+	search.Name = "Search"
+	search.BackgroundColor3 = colors.raised
+	search.BorderSizePixel = 0
+	search.ClearTextOnFocus = false
+	search.FontFace = Theme.fonts.body
+	search.TextColor3 = colors.text
+	search.PlaceholderColor3 = colors.muted
+	search.PlaceholderText = "Search name, type or variant..."
+	search.Text = ""
+	search.TextSize = textSizes.small + 1
+	search.TextXAlignment = Enum.TextXAlignment.Left
+	search.Size = UDim2.new(1, -86, 1, 0)
+	search.Parent = searchRow
+	Theme.panel(search)
+	pad(search, 8)
+	local filtersButton = button("Filters", searchRow, "FILTERS")
+	filtersButton.AnchorPoint = Vector2.new(1, 0)
+	filtersButton.Position = UDim2.fromScale(1, 0)
+	filtersButton.Size = UDim2.new(0, 80, 1, 0)
+	filtersButton.TextSize = textSizes.small
 	local petsScroll = scrolling("Grid", petsPage)
+	local emptyState = button("EmptyInventory", petsPage, "")
+	emptyState.TextWrapped = true
+	emptyState.TextSize = textSizes.body
+	emptyState.Visible = false
 
 	-- Index and Fruit Edition pages.
 	local indexScroll = scrolling("Index", content)
@@ -465,34 +508,36 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		local owned = if payload ~= nil then ownedTable(payload.profile.pets) else {}
 		return PetsView.screenParts(#PetsView.tiles(owned, {}))
 	end
-	local layoutFilters = true
+	local showFilters = false
+	local layoutFilters = false
+	local tab: Tab = "pets"
 	local function computeLayout(): PetsLayout.Layout
-		layoutFilters = currentParts().filters
+		layoutFilters = showFilters
 		local screen = gui.AbsoluteSize
 		local width = if screen.X > 0 then screen.X else 1280
 		local height = if screen.Y > 0 then screen.Y else 720
-		local hud = HudLayout.compute(width, height, 0, HudInsets.read(Vector2.new(width, height)))
+		local insets = HudInsets.read(Vector2.new(width, height))
 		-- Few pets: bigger tiles and a narrower panel. The panel always keeps
 		-- clear of the left menu, so EGGS and PETS stay pressable.
-		local m = hud.menu
-		local menu: PetsLayout.Rect = { name = "menu", x = m.x, y = m.y, w = m.w, h = m.h }
 		return PetsLayout.compute(
 			width,
 			height,
-			hud.contentTop,
-			guideShown,
+			insets.top,
+			guideShown and height >= 560,
 			layoutFilters,
-			{ few = not layoutFilters, menu = menu }
+			{ few = not currentParts().filters, tools = true, actions = tab == "pets" }
 		)
 	end
 	local layout: PetsLayout.Layout = computeLayout()
 
-	local tab: Tab = "pets"
 	local sortKey: PetsView.SortKey = PetsView.DEFAULT_SORT
 	local filter: PetsView.Filter = {}
 	local selected: Selection? = nil
 	local message: string? = nil
 	local busy = false
+	local renderedGrid: string? = nil
+	local lastState: string? = nil
+	local ownedButtons: { [string]: TextButton } = {}
 	-- Beginner detail: battle stats and moves stay behind a toggle.
 	local battleOpen = false
 
@@ -504,19 +549,27 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		render()
 	end
 
-	local function send(remote: RemoteFunction, uid: string)
+	local function send(remote: RemoteFunction, choice: string?, success: string?)
 		if busy then
 			return
 		end
 		busy = true
+		for _, b in teamActions do
+			b.Active = false
+			b.AutoButtonColor = false
+		end
 		local ok, reply = pcall(function(): any
-			return remote:InvokeServer(uid)
+			return remote:InvokeServer(choice)
 		end)
 		busy = false
+		for _, b in teamActions do
+			b.Active = true
+			b.AutoButtonColor = true
+		end
 		if not ok or type(reply) ~= "table" then
 			message = "The server did not answer. Try again."
 		elseif reply.ok == true then
-			message = nil
+			message = success
 		else
 			message = PetsView.reasonText(reply.reason)
 		end
@@ -735,7 +788,8 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			tile.rarity,
 			order,
 			not tile.seenAny,
-			false
+			false,
+			nil
 		)
 		seenMark(marks, "Normal", tile.seen.normal, colors.text, 1)
 		seenMark(marks, "Shiny", tile.seen.shiny, colors.gold, 2)
@@ -760,18 +814,14 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 
 		-- With few pets: no filter row and no Index or Fruit Edition tabs.
 		local parts = PetsView.screenParts(#PetsView.tiles(pets, {}))
-		if parts.filters ~= layoutFilters then
-			applyLayout()
-			return
-		end
 		if table.find(parts.tabs, tab) == nil then
 			tab = "pets"
 		end
 		local counts = PetsView.tabCounts(pets, index)
 		local labels: { [Tab]: string } = {
 			pets = string.format("My pets  %d", counts.owned),
-			index = string.format("Index  %d / %d", counts.seen, counts.total),
-			fruit = string.format("Fruit Edition  %d / %d", counts.fruitSeen, counts.fruitTotal),
+			index = string.format("Index  %d/%d", counts.seen, counts.total),
+			fruit = string.format("Fruit  %d/%d", counts.fruitSeen, counts.fruitTotal),
 		}
 		for key, view in tabButtons do
 			view.button.Visible = table.find(parts.tabs, key) ~= nil
@@ -783,11 +833,12 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		petsPage.Visible = tab == "pets"
 		indexScroll.Visible = tab == "index"
 		fruitPage.Visible = tab == "fruit"
+		actions.Visible = tab == "pets"
 
 		-- A selected owned pet that is gone (traded, or a new save) clears.
 		local tiles = PetsView.tiles(pets, team)
 		local current = selected
-		if current ~= nil and current.uid ~= nil then
+		if tab == "pets" and current ~= nil and current.uid ~= nil then
 			local found = false
 			for _, tile in tiles do
 				if tile.uid == current.uid then
@@ -798,53 +849,133 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 				selected = nil
 			end
 		end
+		if selected == nil and tab == "pets" and #tiles > 0 then
+			local first = PetsView.arrange(tiles, sortKey, filter)[1]
+			if first ~= nil then
+				selected = { uid = first.uid, petId = first.petId, variant = first.variant }
+			end
+		end
+		if selected == nil and tab ~= "pets" then
+			local first = if tab == "fruit"
+				then PetsView.fruitTiles(index)[1]
+				else PetsView.indexTiles(index)[1]
+			if first ~= nil then
+				selected = { petId = first.petId }
+			end
+		end
+		-- Collection tiles name a pet and form, not one owned copy. Resolve a
+		-- matching UID from this profile so the detail action can equip it.
+		-- Prefer a copy already equipped; otherwise keep inventory order.
+		if tab ~= "pets" and selected ~= nil then
+			local choice = selected :: Selection
+			local matchingUid: string? = nil
+			for _, pet in pets do
+				if
+					type(pet) == "table"
+					and pet.petId == choice.petId
+					and pet.variant == choice.variant
+					and type(pet.uid) == "string"
+				then
+					if matchingUid == nil then
+						matchingUid = pet.uid
+					end
+					if teamUids[pet.uid] == true then
+						matchingUid = pet.uid
+						break
+					end
+				end
+			end
+			selected = { petId = choice.petId, variant = choice.variant, uid = matchingUid }
+		end
+		local stateKey = PetsView.signature(profile)
+		local nextGrid = table.concat({
+			stateKey,
+			tab,
+			sortKey,
+			filter.rarity or "",
+			filter.type or "",
+			filter.egg or "",
+			filter.query or "",
+			tostring(layout.tileWidth),
+			tostring(layout.sizes.tileBlock),
+		}, ":")
+		local rebuild = nextGrid ~= renderedGrid
+		renderedGrid = nextGrid
 
 		if tab == "pets" then
-			hint.Text = string.format(
-				"Team %d of %d. The same team clicks and battles.",
-				#team,
-				Config.constants.team_size
-			)
+			local power = 0
+			for _, tile in tiles do
+				if tile.equipped then
+					power += tile.clickPower
+				end
+			end
+			hint.Text = message
+				or string.format(
+					"Team %d/%d  |  Click power +%s  |  %d pets",
+					#team,
+					Config.constants.team_size,
+					PetsView.number(power),
+					#tiles
+				)
+			hint.TextColor3 = if message ~= nil then colors.gold else colors.muted
+			filtersButton.Text = if showFilters then "HIDE" else "FILTERS"
 			sortButton.Text = Theme.label("Sort: " .. PetsView.SORT_NAMES[sortKey])
 			rarityButton.Text =
 				Theme.label("Rarity: " .. PetsView.filterName("rarity", filter.rarity))
 			typeButton.Text = Theme.label("Type: " .. PetsView.filterName("type", filter.type))
 			eggButton.Text = Theme.label("Egg: " .. PetsView.filterName("egg", filter.egg))
-			clear(petsScroll)
-			grid(petsScroll, layout)
-			local s = layout.sizes
-			for position, tile in PetsView.arrange(tiles, sortKey, filter) do
-				local b, marks = tileButton(
-					petsScroll,
-					s,
-					tile.uid,
-					tile.petId,
-					tile.rarity,
-					position,
-					false,
-					true
-				)
-				-- Each marker on its own line: "Click +3", variant, Equipped.
-				tileMarker(marks, s, tile.clickPowerText, colors.muted, 1)
-				if tile.variantName ~= nil then
-					tileMarker(marks, s, tile.variantName, colors.gold, 2)
+			local arranged = PetsView.arrange(tiles, sortKey, filter)
+			emptyState.Visible = #arranged == 0
+			emptyState.Text = if #tiles == 0
+				then "Your team starts here.\nOpen EGGS to hatch your first pet."
+				else "No pets match these filters.\nTap here to clear search and filters."
+			if rebuild then
+				clear(petsScroll)
+				table.clear(ownedButtons)
+				grid(petsScroll, layout)
+				local s = layout.sizes
+				for position, tile in arranged do
+					local b, marks = tileButton(
+						petsScroll,
+						s,
+						tile.uid,
+						tile.petId,
+						tile.rarity,
+						position,
+						false,
+						true,
+						tile.variant
+					)
+					ownedButtons[tile.uid] = b
+					-- Each marker on its own line: "Click +3", variant, Equipped.
+					tileMarker(marks, s, tile.clickPowerText, colors.muted, 1)
+					if tile.variantName ~= nil then
+						tileMarker(marks, s, tile.variantName, colors.gold, 2)
+					end
+					if tile.equipped then
+						tileMarker(marks, s, "Equipped", colors.gold, 3)
+					end
+					if position == 1 then
+						Pointer.register(FIRST_PET_TARGET, b)
+					end
+					local chosen = selected
+					if chosen ~= nil and chosen.uid == tile.uid then
+						(b:FindFirstChildOfClass("UIStroke") :: UIStroke).Color = colors.gold
+					end
+					local uid, petId, variant = tile.uid, tile.petId, tile.variant
+					b.Activated:Connect(function()
+						choose({ petId = petId, variant = variant, uid = uid })
+					end)
 				end
-				if tile.equipped then
-					tileMarker(marks, s, "Equipped", colors.gold, 3)
-				end
-				if position == 1 then
-					Pointer.register(FIRST_PET_TARGET, b)
-				end
-				local chosen = selected
-				if chosen ~= nil and chosen.uid == tile.uid then
-					(b:FindFirstChildOfClass("UIStroke") :: UIStroke).Color = colors.gold
-				end
-				local uid, petId, variant = tile.uid, tile.petId, tile.variant
-				b.Activated:Connect(function()
-					choose({ petId = petId, variant = variant, uid = uid })
-				end)
 			end
-		elseif tab == "index" then
+			for uid, b in ownedButtons do
+				local chosen = selected
+				local stroke = b:FindFirstChildOfClass("UIStroke") :: UIStroke
+				stroke.Color = if chosen ~= nil and chosen.uid == uid
+					then colors.gold
+					else colors.border
+			end
+		elseif tab == "index" and rebuild then
 			clear(indexScroll)
 			list(indexScroll, Enum.FillDirection.Vertical, 12)
 			for position, row in PetsView.eggProgress(index) do
@@ -884,7 +1015,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 					indexTile(cells, tile, order)
 				end
 			end
-		else
+		elseif tab == "fruit" and rebuild then
 			clear(fruitScroll)
 			grid(fruitScroll, layout)
 			for order, tile in PetsView.fruitTiles(index) do
@@ -914,11 +1045,18 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		close.Size =
 			UDim2.fromOffset(if l.compact then 80 else 100, math.min(sizes.minTap, s.header))
 		local strip = l.guide
+		guideBar.Visible = strip ~= nil
 		if strip ~= nil then
 			place(guideBar, strip, p.x, p.y)
 		end
 		local c = l.content
 		place(content, c, p.x, p.y)
+		if l.actions ~= nil then
+			place(actions, l.actions, p.x, p.y)
+		end
+		if l.search ~= nil then
+			place(searchRow, l.search, c.x, c.y)
+		end
 		local d = l.detail
 		place(detail, d, p.x, p.y)
 		place(detailTop, l.detailTop, d.x, d.y)
@@ -934,6 +1072,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 			end
 		end
 		place(petsScroll, l.grid, c.x, c.y)
+		place(emptyState, l.grid, c.x, c.y)
 		place(fruitNote, l.hint, c.x, c.y)
 		fruitNote.TextSize = s.text
 		local fruitTop = l.hint.h + s.controlGap
@@ -941,8 +1080,39 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		fruitScroll.Size = UDim2.new(1, 0, 1, -fruitTop)
 		gridPad(petsScroll, s)
 		gridPad(fruitScroll, s)
+		renderedGrid = nil
 		render()
 	end
+
+	bestCoins.Activated:Connect(function()
+		send(equipBest, "coins", "Best coin team equipped.")
+	end)
+	bestBattle.Activated:Connect(function()
+		send(equipBest, "battle", "Recommended battle team equipped. Type matchups still matter.")
+	end)
+	clearTeam.Activated:Connect(function()
+		send(unequipAll, nil, "Team cleared. Pets stay in your inventory.")
+	end)
+	search:GetPropertyChangedSignal("Text"):Connect(function()
+		filter.query = search.Text
+		petsScroll.CanvasPosition = Vector2.zero
+		render()
+	end)
+	filtersButton.Activated:Connect(function()
+		showFilters = not showFilters
+		applyLayout()
+	end)
+	emptyState.Activated:Connect(function()
+		local payload = State.get()
+		if payload ~= nil and #ownedTable(payload.profile.pets) == 0 then
+			gui.Enabled = false
+			Screens.open(Screens.names.Eggs)
+		else
+			filter = {}
+			search.Text = ""
+			render()
+		end
+	end)
 
 	sortButton.Activated:Connect(function()
 		sortKey = PetsView.nextSort(sortKey)
@@ -963,7 +1133,10 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 	for key, view in tabButtons do
 		view.button.Activated:Connect(function()
 			tab = key
-			render()
+			selected = nil
+			message = nil
+			battleOpen = false
+			applyLayout()
 		end)
 	end
 
@@ -977,6 +1150,7 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 		tab = which
 		message = nil
 		battleOpen = false
+		renderedGrid = nil
 		gui.Enabled = true
 		applyLayout()
 	end
@@ -990,8 +1164,10 @@ function Pets.mount(playerGui: PlayerGui, equip: RemoteFunction, unequip: Remote
 	HudInsets.onChange(relayout)
 	applyLayout()
 	gui.Parent = playerGui
-	State.subscribe(function()
-		if gui.Enabled then
+	State.subscribe(function(payload)
+		local key = PetsView.signature(payload.profile)
+		if gui.Enabled and key ~= lastState then
+			lastState = key
 			render()
 		end
 	end)

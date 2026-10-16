@@ -35,6 +35,13 @@ export type Options = {
 	luckyEggs: boolean?,
 }
 
+export type AutoState = {
+	eggId: string?,
+	active: boolean,
+	inFlight: boolean,
+	token: number,
+}
+
 export type PetLine = {
 	petId: string,
 	name: string,
@@ -75,6 +82,42 @@ export type HatchLine = {
 }
 
 local EggShopView = {}
+
+-- Pure transitions for the client loop. The token invalidates a reply after
+-- Stop, close, or a menu switch; inFlight prevents overlapping BuyEgg calls.
+function EggShopView.newAutoState(): AutoState
+	return { eggId = nil, active = false, inFlight = false, token = 0 }
+end
+
+function EggShopView.startAuto(state: AutoState, eggId: string): AutoState?
+	if state.inFlight then
+		return nil
+	end
+	return { eggId = eggId, active = true, inFlight = false, token = state.token + 1 }
+end
+
+function EggShopView.stopAuto(state: AutoState): AutoState
+	return { eggId = nil, active = false, inFlight = state.inFlight, token = state.token + 1 }
+end
+
+function EggShopView.beginAuto(state: AutoState, eggId: string, eligible: boolean): AutoState?
+	if not state.active or state.inFlight or state.eggId ~= eggId or not eligible then
+		return nil
+	end
+	return { eggId = eggId, active = true, inFlight = true, token = state.token }
+end
+
+function EggShopView.finishAuto(
+	state: AutoState,
+	token: number,
+	success: boolean,
+	eligible: boolean
+): AutoState
+	if state.token ~= token or not state.active or not success or not eligible then
+		return { eggId = nil, active = false, inFlight = false, token = state.token + 1 }
+	end
+	return { eggId = state.eggId, active = true, inFlight = false, token = state.token }
+end
 
 -- How many eggs one Hatch x3 opens. Names the Triple Hatch pass's effect, the
 -- same count the server checks (Hatch.TRIPLE_COUNT).

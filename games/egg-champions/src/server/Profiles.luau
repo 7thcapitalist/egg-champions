@@ -40,6 +40,7 @@ local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Profile = require(Shared:WaitForChild("rules"):WaitForChild("Profile"))
+local SaveOrder = require(Shared:WaitForChild("rules"):WaitForChild("SaveOrder"))
 
 type Profile = Profile.Profile
 
@@ -90,6 +91,7 @@ end
 local jobId = if game.JobId ~= "" then game.JobId else "studio-" .. HttpService:GenerateGUID(false)
 
 local loaded: { [Player]: Profile } = {}
+local saveOrder: { [Player]: SaveOrder.State } = {}
 -- Per loaded player: playSeconds when the session began, and when it began.
 local sessionClock: { [Player]: { base: number, startedAt: number } } = {}
 local loadedListeners: { (Player, Profile) -> () } = {}
@@ -250,36 +252,56 @@ end
 
 -- Writes the profile and refreshes (or releases) the lock. Refuses to write
 -- when another server has taken the lock, so a stale server never overwrites.
-local function save(userId: number, profile: Profile, release: boolean): boolean
+local function save(
+	player: Player,
+	profile: Profile,
+	release: boolean,
+	order: SaveOrder.State
+): boolean
+	local userId = player.UserId
+	while true do
+		local decision = SaveOrder.begin(order, release)
+		if decision == "skip" then
+			return true
+		elseif decision == "run" then
+			break
+		end
+		task.wait(0.05)
+	end
+	local saved = false
 	if offlineUsers[userId] then
 		if release then
 			offlineUsers[userId] = nil
 		end
-		return true
-	end
-	local lost = false
-	local ok = update(
-		userId,
-		if release then "save and release" else "autosave",
-		function(old: any): any
-			local record: Record = if type(old) == "table"
-				then old
-				else { profile = nil, session = nil }
-			local session = record.session
-			if session ~= nil and session.jobId ~= jobId then
-				lost = true
-				return nil
+		saved = true
+	else
+		local lost = false
+		local ok = update(
+			userId,
+			if release then "save and release" else "autosave",
+			function(old: any): any
+				local record: Record = if type(old) == "table"
+					then old
+					else { profile = nil, session = nil }
+				local session = record.session
+				if
+					not SaveOrder.ownsSession(if session ~= nil then session.jobId else nil, jobId)
+				then
+					lost = true
+					return nil
+				end
+				record.profile = profile
+				record.session = if release then nil else { jobId = jobId, heartbeat = os.time() }
+				return record
 			end
-			record.profile = profile
-			record.session = if release then nil else { jobId = jobId, heartbeat = os.time() }
-			return record
+		)
+		if lost then
+			log(userId, "session lock is missing or held by another server; save was not written")
 		end
-	)
-	if lost then
-		log(userId, "lock is held by another server, this save was not written")
-		return false
+		saved = ok and not lost
 	end
-	return ok
+	SaveOrder.finish(order)
+	return saved
 end
 
 -- Whole seconds since this player's profile loaded in this session, or 0.
@@ -346,10 +368,11 @@ local function onJoin(player: Player)
 	end
 	if player.Parent == nil then
 		-- Left while loading: release the lock without changing anything.
-		save(player.UserId, profile, true)
+		save(player, profile, true, SaveOrder.new())
 		return
 	end
 	loaded[player] = profile
+	saveOrder[player] = SaveOrder.new()
 	sessionClock[player] = { base = profile.playSeconds, startedAt = os.clock() }
 	for _, listener in loadedListeners do
 		task.spawn(listener, player, profile)
@@ -358,14 +381,16 @@ end
 
 local function onLeave(player: Player)
 	local profile = loaded[player]
-	if profile == nil then
+	local order = saveOrder[player]
+	if profile == nil or order == nil then
 		return
 	end
 	settleBeforeSave(player, profile)
 	recordPlaytime(player, profile)
 	loaded[player] = nil
 	sessionClock[player] = nil
-	save(player.UserId, profile, true)
+	save(player, profile, true, order)
+	saveOrder[player] = nil
 end
 
 local started = false
@@ -388,7 +413,10 @@ function Profiles.start()
 			task.wait(AUTOSAVE_SECONDS)
 			for player, profile in loaded do
 				recordPlaytime(player, profile)
-				task.spawn(save, player.UserId, profile, false)
+				local order = saveOrder[player]
+				if order ~= nil then
+					task.spawn(save, player, profile, false, order)
+				end
 			end
 		end
 	end)
@@ -401,10 +429,14 @@ function Profiles.start()
 		end
 		for player, profile in loaded do
 			pending += 1
+			local order = saveOrder[player]
 			loaded[player] = nil
 			sessionClock[player] = nil
 			task.spawn(function()
-				save(player.UserId, profile, true)
+				if order ~= nil then
+					save(player, profile, true, order)
+					saveOrder[player] = nil
+				end
 				pending -= 1
 			end)
 		end

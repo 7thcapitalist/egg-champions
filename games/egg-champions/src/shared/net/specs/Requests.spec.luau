@@ -21,6 +21,8 @@ return function()
 				"BuyEgg",
 				"Equip",
 				"Unequip",
+				"EquipBest",
+				"UnequipAll",
 				"PayGymFee",
 				"StartBattle",
 				"BattleMove",
@@ -48,6 +50,8 @@ return function()
 			expect(Remotes.kindOf("ClickCredited")).toEqual("event")
 			expect(Remotes.kindOf("BuyEgg")).toEqual("function")
 			expect(Remotes.kindOf("BattleMove")).toEqual("function")
+			expect(Remotes.kindOf("EquipBest")).toEqual("function")
+			expect(Remotes.kindOf("UnequipAll")).toEqual("function")
 			expect(Remotes.kindOf("NotARemote")).toEqual(nil)
 		end)
 	end)
@@ -83,6 +87,18 @@ return function()
 			local ok, reason = Requests.checkChoice("egg_z", allowed)
 			expect(ok).toBeFalse()
 			expect(reason).toEqual(reasons.unknownChoice)
+		end)
+
+		it("accepts only the server-defined team sorting criterion", function()
+			expect((Requests.checkTeamCriterion(nil))).toBeTrue()
+			expect((Requests.checkTeamCriterion("coins"))).toBeTrue()
+			expect((Requests.checkTeamCriterion("battle"))).toBeTrue()
+			local ok, reason = Requests.checkTeamCriterion("speed")
+			expect(ok).toBeFalse()
+			expect(reason).toEqual(reasons.unknownChoice)
+			ok, reason = Requests.checkTeamCriterion({ uid = "forged" })
+			expect(ok).toBeFalse()
+			expect(reason).toEqual(reasons.badChoice)
 		end)
 	end)
 

@@ -19,22 +19,22 @@
       "id": "planned",
       "status": "passed",
       "attempts": 0,
-      "note": "2026-10-16: gate passed for 43 tasks, no missing dependencies or cycles",
-      "updated": "2026-10-16T08:45:14Z"
+      "note": "2026-10-16: gate passed for 44 tasks, no missing dependencies or cycles",
+      "updated": "2026-10-16T09:50:36Z"
     },
     {
       "id": "built",
       "status": "passed",
-      "attempts": 21,
-      "note": "2026-10-16: 43 briefs; 738 Luau tests and 6 self-tests; Rojo, Selene, StyLua passed via built gate",
-      "updated": "2026-10-16T08:45:07Z"
+      "attempts": 22,
+      "note": "2026-10-16: built gate passed for 44 tasks; 759 game tests and 6 runner self-tests; Rojo, Selene and StyLua pass; Studio evidence in LAUNCH-REPORT.md",
+      "updated": "2026-10-16T10:21:48Z"
     },
     {
       "id": "assets",
       "status": "passed",
       "attempts": 0,
-      "note": "gate passed in CI run 38642077420",
-      "updated": "2026-10-14T21:41:49Z"
+      "note": "2026-10-16: gate passed; 36 models current, mapped, built and existing Roblox verification current",
+      "updated": "2026-10-16T09:50:36Z"
     },
     {
       "id": "worlds",

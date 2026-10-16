@@ -2,6 +2,10 @@
 
 Data: 2026-10-16. Trabalho local, sem push nem publicacao.
 
+Este documento registra a migracao inicial da factory. A entrega posterior
+de qualidade do jogo, com novos testes e evidencias, esta em
+[LAUNCH-REPORT.md](games/egg-champions/LAUNCH-REPORT.md).
+
 ## Resultado comprovado
 
 | Area | Resultado |

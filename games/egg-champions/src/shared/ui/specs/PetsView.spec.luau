@@ -327,15 +327,59 @@ return function()
 		end)
 	end)
 	describe("PetsView with few pets", function()
-		it("hides filters and the Index and Fruit Edition tabs below four pets", function()
+		it("keeps collection tabs accessible even before the first hatch", function()
 			for count = 0, PetsView.FULL_SCREEN_PETS - 1 do
 				local parts = PetsView.screenParts(count)
 				expect(parts.filters).toBeFalse()
-				expect(table.concat(parts.tabs, ",")).toEqual("pets")
+				expect(table.concat(parts.tabs, ",")).toEqual("pets,index,fruit")
 			end
 			local full = PetsView.screenParts(PetsView.FULL_SCREEN_PETS)
 			expect(full.filters).toBeTrue()
 			expect(table.concat(full.tabs, ",")).toEqual("pets,index,fruit")
+		end)
+	end)
+
+	describe("Inventory search and refresh", function()
+		it("finds names, types and variants without case sensitivity or pattern parsing", function()
+			local tiles = PetsView.tiles(sampleOwned(), {})
+			local name = tiles[1].name
+			local found =
+				PetsView.arrange(tiles, nil, { query = "  " .. string.upper(name) .. "  " })
+			expect(#found >= 1).toBeTrue()
+			for _, tile in found do
+				expect(tile.name).toEqual(name)
+			end
+			local variantName = Config.variants[1].name
+			local variants = PetsView.arrange(tiles, nil, { query = variantName })
+			expect(#variants).toEqual(1)
+			expect(variants[1].uid).toEqual("u4")
+			expect(#PetsView.arrange(tiles, nil, { query = "[" })).toEqual(0)
+		end)
+
+		it("combines search with filters and leaves the inventory untouched", function()
+			local tiles = PetsView.tiles(sampleOwned(), {})
+			local wanted = tiles[3]
+			local found =
+				PetsView.arrange(tiles, nil, { query = wanted.typeName, rarity = wanted.rarity })
+			expect(#found >= 1).toBeTrue()
+			for _, tile in found do
+				expect(tile.rarity).toEqual(wanted.rarity)
+			end
+			expect(#tiles).toEqual(6)
+		end)
+
+		it("ignores coin and playtime pushes but detects team and discoveries", function()
+			local profile =
+				{ pets = sampleOwned(), team = {}, index = {}, coins = 50, playSeconds = 0 }
+			local before = PetsView.signature(profile)
+			profile.coins = 5000
+			profile.playSeconds = 100
+			expect(PetsView.signature(profile)).toEqual(before)
+			table.insert(profile.team, "u1")
+			local equipped = PetsView.signature(profile)
+			expect(equipped == before).toBeFalse()
+			profile.index[Config.pets[1].id] = { golden = true }
+			expect(PetsView.signature(profile) == equipped).toBeFalse()
 		end)
 	end)
 

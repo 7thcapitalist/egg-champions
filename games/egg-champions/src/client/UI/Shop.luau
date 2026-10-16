@@ -27,6 +27,7 @@ local textSizes = Theme.textSizes
 
 -- Card width and the width of each row's button, in pixels.
 local CARD_WIDTH = 460
+local CARD_HEIGHT = 380
 local BUY_WIDTH = 110
 
 local Shop = {}
@@ -99,11 +100,10 @@ function Shop.mount(playerGui: PlayerGui)
 	card.BackgroundColor3 = colors.panel
 	card.AnchorPoint = Vector2.new(0.5, 0.5)
 	card.Position = UDim2.fromScale(0.5, 0.5)
-	card.Size = UDim2.fromScale(0.9, 0)
-	card.AutomaticSize = Enum.AutomaticSize.Y
+	card.Size = UDim2.fromScale(0.9, 0.85)
 	card.Parent = dim
 	local limit = Instance.new("UISizeConstraint")
-	limit.MaxSize = Vector2.new(CARD_WIDTH, math.huge)
+	limit.MaxSize = Vector2.new(CARD_WIDTH, CARD_HEIGHT)
 	limit.Parent = card
 	Theme.panel(card, sizes.radius + 2)
 	local padding = Instance.new("UIPadding")
@@ -145,6 +145,22 @@ function Shop.mount(playerGui: PlayerGui)
 	close.Parent = header
 	Theme.panel(close, sizes.radius)
 
+	local list = Instance.new("ScrollingFrame")
+	list.Name = "PassList"
+	list.LayoutOrder = 1
+	list.BackgroundTransparency = 1
+	list.BorderSizePixel = 0
+	list.ScrollBarThickness = 6
+	list.CanvasSize = UDim2.fromOffset(0, 0)
+	list.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	list.Size = UDim2.new(1, 0, 1, -(sizes.minTap + 8 + 32))
+	list.Parent = card
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.FillDirection = Enum.FillDirection.Vertical
+	listLayout.Padding = UDim.new(0, 8)
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Parent = list
+
 	local rows: { [string]: Row } = {}
 	for position, pass in Config.passes do
 		local row = Instance.new("Frame")
@@ -153,7 +169,7 @@ function Shop.mount(playerGui: PlayerGui)
 		row.BorderSizePixel = 0
 		row.BackgroundColor3 = colors.raised
 		row.Size = UDim2.new(1, 0, 0, sizes.minTap + 16)
-		row.Parent = card
+		row.Parent = list
 		Theme.panel(row, sizes.radius)
 
 		local info = plainFrame("Info", row)

@@ -28,6 +28,8 @@ export type Name =
 	| "BuyEgg"
 	| "Equip"
 	| "Unequip"
+	| "EquipBest"
+	| "UnequipAll"
 	| "PayGymFee"
 	| "StartBattle"
 	| "BattleMove"
@@ -48,6 +50,8 @@ Remotes.names = table.freeze({
 	BuyEgg = "BuyEgg" :: Name,
 	Equip = "Equip" :: Name,
 	Unequip = "Unequip" :: Name,
+	EquipBest = "EquipBest" :: Name,
+	UnequipAll = "UnequipAll" :: Name,
 	PayGymFee = "PayGymFee" :: Name,
 	StartBattle = "StartBattle" :: Name,
 	BattleMove = "BattleMove" :: Name,
@@ -65,6 +69,8 @@ Remotes.list = table.freeze({
 	table.freeze({ name = Remotes.names.BuyEgg, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.Equip, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.Unequip, kind = "function" :: Kind }),
+	table.freeze({ name = Remotes.names.EquipBest, kind = "function" :: Kind }),
+	table.freeze({ name = Remotes.names.UnequipAll, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.PayGymFee, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.StartBattle, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.BattleMove, kind = "function" :: Kind }),

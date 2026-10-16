@@ -636,6 +636,7 @@ function Main.mount(
 		top.coin.Size = UDim2.fromOffset(coinSize, coinSize)
 
 		place(menu.frame, layout.menu)
+		menu.frame.Visible = not Screens.anyOpen()
 		menu.layout.Padding = UDim.new(0, s.menuGap)
 		for _, b in menu.buttons do
 			b.Size = UDim2.new(1, 0, 0, s.menuButton)
@@ -663,7 +664,7 @@ function Main.mount(
 		goal.frame.Visible = goalWanted and not Screens.anyOpen()
 
 		local teamRect = layout.team
-		teamFrame.Visible = teamRect ~= nil
+		teamFrame.Visible = teamRect ~= nil and not Screens.anyOpen()
 		if teamRect ~= nil then
 			place(teamFrame, teamRect)
 			teamPadding.PaddingTop = UDim.new(0, s.teamPad)
@@ -693,6 +694,8 @@ function Main.mount(
 	HudInsets.onChange(applyLayout)
 	Screens.onChange(function()
 		goal.frame.Visible = goalWanted and not Screens.anyOpen()
+		menu.frame.Visible = not Screens.anyOpen()
+		teamFrame.Visible = shownSlots > 0 and not Screens.anyOpen()
 		updatePointer()
 	end)
 

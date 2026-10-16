@@ -44,6 +44,7 @@ local Effects = require(EffectsFolder:WaitForChild("Effects"))
 local Progress = require(EffectsFolder:WaitForChild("Progress"))
 local ProgressEffects = require(Shared:WaitForChild("visual"):WaitForChild("ProgressEffects"))
 local Theme = require(script.Parent:WaitForChild("Theme"))
+local HudInsets = require(script.Parent:WaitForChild("HudInsets"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
 local State = require(script.Parent:WaitForChild("State"))
 
@@ -326,11 +327,10 @@ function Battle.mount(
 	-- Top bar: gym name and whose move it is.
 	local top = filled("Top", colors.panel, arena)
 	top.Size = UDim2.new(1, 0, 0, LAYOUT.topBar)
-	pad(top, sizes.gutter, 0)
 	local topLine = filled("Line", colors.border, top)
 	topLine.AnchorPoint = Vector2.new(0, 1)
-	topLine.Position = UDim2.new(0, -sizes.gutter, 1, 0)
-	topLine.Size = UDim2.new(1, sizes.gutter * 2, 0, sizes.border)
+	topLine.Position = UDim2.fromScale(0, 1)
+	topLine.Size = UDim2.new(1, 0, 0, sizes.border)
 	local gymTitle = Theme.text({
 		name = "Gym",
 		font = Theme.fonts.heading,
@@ -338,7 +338,9 @@ function Battle.mount(
 		parent = top,
 	})
 	gymTitle.AnchorPoint = Vector2.new(0, 0.5)
-	gymTitle.Position = UDim2.fromScale(0, 0.5)
+	gymTitle.AutomaticSize = Enum.AutomaticSize.None
+	gymTitle.TextTruncate = Enum.TextTruncate.AtEnd
+	gymTitle.TextXAlignment = Enum.TextXAlignment.Left
 	local turnLabel = Theme.text({
 		name = "Turn",
 		font = Theme.fonts.label,
@@ -347,7 +349,33 @@ function Battle.mount(
 		parent = top,
 	})
 	turnLabel.AnchorPoint = Vector2.new(1, 0.5)
-	turnLabel.Position = UDim2.fromScale(1, 0.5)
+	turnLabel.AutomaticSize = Enum.AutomaticSize.None
+	turnLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	turnLabel.TextXAlignment = Enum.TextXAlignment.Right
+	local function fitHeader()
+		local screen = gui.AbsoluteSize
+		if screen.X <= 0 then
+			return
+		end
+		local insets = HudInsets.read(screen)
+		-- TopbarInset is the free strip between Roblox's controls. Some
+		-- Studio sessions report only the top height, so reserve both ends.
+		local valid = insets.right > insets.left and insets.left < screen.X
+		local left = if valid then insets.left else math.min(176, screen.X * 0.25)
+		local right = if valid then insets.right else screen.X - math.min(140, screen.X * 0.2)
+		local start = left + sizes.gutter
+		local finish = math.max(start + 1, right - sizes.gutter)
+		local room = finish - start
+		local gap = 12
+		local turnWidth = math.min(180, math.max(72, room * 0.36))
+		local titleWidth = math.max(1, room - turnWidth - gap)
+		gymTitle.Position = UDim2.fromOffset(start, LAYOUT.topBar / 2)
+		gymTitle.Size = UDim2.fromOffset(titleWidth, LAYOUT.topBar)
+		turnLabel.Position = UDim2.fromOffset(finish, LAYOUT.topBar / 2)
+		turnLabel.Size = UDim2.fromOffset(turnWidth, LAYOUT.topBar)
+	end
+	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitHeader)
+	HudInsets.onChange(fitHeader)
 
 	local playerPanel = hpPanel("PlayerPanel", canvas, false)
 	local leaderPanel = hpPanel("LeaderPanel", canvas, true)
@@ -455,6 +483,7 @@ function Battle.mount(
 
 	gui.Parent = playerGui
 	fit()
+	fitHeader()
 
 	-- What the screen is showing. None of it is game state: display is the
 	-- last view the server sent, moved event by event while a turn plays.

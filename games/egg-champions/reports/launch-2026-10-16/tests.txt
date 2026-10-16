@@ -1,0 +1,2 @@
+run_tests: 6 self-tests passed
+759 passed, 0 failed, 759 total (luau 0.742)

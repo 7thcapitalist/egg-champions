@@ -13,15 +13,41 @@ local Battle = require(script.Parent.Battle)
 
 local Gym = {}
 
+-- Match each tuned leader slot to an existing pet model from that world.
+-- This identity is cosmetic: every combat field still comes from gyms.json.
+local function leaderLooks(worldId: string, typeId: string): { string }
+	local world = Config.worldById[worldId]
+	local looks = {}
+	for _, pet in Config.pets do
+		if
+			pet.world == worldId
+			and pet.type == typeId
+			and table.find(world.eggs, pet.egg) ~= nil
+		then
+			table.insert(looks, pet.id)
+		end
+	end
+	if #looks == 0 then
+		error(string.format("Gym.leaderTeam: no %s pet in %s eggs", typeId, worldId))
+	end
+	return looks
+end
+
 function Gym.leaderTeam(worldId: string, rebirths: number): { Battle.FighterSpec }
 	if rebirths < 0 then
 		error("Gym.leaderTeam: rebirths cannot be negative")
 	end
 	local gym = Config.gymByWorld[worldId]
 	local team: { Battle.FighterSpec } = {}
-	for _, leader in gym.leader_team do
+	local looksByType: { [string]: { string } } = {}
+	for slot, leader in gym.leader_team do
+		local looks = looksByType[leader.type]
+		if looks == nil then
+			looks = leaderLooks(worldId, leader.type)
+			looksByType[leader.type] = looks
+		end
 		table.insert(team, {
-			pet = nil,
+			pet = looks[(slot - 1) % #looks + 1],
 			variant = nil,
 			type = leader.type,
 			hp = leader.hp,

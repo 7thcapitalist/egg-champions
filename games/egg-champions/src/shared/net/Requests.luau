@@ -20,6 +20,8 @@ Requests.MAX_CHOICE_LENGTH = 64
 -- The two moves a player can pick in a battle.
 Requests.MOVE_BASIC = 1
 Requests.MOVE_SPECIAL = 2
+Requests.TEAM_CRITERION_COINS = "coins"
+Requests.TEAM_CRITERION_BATTLE = "battle"
 
 Requests.reasons = table.freeze({
 	noProfile = "no_profile",
@@ -56,6 +58,22 @@ function Requests.checkChoice(value: any, allowed: { [string]: boolean }): (bool
 		return false, Requests.reasons.unknownChoice
 	end
 	return true, nil
+end
+
+-- Equip Best accepts no argument (coins by default), coins, or battle.
+-- Client-provided pet ids, rankings and stat tables are refused.
+function Requests.checkTeamCriterion(value: any): (boolean, string?)
+	if
+		value == nil
+		or value == Requests.TEAM_CRITERION_COINS
+		or value == Requests.TEAM_CRITERION_BATTLE
+	then
+		return true, nil
+	end
+	if not Requests.isChoiceString(value) then
+		return false, Requests.reasons.badChoice
+	end
+	return false, Requests.reasons.unknownChoice
 end
 
 -- The parts of a server battle session the move check reads.

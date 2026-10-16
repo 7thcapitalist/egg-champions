@@ -22,8 +22,9 @@
 	any size. PetVisual.fade dims the model and those layers together.
 
 	Every model carries an attachment named for its elemental feature (Flame,
-	Sparks, Droplets, Leaves). Fire, electric and water pets get a small solid
-	accent there in the feature color.
+	Sparks, Droplets, Leaves). Placeholder blocks for fire, electric and water
+	pets get a small solid accent there; imported meshes have the feature
+	sculpted in and need no extra cube.
 
 	The asset stage's seam is PetLook.MODEL_IDS: when a pet has an entry,
 	PetVisual clones ReplicatedStorage.PetModels[<model id>] instead of the
@@ -37,6 +38,7 @@ local TweenService = game:GetService("TweenService")
 
 local EffectsBudget = require(script.Parent.visual.EffectsBudget)
 local PetLook = require(script.Parent.visual.PetLook)
+local PetPortrait = require(script.Parent.visual.PetPortrait)
 local VariantFx = require(script.Parent.visual.VariantFx)
 
 local PetVisual = {}
@@ -167,6 +169,7 @@ local function build(look: PetLook.Look): Model
 	if look.modelId ~= nil then
 		model, root = fromAsset(look)
 	end
+	local hasAsset = model ~= nil and root ~= nil
 	if model == nil or root == nil then
 		model, root = block(look)
 	end
@@ -177,6 +180,7 @@ local function build(look: PetLook.Look): Model
 	pet:SetAttribute("Type", look.typeId)
 	pet:SetAttribute("Rarity", look.rarityId)
 	pet:SetAttribute("Variant", look.variant)
+	pet:SetAttribute("UsesAsset", hasAsset)
 
 	-- The feature attachment: a real model may bring its own, placed by the
 	-- artist; otherwise it goes on the top back of the root part.
@@ -188,7 +192,10 @@ local function build(look: PetLook.Look): Model
 		made.Parent = base
 		attachment = made
 	end
-	if look.feature.accent then
+	-- The imported mesh already carries its sculpted elemental feature. The
+	-- cube is only a readability aid for the temporary block model; on a
+	-- real pet it floats above the face and expands portrait bounds.
+	if look.feature.accent and not hasAsset then
 		accent(look, base, attachment :: Attachment)
 	end
 	applyVariant(pet, look)
@@ -311,26 +318,139 @@ function PetVisual.view(
 	viewport.BackgroundTransparency = 1
 	viewport.BorderSizePixel = 0
 	viewport.Size = UDim2.fromScale(1, 1)
-	viewport.Ambient = Color3.fromRGB(200, 200, 200)
+	viewport.Ambient = Color3.fromRGB(165, 170, 180)
 	viewport.LightColor = Color3.fromRGB(255, 255, 255)
-	viewport.LightDirection = Vector3.new(-1, -1, -1)
+	viewport.LightDirection = Vector3.new(0.35, -0.75, 1)
 	viewport:SetAttribute("PetKey", PetLook.key(look))
 
 	local model = build(look)
-	model:PivotTo(CFrame.new())
+	local function centerModel(pet: Model): Vector3
+		pet:PivotTo(CFrame.new())
+		local box, bounds = pet:GetBoundingBox()
+		pet:PivotTo(pet:GetPivot() - box.Position)
+		return bounds
+	end
+	local extents = centerModel(model)
 	model.Parent = viewport
 
-	-- Frame the largest rarity the same way, so size still reads in the UI.
+	-- Pet models face local -Z. Keep the face visible at a slight angle, and
+	-- fit the real model bounds to each card's aspect ratio.
 	local camera = Instance.new("Camera")
-	camera.FieldOfView = 30
-	local largest = PetLook.SIZE.base + PetLook.SIZE.step * (#PetLook.RARITY_PALETTE - 1)
-	local distance = largest * 3.2
-	local eye = Vector3.new(distance * 0.45, distance * 0.35, distance)
-	camera.CFrame = CFrame.lookAt(eye, Vector3.zero)
+	camera.FieldOfView = PetPortrait.FOV
 	camera.Parent = viewport
 	viewport.CurrentCamera = camera
+	local dx, dy, dz = PetPortrait.direction()
+	local function frame()
+		local size = viewport.AbsoluteSize
+		local aspect = if size.X > 0 and size.Y > 0 then size.X / size.Y else 1
+		local distance = PetPortrait.distance(extents.X, extents.Y, extents.Z, aspect)
+		if distance <= 0 then
+			distance = 4
+		end
+		camera.CFrame = CFrame.lookAt(Vector3.new(dx, dy, dz) * distance, Vector3.zero)
+	end
+	local sizeConnection = viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(frame)
 	variantFx(viewport, parent, look.variant)
 	viewport.Parent = parent
+	frame()
+	viewport.Destroying:Connect(function()
+		sizeConnection:Disconnect()
+	end)
+
+	-- ModelLibrary may still be loading when a card opens. Upgrade this one
+	-- view when its template and first part replicate; leave the variant UI
+	-- layers in place. No screen-wide refresh or yield is needed.
+	if petId ~= nil and model:GetAttribute("UsesAsset") ~= true then
+		local waitingPetId = petId :: string
+		local folderConnection: RBXScriptConnection? = nil
+		local modelConnection: RBXScriptConnection? = nil
+		local storageConnection: RBXScriptConnection? = nil
+		local destroyConnection: RBXScriptConnection? = nil
+		local watchedFolder: Instance? = nil
+		local watchedModel: Instance? = nil
+		local upgraded = false
+		local function disconnectWatchers()
+			if folderConnection ~= nil then
+				folderConnection:Disconnect()
+			end
+			if modelConnection ~= nil then
+				modelConnection:Disconnect()
+			end
+			if storageConnection ~= nil then
+				storageConnection:Disconnect()
+			end
+			if destroyConnection ~= nil then
+				destroyConnection:Disconnect()
+			end
+		end
+		local function tryUpgrade(source: Instance)
+			if
+				upgraded
+				or viewport.Parent == nil
+				or source.Name ~= waitingPetId
+				or not source:IsA("Model")
+			then
+				return
+			end
+			if
+				watchedFolder == nil
+				or source.Parent ~= watchedFolder
+				or watchedFolder:FindFirstChild(waitingPetId) ~= source
+			then
+				return
+			end
+			if source:FindFirstChildWhichIsA("BasePart", true) == nil then
+				if watchedModel ~= source then
+					if modelConnection ~= nil then
+						modelConnection:Disconnect()
+					end
+					watchedModel = source
+					modelConnection = source.DescendantAdded:Connect(function()
+						tryUpgrade(source)
+					end)
+				end
+				return
+			end
+			PetLook.MODEL_IDS[waitingPetId] = waitingPetId
+			local resolved = PetLook.resolve(waitingPetId, variant)
+			local replacement = build(resolved)
+			if replacement:GetAttribute("UsesAsset") ~= true then
+				replacement:Destroy()
+				return
+			end
+			upgraded = true
+			extents = centerModel(replacement)
+			replacement.Parent = viewport
+			model:Destroy()
+			model = replacement
+			viewport:SetAttribute("PetKey", PetLook.key(resolved))
+			frame()
+			disconnectWatchers()
+		end
+		local function watchFolder(folder: Instance)
+			if not folder:IsA("Folder") or folder.Name ~= "PetModels" then
+				return
+			end
+			if watchedFolder == folder then
+				return
+			end
+			if folderConnection ~= nil then
+				folderConnection:Disconnect()
+			end
+			watchedFolder = folder
+			folderConnection = folder.ChildAdded:Connect(tryUpgrade)
+			local source = folder:FindFirstChild(waitingPetId)
+			if source ~= nil then
+				tryUpgrade(source)
+			end
+		end
+		destroyConnection = viewport.Destroying:Connect(disconnectWatchers)
+		storageConnection = ReplicatedStorage.ChildAdded:Connect(watchFolder)
+		local folder = ReplicatedStorage:FindFirstChild("PetModels")
+		if folder ~= nil then
+			watchFolder(folder)
+		end
+	end
 	return viewport
 end
 
