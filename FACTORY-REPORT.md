@@ -5,6 +5,10 @@ Data: 2026-10-16. Trabalho local, sem push nem publicacao.
 Este documento registra a migracao inicial da factory. A entrega posterior
 de qualidade do jogo, com novos testes e evidencias, esta em
 [LAUNCH-REPORT.md](games/egg-champions/LAUNCH-REPORT.md).
+O estado atual e **759 testes do jogo, 6 autotestes e 44 tarefas done**.
+A aceitacao complementar e o clone isolado operacional estao em
+[NIGHT-ACCEPTANCE.md](games/egg-champions/NIGHT-ACCEPTANCE.md).
+Os numeros de 738/43 abaixo pertencem ao snapshot da migracao.
 
 ## Resultado comprovado
 
@@ -69,9 +73,21 @@ O Git iniciou 34 commits a frente de `origin/main`. Nenhum push foi feito.
 Os arquivos importados em `claude-*`, `related-conversations/` e outros
 nao rastreados foram preservados; o executor nao rodou nessa arvore suja.
 
-## Proximos passos do Joao
+## Proximos passos do Joao (atualizados apos aceitacao)
 
-1. Completar playtest de gym, portais e UI em resolucoes diferentes no Studio, registrando o Output.
-2. Testar save/rejoin em um ambiente de TESTE publicado com acesso a DataStore, antes de aprovar `playtested`.
-3. Definir gates para `worlds`, `playtested` e `published_test`; hoje esses gates nao permitem marcar as etapas como passed.
-4. Revisar os commits locais e o material importado antes de qualquer sincronizacao com GitHub. Um push relevante em `main` aciona publicacao automatica no lugar de TESTE.
+Gym1, portais, UI desktop/celular emulado, inicio curto sem recursos
+semeados, gyms2/3 com referencia e preflight isolado ja foram executados.
+Resultados em LAUNCH-REPORT e NIGHT-ACCEPTANCE; nao precisam ser repetidos
+como tarefas locais pendentes.
+
+1. Testar save/rejoin, autosave junto da saida e trava entre servidores em
+   TESTE publicado, incluindo recuperacao de falha.
+2. Validar compra/cancelamento/beneficios dos passes no TESTE; jogar
+   progressao longa natural com jogadores novos e testar celular fisico,
+   rede lenta e mais de um jogador.
+3. Revisar titulo, descricao, icone/thumbnails, lugar alvo e commits antes
+   de aprovar publicacao. Um push relevante em main publica no TESTE.
+
+Os gates completos worlds, playtested e published_test continuam ausentes;
+as etapas permanecem pending. Isso e uma limitacao da fabrica, nao uma
+validacao que Joao deva marcar como passed manualmente.

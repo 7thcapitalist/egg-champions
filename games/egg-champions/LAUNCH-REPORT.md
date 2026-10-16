@@ -2,6 +2,11 @@
 
 Data: 2026-10-16. Implementacao local da task 44. Sem push ou publicacao.
 Lista executada: [LAUNCH-WORK.md](LAUNCH-WORK.md).
+Aceitacao complementar posterior: [NIGHT-ACCEPTANCE.md](NIGHT-ACCEPTANCE.md),
+com inicio sem recursos semeados, gyms 2/3 e preflight do clone isolado.
+O complemento b9e6210 corrige seguidores presos no bloco apos chegada
+tardia dos assets. Built foi reexecutado com sucesso; o hash do build final
+e as novas evidencias estao no NIGHT-ACCEPTANCE.
 
 ## Avaliacao
 
@@ -132,9 +137,11 @@ arquivos. O builder nao altera `default.project.json`, spec ou configuracao.
   apos falha. Multi-client local sozinho nao comprova esse criterio.
 - [ ] Testar compra, cancelamento e beneficio dos quatro passes no TESTE.
   O modo local exibe SOON deliberadamente e nao permite compras reais.
-- [ ] Jogar uma sessao inicial sem fixture e as lutas dos gyms 2 e 3 com
-  equipe obtida naturalmente; verificar ritmo, dificuldade e entendimento
-  com jogadores novos. Simulacao e testes de regra nao substituem esse uso.
+- [ ] Verificar progressao prolongada, ritmo e dificuldade dos gyms 2 e 3
+  com equipe obtida naturalmente e entendimento com jogadores novos.
+  A sessao curta do inicio sem recursos semeados e as lutas de integracao
+  com equipes de referencia estao registradas no NIGHT-ACCEPTANCE;
+  nao comprovam o ritmo completo.
 - [ ] Testar em celular fisico, rede lenta e mais de um jogador, incluindo
   FPS, carregamento de modelos e tempo de resposta.
 - [ ] Revisar titulo, descricao, icone, thumbnails e lugar alvo; aprovar

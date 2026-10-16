@@ -1,0 +1,4 @@
+preflight: PASS; working tree clean; no remotes
+HEAD: b9e62108dbfa500fa604e37a141a0dd45148099f
+No agent or factory run was dispatched.
+Includes late follower template fix.

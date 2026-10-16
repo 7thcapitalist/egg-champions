@@ -1,15 +1,21 @@
 # Trabalho noturno: Roblox Factory
 
-Data da auditoria: 2026-10-16. Execucao concluida parcialmente no mesmo dia;
-resultado detalhado em `FACTORY-REPORT.md` e operacao em `RUN-CODEX.md`.
+Data: 2026-10-16. Migracao e entrega local concluidas.
+Estado atual: **759/759 testes do jogo, 6 autotestes do runner e 44 tarefas done**.
+Built e assets passaram; worlds, playtested e published_test continuam pending.
+Relatorios: [migracao](FACTORY-REPORT.md),
+[qualidade](games/egg-champions/LAUNCH-REPORT.md) e
+[aceitacao complementar](games/egg-champions/NIGHT-ACCEPTANCE.md).
+Operacao reproduzivel em [RUN-CODEX.md](RUN-CODEX.md).
 
 Objetivo: operar a fabrica a partir do Codex, executar testes reproduziveis e entregar um jogo local compilado com evidencias claras do que foi validado. Esta fila tem aproximadamente 4 a 8 horas de trabalho util; termine antes se todos os criterios forem atendidos. Nao mantenha agentes ocupados apenas para consumir o periodo.
 
 Leia `AGENTS.md`, `factory/README.md`, `games/egg-champions/spec.md` e o codigo atual antes de implementar. O material importado em `claude-*` e `related-conversations/` e referencia historica. Este documento registra o pedido do usuario de executar as tarefas no Codex.
 
-## Baseline verificado
+## Baseline historico da auditoria inicial
 
-Auditoria somente leitura, sem commits, push ou chamadas de publicacao:
+Snapshot anterior a migracao e a task 44. Os numeros abaixo sao historicos,
+nao o estado atual. Auditoria somente leitura, sem publicacao:
 
 | Verificacao | Resultado |
 | --- | --- |
@@ -26,11 +32,14 @@ Auditoria somente leitura, sem commits, push ou chamadas de publicacao:
 | Assets preservados | 36 verificacoes ok; hash corresponde ao `models.json` atual |
 | Git | `main` 34 commits a frente de `origin/main`; material da importacao nao rastreado |
 
-O pin do Luau em `rokit.toml` e `luau-lang/luau@0.742`. Os executaveis existentes em `.rokit/bin` nao incluem `luau.exe`.
+Na auditoria inicial, Luau 0.742 ainda nao estava instalado. Foi restaurado
+na migracao; o pin em `rokit.toml` foi preservado.
 
-`games/egg-champions/tasks/index.json` marca 43 tarefas como done. `state.json` ainda marca built pending. `reports/latest.md`, de 2026-10-13, descreve apenas 21 tarefas e esta desatualizado. Reconciliar os documentos somente depois das verificacoes atuais.
-
-O gate built atual checa caixas dos briefs, Rojo, Selene e StyLua; nao executa a suite de testes. Os gates worlds, playtested e published_test nao estao implementados. Uma compilacao local nao prova comportamento dentro do Roblox.
+Naquele snapshot havia 43 tarefas done, built pending e um relatorio antigo
+de 21 tarefas. A migracao reconciliou esse estado e incluiu a suite no gate
+built. A task 44 acrescentou os ajustes de qualidade e elevou a suite a 759.
+Os gates worlds, playtested e published_test ainda nao estao implementados.
+As evidencias manuais do Studio nao substituem esses gates.
 
 ## Limites de execucao
 
@@ -64,7 +73,7 @@ stylua --check games/egg-champions/src
 Criterios de aceite:
 
 - [x] Luau 0.742 disponivel e pin preservado.
-- [x] Suite executada: 6 autotestes e 738/738 testes do jogo, codigo de saida 0.
+- [x] Suite executada: 6 autotestes e 759/759 testes do jogo, codigo de saida 0.
 - [x] Build, validacao, lint e formatacao passam apos a correcao.
 - [x] `FACTORY-REPORT.md` registra os resultados atuais.
 
@@ -72,7 +81,10 @@ Criterios de aceite:
 
 Estimativa: 1 a 2 horas.
 
-`factory/tools/run_factory.py` ainda resolve `claude`, usa flags Claude, interpreta seu JSON e registra `total_cost_usd`. O caminho `--agent-cmd` aceita prompt por stdin, mas nao representa uma integracao completa com Codex. As definicoes dos agentes estao em `.claude/agents/`; separar instrucoes portaveis das configuracoes especificas do provedor e manter uma fonte clara para cada papel.
+Concluido: `factory/tools/run_factory.py` usa Codex por padrao, interpreta
+JSONL e preserva resposta final e trace. O caminho `--agent-cmd` serve a
+fixtures. As instrucoes de papel continuam em `.claude/agents/`, carregadas
+sem frontmatter pelo executor.
 
 Inspecionar `codex exec --help` na maquina antes de escolher flags. O CLI instalado oferece `--sandbox workspace-write`, `--approve-for-me`, `--ephemeral`, `--json` e `--output-last-message`. Integrar a resposta real do Codex, em vez de esperar o formato do Claude. Se uma opcao antiga de custo nao tiver equivalente, rejeita-la com mensagem clara ou documentar a limitacao; nunca simular um custo medido.
 
@@ -99,7 +111,7 @@ Criterios de aceite:
 - [x] Alteracao de um caminho proibido e rejeitada em fixture isolada.
 - [x] Execucao padrao nao faz push nem aciona o workflow remoto.
 - [x] Preflight recusa arquivos importados nao rastreados sem apaga-los; retry em fixture passou.
-- [x] Limites de tarefas, tentativas e tempo estao no executor e no relatorio; timeout real de processo filho ainda nao foi testado no Windows.
+- [x] Limites de tarefas, tentativas e tempo estao no executor e no relatorio; teste Windows matou processo pai e filho; timeout de uma chamada real do Codex nao foi provocado.
 - [x] `RUN-CODEX.md` documenta comandos locais reproduziveis.
 
 ## 4. Reconciliar estado e documentacao
@@ -111,7 +123,7 @@ Atualizar o fluxo operacional para Codex. Depois do gate completo aprovado, usar
 Criterios de aceite:
 
 - [x] README e `RUN-CODEX.md` descrevem iniciar, limitar, interromper e retomar.
-- [x] Indice com 43 briefs, estado e relatorio refletem as verificacoes executadas.
+- [x] Indice com 44 briefs, estado e relatorio refletem as verificacoes executadas.
 - [x] Built foi registrado como passed via `state.py` depois do gate completo.
 - [x] Etapas sem gate/evidencia completa permanecem pending, com motivo no relatorio.
 
@@ -127,17 +139,19 @@ Criterios de aceite:
 - [x] Click concede moedas e atualiza a interface.
 - [x] Hatch, inventario e equipar tres pets funcionam no Studio local.
 - [x] Tutorial oferece proximo passo e ponteiro funcional no fluxo inicial.
-- [ ] Entrada, batalha, derrota/retry e vitoria de gym funcionam no fluxo testado.
-- [ ] Portais/progressao e UI nas resolucoes verificadas tem evidencias.
+- [x] Gym1: entrada, batalha, derrota/retry e vitoria no LAUNCH-REPORT. Gyms2/3: entrada, normal/especial/recarga e vitoria com referencia no NIGHT-ACCEPTANCE.
+- [x] Portais/progressao e UI desktop e iPhone XR emulado tem evidencias no LAUNCH-REPORT.
 - [ ] Save/rejoin exige ambiente de TESTE publicado com DataStore; limitacao registrada.
 - [x] Observacoes do Studio, Output, hash do build e bug corrigido constam no relatorio.
 - [x] Nenhuma publicacao ocorreu para produzir o playtest local.
+- [x] Sessao curta do inicio sem moedas/pets semeados: 50 cliques, primeiro hatch, equip e bonus real.
+- [x] Clone local isolado do HEAD b9e6210, sem remotes, preflight aprovado e origem preservada.
 
 ## 6. Entregar relatorio e proximos passos
 
 Estimativa: 30 minutos.
 
-Gerar `NIGHT-REPORT.md` com o estado final, mudancas feitas, comandos e resultados, caminhos do build e das evidencias, falhas restantes e proximas acoes do usuario. Informar o que foi apenas verificado localmente e o que foi realmente executado no Roblox Studio. Se a operacao depender de credenciais ou acesso que nao existem, informar exatamente qual capacidade falta, sem pedir ou expor o valor de uma chave no relatorio.
+Relatorio complementar entregue em `games/egg-champions/NIGHT-ACCEPTANCE.md` com o estado final, mudancas feitas, comandos e resultados, caminhos do build e das evidencias, falhas restantes e proximas acoes do usuario. Informar o que foi apenas verificado localmente e o que foi realmente executado no Roblox Studio. Se a operacao depender de credenciais ou acesso que nao existem, informar exatamente qual capacidade falta, sem pedir ou expor o valor de uma chave no relatorio.
 
 Criterios de aceite:
 
@@ -146,3 +160,20 @@ Criterios de aceite:
 - [x] Git preservado, com 34 commits originais a frente de `origin/main`; sem push.
 - [x] Fila atualizada com caixas marcadas apenas para verificacoes executadas.
 - [x] Nenhuma afirmacao de publicacao, playtest completo ou custo sem evidencia.
+
+
+## Conclusao local e pendencias
+
+- [x] Inicio curto sem recursos semeados, com tempos e limites registrados.
+- [x] Gyms2/3 com equipes de referencia, recompensas e UI verificadas.
+- [x] Corrigido seguidor que permanecia bloco apos chegada tardia do asset;
+  gate built reexecutado e caso visual confirmado no Studio.
+- [x] RUN-CODEX inclui clone Windows do HEAD local e preflight reproduzivel;
+  clone final inclui codigo b9e6210, sem remotes, sem executar a fabrica.
+- [x] Relatorios atuais apontam 759 testes/44 tarefas; baseline antigo
+  identificado como historico. Evidencias anteriores preservadas.
+
+Proximas acoes dependem de ambiente externo: DataStore real/save/rejoin e
+trava entre servidores, passes no TESTE, progressao longa com jogadores
+novos, celular fisico/rede lenta/multiplayer e revisao/publicacao. As tarefas
+locais acima nao precisam ser refeitas por Joao. Nenhum push foi realizado.

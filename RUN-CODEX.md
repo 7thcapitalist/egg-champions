@@ -57,9 +57,77 @@ principal ainda contem referencias importadas nao rastreadas e o preflight
 recusa executa-la para protege-las. Execute os comandos de validacao acima na
 copia principal quando precisar apenas checar o jogo.
 
+### Preparar o checkout no Windows
+
+Abra PowerShell na raiz desta copia. Escolha uma pasta de destino nova.
+Esta sequencia copia o historico local e faz checkout do HEAD lido na
+origem. Nao usa fetch/push nem copia arquivos nao rastreados ou alteracoes
+nao commitadas. O remote que o clone local cria e removido ao final.
+
+```powershell
+$factorySource = (Resolve-Path -LiteralPath '.').Path
+$factoryRun = 'C:\Users\joaov\Documents\Codex\2026-10-15\roblox-factory-acceptance-clean-2026-10-16'
+if (Test-Path -LiteralPath $factoryRun) { throw 'O destino ja existe; escolha uma pasta nova.' }
+$factoryHead = (git -C $factorySource rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0) { throw 'Nao foi possivel ler HEAD.' }
+git clone --no-hardlinks --no-checkout -- $factorySource $factoryRun
+if ($LASTEXITCODE -ne 0) { throw 'Clone local falhou.' }
+git -C $factoryRun switch -c codex/factory-local $factoryHead
+if ($LASTEXITCODE -ne 0) { throw 'Checkout do HEAD falhou.' }
+git -C $factoryRun remote remove origin
+if ($LASTEXITCODE -ne 0) { throw 'Remocao do remote local falhou.' }
+$factoryRunHead = (git -C $factoryRun rev-parse HEAD).Trim()
+if ($factoryRunHead -ne $factoryHead) { throw 'HEAD do clone divergiu.' }
+if (git -C $factoryRun status --porcelain) { throw 'O clone nao esta limpo.' }
+git -C $factoryRun remote -v
+Set-Location -LiteralPath $factoryRun
+```
+
+`remote -v` deve ficar vazio. `--no-hardlinks` deixa os objetos Git
+independentes da origem. O clone preparado nesta entrega esta no caminho
+acima, branch `codex/factory-local`, HEAD
+`b9e62108dbfa500fa604e37a141a0dd45148099f`, que contem os 34 commits
+importados mais `3786b2c`, `14759c3` e `b9e6210`, incluindo a correcao
+dos seguidores. Uma repeticao futura deve escolher
+outro destino e lera o HEAD atual, inclusive commits locais posteriores.
+
+### Provar somente o preflight
+
+Ainda dentro do clone, rode o preflight existente diretamente. Ele inspeciona
+Git e metadados de `.env`, sem ler seu conteudo; nao inicia agentes, nao
+executa etapas e nao faz commit/reset. `python -B` evita criar `__pycache__`.
+
+```powershell
+@'
+from pathlib import Path
+from types import SimpleNamespace
+import subprocess
+import sys
+sys.path.insert(0, str(Path('factory/tools').resolve()))
+from run_factory import Run
+Run(SimpleNamespace(game_dir='games/egg-champions')).preflight()
+assert subprocess.check_output(['git', 'status', '--porcelain'], text=True) == ''
+assert subprocess.check_output(['git', 'remote', '-v'], text=True) == ''
+print('preflight: PASS; working tree clean; no remotes')
+print('HEAD: ' + subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip())
+'@ | python -B -
+if ($LASTEXITCODE -ne 0) { throw 'Preflight falhou; nao execute a fabrica.' }
+```
+
+Esse procedimento foi executado no clone indicado e passou. O historico e
+os arquivos importados nao rastreados da origem foram preservados. A
+evidencia esta em [preflight-final.txt](games/egg-champions/reports/night-acceptance-2026-10-16/preflight-final.txt).
+
+### Executar uma tarefa futura
+
+Quando houver um brief pendente, ainda dentro desse clone limpo:
+
 ```powershell
 python -B factory/tools/run_factory.py games/egg-champions --max-tasks 1 --attempts 2 --task-minutes 30
 ```
+
+As 44 tarefas atuais ja estao done. Rodar o executor agora nao implementa
+os gates ausentes de `worlds`, `playtested` ou `published_test`.
 
 O backend padrao e `codex exec`; cada tentativa recebe as instrucoes do papel
 correspondente em `.claude/agents/` e um brief especifico. `--agent-cmd` e

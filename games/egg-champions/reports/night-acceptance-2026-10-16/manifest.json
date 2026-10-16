@@ -1,0 +1,117 @@
+{
+  "date": "2026-10-16",
+  "code_commit": "b9e62108dbfa500fa604e37a141a0dd45148099f",
+  "earlier_beginner_gym2_commit": "14759c3c91cc8746083269bbcd6732781d5fecb8",
+  "files": [
+    {
+      "file": "beginner-equipped.png",
+      "bytes": 154107,
+      "sha256": "19743d870db9057b3c3a47e5f311bd78abc2cf0a62b5375d40a8e358ca33b432"
+    },
+    {
+      "file": "beginner-first-egg-ready.png",
+      "bytes": 262837,
+      "sha256": "c4311c2320bb1a92b4a44aabeb7d98492ef4cbbf02b65461be81a0288fd23e4d"
+    },
+    {
+      "file": "beginner-first-pet.png",
+      "bytes": 154865,
+      "sha256": "e00a1a525e83eaa9e359bf45a7cf90ae6d054d4078d89dfb53cfc43f56689f44"
+    },
+    {
+      "file": "beginner-normal-bonus.png",
+      "bytes": 261835,
+      "sha256": "64f9ab8900722bf4dff11f9937386e7e06537a0803ba516bbb4c3439ff788f33"
+    },
+    {
+      "file": "beginner-output.txt",
+      "bytes": 2607,
+      "sha256": "1316e65202440c8018d5bda1f0ee0f0e1b1fb2a93724ab92f1da1b40c381b86f"
+    },
+    {
+      "file": "beginner-zero.png",
+      "bytes": 256762,
+      "sha256": "dce8b266878291ff5c28bbf6f543c820b7125bd9f8b133d17d7026a91d462040"
+    },
+    {
+      "file": "built-after-followers.txt",
+      "bytes": 297,
+      "sha256": "6dc79f0945db77129df000d5aed2e8dbbbca8a8e85cb81b772fa06c7e00c3c1b"
+    },
+    {
+      "file": "followers-late-assets-fixed.png",
+      "bytes": 257655,
+      "sha256": "889c020301cf7f33a1353c74758257a9278a3eef6f64a26e9a4750e2c7c02558"
+    },
+    {
+      "file": "gym2-entry.png",
+      "bytes": 200389,
+      "sha256": "998db83c914ad9de486f8a1bb1b280064db8ea8d86228013ee7233e999fc84d6"
+    },
+    {
+      "file": "gym2-normal.png",
+      "bytes": 133330,
+      "sha256": "c45f60ad7d9bd39f92398ef020cee666db8653e4ebbd9a15fbbbb72af9f3a5fc"
+    },
+    {
+      "file": "gym2-output.txt",
+      "bytes": 2606,
+      "sha256": "582973315664762014077d776bce5381ba60351fda5b9cd5f2586c57ee504ec4"
+    },
+    {
+      "file": "gym2-special-cooldown.png",
+      "bytes": 131011,
+      "sha256": "ef0ca4acff4e3d72013220778207af1ddf63f73f4ceeba275412ad271128ffd3"
+    },
+    {
+      "file": "gym2-unlocked.png",
+      "bytes": 255881,
+      "sha256": "3fbc01fa6b11f755801b3965601fa2354efd13b8ab9fc39a7bd51ea6aa1f67ab"
+    },
+    {
+      "file": "gym2-victory.png",
+      "bytes": 122218,
+      "sha256": "65c6790b0eddcd823e69062b8c3f98c39cb1676b66004ac5f7254517abe68907"
+    },
+    {
+      "file": "gym3-complete.png",
+      "bytes": 261748,
+      "sha256": "263de88dd07447d4537464c81ba662263a65c4b77b5d1cd9421215e545fa2745"
+    },
+    {
+      "file": "gym3-entry.png",
+      "bytes": 202923,
+      "sha256": "2876d01d3a98f4e9857549de8d6745672300fb3f84a0a8c470a1d9258ff9d6ba"
+    },
+    {
+      "file": "gym3-normal.png",
+      "bytes": 131699,
+      "sha256": "d0166acc9f3c7f882337e9832070aa287cc96baba4946bcbdf28f812ee8ef0e7"
+    },
+    {
+      "file": "gym3-output.txt",
+      "bytes": 2609,
+      "sha256": "ccafecd4a494869513517089f114b64152427e4849f0d3457a076fccbd181734"
+    },
+    {
+      "file": "gym3-special-cooldown.png",
+      "bytes": 131374,
+      "sha256": "7a31922b0506a8353a845722caaca419f987de353240ab42483cff3a893810bc"
+    },
+    {
+      "file": "gym3-victory.png",
+      "bytes": 121991,
+      "sha256": "aab1b94de5eb8aefaec2c9a452be10c68fe20b8925ba82ba5eeb61a4c6adfe8d"
+    },
+    {
+      "file": "preflight-final.txt",
+      "bytes": 176,
+      "sha256": "c87c00182b07df878162acbbadaf820f05f6c6e08cea502dd70b3f1dd8f5e4fe"
+    },
+    {
+      "file": "preflight.txt",
+      "bytes": 138,
+      "sha256": "dbbc4988d9b1c53a0b4e250957e69b71f9a7d77c180f5286933958e6cc666654"
+    }
+  ]
+}
