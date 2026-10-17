@@ -409,7 +409,9 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 
 	-- The tutorial's line for this screen (UI/Guide), between the title and
 	-- the coins, such as "Tap HATCH on the Meadow Egg".
-	local guideBar = Guide.bar(header)
+	local guideHost = frame("GuideHost", header)
+	guideHost.Size = UDim2.fromScale(1, 1)
+	local guideBar = Guide.bar(guideHost)
 	guideBar.AnchorPoint = Vector2.new(0.5, 0.5)
 	guideBar.Position = UDim2.fromScale(0.5, 0.5)
 	guideBar.Size = UDim2.new(GUIDE_WIDTH, 0, 0, sizes.minTap - 8)
@@ -807,7 +809,8 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		place(scroll, l.list, p.x, p.y)
 		place(footer, l.footer, p.x, p.y)
 		-- Give guidance its own row on phones so it never covers the title or balance.
-		local guideRow = if Guide.reserved() then 44 else 0
+		guideHost.Visible = not (screen.X >= 600 and screen.Y < 360)
+		local guideRow = if Guide.reserved() and guideHost.Visible then 44 else 0
 		guideBar.AnchorPoint = Vector2.new(0, 0)
 		guideBar.Position = UDim2.fromOffset(0, s.header + 4)
 		guideBar.Size = UDim2.new(1, 0, 0, 36)

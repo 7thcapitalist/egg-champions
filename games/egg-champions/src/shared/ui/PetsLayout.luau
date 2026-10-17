@@ -90,6 +90,8 @@ export type Options = {
 
 export type Layout = {
 	compact: boolean,
+	bodyViewport: Rect?,
+	bodyCanvasHeight: number,
 	few: boolean,
 	sizes: Sizes,
 	panel: Rect,
@@ -265,6 +267,12 @@ function PetsLayout.compute(
 	filters: boolean?,
 	options: Options?
 ): Layout
+	local screenHeight = height
+	local scrollBody = width >= 600 and height < 360
+	if scrollBody then
+		-- Keep readable controls and scroll the body under a fixed header.
+		height = math.max(height, top + 420)
+	end
 	local withFilters = filters ~= false
 	local few = options ~= nil and options.few == true
 	local tools = options ~= nil and options.tools == true
@@ -285,7 +293,7 @@ function PetsLayout.compute(
 		copy.detailWidth = if compact then 230 else 300
 		copy.tileBlock = if compact then 80 else 104
 		copy.controlMin = if compact then 76 else 120
-		if height < 420 then
+		if screenHeight < 420 then
 			copy.tileHorizontal = true
 			copy.tileBlock = 64
 			copy.gridPad = 4
@@ -419,8 +427,19 @@ function PetsLayout.compute(
 		copy.tileBlock = math.min(s.tileBlock, tileWidth - 2 * s.tilePad)
 		s = copy
 	end
+	local bodyViewport: Rect? = nil
+	local bodyCanvasHeight = 0
+	if scrollBody then
+		local bodyTop = header.y + header.h + s.controlGap
+		bodyCanvasHeight = panel.y + panel.h - s.padding - bodyTop
+		panel.h = math.max(0, screenHeight - panel.y - s.margin)
+		bodyViewport =
+			rect("bodyViewport", panel.x, bodyTop, panel.w, panel.y + panel.h - s.padding - bodyTop)
+	end
 	return {
 		compact = compact,
+		bodyViewport = bodyViewport,
+		bodyCanvasHeight = bodyCanvasHeight,
 		few = few,
 		sizes = s,
 		panel = panel,
@@ -442,6 +461,19 @@ function PetsLayout.compute(
 		tileWidth = tileWidth,
 		tileHeight = PetsLayout.tileHeight(s),
 	}
+end
+
+-- Scroll just enough to center an action inside the short body viewport.
+function PetsLayout.revealScroll(layout: Layout, target: Rect): number
+	local viewport = layout.bodyViewport
+	if viewport == nil then
+		return 0
+	end
+	return math.clamp(
+		target.y - viewport.y - (viewport.h - target.h) / 2,
+		0,
+		math.max(0, layout.bodyCanvasHeight - viewport.h)
+	)
 end
 
 -- True when inner lies wholly inside outer.

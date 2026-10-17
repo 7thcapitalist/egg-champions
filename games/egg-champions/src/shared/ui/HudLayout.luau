@@ -89,6 +89,7 @@ export type Sizes = {
 
 export type Layout = {
 	compact: boolean,
+	horizontalMenu: boolean,
 	sizes: Sizes,
 	-- True when coins, world and rebirths sit inside Roblox's top bar row.
 	inRow: boolean,
@@ -287,6 +288,13 @@ function HudLayout.compute(
 ): Layout
 	local compact = HudLayout.isCompact(width, height)
 	local s: Sizes = if compact then HudLayout.SIZES.compact else HudLayout.SIZES.normal
+	-- A short landscape viewport cannot fit the vertical menu below chat.
+	-- Keep the primary actions in one touch-sized row between the controls.
+	local horizontalMenu = width >= 600 and height < 360
+	if horizontalMenu then
+		s = table.clone(s)
+		s.menuButton = 40
+	end
 	local i: Insets = insets or HudLayout.NO_INSETS
 	local gap = HudLayout.INSET_GAP
 	local rowTop = math.max(0, i.top)
@@ -367,6 +375,16 @@ function HudLayout.compute(
 	local bandBottom = if compact then teamTop - s.menuGap else height - s.gutter
 	local menuY = bandTop + math.max(0, math.floor((bandBottom - bandTop - menuHeight) / 2))
 	local menu = rect("menu", s.gutter, menuY, s.menuWidth, menuHeight)
+	if horizontalMenu then
+		local menuWidth = count * s.menuWidth + (count - 1) * s.menuGap
+		menu = rect(
+			"menu",
+			math.floor((width - menuWidth) / 2),
+			height - gap - s.menuButton,
+			menuWidth,
+			s.menuButton
+		)
+	end
 
 	local goalHeight = s.goalPad * 2 + s.goalLine * s.goalLines + s.goalGap + s.goalButton
 	local goal = rect(
@@ -379,7 +397,7 @@ function HudLayout.compute(
 
 	local parts = { coins, world, rebirths, menu, goal }
 	local team: Rect? = nil
-	if slots > 0 then
+	if slots > 0 and not horizontalMenu then
 		if width < 500 then
 			s = table.clone(s)
 			s.slotWidth = math.min(
@@ -396,6 +414,7 @@ function HudLayout.compute(
 
 	return {
 		compact = compact,
+		horizontalMenu = horizontalMenu,
 		sizes = s,
 		inRow = inRow,
 		topBar = topBar,

@@ -176,6 +176,16 @@ end
 function EggShopLayout.compute(width: number, height: number, top: number): Layout
 	local compact = EggShopLayout.isCompact(width, height)
 	local s: Sizes = if compact then EggShopLayout.SIZES.compact else EggShopLayout.SIZES.normal
+	if width >= 600 and height < 360 then
+		s = table.clone(s)
+		s.header = 40
+		s.footer = 0
+		s.padding = 6
+		s.gap = 4
+		s.cardPadding = 6
+		s.innerGap = 6
+		s.egg = 36
+	end
 
 	local panelWidth = math.min(s.maxWidth, width - 2 * s.margin)
 	local panelX = math.floor((width - panelWidth) / 2)

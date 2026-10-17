@@ -45,6 +45,15 @@ issues. Require at least 4 in each area before calling visual quality approved.
 An automated evidence check validates completeness and freshness only; it cannot
 decide whether an image is attractive. User feedback overrides internal scores.
 
+For phone UI review, record both requested device resolution and the actual
+camera/ScreenGui dimensions. A portrait device setting with a landscape capture
+is not portrait evidence. Include a short landscape viewport (720x239), portrait
+320x720 and 390x844, and the maximum unlocked menu. Exercise opening, closing,
+hatching and equipping with real UI input; rectangle tests alone are insufficient.
+If a panel needs scrolling, keep Close reachable and reveal the tutorial action
+inside the clipped viewport. Distinguish custom Studio resolution from mobile
+device emulation and physical-phone performance.
+
 Use `python factory/tools/quality_review.py <game-dir> <review.json>` to check a
 review. Missing, stale, blocked or incomplete reviews fail. This is a separate
 quality check; it never marks unfinished factory stages passed.

@@ -1,22 +1,17 @@
-# Estado verificado da fabrica: Egg Champions
+# Estado verificado: Egg Champions
 
-Verificacao local de 2026-10-16. Este arquivo resume a auditoria no Codex;
-nao representa uma execucao do orquestrador na arvore principal.
+Atualizado em 2026-10-17. Trabalho local no Codex; nao representa uma execucao automatica integral da fabrica.
 
-## Resultado
+## Entrega atual
 
-- 43 tarefas no indice, todas `done`.
-- `run_tests.py`: 6 autotestes e 738/738 testes Luau passaram com Luau 0.742.
-- Gates `spec_parsed`, `economy_tuned`, `planned`, `built` e `assets` passaram.
-- O gate `built` agora inclui testes, Rojo, Selene e StyLua.
-- Build local em `build/game-playtest.rbxl` foi aberto e testado parcialmente no Studio.
-- `state.json` foi atualizado por `state.py` apos os gates `planned` e `built`.
+- 48 tarefas no indice, todas done.
+- TEST publicado na versao 92 e reaberto da nuvem: 137 fontes conferidas com o build local.
+- 866 testes Luau e seis autotestes; gates planned e built passaram, incluindo Rojo, Selene e StyLua.
+- Corte do menu em tela baixa corrigido; HATCH visivel e EQUIP revelado automaticamente no inventario com rolagem.
+- Capturas portrait reais de layout em 320x720 e 390x844 com resolucao personalizada no Studio.
+- Relatorio: [short-viewport-2026-10-17/REVIEW.md](short-viewport-2026-10-17/REVIEW.md).
+- Melhorias anteriores de mapas, locomocao e pets antigos continuam no build; veja [composition-motion-2026-10-17/REVIEW.md](composition-motion-2026-10-17/REVIEW.md) e [world-polish-2026-10-16/REVIEW.md](world-polish-2026-10-16/REVIEW.md).
 
-`worlds`, `playtested` e `published_test` continuam pendentes. O playtest
-comprovou inicializacao, click, hatch, inventario, equipe 3/3 e tutorial
-inicial. Gym, portais, outras resolucoes e save/rejoin
-ainda precisam de validacao. O perfil local do Studio nao salva no DataStore.
+## Ainda aberto para lancamento
 
-O executor Codex foi validado em fixture isolada; nao foi executado nesta
-arvore, que contem arquivos importados nao rastreados. Consulte
-`FACTORY-REPORT.md` e `RUN-CODEX.md` na raiz para evidencias e proximos passos.
+Arte/composicao e animacao ainda em 3.5/5. Simulacao atual tem mediana de sete rebirths contra alvo de cinco. Comparacao completa de save/rejoin publicado, compra nova de passes e desempenho em celular fisico continuam sem aprovacao completa. Studio usa perfil temporario por API desativada. Os estagios worlds, playtested e published_test seguem pendentes porque seus gates ainda nao existem. Nenhuma publicacao em producao.

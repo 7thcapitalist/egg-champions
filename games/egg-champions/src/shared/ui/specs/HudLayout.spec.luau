@@ -233,6 +233,54 @@ return function()
 		end)
 	end)
 
+	describe("HudLayout short landscape", function()
+		for _, screen in
+			{
+				{ width = 720, height = 239 },
+				{ width = 842, height = 308 },
+				{ width = 844, height = 359 },
+			}
+		do
+			it(
+				string.format("keeps all actions reachable at %dx%d", screen.width, screen.height),
+				function()
+					for _, bar in TOPBARS do
+						for _, chat in { true, false } do
+							for count = 2, #HudLayout.MENU do
+								for _, slots in { 0, 3 } do
+									local layout = HudLayout.compute(
+										screen.width,
+										screen.height,
+										slots,
+										insetsFor(screen, bar, chat),
+										count
+									)
+									expect(
+										joined(
+											HudLayout.outside(
+												layout.parts,
+												screen.width,
+												screen.height
+											)
+										)
+									).toEqual("")
+									expect(joined(HudLayout.overlaps(layout.parts))).toEqual("")
+									expect(joined(HudLayout.blocked(layout))).toEqual("")
+									expect(layout.horizontalMenu).toBeTrue()
+									expect(layout.menu.h >= 40).toBeTrue()
+									expect(layout.sizes.goalButton >= 40).toBeTrue()
+									expect(layout.menu.x >= 140).toBeTrue()
+									expect(layout.menu.x + layout.menu.w <= screen.width - 140).toBeTrue()
+									expect(layout.team == nil).toBeTrue()
+								end
+							end
+						end
+					end
+				end
+			)
+		end
+	end)
+
 	describe("HudLayout goal text", function()
 		it("wraps words onto lines", function()
 			expect(HudLayout.lineCount("", 100, 18)).toEqual(0)

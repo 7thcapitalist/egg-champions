@@ -432,6 +432,7 @@
       "depends_on": ["45"],
       "status": "done"
     },
-    {"id":"47","title":"Composition, locomotion and pacing review","file":"47-composition-and-locomotion.md","depends_on":["46"],"status":"done"}
+    {"id":"47","title":"Composition, locomotion and pacing review","file":"47-composition-and-locomotion.md","depends_on":["46"],"status":"done"},
+    {"id":"48","title":"Reachable actions in short viewports","file":"48-short-viewport.md","depends_on":["47"],"status":"done"}
   ]
 }

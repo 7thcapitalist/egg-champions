@@ -638,8 +638,13 @@ function Main.mount(
 		place(menu.frame, layout.menu)
 		menu.frame.Visible = not Screens.anyOpen()
 		menu.layout.Padding = UDim.new(0, s.menuGap)
+		menu.layout.FillDirection = if layout.horizontalMenu
+			then Enum.FillDirection.Horizontal
+			else Enum.FillDirection.Vertical
 		for _, b in menu.buttons do
-			b.Size = UDim2.new(1, 0, 0, s.menuButton)
+			b.Size = if layout.horizontalMenu
+				then UDim2.fromOffset(s.menuWidth, s.menuButton)
+				else UDim2.new(1, 0, 0, s.menuButton)
 		end
 
 		place(goal.frame, layout.goal)
@@ -693,9 +698,7 @@ function Main.mount(
 	content:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyLayout)
 	HudInsets.onChange(applyLayout)
 	Screens.onChange(function()
-		goal.frame.Visible = goalWanted and not Screens.anyOpen()
-		menu.frame.Visible = not Screens.anyOpen()
-		teamFrame.Visible = shownSlots > 0 and not Screens.anyOpen()
+		applyLayout()
 		updatePointer()
 	end)
 

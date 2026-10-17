@@ -373,6 +373,10 @@ function Pets.mount(
 	panel.BackgroundColor3 = colors.panel
 	panel.Active = true
 	Theme.panel(panel, sizes.radius + 2)
+	local bodyViewport = scrolling("BodyViewport", panel)
+	bodyViewport.AutomaticCanvasSize = Enum.AutomaticSize.None
+	bodyViewport.ScrollingDirection = Enum.ScrollingDirection.Y
+	bodyViewport.Visible = false
 
 	-- Header: the three tabs and Close.
 	local header = frame("Header", panel)
@@ -547,6 +551,7 @@ function Pets.mount(
 	local sortKey: PetsView.SortKey = PetsView.DEFAULT_SORT
 	local filter: PetsView.Filter = {}
 	local selected: Selection? = nil
+	local revealedSelection: string? = nil
 	local message: string? = nil
 	local busy = false
 	local renderedGrid: string? = nil
@@ -1050,6 +1055,16 @@ function Pets.mount(
 		renderDetail(teamUids, PetsView.beginner(#tiles, Guide.reserved()))
 		local now = selected
 		Guide.setPetSelected(now ~= nil and now.uid ~= nil)
+		if
+			layout.bodyViewport ~= nil
+			and now ~= nil
+			and now.uid ~= nil
+			and now.uid ~= revealedSelection
+		then
+			revealedSelection = now.uid
+			bodyViewport.CanvasPosition =
+				Vector2.new(0, PetsLayout.revealScroll(layout, layout.equipButton))
+		end
 	end
 
 	-- Places every part from PetsLayout for the current screen size and
@@ -1061,6 +1076,19 @@ function Pets.mount(
 		local p = l.panel
 		place(panel, p, 0, 0)
 		place(header, l.header, p.x, p.y)
+		local bodyOriginY = p.y
+		local viewport = l.bodyViewport
+		bodyViewport.Visible = viewport ~= nil
+		if viewport ~= nil then
+			place(bodyViewport, viewport, p.x, p.y)
+			bodyViewport.CanvasSize = UDim2.fromOffset(0, l.bodyCanvasHeight)
+			bodyOriginY = viewport.y
+		else
+			bodyViewport.CanvasPosition = Vector2.zero
+		end
+		for _, child in { guideBar, content, actions, detail } do
+			child.Parent = if viewport ~= nil then bodyViewport else panel
+		end
 		local tabHeight = math.min(LAYOUT.tabHeight, s.header)
 		for _, view in tabButtons do
 			view.button.Size = UDim2.fromOffset(0, tabHeight)
@@ -1090,18 +1118,18 @@ function Pets.mount(
 		local strip = l.guide
 		guideBar.Visible = strip ~= nil
 		if strip ~= nil then
-			place(guideBar, strip, p.x, p.y)
+			place(guideBar, strip, p.x, bodyOriginY)
 		end
 		local c = l.content
-		place(content, c, p.x, p.y)
+		place(content, c, p.x, bodyOriginY)
 		if l.actions ~= nil then
-			place(actions, l.actions, p.x, p.y)
+			place(actions, l.actions, p.x, bodyOriginY)
 		end
 		if l.search ~= nil then
 			place(searchRow, l.search, c.x, c.y)
 		end
 		local d = l.detail
-		place(detail, d, p.x, p.y)
+		place(detail, d, p.x, bodyOriginY)
 		place(detailTop, l.detailTop, d.x, d.y)
 		place(equipSlot, l.equip, d.x, d.y)
 		place(detailScroll, l.detailScroll, d.x, d.y)
@@ -1191,6 +1219,7 @@ function Pets.mount(
 
 	opener = function(which: Tab)
 		tab = which
+		revealedSelection = nil
 		message = nil
 		battleOpen = false
 		renderedGrid = nil

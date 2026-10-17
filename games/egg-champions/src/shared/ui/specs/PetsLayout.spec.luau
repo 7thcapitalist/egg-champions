@@ -384,6 +384,46 @@ return function()
 		end)
 	end)
 
+	describe("PetsLayout short viewport", function()
+		it("keeps Close fixed and every body control reachable by scrolling", function()
+			for _, height in { 239, 308, 359 } do
+				for _, filters in { false, true } do
+					local l = PetsLayout.compute(
+						720,
+						height,
+						58,
+						false,
+						filters,
+						{ tools = true, actions = true }
+					)
+					local v = l.bodyViewport :: PetsLayout.Rect
+					expect(PetsLayout.inside(l.header, l.panel)).toBeTrue()
+					expect(PetsLayout.inside(v, l.panel)).toBeTrue()
+					expect(PetsLayout.overlap(l.header, v)).toBeFalse()
+					expect(v.h >= 80).toBeTrue()
+					expect(l.grid.h >= l.tileHeight).toBeTrue()
+					local offset = PetsLayout.revealScroll(l, l.equipButton)
+					local visibleEquip = table.clone(l.equipButton)
+					visibleEquip.y -= offset
+					expect(PetsLayout.inside(visibleEquip, v)).toBeTrue()
+					local canvas =
+						{ name = "canvas", x = v.x, y = v.y, w = v.w, h = l.bodyCanvasHeight }
+					for _, r in
+						{
+							l.actions :: PetsLayout.Rect,
+							l.search :: PetsLayout.Rect,
+							l.grid,
+							l.equipButton,
+							l.detailScroll,
+						}
+					do
+						expect(PetsLayout.inside(r, canvas)).toBeTrue()
+					end
+				end
+			end
+		end)
+	end)
+
 	describe("PetsLayout stat rows", function()
 		it("sizes a row from its text size plus padding", function()
 			for _, s in { PetsLayout.SIZES.normal, PetsLayout.SIZES.compact } do
