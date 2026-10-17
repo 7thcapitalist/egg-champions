@@ -44,6 +44,9 @@ All models, characters and world compositions must remain original.
 - Keep spawn, egg, gym and portal corridors free of decorative collision. Measure
   actual generated part counts, including authored structures; estimates alone
   can miss an oversized landmark.
+- Share raised scene footprints between scatter and construction. Walk each ramp
+  both uphill and downhill in the engine; a valid slope angle does not prove the
+  joining surfaces are traversable. Check the approach at character height.
 - Verify primitive dimensions in the renderer. Roblox ball parts can appear
   spherical despite nonuniform Size; use an appropriately scaled sphere mesh
   when the silhouette depends on an ellipsoid. Inspect connected branches at
@@ -55,6 +58,10 @@ All models, characters and world compositions must remain original.
   endpoints and framing bounds without changing server combat timing or stats.
   Shared motion families are acceptable, but do not describe them as bespoke
   animations for every species. Show distinctive hero silhouettes in motion.
+- Lay out combat controls and portraits for the effective viewport instead of
+  uniformly shrinking a desktop canvas. Keep short-screen controls usable and
+  document any reduction in creature visibility. Reflow effects onto new anchors
+  while preserving their dispatcher; exercise resizing during an actual turn.
 
 Review desktop and phone-sized views for each biome and main interaction.
 Score composition, models, animation, feedback and onboarding from 1 to 5:

@@ -1,5 +1,12 @@
 # Publicacao TESTE e aceitacao
 
+## Task 50: build pronto, publicacao ainda sem confirmacao
+
+- Terracos e rampas nos tres biomas, layout responsivo da batalha e recuperacao dos efeitos ao redimensionar. Seis rampas percorridas nos dois sentidos; batalha exercitada em desktop, portrait 320/390 e tela baixa.
+- 876 testes Luau e seis self-tests; Selene, StyLua e Rojo passaram. Edit limpo tinha 143 fontes iguais ao build. [Revisao e evidencias](reports/elevation-battle-2026-10-17/REVIEW.md).
+- Studio desconectou do servidor de edicao em 2026-10-17 01:34:44 America/New_York. Pedido de publicacao as 01:35:38 ficou em Publishing in progress, sem numero novo nem confirmacao. Nao considerar task 50 publicada. Ultima versao confirmada: 95.
+- Checkpoint completo preservado em build/task50-studio-recovery.rbxl, alem do build/game.rbxl. Operacao nao foi cancelada nem repetida.
+
 ## Estado atual: versao 95
 
 - Publicacao confirmada pelo Output em 2026-10-17 01:02, America/New_York: publish notes v95 e Published new changes in Egg Champions Test.

@@ -38,6 +38,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local BattleView = require(uiShared:WaitForChild("BattleView"))
+local BattleLayout = require(uiShared:WaitForChild("BattleLayout"))
 
 local EffectsFolder = script.Parent.Parent:WaitForChild("Effects")
 local Effects = require(EffectsFolder:WaitForChild("Effects"))
@@ -164,6 +165,7 @@ local function button(name: string, parent: Instance): (TextButton, UIStroke)
 end
 
 type HpPanel = {
+	root: Frame,
 	name: TextLabel,
 	typeLabel: TextLabel,
 	fill: Frame,
@@ -237,6 +239,7 @@ local function hpPanel(name: string, parent: Instance, rightSide: boolean): HpPa
 		Enum.VerticalAlignment.Center
 
 	return {
+		root = panel,
 		name = petName,
 		typeLabel = typeLabel,
 		fill = fill,
@@ -294,8 +297,8 @@ function Battle.mount(
 	gui.DisplayOrder = 20
 	gui.Enabled = false
 
-	-- The battle itself: a full screen arena with a 1280 x 720 canvas scaled
-	-- to fit, so the layout is the mockup's at any screen size.
+	-- Battle contents lay out in effective viewport pixels. Scaling the whole
+	-- desktop mockup made creatures and move labels tiny on phones.
 	local arena = Instance.new("TextButton")
 	arena.Name = "Arena"
 	arena.Text = ""
@@ -316,10 +319,15 @@ function Battle.mount(
 	canvas.Size = UDim2.fromOffset(DESIGN.X, DESIGN.Y)
 	local scale = Instance.new("UIScale")
 	scale.Parent = canvas
+	local fitContents: ((Vector2) -> ())? = nil
 	local function fit()
 		local size = gui.AbsoluteSize
 		if size.X > 0 and size.Y > 0 then
-			scale.Scale = math.min(size.X / DESIGN.X, size.Y / DESIGN.Y)
+			scale.Scale = 1
+			canvas.Size = UDim2.fromOffset(size.X, size.Y)
+			if fitContents then
+				fitContents(size)
+			end
 		end
 	end
 	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)
@@ -358,24 +366,30 @@ function Battle.mount(
 			return
 		end
 		local insets = HudInsets.read(screen)
+		local plan = BattleLayout.compute(screen.X, screen.Y, insets.top)
+		top.Position = UDim2.fromOffset(0, plan.headerY)
+		top.Size = UDim2.new(1, 0, 0, plan.headerHeight)
 		-- TopbarInset is the free strip between Roblox's controls. Some
 		-- Studio sessions report only the top height, so reserve both ends.
 		local valid = insets.right > insets.left and insets.left < screen.X
 		local left = if valid then insets.left else math.min(176, screen.X * 0.25)
 		local right = if valid then insets.right else screen.X - math.min(140, screen.X * 0.2)
-		local start = left + sizes.gutter
-		local finish = math.max(start + 1, right - sizes.gutter)
+		local start = if plan.short then left + 8 else 12
+		local finish = if plan.short then math.max(start + 1, right - 8) else screen.X - 12
 		local room = finish - start
 		local gap = 12
 		local turnWidth = math.min(180, math.max(72, room * 0.36))
 		local titleWidth = math.max(1, room - turnWidth - gap)
-		gymTitle.Position = UDim2.fromOffset(start, LAYOUT.topBar / 2)
-		gymTitle.Size = UDim2.fromOffset(titleWidth, LAYOUT.topBar)
-		turnLabel.Position = UDim2.fromOffset(finish, LAYOUT.topBar / 2)
-		turnLabel.Size = UDim2.fromOffset(turnWidth, LAYOUT.topBar)
+		gymTitle.TextSize = if plan.short or plan.portrait then 16 else LAYOUT.titleSize
+		turnLabel.TextSize = if plan.short or plan.portrait then 12 else Theme.textSizes.body
+		gymTitle.Position = UDim2.fromOffset(start, plan.headerHeight / 2)
+		gymTitle.Size = UDim2.fromOffset(titleWidth, plan.headerHeight)
+		turnLabel.Position = UDim2.fromOffset(finish, plan.headerHeight / 2)
+		turnLabel.Size = UDim2.fromOffset(turnWidth, plan.headerHeight)
 	end
 	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitHeader)
 	HudInsets.onChange(fitHeader)
+	HudInsets.onChange(fit)
 
 	local playerPanel = hpPanel("PlayerPanel", canvas, false)
 	local leaderPanel = hpPanel("LeaderPanel", canvas, true)
@@ -383,12 +397,25 @@ function Battle.mount(
 	local playerBlock = filled("PlayerPet", colors.muted, canvas)
 	playerBlock.Size = UDim2.fromOffset(LAYOUT.blockSize, LAYOUT.blockSize)
 	playerBlock.Position = UDim2.fromOffset(LAYOUT.blockX, LAYOUT.blockY)
-	Theme.panel(playerBlock, sizes.radius, colors.panel)
 	local leaderBlock = filled("LeaderPet", colors.muted, canvas)
 	leaderBlock.AnchorPoint = Vector2.new(1, 0)
 	leaderBlock.Size = UDim2.fromOffset(LAYOUT.blockSize, LAYOUT.blockSize)
 	leaderBlock.Position = UDim2.new(1, -LAYOUT.blockX, 0, LAYOUT.blockY)
-	Theme.panel(leaderBlock, sizes.radius, colors.panel)
+	for _, block in { playerBlock, leaderBlock } do
+		block.BackgroundTransparency = 1
+		local shadow = filled("Stage", colors.arenaFloor, block)
+		shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+		shadow.Position = UDim2.fromScale(0.5, 0.87)
+		shadow.Size = UDim2.fromScale(0.78, 0.13)
+		local round = Instance.new("UICorner")
+		round.CornerRadius = UDim.new(0.5, 0)
+		round.Parent = shadow
+		local rim = Instance.new("UIStroke")
+		rim.Color = colors.border
+		rim.Thickness = 2
+		rim.Transparency = 0.35
+		rim.Parent = shadow
+	end
 
 	-- Hops, bursts, damage numbers and the special visuals draw over these.
 	Effects.mountBattle(canvas, playerBlock, leaderBlock)
@@ -422,6 +449,77 @@ function Battle.mount(
 	giveUpButton.LayoutOrder = 4
 	giveUpButton.Size = UDim2.new(0, LAYOUT.giveUpWidth, 1, 0)
 	giveUpButton.Text = Theme.label("Give up")
+	-- Rectangles are shared with the headless bounds tests. The original row's
+	-- list is replaced by explicit positions so portrait can wrap its controls.
+	local rowList = row:FindFirstChildOfClass("UIListLayout") :: UIListLayout
+	rowList:Destroy()
+	row.AnchorPoint = Vector2.zero
+	row.Position = UDim2.fromOffset(0, 0)
+	row.Size = UDim2.fromScale(1, 1)
+	local function place(item: GuiObject, r: BattleLayout.Rect)
+		item.AnchorPoint = Vector2.zero
+		item.Position = UDim2.fromOffset(r.x, r.y)
+		item.Size = UDim2.fromOffset(r.w, r.h)
+	end
+	fitContents = function(size)
+		local plan = BattleLayout.compute(size.X, size.Y, HudInsets.read(size).top)
+		place(playerPanel.root, plan.playerPanel)
+		place(leaderPanel.root, plan.leaderPanel)
+		place(playerBlock, plan.playerPet)
+		place(leaderBlock, plan.leaderPet)
+		for _, panel in { playerPanel, leaderPanel } do
+			local root = panel.root
+			root.AutomaticSize = Enum.AutomaticSize.None
+			local padding = root:FindFirstChildOfClass("UIPadding") :: UIPadding
+			local py = if plan.short then 4 else if plan.portrait then 6 else 7
+			padding.PaddingTop = UDim.new(0, py)
+			padding.PaddingBottom = UDim.new(0, py)
+			padding.PaddingLeft = UDim.new(0, 10)
+			padding.PaddingRight = UDim.new(0, 10)
+			local flow = root:FindFirstChildOfClass("UIListLayout") :: UIListLayout
+			flow.Padding = UDim.new(0, if plan.short then 2 else 4)
+			local head = root:FindFirstChild("Head") :: Frame
+			local bar = root:FindFirstChild("Bar") :: Frame
+			local numbers = root:FindFirstChild("Numbers") :: Frame
+			head.Size = UDim2.new(1, 0, 0, if plan.short then 16 else 20)
+			bar.Size = UDim2.new(1, 0, 0, if plan.short then 5 else 7)
+			numbers.Size = UDim2.new(1, 0, 0, if plan.short then 13 else 16)
+			local team = root:FindFirstChild("Team") :: Frame
+			team.Visible = not plan.short
+			team.Size = UDim2.new(1, 0, 0, 12)
+			local teamLabel = team:FindFirstChild("Label") :: TextLabel
+			teamLabel.TextSize = 10
+			panel.name.AutomaticSize = Enum.AutomaticSize.None
+			panel.name.Size = UDim2.new(1, -44, 1, 0)
+			panel.name.TextTruncate = Enum.TextTruncate.AtEnd
+			panel.name.TextSize = if plan.short then 13 else if plan.portrait then 14 else 20
+			panel.typeLabel.TextSize = 10
+			panel.hp.TextSize = if plan.short then 11 else 13
+			panel.speed.TextSize = 12
+			panel.speed.Visible = not plan.short and not plan.portrait
+		end
+		place(log, plan.log)
+		log.Visible = not plan.short
+		place(move1.button, plan.move1)
+		place(move2.button, plan.move2)
+		place(giveUpButton, plan.giveUp)
+		for _, move in { move1, move2 } do
+			local movePad = move.button:FindFirstChildOfClass("UIPadding") :: UIPadding
+			movePad.PaddingLeft = UDim.new(0, 10)
+			movePad.PaddingRight = UDim.new(0, 10)
+			move.title.AutomaticSize = Enum.AutomaticSize.None
+			move.title.Size = UDim2.new(1, 0, 0, 22)
+			move.title.TextTruncate = Enum.TextTruncate.AtEnd
+			move.sub.AutomaticSize = Enum.AutomaticSize.None
+			move.sub.Size = UDim2.new(1, 0, 0, 16)
+			move.sub.TextTruncate = Enum.TextTruncate.AtEnd
+			move.title.TextSize = if plan.short or plan.portrait then 16 else 20
+			move.sub.TextSize = 12
+			move.sub.Visible = not plan.short
+		end
+		giveUpButton.TextSize = if plan.short then 12 else 14
+		Effects.reflowBattle()
+	end
 
 	-- The fee prompt and the result share one centered card over a dim.
 	local dim = Instance.new("TextButton")
@@ -567,7 +665,8 @@ function Battle.mount(
 		end
 		local shown = fighter :: BattleView.FighterView
 		local index = math.min(sideView.active, #sideView.fighters)
-		panel.name.Text = Theme.label(BattleView.fighterName(snapshot, side, index))
+		panel.name.Text =
+			Theme.label((BattleView.fighterName(snapshot, side, index):gsub("^Leader's ", "")))
 		panel.typeLabel.Text = Theme.label(BattleView.typeName(shown.type))
 		panel.typeLabel.TextColor3 = Theme.typeColor(shown.type)
 		local share = BattleView.hpShare(shown.hp, shown.maxHp)
@@ -590,7 +689,7 @@ function Battle.mount(
 			marker.Size = UDim2.fromOffset(LAYOUT.marker.X, LAYOUT.marker.Y)
 		end
 		block.BackgroundColor3 = colors.panel
-		block.BackgroundTransparency = if shown.hp > 0 then 0 else 0.6
+		block.BackgroundTransparency = 1
 		local key = PetVisual.key(shown.pet, shown.variant, shown.type)
 		local fainted = shown.hp <= 0
 		local view = block:FindFirstChild("PetView")

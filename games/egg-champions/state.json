@@ -19,15 +19,15 @@
       "id": "planned",
       "status": "passed",
       "attempts": 0,
-      "note": "49 tasks; planned gate passed 2026-10-17.",
-      "updated": "2026-10-17T05:04:33Z"
+      "note": "50 tasks; planned gate passed. Task 50 implementation and QA complete; publication confirmation pending.",
+      "updated": "2026-10-17T05:39:30Z"
     },
     {
       "id": "built",
-      "status": "passed",
-      "attempts": 22,
-      "note": "49 tasks; built gate passed; 871 Luau tests plus six self-tests; TEST v95 reopened, 139 matching sources. Visual composition/animation remain below approval.",
-      "updated": "2026-10-17T05:04:33Z"
+      "status": "running",
+      "attempts": 23,
+      "note": "Task 50 has 876 Luau tests plus six self-tests, Selene/StyLua/Rojo passed. Final brief checkbox remains open pending TEST publication/reopen; v95 is last confirmed.",
+      "updated": "2026-10-17T05:39:30Z"
     },
     {
       "id": "assets",

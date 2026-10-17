@@ -20,6 +20,7 @@
 
 local Layout = require(script.Parent.Layout)
 local WorldLook = require(script.Parent.WorldLook)
+local SceneLayout = require(script.Parent.SceneLayout)
 
 export type P = { x: number, z: number }
 export type Circle = { x: number, z: number, r: number }
@@ -619,18 +620,14 @@ function Scenery.forIsland(plan: Layout.Plan, island: Layout.Island): WorldScene
 	table.insert(scenery.clear, { x = o.x - 58, z = o.z + 48, r = 25 })
 	-- Secondary scenes have reserved footprints, so seeded props cannot grow
 	-- through their structures. Their access paths join the existing loop.
-	table.insert(scenery.clear, { x = o.x + 65, z = o.z - 55, r = 22 })
-	table.insert(scenery.clear, { x = o.x + 46, z = o.z + 65, r = 19 })
-	table.insert(scenery.paths, {
-		a = { x = o.x + 60, z = o.z },
-		b = { x = o.x + 65, z = o.z - 55 },
-		width = 7,
-	})
-	table.insert(scenery.paths, {
-		a = { x = o.x + 42, z = o.z + 40 },
-		b = { x = o.x + 46, z = o.z + 65 },
-		width = 7,
-	})
+	for _, scene in SceneLayout.forTheme(scenery.theme) do
+		table.insert(scenery.clear, { x = o.x + scene.x, z = o.z + scene.z, r = scene.radius })
+		table.insert(scenery.paths, {
+			a = { x = o.x + scene.accessX, z = o.z + scene.accessZ },
+			b = { x = o.x + scene.x, z = o.z + scene.z },
+			width = 9,
+		})
+	end
 	table.insert(
 		scenery.paths,
 		{ a = { x = o.x - 58, z = o.z }, b = { x = o.x - 58, z = o.z + 90 }, width = 18 }

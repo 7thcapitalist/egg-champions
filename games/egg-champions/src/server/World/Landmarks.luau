@@ -1,6 +1,7 @@
 --!strict
 -- Original constructed landmarks. Geometry is presentation, all routes stay clear.
 local CollectionService = game:GetService("CollectionService")
+local SceneLayout = require(game:GetService("ReplicatedStorage").Shared.world.SceneLayout)
 local Landmarks = {}
 
 function Landmarks.build(theme: string, origin: Vector3, parent: Folder)
@@ -328,8 +329,54 @@ function Landmarks.build(theme: string, origin: Vector3, parent: Folder)
 	end
 	-- Two composed scenes balance the large landmark on the left. The footprints
 	-- are reserved in Scenery before random dressing. Detail stays off the paths.
-	local garden = Vector3.new(46, 0, 65)
-	local vista = Vector3.new(65, 0, -55)
+	local scenes = SceneLayout.forTheme(theme)
+	local earth = if theme == "green_meadow"
+		then Color3.fromRGB(123, 103, 76)
+		elseif theme == "coral_coast" then Color3.fromRGB(204, 164, 111)
+		else Color3.fromRGB(65, 54, 80)
+	local turf = if theme == "green_meadow"
+		then Color3.fromRGB(103, 175, 91)
+		elseif theme == "coral_coast" then cream
+		else Color3.fromRGB(121, 99, 139)
+	for _, scene in scenes do
+		local center = Vector3.new(scene.x, 0, scene.z)
+		cylinder(
+			"ScenicCliff",
+			scene.radius - 1.5,
+			scene.height,
+			center + Vector3.new(0, scene.height / 2, 0),
+			earth
+		)
+		cylinder(
+			"ScenicStratum",
+			scene.radius - 1.3,
+			0.45,
+			center + Vector3.new(0, scene.height * 0.45, 0),
+			earth:Lerp(cream, 0.2)
+		)
+		cylinder(
+			"ScenicTurf",
+			scene.radius - 1.6,
+			0.45,
+			center + Vector3.new(0, scene.height - 0.2, 0),
+			turf
+		)
+		local a = Vector3.new(scene.startX, 0.1, scene.startZ)
+		local b = Vector3.new(scene.endX, scene.endY, scene.endZ)
+		local cf = CFrame.lookAt((a + b) / 2, b)
+		part("ScenicRamp", Vector3.new(9, 0.3, (b - a).Magnitude + 0.5), cf, cream)
+		for side = -1, 1, 2 do
+			local edge = part(
+				"RampEdge",
+				Vector3.new(0.35, 0.4, (b - a).Magnitude + 0.5),
+				cf * CFrame.new(side * 4.6, 0, 0),
+				turf
+			)
+			edge.CanCollide = false
+		end
+	end
+	local garden = Vector3.new(scenes[1].x, scenes[1].height, scenes[1].z)
+	local vista = Vector3.new(scenes[2].x, scenes[2].height, scenes[2].z)
 	if theme == "green_meadow" then
 		-- A flowering pergola frames the distant ancient tree from the return loop.
 		cylinder("GardenTerrace", 17, 0.4, garden + Vector3.new(0, 0.2, 0), cream)

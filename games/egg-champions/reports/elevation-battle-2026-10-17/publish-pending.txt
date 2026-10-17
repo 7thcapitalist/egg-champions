@@ -1,0 +1,1 @@
+Observed 2026-10-17: 01:34:44 disconnected editing server; 01:35:38 Sent message to server to publish; later native dialog: Publishing in progress. Studio will close automatically when complete. No success or new version observed. Last confirmed version 95.

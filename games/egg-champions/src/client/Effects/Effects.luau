@@ -1010,4 +1010,20 @@ function Effects.resetBattle()
 	hideAll(labels)
 end
 
+-- Layout changes interrupt presentation only. Preserve the dispatcher metadata
+-- so a damage event after resize retains its attack type and special cue.
+function Effects.reflowBattle()
+	local positions = {}
+	for key, side in sides do
+		positions[key] = side.block.Position
+	end
+	local savedDispatcher = dispatcher
+	Effects.resetBattle()
+	dispatcher = savedDispatcher
+	for key, side in sides do
+		side.base = positions[key]
+		side.block.Position = side.base
+	end
+end
+
 return Effects
