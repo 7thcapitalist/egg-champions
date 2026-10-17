@@ -12,6 +12,8 @@ local expect = Runner.expect
 
 -- The screens from the brief, plus the 844 x 390 phone.
 local SCREENS = {
+	{ width = 320, height = 720 },
+	{ width = 390, height = 844 },
 	{ width = 808, height = 432 },
 	{ width = 1092, height = 432 },
 	{ width = 1280, height = 720 },
@@ -159,9 +161,13 @@ return function()
 						function()
 							local layout = HudLayout.compute(width, height, teamSize, insets)
 							local team = layout.team :: HudLayout.Rect
-							-- The bottom quarter of the screen.
-							expect(team.y >= height * 0.75).toBeTrue()
-							if layout.compact then
+							if width < 500 then
+								-- Portrait phones keep the team above the joystick/jump band.
+								expect(team.y >= height * 0.65).toBeTrue()
+								expect(team.y + team.h <= height - 140).toBeTrue()
+								expect(team.x + team.w <= width - layout.sizes.gutter).toBeTrue()
+							elseif layout.compact then
+								expect(team.y >= height * 0.75).toBeTrue()
 								-- Bottom left, ending before the middle of the screen.
 								expect(team.x).toEqual(layout.sizes.gutter)
 								expect(team.x + team.w <= width / 2).toBeTrue()

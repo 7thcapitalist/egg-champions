@@ -42,6 +42,7 @@ local PetLook = require(script.Parent.visual.PetLook)
 local PetPortrait = require(script.Parent.visual.PetPortrait)
 local PetMotion = require(script.Parent.visual.PetMotion)
 local VariantFx = require(script.Parent.visual.VariantFx)
+local PetFinishing = require(script.Parent.visual.PetFinishing)
 
 local PetVisual = {}
 -- Gym opponents use the same original creature art as the collection.
@@ -274,6 +275,9 @@ local function build(look: PetLook.Look): Model
 		accent(look, base, attachment :: Attachment)
 	end
 	applyVariant(pet, look)
+	if hasAsset then
+		PetFinishing.apply(pet, look.rarityId, look.typeId)
+	end
 	return pet
 end
 

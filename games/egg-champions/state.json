@@ -5,36 +5,36 @@
       "id": "spec_parsed",
       "status": "passed",
       "attempts": 1,
-      "note": "config matches the spec's current hash and passes the validator",
-      "updated": "2026-10-02T19:21:02Z"
+      "note": "Current spec hash and generated config validated for task 46.",
+      "updated": "2026-10-17T04:04:39Z"
     },
     {
       "id": "economy_tuned",
       "status": "passed",
       "attempts": 1,
-      "note": "all 3 time pacing targets met; rebirths at gym 3 still 4 against a target of 5",
-      "updated": "2026-10-02T19:21:02Z"
+      "note": "All 3 time targets met with legacy pet floor; final gym 7.70h and 7 rebirths versus unchanged target 5 remains a design gap.",
+      "updated": "2026-10-17T04:04:39Z"
     },
     {
       "id": "planned",
       "status": "passed",
       "attempts": 0,
-      "note": "45 tasks; planned gate passed, no missing dependency or cycle.",
-      "updated": "2026-10-17T00:54:48Z"
+      "note": "46 tasks; planned gate passed, no missing dependency or cycle.",
+      "updated": "2026-10-17T04:04:39Z"
     },
     {
       "id": "built",
       "status": "passed",
       "attempts": 22,
-      "note": "45 tasks complete; 760 Luau tests, 6 runner self-tests, Rojo, Selene and StyLua pass; TEST v72 cloud reopened with 131 matching sources.",
-      "updated": "2026-10-17T00:54:48Z"
+      "note": "46 tasks complete; 859 Luau tests and 6 self-tests, Rojo, Selene, StyLua pass. TEST v84 reopened with 137 matching sources. Final visual approval remains open.",
+      "updated": "2026-10-17T04:04:39Z"
     },
     {
       "id": "assets",
       "status": "passed",
       "attempts": 0,
-      "note": "36 models, 164 mesh pieces and textures verified on TEST Studio; segmented asset gate passed.",
-      "updated": "2026-10-17T00:37:48Z"
+      "note": "36 current model entries and textures verified in TEST Studio; assets gate passed.",
+      "updated": "2026-10-17T04:04:39Z"
     },
     {
       "id": "worlds",

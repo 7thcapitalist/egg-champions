@@ -30,6 +30,9 @@ Every fixed number in the game lives in this table. The parser reads values from
 | roblox_title | Egg Champions: Pet Clicker Simulator | Title shown on Roblox |
 | team_size | 3 | Pets equipped, used for both clicking and battling |
 | pets_per_egg | 5 | One pet per rarity in each egg |
+| character_walk_speed | 22 | Comfortable traversal speed in studs per second |
+| legacy_epic_floor | 65% | Epic minimum coin power relative to strongest raw owned pet |
+| legacy_legendary_floor | 85% | Legendary minimum coin power relative to strongest raw owned pet |
 | basic_move_power | 40 | Power of move 1 |
 | special_cooldown_turns | 2 | Turns before move 2 can be used again |
 | type_bonus_strong | 1.5 | Damage multiplier when the move's type is strong against the target |
@@ -52,7 +55,7 @@ Every fixed number in the game lives in this table. The parser reads values from
 
 ## Pets
 
-Every pet has fixed stats, one type, one rarity, and two moves. Pets never level up or evolve. The only way to get stronger is to hatch better pets.
+Every pet has base stats, one type, one rarity, and two moves. Epic and Legendary pets have Legacy Power: effective coin power is the greater of their own variant-adjusted base power and their rarity floor times the strongest raw variant-adjusted power in the owned inventory. Compute the anchor from raw powers only, never boosted powers. The floor does not multiply again by variant or role. This preserves old favorites without making a cheap hatch stronger than the newest best pet. Battle stats remain unchanged. Existing inventories benefit automatically, including after rebirth. Inventory, equipped HUD and Best Coins show/use the same effective power.
 
 | Stat | What it does |
 | --- | --- |
@@ -218,7 +221,7 @@ One pet per rarity in each egg. Names are placeholders to check for conflicts be
 | Lavalynx | Lava lynx | Magma | Epic | Fire | Balanced | Drain | 13 |
 | Magmaroc | Lava bird | Magma | Legendary | Fire | Fighter | Off-type (Electric) | 12 |
 
-Art direction for the asset line: round chunky bodies, big eyes, flat bright colors, under 2,000 triangles each, and no moving parts.
+Art direction: original stylized segmented creatures, readable faces, exaggerated elemental silhouettes, broad clean color regions, up to 4,000 triangles per pet and at most eight imported pieces. Animate legs, tails and wings locally. Epic and Legendary creatures have restrained elemental accents that work in both portraits and the world. Maps need distinct landmark silhouettes, open foregrounds and readable paths. Environmental motion and action effects stay bounded and never obscure controls. Use the factory visual quality checklist for review in the actual game.
 
 ## Out of scope
 

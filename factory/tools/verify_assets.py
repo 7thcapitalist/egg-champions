@@ -52,14 +52,23 @@ for _, entry in entries do
         item.mesh_ok = ok and part ~= nil
         if item.mesh_ok then
             item.mesh_size = {part.MeshSize.X, part.MeshSize.Y, part.MeshSize.Z}
-            part:Destroy()
+            part.TextureID = "rbxassetid://" .. piece.texture_id
+            part.Anchored = true
+            part.CanCollide = false
+            part.Transparency = 1
+            part.Parent = workspace
         else item.error = tostring(part) end
         local status = "None"
         local loaded, err = pcall(function()
-            ContentProvider:PreloadAsync({"rbxassetid://" .. piece.texture_id}, function(_, fetch)
-                status = fetch.Name
+            -- Resolve dependencies through the actual MeshPart. A bare image
+            -- URI in Edit can report Failure despite the textured part loading.
+            ContentProvider:PreloadAsync({if item.mesh_ok then part else "rbxassetid://" .. piece.texture_id}, function(asset, fetch)
+                if asset == "rbxassetid://" .. piece.texture_id then
+                    status = fetch.Name
+                end
             end)
         end)
+        if item.mesh_ok then part:Destroy() end
         item.texture_status = if loaded then status else ("error: " .. tostring(err))
         table.insert(result.parts, item)
     end

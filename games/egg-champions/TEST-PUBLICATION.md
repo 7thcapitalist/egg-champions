@@ -1,5 +1,15 @@
 # Publicacao TESTE e aceitacao
 
+## Mapas, efeitos, tutorial e valor dos pets: versao 84
+
+- Publicacao confirmada em 2026-10-16 23:56 local pelo Output do Studio. TESTE: universe 10769019206, place 101737317546942.
+- Studio reiniciado e TESTE reaberto da nuvem em 2026-10-17: PlaceVersion 84; todos os 137 scripts iguais ao build, sem scripts extras ou atributos de fixture. Workspace de edicao contem apenas Terrain, SpawnLocation e Camera.
+- Tres mapas com novos marcos e horizontes abertos; moinho, ondas e particulas ambientais; novos modelos Tidewhale, Thundrake e Magmaroc; movimentos mais suaves, velocidade 22, celebracoes e tutorial com acoes diretas.
+- Epic/Legendary antigos passam a ter piso de poder de moedas de 65%/85% do maior poder bruto possuido. Equip Best, servidor e interface usam a mesma regra. Combate permanece com seus atributos proprios.
+- 859 testes Luau e seis self-tests; 13 testes Python, Selene, StyLua e Rojo aprovados. 36 modelos e texturas verificados, zero placeholders. Tutorial hatch/equip exercitado no Studio; layouts 320/390 revisados.
+- Evidencias: reports/world-polish-2026-10-16/REVIEW.md, publish-output.txt, cloud-reopened.json e capturas finais.
+- A revisao visual da fabrica ainda reprova composicao e animacao para lancamento final (3,5/5). Pacing simulado final de 7,70 h, mas 7 rebirths contra alvo 5. Save completo, compra nova de passes no TESTE e telefone fisico continuam pendentes; os testes abaixo nao foram repetidos no cliente publicado nesta versao.
+
 ## Atualizacao visual publicada: versao 72
 
 - Publicada em 2026-10-16, 20:52 no horario local, no mesmo TESTE abaixo. Output: Published new changes in Egg Champions Test, publish notes v72.
@@ -8,6 +18,14 @@
 - 760 testes Luau, seis self-tests, tres testes Python, Selene, StyLua e Rojo passaram. Studio carregou 36 templates, zero placeholders, e verificou 90 variantes.
 - HATCH pela interface adquiriu Emberkit e mostrou o modelo correto no efeito/revelacao. BEST COINS, BEST BATTLE e UNEQUIP ALL funcionaram pela interface. Seguidor acompanhou caminhada de 21 metros com articulacao e contato com o chao.
 - Evidencias: reports/visual-rework-2026-10-16/publish-output.txt, cloud-reopened.json, runtime-qa.json, variants.json e capturas. Esses testes de Studio nao comprovam save/rejoin publicado.
+
+## Save/rejoin no cliente publicado: 2026-10-16
+
+- O usuario saiu e entrou novamente pelo link do TESTE. Captura apos retorno: Coral Coast, 0 rebirths, +232 por clique; equipe Zapeel (+80), Cinderhog (+25), Sparkit (+10).
+- O usuario confirmou que havia comprado ovos e trocado para essa equipe antes de sair. A captura anterior (+162, Bubblecrab/Cinderhog/Zapmoth) antecedia essas mudancas.
+- Aprovado neste ciclo manual: equipe equipada e acesso ao mundo mantidos apos rejoin. Ganho por clique observado compativel com a equipe e 2x Coins: (1 + 80 + 25 + 10) * 2 = 232.
+- Saldo observado apos retorno: 45K, depois 51K. Nao ha captura imediatamente anterior a saida para validar saldo exato; inventario completo, index, taxas e rebirth nao foram exercitados neste ciclo.
+- Evidencia: reports/published-rejoin-2026-10-16/after-rejoin.jpg. Captura do cliente no segundo monitor; o numero da versao do servidor nao aparece no HUD.
 
 ## Publicacao anterior: versao 54
 
@@ -30,9 +48,9 @@
 
 ## Pendencias concretas
 
-- Save/rejoin: Studio recusou UpdateAsync com StudioAccessToApisNotAllowed. Perfil desta sessao era temporario e nao foi salvo. O usuario prefere validar no Roblox publicado; esse teste continua pendente.
+- Save/rejoin: equipe e acesso ao mundo confirmados no cliente publicado no ciclo acima. Saldo exato, inventario completo, index e persistencia de rebirth continuam sem comparacao antes/depois. Studio permanece com acesso a APIs desativado e usa perfil temporario.
 - Consulta publica da API Roblox: TESTE nao tem passes proprios; os quatro IDs configurados pertencem ao universe de producao 10769019314. Beneficios ja possuidos funcionam no TESTE, mas uma compra nova nele nao esta validada. Roblox desativou vendas entre jogos em 2026-05-30: https://create.roblox.com/docs/production/monetization/passes .
-- Controle nativo no segundo monitor apresentou erro de coordenadas e de janela em primeiro plano; nao foi possivel concluir a entrada no cliente publicado por automacao. Navegador pessoal nao foi operado.
+- Controle nativo no segundo monitor apresenta coordenadas inconsistentes e cliques que nao abrem os menus; entrada e rejoin foram feitos pelo usuario. Observacao do cliente publicado funciona. Navegador pessoal nao foi operado.
 - Pacing completo de 6 a 8 horas e desempenho em telefone fisico continuam pendentes.
 
 ## Direcao visual posterior

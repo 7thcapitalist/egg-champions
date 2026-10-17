@@ -48,7 +48,7 @@ ASSUMPTIONS = [
     "Clicks are continuous: coins arrive at clicks per second x coins per click. The index bonus multiplies coins per click: x (1 + index_egg_bonus x completed eggs). An egg is complete when all 5 normal pets were hatched. The index survives rebirth.",
     "Shiny and Golden are exclusive rolls on each hatch. Their click and battle multipliers apply on top of rarity and role.",
     "Hatching takes {hatch_seconds} s and a battle takes {turn_seconds} s per turn. The player does not click during either. The player clicks during the gym retry wait.",
-    "No game passes. No storage: the player owns exactly one team of team_size pets. A new hatch either replaces the worst team member or is discarded.",
+    "No game passes. Inventory retains up to team_size copies of each pet/variant (extra identical copies cannot improve a team). Legacy floors, when configured, use the strongest raw owned power. Farm teams reselect the best effective coin pets after hatches. Battle training still uses a greedy replacement policy.",
     "Greedy player policy, farm mode: buy the unlocked egg with the best expected click gain per coin, as long as the expected gain pays back the price plus the coins lost while hatching within {payback_seconds} s, or within the time it would take to save the gym fee if that is longer. A hatch replaces the lowest Click Power pet if it is better.",
     "Greedy player policy, gym: when no egg is worth buying, save for the gym fee, pay it, and fight. After {losses_before_stuck} losses in a row the player is stuck.",
     "Greedy player policy, stuck: rebirth if affordable. Otherwise buy the egg with the best expected battle gain per coin and replace the weakest battler. Each team change gives {losses_before_stuck} more gym tries. After {train_hatch_cap} such hatches in one stuck spell, or if that egg costs as much as the rebirth, save for the rebirth instead. Players only rebirth when stuck.",
@@ -339,10 +339,17 @@ def simulate_player(game, gyms, cps, rng, max_seconds):
     train_hatches = 0
     seen = {e: set() for e in game.eggs}
     done_eggs = 0
+    owned = {}
+    legacy_anchor = 0.0
     res = {"first_hatch": None, "gym": [None] * nw, "gym_rebirths": [None] * nw, "rebirths": [], "hatches": 0, "battles": 0}
 
+    def effective_click(inst):
+        rarity = game.pets[inst["pet"]]["rarity"]
+        floor = C.get("legacy_" + rarity + "_floor", 0)
+        return max(inst["click"], legacy_anchor * floor)
+
     def rate():
-        return (1 + sum(i["click"] for i in team)) * (1 + C["rebirth_coin_bonus"] * r) * (1 + C["index_egg_bonus"] * done_eggs) * cps
+        return (1 + sum(effective_click(i) for i in team)) * (1 + C["rebirth_coin_bonus"] * r) * (1 + C["index_egg_bonus"] * done_eggs) * cps
 
     def roll(egg_id):
         x = rng.random()
@@ -371,16 +378,16 @@ def simulate_player(game, gyms, cps, rng, max_seconds):
 
     def choose_farm():
         """Best gain per coin among eggs that pay back in time."""
-        floor = 0.0 if len(team) < size else min(i["click"] for i in team)
+        floor = 0.0 if len(team) < size else min(effective_click(i) for i in team)
         income = rate()
-        mult = income / (1 + sum(i["click"] for i in team))
+        mult = income / (1 + sum(effective_click(i) for i in team))
         horizon = SIM["payback_seconds"]
         if not fee_paid:
             horizon = max(horizon, (game.worlds[beaten]["gym"]["fee"] - coins) / income)
         best = None
         for w in game.worlds[:min(beaten, nw - 1) + 1]:
             for eid in w["eggs"]:
-                gain = sum(pr * max(0.0, inst["click"] - floor) for pr, inst in game.outcomes[eid])
+                gain = sum(pr * max(0.0, effective_click(inst) - floor) for pr, inst in game.outcomes[eid])
                 # full cost of a hatch: the price plus the coins not earned while it hatches
                 price = game.eggs[eid]["price"] + income * SIM["hatch_seconds"]
                 if gain * mult * horizon >= price and (best is None or gain / price > best[1] / best[2]):
@@ -394,7 +401,7 @@ def simulate_player(game, gyms, cps, rng, max_seconds):
         key = None
         if not train:
             pick = choose_farm()
-            key = lambda i: i["click"]
+            key = effective_click
         elif stuck:
             cost = game.rebirth_cost(r)
             if coins < cost and train_hatches < SIM["train_hatch_cap"]:
@@ -420,6 +427,11 @@ def simulate_player(game, gyms, cps, rng, max_seconds):
             coins -= price
             t += SIM["hatch_seconds"]
             inst = roll(eid)
+            legacy_anchor = max(legacy_anchor, inst["click"])
+            inventory_key = (inst["pet"], inst["variant"])
+            copies = owned.setdefault(inventory_key, [])
+            if len(copies) < size:
+                copies.append(inst)
             res["hatches"] += 1
             if res["first_hatch"] is None:
                 res["first_hatch"] = t
@@ -436,6 +448,8 @@ def simulate_player(game, gyms, cps, rng, max_seconds):
                 if key(inst) > key(team[j]):
                     team[j] = inst
                     changed = True
+            if not train:
+                team = sorted((p for copies in owned.values() for p in copies), key=effective_click, reverse=True)[:size]
             if train:
                 train_hatches += 1
                 if changed:

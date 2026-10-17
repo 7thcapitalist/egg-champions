@@ -122,6 +122,7 @@ local function newBurst(holder: Instance): Burst
 	attachment.Name = "CoinBurst"
 	local emitter = Instance.new("ParticleEmitter")
 	emitter.Enabled = false
+	emitter.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	emitter.Rate = 0
 	emitter.Color = ColorSequence.new(Theme.colors.gold)
 	emitter.LightEmission = 0.5

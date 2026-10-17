@@ -8,7 +8,7 @@ local function roleFor(name: string): string?
 	if string.find(lower, "tail") then
 		return "tail"
 	end
-	if lower == "wings" then
+	if lower == "wings" or lower == "flippers" then
 		return "wings"
 	end
 	if lower == "front legs" or lower == "limbs" then

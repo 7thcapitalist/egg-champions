@@ -25,6 +25,10 @@ planning:
   builds in code, and every one of them needs a task.
 - `<game-dir>/tasks/`: briefs already written, and their ticked state.
 - `CLAUDE.md` at the repo root, for the rules that outrank this file.
+- `factory/VISUAL-QUALITY.md`: include its design artifacts and visual review
+  tasks in the coverage table. Code passing is not art approval. Reserve tasks
+  for in-engine contact sheets, world silhouettes, motion/effects and fresh-user
+  onboarding on desktop and mobile. Record references and evidence separately.
 
 ## Output
 - One brief per task at `<game-dir>/tasks/NN-short-name.md`, numbered in

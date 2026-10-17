@@ -41,12 +41,13 @@ export type ClickState = {
 	completedEggs: number,
 	-- Product of every owned pass's coin factor. Defaults to 1 when omitted.
 	passMultiplier: number?,
+	legacyAnchor: number?,
 }
 
 local Coins = {}
 
 -- A pet's Click Power, including its variant multiplier.
-function Coins.clickPowerOf(pet: OwnedPet): number
+function Coins.rawPowerOf(pet: OwnedPet): number
 	local power = Config.petById[pet.petId].click_power
 	local variant = pet.variant
 	if variant ~= nil then
@@ -55,10 +56,27 @@ function Coins.clickPowerOf(pet: OwnedPet): number
 	return power
 end
 
-function Coins.teamClickPower(team: { OwnedPet }): number
+function Coins.legacyAnchor(owned: { OwnedPet }): number
+	local strongest = 0
+	for _, pet in owned do
+		strongest = math.max(strongest, Coins.rawPowerOf(pet))
+	end
+	return strongest
+end
+
+function Coins.clickPowerOf(pet: OwnedPet, anchor: number?): number
+	local rarity = Config.petById[pet.petId].rarity
+	local fraction = if rarity == "epic"
+		then Config.constants.legacy_epic_floor
+		elseif rarity == "legendary" then Config.constants.legacy_legendary_floor
+		else 0
+	return math.max(Coins.rawPowerOf(pet), (anchor or 0) * fraction)
+end
+
+function Coins.teamClickPower(team: { OwnedPet }, anchor: number?): number
 	local total = 0
 	for _, pet in team do
-		total += Coins.clickPowerOf(pet)
+		total += Coins.clickPowerOf(pet, anchor)
 	end
 	return total
 end
@@ -73,7 +91,7 @@ end
 
 function Coins.perClick(state: ClickState): number
 	local passMultiplier = state.passMultiplier or 1
-	return (1 + Coins.teamClickPower(state.team))
+	return (1 + Coins.teamClickPower(state.team, state.legacyAnchor))
 		* Coins.rebirthMultiplier(state.rebirths)
 		* Coins.indexMultiplier(state.completedEggs)
 		* passMultiplier

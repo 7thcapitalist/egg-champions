@@ -77,6 +77,20 @@ local function expectApart(where: string, a: PetsLayout.Rect, b: PetsLayout.Rect
 end
 
 return function()
+	describe("Portrait inventory", function()
+		it("stacks readable tiles above reachable detail and equip controls", function()
+			for _, width in { 320, 390 } do
+				for _, filters in { false, true } do
+					local l = PetsLayout.compute(width, 720, 58, true, filters, { tools = true })
+					expect(PetsLayout.overlap(l.content, l.detail)).toEqual(false)
+					expect(PetsLayout.inside(l.detail, l.panel)).toBeTrue()
+					expect(PetsLayout.inside(l.equipButton, l.detail)).toBeTrue()
+					expect(l.tileWidth >= 104).toBeTrue()
+					expect(l.grid.h >= 60).toBeTrue()
+				end
+			end
+		end)
+	end)
 	describe("Inventory action toolbar", function()
 		it("keeps team actions, search, equip and a usable grid on phone and desktop", function()
 			for _, screen in { { 808, 432 }, { 844, 390 }, { 1280, 720 }, { 1920, 1080 } } do

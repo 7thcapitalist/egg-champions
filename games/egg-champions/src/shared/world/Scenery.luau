@@ -613,6 +613,14 @@ function Scenery.forIsland(plan: Layout.Plan, island: Layout.Island): WorldScene
 	}
 
 	local here: P = { x = arrival.x, z = arrival.z }
+	-- Authored landmark footprints and their access lane, before random scenery.
+	table.insert(scenery.clear, { x = o.x - 64, z = o.z - 57, r = 27 })
+	table.insert(scenery.clear, { x = o.x - 58, z = o.z + 48, r = 25 })
+	table.insert(
+		scenery.paths,
+		{ a = { x = o.x - 58, z = o.z }, b = { x = o.x - 58, z = o.z + 90 }, width = 18 }
+	)
+	table.insert(scenery.paths, { a = here, b = { x = o.x - 58, z = o.z }, width = 10 })
 	table.insert(scenery.clear, { x = arrival.x, z = arrival.z, r = Scenery.ARRIVAL_CLEAR })
 	table.insert(scenery.clear, { x = signSpot.x, z = signSpot.z, r = Scenery.SIGN_CLEAR })
 	local stands = 0

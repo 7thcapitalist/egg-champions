@@ -39,6 +39,7 @@ local WorldPalette = require(Shared:WaitForChild("world"):WaitForChild("WorldPal
 local WorldNames = require(Shared:WaitForChild("world"):WaitForChild("Names"))
 local Kit = require(script.Parent:WaitForChild("Kit"))
 local WorldTerrain = require(script.Parent:WaitForChild("Landscape"))
+local Landmarks = require(script.Parent:WaitForChild("Landmarks"))
 
 -- Each egg's configured model height in studs (GameConfig.models, built from
 -- assets/models.json), so a stand's sign clears its real egg. An egg with no
@@ -274,6 +275,7 @@ function Builder.buildAll(): Built
 			Kit.arrivalPad(at(plan.arrivals[island.worldId]), palette).Parent = folder
 		end
 		buildScenery(folder, scenery, palette)
+		Landmarks.build(scenery.theme, Vector3.new(scenery.origin.x, 0, scenery.origin.z), folder)
 		task.wait()
 	end
 

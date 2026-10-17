@@ -18,6 +18,7 @@ local testingSpecs = script.Parent
 return {
 	ruleSpecs["Team.spec"],
 	ruleSpecs["Coins.spec"],
+	ruleSpecs["Legacy.spec"],
 	ruleSpecs["Hatch.spec"],
 	ruleSpecs["PetIndex.spec"],
 	ruleSpecs["Battle.spec"],

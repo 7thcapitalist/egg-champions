@@ -166,8 +166,8 @@ return function()
 						expect(covered(portal.position.x, portal.position.z)).toBeTrue()
 					end
 				end
-				-- A path from the spawn to the gym, and one to the portal.
-				expect(#s.paths).toEqual(2)
+				-- Gym, portal, landmark connector and boardwalk access.
+				expect(#s.paths).toEqual(4)
 			end
 		end)
 

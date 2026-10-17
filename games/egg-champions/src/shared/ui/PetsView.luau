@@ -318,7 +318,24 @@ local function knownVariant(variant: any): Config.Variant?
 end
 
 -- One tile per owned pet the client recognises, in profile order.
+function PetsView.anchor(pets: any): number
+	local valid = {}
+	if type(pets) == "table" then
+		for _, owned in pets do
+			if type(owned) == "table" and knownPet(owned.petId) ~= nil then
+				local variant = knownVariant(owned.variant)
+				table.insert(
+					valid,
+					{ petId = owned.petId, variant = if variant then variant.id else nil }
+				)
+			end
+		end
+	end
+	return Coins.legacyAnchor(valid)
+end
+
 function PetsView.tiles(pets: any, team: any): { Tile }
+	local anchor = PetsView.anchor(pets)
 	local equipped: { [string]: boolean } = {}
 	if type(team) == "table" then
 		for _, uid in team do
@@ -339,7 +356,7 @@ function PetsView.tiles(pets: any, team: any): { Tile }
 				local power = Coins.clickPowerOf({
 					petId = pet.id,
 					variant = if variant ~= nil then variant.id else nil,
-				})
+				}, anchor)
 				table.insert(tiles, {
 					uid = owned.uid,
 					petId = pet.id,
@@ -645,11 +662,13 @@ function PetsView.tabCounts(
 end
 
 -- The detail panel of one pet, with its variant's multipliers applied.
-function PetsView.detail(petId: string, variant: string?): Detail
+function PetsView.detail(petId: string, variant: string?, anchor: number?): Detail
 	local pet = Config.petById[petId]
 	local variantRow = if variant ~= nil then Config.variantById[variant] else nil
 	local variantId = if variantRow ~= nil then variantRow.id else nil
-	local clickPower = Coins.clickPowerOf({ petId = pet.id, variant = variantId })
+	local owned = { petId = pet.id, variant = variantId }
+	local clickPower = Coins.clickPowerOf(owned, anchor)
+	local legacy = clickPower > Coins.rawPowerOf(owned)
 	local battleMult = Battle.playerMultiplier(0, variantId)
 	local hp = pet.hp * battleMult
 	local attack = pet.attack * battleMult
@@ -675,7 +694,10 @@ function PetsView.detail(petId: string, variant: string?): Detail
 		attack = attack,
 		speed = pet.speed,
 		stats = {
-			{ label = "Click Power", value = PetsView.number(clickPower) },
+			{
+				label = "Click Power",
+				value = PetsView.number(clickPower) .. (if legacy then " (Legacy)" else ""),
+			},
 			{ label = "HP", value = PetsView.whole(hp) },
 			{ label = "Attack", value = PetsView.whole(attack) },
 			{ label = "Speed", value = PetsView.number(pet.speed) },

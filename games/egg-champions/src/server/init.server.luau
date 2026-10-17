@@ -10,8 +10,25 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local function movement(player: Player)
+	local function characterAdded(character: Model)
+		local humanoid = character:WaitForChild("Humanoid", 10)
+		if humanoid and humanoid:IsA("Humanoid") then
+			humanoid.WalkSpeed = Config.constants.character_walk_speed
+		end
+	end
+	player.CharacterAdded:Connect(characterAdded)
+	if player.Character then
+		task.spawn(characterAdded, player.Character)
+	end
+end
+Players.PlayerAdded:Connect(movement)
+for _, player in Players:GetPlayers() do
+	movement(player)
+end
 local Profiles = require(script:WaitForChild("Profiles"))
 local Guard = require(script:WaitForChild("Guard"))
 local Analytics = require(script:WaitForChild("Analytics"))

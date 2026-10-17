@@ -32,6 +32,7 @@ type Entry = {
 	models: { Model },
 	floors: { number },
 	clearance: { number },
+	motion: { number },
 }
 
 local Followers = {}
@@ -71,7 +72,7 @@ local function build(player: Player, key: string): Entry
 			table.insert(clearance, model:GetPivot().Position.Y - box.Position.Y + size.Y / 2)
 		end
 	end
-	local entry = { key = key, models = models, floors = {}, clearance = clearance }
+	local entry = { key = key, models = models, floors = {}, clearance = clearance, motion = {} }
 	entries[player] = entry
 	return entry
 end
@@ -133,6 +134,10 @@ local function step(dt: number)
 			1
 		)
 		for index, model in current.models do
+			local gait = (current.motion[index] or 0)
+				+ (moving - (current.motion[index] or 0)) * blend
+			current.motion[index] = gait
+			local phase = seconds + index * 0.71
 			local o = FollowerMath.offset(index, count, seconds)
 			local spot = base * CFrame.new(o.x, o.y, o.z)
 			local hit = Workspace:Raycast(
@@ -147,18 +152,22 @@ local function step(dt: number)
 			local flying = model:GetAttribute("Flying") == true
 			local lift = if flying
 				then 1 + (o.y - FollowerMath.LOOK.hover)
-				else math.abs(math.sin(seconds * 11)) * moving * 0.12
+				else math.abs(math.sin(phase * 11)) * gait * 0.12
 			local target = CFrame.new(
 				spot.Position.X,
 				floor + current.clearance[index] + lift,
 				spot.Position.Z
-			) * base.Rotation
+			) * base.Rotation * CFrame.Angles(
+				0,
+				math.sin(phase * 1.1) * 0.04 * (1 - gait),
+				math.sin(phase * 5.5) * gait * 0.035
+			)
 			if fresh then
 				model:PivotTo(target)
 			else
 				model:PivotTo(model:GetPivot():Lerp(target, blend))
 			end
-			PetMotion.pose(model, seconds, moving)
+			PetMotion.pose(model, phase, gait)
 		end
 	end
 end

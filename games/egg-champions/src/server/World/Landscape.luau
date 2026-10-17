@@ -53,7 +53,20 @@ function Landscape.build(scenery: Scenery.WorldScenery, parent: Folder)
 	end
 	local o = scenery.origin
 	local size = scenery.half * 2
-	block("Island", Vector3.new(size, 12, size), CFrame.new(o.x, -7, o.z), rock)
+	local island = block(
+		"Island",
+		Vector3.new(12, size + 30, size + 30),
+		CFrame.new(o.x, -7, o.z) * CFrame.Angles(0, 0, math.pi / 2),
+		rock
+	)
+	island.Shape = Enum.PartType.Cylinder
+	local surface = block(
+		"Ground",
+		Vector3.new(1, size + 26, size + 26),
+		CFrame.new(o.x, -0.5, o.z) * CFrame.Angles(0, 0, math.pi / 2),
+		ground
+	)
+	surface.Shape = Enum.PartType.Cylinder
 	local water = block(
 		"Sea",
 		Vector3.new(size + 110, 1, size + 110),
@@ -63,46 +76,24 @@ function Landscape.build(scenery: Scenery.WorldScenery, parent: Folder)
 	water.Material = Enum.Material.Glass
 	water.Transparency = 0.18
 	water.CanCollide = false
-	local tile = 20
-	local count = math.ceil(size / tile)
-	for x = 0, count - 1 do
-		for z = 0, count - 1 do
-			local tint = ground:Lerp(Color3.new(1, 1, 1), if (x + z) % 2 == 0 then 0.075 else 0)
-			block(
-				"GroundTile",
-				Vector3.new(tile, 1, tile),
-				CFrame.new(
-					o.x - scenery.half + (x + 0.5) * tile,
-					-0.5,
-					o.z - scenery.half + (z + 0.5) * tile
-				),
-				tint,
-				true
-			)
+	-- Irregular perimeter rocks frame the horizon without a repeated fortress wall.
+	-- They sit beyond every interaction route and the landmark footprints.
+	for i = 0, 17 do
+		local angle = i * math.pi / 9
+		local rear = math.sin(angle) < -0.35
+		local h = if rear then 11 + (i * 7 % 4) * 4 else 3 + i % 3
+		if scenery.theme == "coral_coast" then
+			h *= 0.55
 		end
-	end
-	for side = 0, 3 do
-		for column = 0, 12 do
-			local height = 18 + ((column * 7 + side * 3 + scenery.worldIndex) % 4) * 4
-			local along = -96 + column * 16
-			local cf = CFrame.new(o.x, 0, o.z)
-				* CFrame.Angles(0, side * math.pi / 2, 0)
-				* CFrame.new(along, height / 2 - 3, -scenery.half - 7)
-			block(
-				"Cliff",
-				Vector3.new(16, height, 14),
-				cf,
-				rock:Lerp(ground, 0.16 + (column % 3) * 0.07),
-				true
-			)
-			block(
-				"CliffCap",
-				Vector3.new(16.5, 1.5, 14.5),
-				cf * CFrame.new(0, height / 2, 0),
-				ground,
-				true
-			)
-		end
+		local radius = 116 + (i % 3) * 2
+		local p = block(
+			"ShoreRock",
+			Vector3.new(13 + i % 4 * 2, h, 14),
+			CFrame.new(o.x + math.cos(angle) * radius, h / 2 - 4, o.z + math.sin(angle) * radius)
+				* CFrame.Angles(0.08 * (i % 2), angle + 0.3, -0.12),
+			rock:Lerp(ground, 0.12 + i % 3 * 0.06)
+		)
+		p.Shape = Enum.PartType.Ball
 	end
 	-- Spheres match Scenery.heightAt exactly, so trees stay grounded.
 	for _, hill in scenery.hills do

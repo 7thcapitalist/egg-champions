@@ -806,6 +806,18 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		place(header, l.header, p.x, p.y)
 		place(scroll, l.list, p.x, p.y)
 		place(footer, l.footer, p.x, p.y)
+		-- Give guidance its own row on phones so it never covers the title or balance.
+		local guideRow = if Guide.reserved() then 44 else 0
+		guideBar.AnchorPoint = Vector2.new(0, 0)
+		guideBar.Position = UDim2.fromOffset(0, s.header + 4)
+		guideBar.Size = UDim2.new(1, 0, 0, 36)
+		local guideLine = guideBar:FindFirstChild("Line") :: TextLabel
+		guideLine.TextWrapped = true
+		guideLine.TextTruncate = Enum.TextTruncate.None
+		scroll.Position += UDim2.fromOffset(0, guideRow)
+		scroll.Size -= UDim2.fromOffset(0, guideRow)
+		coin.Visible = screen.X >= 500
+		coinsLabel.Visible = screen.X >= 500
 		titleLabel.TextSize = EggShopLayout.titleSize(s, textSizes.small)
 		scroll.ScrollBarThickness = math.max(1, s.scrollBar - 2)
 		grid.CellSize = UDim2.fromOffset(l.cardWidth, l.cardHeight)

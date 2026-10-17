@@ -31,8 +31,8 @@
 	  The tutorial's gym step waits while NextGoal has a small goal before
 	  the gym (more pets, a full team, the next egg): the card shows that
 	  goal, and Guide leads to it with Tutorial.heldCard until it is done.
-	  During the tutorial the pointer is the only call to action: the card
-	  shows no OPEN EGGS or OPEN PETS button. Under a small goal a muted
+	  During the tutorial the card provides a direct action alongside the pointer;
+	  OPEN EGGS and OPEN PETS remain reachable. Under a small goal a muted
 	  second line names the gym and its fee (NextGoal.nextLine); tapping it
 	  turns on the beam and edge arrow to the gym, which also turn on by
 	  themselves once the team is full (NextGoal.gymBeam, shown by Guide).
@@ -94,14 +94,6 @@ local Z_PANEL = 2
 -- Display sizes, not game numbers.
 local SKIP_WIDTH = 56
 local SKIP_GAP = 6
-
--- While the tutorial runs, the pointer is the one call to action for a
--- screen: the goal card shows no OPEN EGGS or OPEN PETS button then.
-local SCREEN_ACTIONS: { [string]: boolean } = {
-	pets = true,
-	team = true,
-	egg = true,
-}
 
 -- The screen each HudLayout.MENU entry opens. Shop is the accent button once
 -- the tutorial is done.
@@ -584,6 +576,15 @@ function Main.mount(
 	content.Size = UDim2.fromScale(1, 1)
 
 	local top = buildTopBar(content)
+	top.rebirths.Active = true
+	top.rebirths.InputBegan:Connect(function(input)
+		if
+			input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+		then
+			Screens.open("Journey")
+		end
+	end)
 	local pulse = Instance.new("UIScale")
 	pulse.Name = "Pulse"
 	pulse.Parent = top.coinsBox
@@ -627,11 +628,10 @@ function Main.mount(
 		placeIn(top.coinsBox, layout.coins, barRect)
 		placeIn(top.world, layout.world, barRect)
 		local rebirthRect = layout.rebirths
-		top.rebirths.Position = UDim2.fromOffset(
-			rebirthRect.x - barRect.x,
-			rebirthRect.y - barRect.y + rebirthRect.h * 0.3
-		)
-		top.rebirths.Size = UDim2.fromOffset(rebirthRect.w, rebirthRect.h * 0.4)
+		top.rebirths.Position =
+			UDim2.fromOffset(rebirthRect.x - barRect.x, rebirthRect.y - barRect.y)
+		top.rebirths.Size = UDim2.fromOffset(rebirthRect.w, rebirthRect.h)
+		top.rebirths.TextWrapped = true
 		local coinSize = math.max(12, math.min(sizes.coin, layout.coins.h - 16))
 		top.coin.Size = UDim2.fromOffset(coinSize, coinSize)
 
@@ -775,7 +775,18 @@ function Main.mount(
 		)
 		local world = NextGoal.currentWorld(goalState)
 		top.world.Text = Theme.label(world.name)
-		top.rebirths.Text = Theme.label(string.format("Rebirths %s", Format.abbreviate(rebirths)))
+		local badgeCount = 0
+		for _, w in Config.worlds do
+			if (profile.badges or {})[w.id] == true then
+				badgeCount += 1
+			end
+		end
+		top.rebirths.Text = string.format(
+			"BADGES %d/%d >\nRebirths %s",
+			badgeCount,
+			#Config.worlds,
+			Format.abbreviate(rebirths)
+		)
 
 		local picked = NextGoal.pick(goalState, number(derived.rebirthCost))
 		tutorialStep = profile.tutorialStep
@@ -802,9 +813,6 @@ function Main.mount(
 		updatePointer()
 
 		local action = GOAL_ACTION[picked.kind]
-		if onboarding and SCREEN_ACTIONS[picked.kind] == true then
-			action = nil
-		end
 		local nextText: string? = nil
 		-- The short "Click anywhere to earn coins" line, while the goal waits
 		-- on coins. It takes the second line's place.
@@ -824,8 +832,9 @@ function Main.mount(
 			elseif
 				tutorial.step == Tutorial.steps.hatch or tutorial.step == Tutorial.steps.equip
 			then
-				-- The pointer is the call to action: no button here.
-				action = nil
+				action = if tutorial.step == Tutorial.steps.hatch
+					then GOAL_ACTION.egg
+					else GOAL_ACTION.team
 				picked.ready = true
 			else
 				-- The gym step: the first world's gym fee, or the gym itself
@@ -890,7 +899,7 @@ function Main.mount(
 					Format.abbreviate(shown.need)
 				)
 			elseif onboarding then
-				-- The pointer leads the way; the button row stays empty.
+				-- Keep the instruction visible while awaiting the next state.
 				goal.action.Visible = false
 				goal.bar.Visible = false
 			else

@@ -67,6 +67,12 @@ stage passed on its own word.
 
 ## Local Studio QA
 
+Before art/UI planning read [VISUAL-QUALITY.md](VISUAL-QUALITY.md). Plans must
+include map composition, asset contact sheets, animation/effect budgets,
+onboarding and collection-value review. Validate review evidence with
+`python factory/tools/quality_review.py <game-dir> <review.json>`. It checks
+freshness and completeness; it does not replace visual inspection or stage gates.
+
 `python -B factory/tools/build_playtest.py <game-dir> <scenario>` builds a
 separate unpublished QA place under `<game-dir>/build/playtest/` without
 changing the shipping project. Scenarios are `beginner`, `collection`,

@@ -270,6 +270,7 @@ function PetsLayout.compute(
 	local tools = options ~= nil and options.tools == true
 	local menu = if options ~= nil then options.menu else nil
 	local compact = PetsLayout.isCompact(width, height)
+	local portrait = width < 500
 	local s: Sizes = if compact then PetsLayout.SIZES.compact else PetsLayout.SIZES.normal
 	if few then
 		local fewSizes = if compact then PetsLayout.FEW.compact else PetsLayout.FEW.normal
@@ -290,6 +291,12 @@ function PetsLayout.compute(
 			copy.gridPad = 4
 		end
 		s = copy
+	end
+	if portrait then
+		s = table.clone(s)
+		s.header = 78
+		s.detailBlock = 48
+		menu = nil
 	end
 
 	local panelWidth = math.min(s.maxWidth, width - 2 * s.margin)
@@ -322,6 +329,10 @@ function PetsLayout.compute(
 	local bodyH = panel.y + panel.h - s.padding - bodyY
 
 	local detail = rect("detail", innerX + innerW - s.detailWidth, bodyY, s.detailWidth, bodyH)
+	if portrait then
+		local detailHeight = math.min(190, bodyH * 0.45)
+		detail = rect("detail", innerX, bodyY + bodyH - detailHeight, innerW, detailHeight)
+	end
 	local detailInnerX = detail.x + s.detailPad
 	local detailInnerW = detail.w - 2 * s.detailPad
 	local detailTop =
@@ -346,6 +357,9 @@ function PetsLayout.compute(
 	)
 
 	local content = rect("content", innerX, bodyY, innerW - s.detailWidth - s.gap, bodyH)
+	if portrait then
+		content = rect("content", innerX, bodyY, innerW, detail.y - bodyY - s.gap)
+	end
 	local hint = rect("hint", content.x, content.y, content.w, s.hint)
 	local search: Rect? = nil
 	if tools then

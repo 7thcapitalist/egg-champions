@@ -112,10 +112,11 @@ end
 
 function Team.bestForCoins(owned: { OwnedPet }): TeamList
 	local ranked: { Ranked } = {}
+	local anchor = Coins.legacyAnchor(owned)
 	for index, pet in owned do
 		table.insert(
 			ranked,
-			{ uid = pet.uid, power = Coins.clickPowerOf(pet), speed = 0, index = index }
+			{ uid = pet.uid, power = Coins.clickPowerOf(pet, anchor), speed = 0, index = index }
 		)
 	end
 	return bestFromRanked(ranked)

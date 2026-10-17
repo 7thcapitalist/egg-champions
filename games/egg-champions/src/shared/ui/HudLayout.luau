@@ -323,19 +323,24 @@ function HudLayout.compute(
 	if not inRow then
 		-- A chat window reaching into the bar pushes coins right of it.
 		local coinsX = s.gutter
+		local barY = rowTop
 		local c = i.chat
 		if c ~= nil and HudLayout.intersects(c, rect("bar", 0, rowTop, width, s.topBar)) then
 			coinsX = math.max(coinsX, c.x + c.w + gap)
 		end
 		local rebirthsX = width - s.gutter - s.rebirthsWidth
+		if coinsX + s.coinsWidth + gap > rebirthsX and c ~= nil then
+			barY = math.max(barY, c.y + c.h + gap)
+			coinsX = s.gutter
+		end
 		local lo = coinsX + s.coinsWidth + gap
 		local hi = rebirthsX - gap
 		local ww = math.max(0, math.min(s.worldWidth, hi - lo))
 		local wx = math.clamp(math.floor((width - ww) / 2), lo, math.max(lo, hi - ww))
-		topBar = rect("topBar", 0, rowTop, width, s.topBar)
-		coins = rect("coins", coinsX, rowTop, s.coinsWidth, s.topBar)
-		world = rect("world", wx, rowTop, ww, s.topBar)
-		rebirths = rect("rebirths", rebirthsX, rowTop, s.rebirthsWidth, s.topBar)
+		topBar = rect("topBar", 0, barY, width, s.topBar)
+		coins = rect("coins", coinsX, barY, s.coinsWidth, s.topBar)
+		world = rect("world", wx, barY, ww, s.topBar)
+		rebirths = rect("rebirths", rebirthsX, barY, s.rebirthsWidth, s.topBar)
 		if rowTop > 0 then
 			table.insert(reserved, rect("robloxBar", 0, 0, width, rowTop))
 		end
@@ -350,7 +355,7 @@ function HudLayout.compute(
 	-- The team bar's height, also used to keep the menu clear of it on
 	-- compact screens whether or not it shows yet.
 	local teamHeight = s.slotHeight + s.teamPad * 2
-	local teamTop = height - s.teamBottom - teamHeight
+	local teamTop = height - (if width < 500 then 140 else s.teamBottom) - teamHeight
 
 	local count = math.clamp(menuCount or #HudLayout.MENU, 1, #HudLayout.MENU)
 	local menuHeight = count * s.menuButton + (count - 1) * s.menuGap
@@ -375,6 +380,13 @@ function HudLayout.compute(
 	local parts = { coins, world, rebirths, menu, goal }
 	local team: Rect? = nil
 	if slots > 0 then
+		if width < 500 then
+			s = table.clone(s)
+			s.slotWidth = math.min(
+				s.slotWidth,
+				math.floor((width - 2 * s.gutter - 2 * s.teamPad - (slots - 1) * s.slotGap) / slots)
+			)
+		end
 		local teamWidth = slots * s.slotWidth + (slots - 1) * s.slotGap + s.teamPad * 2
 		local teamX = if compact then s.gutter else math.floor((width - teamWidth) / 2)
 		local t = rect("team", teamX, teamTop, teamWidth, teamHeight)

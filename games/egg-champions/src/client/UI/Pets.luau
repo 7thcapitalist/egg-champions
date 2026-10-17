@@ -610,7 +610,12 @@ function Pets.mount(
 			empty.TextXAlignment = Enum.TextXAlignment.Left
 			return
 		end
-		local info = PetsView.detail(choice.petId, choice.variant)
+		local payload = State.get()
+		local info = PetsView.detail(
+			choice.petId,
+			choice.variant,
+			PetsView.anchor(if payload then payload.profile.pets else {})
+		)
 		local parts = PetsView.detailParts(info, beginner, battleOpen)
 		local pet = Config.petById[choice.petId]
 
@@ -837,6 +842,11 @@ function Pets.mount(
 			index = string.format("Index  %d/%d", counts.seen, counts.total),
 			fruit = string.format("Fruit  %d/%d", counts.fruitSeen, counts.fruitTotal),
 		}
+		if gui.AbsoluteSize.X < 500 then
+			labels.pets = string.format("Pets %d", counts.owned)
+			labels.index = string.format("Index %d/%d", counts.seen, counts.total)
+			labels.fruit = string.format("Fruit %d/%d", counts.fruitSeen, counts.fruitTotal)
+		end
 		for key, view in tabButtons do
 			view.button.Visible = table.find(parts.tabs, key) ~= nil
 			view.button.Text = Theme.label(labels[key])
@@ -1058,6 +1068,25 @@ function Pets.mount(
 		end
 		close.Size =
 			UDim2.fromOffset(if l.compact then 80 else 100, math.min(sizes.minTap, s.header))
+		local portrait = gui.AbsoluteSize.X < 500
+		tabsFrame.AnchorPoint = Vector2.new(0, if portrait then 0 else 0.5)
+		tabsFrame.Position = if portrait then UDim2.fromOffset(0, 44) else UDim2.fromScale(0, 0.5)
+		tabsFrame.Size = if portrait then UDim2.fromOffset(0, 32) else UDim2.fromScale(0, 1)
+		close.Position = if portrait then UDim2.new(1, 0, 0, 18) else UDim2.fromScale(1, 0.5)
+		if portrait then
+			close.Size = UDim2.fromOffset(80, 36)
+		end
+		for _, view in tabButtons do
+			local tabPad = view.button:FindFirstChildOfClass("UIPadding") :: UIPadding
+			tabPad.PaddingLeft = UDim.new(0, if portrait then 4 else 16)
+			tabPad.PaddingRight = tabPad.PaddingLeft
+			view.button.AutomaticSize = if portrait
+				then Enum.AutomaticSize.None
+				else Enum.AutomaticSize.X
+			if portrait then
+				view.button.Size = UDim2.fromOffset(math.floor((l.header.w - 16) / 3), 32)
+			end
+		end
 		local strip = l.guide
 		guideBar.Visible = strip ~= nil
 		if strip ~= nil then

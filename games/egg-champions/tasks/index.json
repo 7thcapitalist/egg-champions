@@ -424,6 +424,13 @@
       "file": "45-visual-rework.md",
       "depends_on": ["44"],
       "status": "done"
+    },
+    {
+      "id": "46",
+      "title": "World identity, feedback and lasting pet value",
+      "file": "46-worlds-and-pet-value.md",
+      "depends_on": ["45"],
+      "status": "done"
     }
   ]
 }

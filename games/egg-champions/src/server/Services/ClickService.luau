@@ -64,6 +64,7 @@ function ClickService.coinsPerClick(player: Player, profile: Profile): number
 		rebirths = profile.rebirths,
 		completedEggs = PetIndex.completedEggs(profile.index),
 		passMultiplier = Passes.coinMultiplier(player),
+		legacyAnchor = Coins.legacyAnchor(profile.pets),
 	})
 end
 
@@ -98,10 +99,11 @@ function ClickService.teamClickPower(_player: Player, profile: Profile): { [stri
 		byUid[pet.uid] = pet
 	end
 	local powers: { [string]: number } = {}
+	local anchor = Coins.legacyAnchor(profile.pets)
 	for _, uid in profile.team do
 		local pet = byUid[uid]
 		if pet ~= nil then
-			powers[uid] = Coins.clickPowerOf({ petId = pet.petId, variant = pet.variant })
+			powers[uid] = Coins.clickPowerOf({ petId = pet.petId, variant = pet.variant }, anchor)
 		end
 	end
 	return powers
