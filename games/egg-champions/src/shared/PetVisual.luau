@@ -41,6 +41,7 @@ local EffectsBudget = require(script.Parent.visual.EffectsBudget)
 local PetLook = require(script.Parent.visual.PetLook)
 local PetPortrait = require(script.Parent.visual.PetPortrait)
 local PetMotion = require(script.Parent.visual.PetMotion)
+local BattleMotion = require(script.Parent.visual.BattleMotion)
 local VariantFx = require(script.Parent.visual.VariantFx)
 local PetFinishing = require(script.Parent.visual.PetFinishing)
 
@@ -51,6 +52,47 @@ local LEADER_MASCOTS =
 
 -- A bounded shared loop animates only visible portraits, at 30 Hz.
 local previews: { [ViewportFrame]: Model } = setmetatable({}, { __mode = "k" }) :: any
+type Reaction = {
+	model: Model,
+	base: CFrame,
+	started: number,
+	duration: number,
+	kind: string,
+	petId: string,
+	height: number,
+}
+local reactions: { [ViewportFrame]: Reaction } = setmetatable({}, { __mode = "k" }) :: any
+
+function PetVisual.clearReactions(parent: Instance)
+	for view, reaction in reactions do
+		if view == parent or view:IsDescendantOf(parent) then
+			if reaction.model.Parent ~= nil then
+				reaction.model:PivotTo(reaction.base)
+				PetMotion.pose(reaction.model, os.clock(), 0)
+			end
+			reactions[view] = nil
+		end
+	end
+end
+
+function PetVisual.react(parent: Instance, kind: string, seconds: number)
+	PetVisual.clearReactions(parent)
+	for view, model in previews do
+		if (view == parent or view:IsDescendantOf(parent)) and model.Parent ~= nil then
+			-- Cache articulation from the resting pivot before moving the whole model.
+			PetMotion.pose(model, os.clock(), 0)
+			reactions[view] = {
+				model = model,
+				base = model:GetPivot(),
+				started = os.clock(),
+				duration = math.max(seconds, 0.01),
+				kind = kind,
+				petId = model:GetAttribute("PetId") or "",
+				height = model:GetExtentsSize().Y,
+			}
+		end
+	end
+end
 local function previewVisible(view: ViewportFrame): boolean
 	local at: Instance? = view
 	local point, size = view.AbsolutePosition, view.AbsoluteSize
@@ -87,9 +129,40 @@ if RunService:IsClient() then
 		end
 		elapsed = 0
 		local count = 0
+		-- Restore even hidden views; closing a panel cannot strand a displaced model.
+		for view, reaction in reactions do
+			if reaction.model.Parent == nil or previews[view] ~= reaction.model then
+				reactions[view] = nil
+			elseif
+				os.clock() - reaction.started >= reaction.duration or not previewVisible(view)
+			then
+				reaction.model:PivotTo(reaction.base)
+				PetMotion.pose(reaction.model, os.clock(), 0)
+				reactions[view] = nil
+			end
+		end
 		for view, model in previews do
 			if model.Parent ~= nil and previewVisible(view) then
-				PetMotion.pose(model, os.clock(), 0)
+				local reaction = reactions[view]
+				local effort = 0
+				if reaction ~= nil then
+					local pose = BattleMotion.sample(
+						reaction.petId,
+						reaction.kind,
+						(os.clock() - reaction.started) / reaction.duration
+					)
+					model:PivotTo(
+						reaction.base
+							* CFrame.new(
+								pose.x * reaction.height,
+								pose.y * reaction.height,
+								pose.z * reaction.height
+							)
+							* CFrame.Angles(pose.pitch, pose.yaw, pose.roll)
+					)
+					effort = pose.effort
+				end
+				PetMotion.pose(model, os.clock(), 0, nil, effort)
 				count += 1
 				if count >= 12 then
 					break
@@ -468,6 +541,7 @@ function PetVisual.view(
 	viewport.Destroying:Connect(function()
 		sizeConnection:Disconnect()
 		previews[viewport] = nil
+		reactions[viewport] = nil
 	end)
 
 	-- ModelLibrary may still be loading when a card opens. Upgrade this one

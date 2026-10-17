@@ -26,7 +26,11 @@ function Landmarks.build(theme: string, origin: Vector3, parent: Folder)
 	end
 	local function ball(name: string, size: Vector3, pos: Vector3, color: Color3): Part
 		local p = part(name, size, CFrame.new(pos), color)
-		p.Shape = Enum.PartType.Ball
+		-- PartType.Ball renders a sphere using the narrowest dimension. A sphere
+		-- mesh preserves authored nonuniform sizes for crowns, vines and branches.
+		local mesh = Instance.new("SpecialMesh")
+		mesh.MeshType = Enum.MeshType.Sphere
+		mesh.Parent = p
 		return p
 	end
 	local function cylinder(
@@ -320,6 +324,223 @@ function Landmarks.build(theme: string, origin: Vector3, parent: Folder)
 				CFrame.new(-59, 0.15, i * 3),
 				Color3.fromRGB(130, 113, 140)
 			)
+		end
+	end
+	-- Two composed scenes balance the large landmark on the left. The footprints
+	-- are reserved in Scenery before random dressing. Detail stays off the paths.
+	local garden = Vector3.new(46, 0, 65)
+	local vista = Vector3.new(65, 0, -55)
+	if theme == "green_meadow" then
+		-- A flowering pergola frames the distant ancient tree from the return loop.
+		cylinder("GardenTerrace", 17, 0.4, garden + Vector3.new(0, 0.2, 0), cream)
+		for side = -1, 1, 2 do
+			for depth = -1, 1, 2 do
+				local p = garden + Vector3.new(side * 10, 0, depth * 9)
+				cylinder("PergolaFoot", 1.8, 1, p + Vector3.new(0, 0.5, 0), cream)
+				cylinder("PergolaPost", 0.7, 12, p + Vector3.new(0, 6, 0), wood)
+			end
+			beam(
+				"PergolaRail",
+				garden + Vector3.new(side * 10, 12, -11),
+				garden + Vector3.new(side * 10, 12, 11),
+				1,
+				wood
+			)
+		end
+		for i = -2, 2 do
+			beam(
+				"PergolaRafter",
+				garden + Vector3.new(-12, 12.6, i * 4.5),
+				garden + Vector3.new(12, 12.6, i * 4.5),
+				0.65,
+				wood
+			)
+			ball(
+				"FloweringVine",
+				Vector3.new(6, 2.5, 5),
+				garden + Vector3.new(9, 12.8, i * 4),
+				Color3.fromRGB(88, 159, 100)
+			)
+			for j = 0, 2 do
+				ball(
+					"VineFlower",
+					Vector3.one * 1.3,
+					garden + Vector3.new(7.5 + j * 1.4, 13.7, i * 4),
+					Color3.fromRGB(245, 165 + j * 12, 193)
+				)
+			end
+		end
+		-- Terraced spring: broad shapes read from spawn, smaller reeds at its edge.
+		for i = 0, 2 do
+			cylinder(
+				"SpringTerrace",
+				18 - i * 4,
+				1.5,
+				vista + Vector3.new(0, 0.8 + i * 1.3, -i * 2),
+				Color3.fromRGB(118, 172 + i * 8, 103)
+			)
+		end
+		cylinder(
+			"SpringWater",
+			8,
+			0.15,
+			vista + Vector3.new(0, 4.55, -4),
+			Color3.fromRGB(75, 190, 196)
+		)
+		for i = 0, 5 do
+			local a = i * math.pi / 5
+			ball(
+				"SpringStone",
+				Vector3.new(4, 3, 3),
+				vista + Vector3.new(math.cos(a) * 10, 4.3, -4 - math.sin(a) * 8),
+				cream
+			)
+		end
+		local mist =
+			ball("SpringSource", Vector3.new(2, 2, 2), vista + Vector3.new(0, 5, -10), teal)
+		emitter(
+			mist,
+			Color3.fromRGB(204, 255, 236),
+			"rbxasset://textures/particles/sparkles_main.dds",
+			2,
+			2
+		)
+	elseif theme == "coral_coast" then
+		-- A low tidal pool and split coral arch give the beach an organic silhouette.
+		cylinder("TidalRim", 18, 0.6, vista + Vector3.new(0, 0.3, 0), cream)
+		cylinder(
+			"TidalWater",
+			15.5,
+			0.12,
+			vista + Vector3.new(0, 0.66, 0),
+			Color3.fromRGB(56, 179, 193)
+		)
+		for side = -1, 1, 2 do
+			for i = 0, 4 do
+				local p = vista + Vector3.new(side * (12 - i * 1.4), 2 + i * 3.2, -6)
+				ball(
+					"CoralArch",
+					Vector3.new(5 - i * 0.6, 8, 4 - i * 0.4),
+					p,
+					Color3.fromRGB(234, 119 + i * 10, 128)
+				)
+			end
+			for i = 0, 2 do
+				local a = vista + Vector3.new(side * (11 - i * 1.4), 5 + i * 3.2, -6)
+				local b = a + Vector3.new(side * (6 - i), 4, 0)
+				local branch = ball(
+					"CoralBranch",
+					Vector3.new(2.2, 2.2, (b - a).Magnitude + 1.5),
+					(a + b) / 2,
+					Color3.fromRGB(251, 170, 155)
+				)
+				branch.CFrame = CFrame.new(origin) * CFrame.lookAt((a + b) / 2, b)
+			end
+		end
+		for i = -2, 2 do
+			cylinder("TidalStep", 2.3, 0.8, vista + Vector3.new(i * 5.5, 0.8, 5), cream)
+		end
+		-- Striped sun pavilion: a sheltered view back over the harbor.
+		cylinder("PavilionDeck", 16, 0.5, garden + Vector3.new(0, 0.25, 0), wood:Lerp(cream, 0.4))
+		for x = -1, 1, 2 do
+			for z = -1, 1, 2 do
+				cylinder("PavilionPost", 0.5, 11, garden + Vector3.new(x * 10, 5.5, z * 8), cream)
+			end
+		end
+		for i = -2, 2 do
+			for side = -1, 1, 2 do
+				part(
+					"StripedCanopy",
+					Vector3.new(5, 0.5, 11),
+					CFrame.new(garden + Vector3.new(i * 4.5, 12, side * 4.5))
+						* CFrame.Angles(side * math.rad(17), 0, 0),
+					if i % 2 == 0 then cream else teal
+				).CanCollide =
+					false
+			end
+		end
+		for side = -1, 1, 2 do
+			ball(
+				"ShellSeat",
+				Vector3.new(5, 1.4, 4),
+				garden + Vector3.new(side * 7, 1.4, 4),
+				Color3.fromRGB(248, 183, 154)
+			)
+		end
+	else
+		-- Cooling hexagonal-looking column clusters frame a steaming mineral pool.
+		cylinder(
+			"MineralRim",
+			18,
+			0.8,
+			vista + Vector3.new(0, 0.4, 0),
+			Color3.fromRGB(113, 92, 126)
+		)
+		local water = cylinder(
+			"MineralPool",
+			13,
+			0.15,
+			vista + Vector3.new(0, 0.86, 0),
+			Color3.fromRGB(100, 204, 200)
+		)
+		emitter(
+			water,
+			Color3.fromRGB(204, 222, 232),
+			"rbxasset://textures/particles/smoke_main.dds",
+			3,
+			3
+		)
+		for i = 0, 8 do
+			local a = math.pi * (0.08 + i * 0.105)
+			local h = 9 + (i % 3) * 4
+			local p = vista + Vector3.new(math.cos(a) * 16, h / 2, -math.sin(a) * 16)
+			part(
+				"CoolingColumn",
+				Vector3.new(5, h, 5),
+				CFrame.new(p) * CFrame.Angles(0, a, 0),
+				Color3.fromRGB(76 + i % 3 * 9, 69, 92)
+			)
+			part(
+				"ColumnCap",
+				Vector3.new(5.2, 0.7, 5.2),
+				CFrame.new(p + Vector3.new(0, h / 2, 0)) * CFrame.Angles(0, a, 0),
+				Color3.fromRGB(149, 129, 160)
+			)
+		end
+		-- An open obsidian ring with suspended crystal shards, away from the portal.
+		cylinder(
+			"ObsidianDais",
+			16,
+			0.4,
+			garden + Vector3.new(0, 0.2, 0),
+			Color3.fromRGB(74, 60, 87)
+		)
+		for i = 0, 4 do
+			local a = math.pi * (0.12 + i * 0.19)
+			local p = garden + Vector3.new(math.cos(a) * 12, 0, math.sin(a) * 12)
+			ball(
+				"CrystalSocket",
+				Vector3.new(6, 3, 5),
+				p + Vector3.new(0, 1.2, 0),
+				Color3.fromRGB(105, 81, 118)
+			)
+			local crystal = part(
+				"CrystalShard",
+				Vector3.new(2.4, 9 + i % 2 * 4, 2.4),
+				CFrame.new(p + Vector3.new(0, 6, 0)) * CFrame.Angles(0.2, a, 0.25),
+				Color3.fromRGB(255, 149 + i * 12, 81),
+				Enum.Material.Neon
+			)
+			crystal.CanCollide = false
+			if i == 2 then
+				emitter(
+					crystal,
+					crystal.Color,
+					"rbxasset://textures/particles/sparkles_main.dds",
+					2,
+					2
+				)
+			end
 		end
 	end
 	-- Scenic resting spots are outside the walking loop and interaction corridors.

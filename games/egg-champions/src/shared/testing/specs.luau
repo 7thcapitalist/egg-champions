@@ -46,6 +46,7 @@ return {
 	visualSpecs["PetPortrait.spec"],
 	visualSpecs["Effects.spec"],
 	visualSpecs["BattleEffects.spec"],
+	visualSpecs["BattleMotion.spec"],
 	visualSpecs["Progress.spec"],
 	visualSpecs["VariantView.spec"],
 	visualSpecs["ModelTemplates.spec"],

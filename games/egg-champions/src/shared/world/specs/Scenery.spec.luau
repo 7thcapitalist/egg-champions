@@ -166,8 +166,10 @@ return function()
 						expect(covered(portal.position.x, portal.position.z)).toBeTrue()
 					end
 				end
-				-- Gym, portal, landmark connector, boardwalk and six scenic loop segments.
-				expect(#s.paths).toEqual(10)
+				-- Main routes, six loop segments and two authored scene approaches.
+				expect(#s.paths).toEqual(12)
+				expect(covered(island.origin.x + 65, island.origin.z - 55)).toBeTrue()
+				expect(covered(island.origin.x + 46, island.origin.z + 65)).toBeTrue()
 			end
 		end)
 

@@ -1,0 +1,62 @@
+{
+  "source_sha256": "b5f1a7dadde2eb76f782c8a5d36ba6af8f01e9ff136fd0c1040bfc330555850d",
+  "reviewer": "Codex Studio inspection",
+  "date": "2026-10-17",
+  "environment": "Studio",
+  "limitations": "Custom desktop 958x540 and portrait390x844; not physical-phone validation. Temporary profiles; current published save/rejoin and purchases untested. Composition and animation not approved.",
+  "viewports": [
+    "desktop",
+    "mobile"
+  ],
+  "categories": {
+    "composition": {
+      "score": 3.75,
+      "observation": "Two authored secondary scenes per biome; common flat hub layout and broad ground still visible.",
+      "evidence": [
+        "reports/authored-scenes-2026-10-17/meadow.jpg",
+        "reports/authored-scenes-2026-10-17/coast.jpg",
+        "reports/authored-scenes-2026-10-17/volcano.jpg",
+        "reports/authored-scenes-2026-10-17/pergola.jpg",
+        "reports/authored-scenes-2026-10-17/coral.jpg",
+        "reports/authored-scenes-2026-10-17/mineral-pool.jpg"
+      ]
+    },
+    "models": {
+      "score": 4,
+      "observation": "Hero silhouettes readable; ellipsoid correction joins the coral and preserves crown/vine proportions. Smaller props remain primitive.",
+      "evidence": [
+        "reports/authored-scenes-2026-10-17/hero-motion-sheet.jpg",
+        "reports/authored-scenes-2026-10-17/coral.jpg"
+      ]
+    },
+    "animation": {
+      "score": 3.75,
+      "observation": "Real battle turn moved Tidewhale root and restored it; cancellation/hiding/replacement checks passed. Small portrait arena and shared families remain limitations.",
+      "evidence": [
+        "reports/authored-scenes-2026-10-17/motion-runtime.json",
+        "reports/authored-scenes-2026-10-17/battle-ready.jpg",
+        "reports/authored-scenes-2026-10-17/hero-motion-sheet.jpg"
+      ]
+    },
+    "feedback": {
+      "score": 4,
+      "observation": "Real hatch/equip showed highlighted actions and +2 to +14 click gain; recoil and attack recorded.",
+      "evidence": [
+        "reports/authored-scenes-2026-10-17/portrait-eggs.jpg",
+        "reports/authored-scenes-2026-10-17/portrait-equip.jpg",
+        "reports/authored-scenes-2026-10-17/portrait-complete.jpg",
+        "reports/authored-scenes-2026-10-17/motion-runtime.json"
+      ]
+    },
+    "onboarding": {
+      "score": 4,
+      "observation": "Fresh temporary-profile hatch/equip flow completed with actual mouse input at 390x844. Full first gym journey not tested.",
+      "evidence": [
+        "reports/authored-scenes-2026-10-17/portrait-hud.jpg",
+        "reports/authored-scenes-2026-10-17/portrait-eggs.jpg",
+        "reports/authored-scenes-2026-10-17/portrait-equip.jpg",
+        "reports/authored-scenes-2026-10-17/portrait-complete.jpg"
+      ]
+    }
+  }
+}

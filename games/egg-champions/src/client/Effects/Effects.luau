@@ -934,9 +934,11 @@ function Effects.playBattle(event: any): number
 	end
 	if cue.hop then
 		hop(side)
+		PetVisual.react(side.block, "attack", cue.seconds)
 	end
 	if cue.hit then
 		hit(side)
+		PetVisual.react(side.block, "hit", cue.seconds)
 	end
 	local look = cue.burst
 	if look ~= nil then
@@ -995,6 +997,7 @@ function Effects.resetBattle()
 	end
 	table.clear(battleTweens)
 	for _, side in sides do
+		PetVisual.clearReactions(side.block)
 		side.block.Position = side.base
 		side.scale.Scale = 1
 		side.flash.BackgroundTransparency = 1

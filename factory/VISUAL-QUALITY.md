@@ -35,6 +35,27 @@ All models, characters and world compositions must remain original.
 
 ## Review standard
 
+### Prevention rules from scene and animation reviews
+
+- Reserve authored scene footprints before procedural props. Join them to a
+  walkable loop and inspect arrival, player-height approach and overview cameras.
+  Each secondary scene needs a silhouette and a relationship to the main landmark;
+  filling empty ground with random props is not a composition pass.
+- Keep spawn, egg, gym and portal corridors free of decorative collision. Measure
+  actual generated part counts, including authored structures; estimates alone
+  can miss an oversized landmark.
+- Verify primitive dimensions in the renderer. Roblox ball parts can appear
+  spherical despite nonuniform Size; use an appropriately scaled sphere mesh
+  when the silhouette depends on an ellipsoid. Inspect connected branches at
+  player height, because numeric overlap alone does not prove visual contact.
+- For creature combat, specify anticipation, strike, recoil and recovery in model
+  space. UI translation alone does not demonstrate creature animation. Check a
+  rendered event sequence, reset on interruption, hidden views and model replacement.
+- Reuse bounded normalized motion curves and one presentation dispatcher. Test
+  endpoints and framing bounds without changing server combat timing or stats.
+  Shared motion families are acceptable, but do not describe them as bespoke
+  animations for every species. Show distinctive hero silhouettes in motion.
+
 Review desktop and phone-sized views for each biome and main interaction.
 Score composition, models, animation, feedback and onboarding from 1 to 5:
 1 broken, 2 placeholder/unclear, 3 functional but needs polish, 4 polished and

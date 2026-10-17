@@ -433,6 +433,7 @@
       "status": "done"
     },
     {"id":"47","title":"Composition, locomotion and pacing review","file":"47-composition-and-locomotion.md","depends_on":["46"],"status":"done"},
-    {"id":"48","title":"Reachable actions in short viewports","file":"48-short-viewport.md","depends_on":["47"],"status":"done"}
+    {"id":"48","title":"Reachable actions in short viewports","file":"48-short-viewport.md","depends_on":["47"],"status":"done"},
+    {"id":"49","title":"Authored scenes and creature battle motion","file":"49-authored-scenes-and-battle-motion.md","depends_on":["48"],"status":"done"}
   ]
 }

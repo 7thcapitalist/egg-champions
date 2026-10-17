@@ -114,7 +114,7 @@ Scenery.FENCE_PARTS = 3
 Scenery.LIGHT_PARTS = 1
 -- An upper bound on the parts of the game props every world has (sign,
 -- arrival pad, gym, portal), and of each egg stand, for the budget estimate.
-Scenery.FIXED_PARTS = 360
+Scenery.FIXED_PARTS = 440
 Scenery.STAND_PARTS = 13
 
 -- Clear zone radii around the game props, in studs.
@@ -434,7 +434,8 @@ local function addCircles(
 	pad: number
 )
 	for _ = 1, count do
-		for _ = 1, TRIES_PER_ITEM do
+		-- Large features need more candidates once authored footprints are reserved.
+		for _ = 1, TRIES_PER_ITEM * 4 do
 			local r = between(random, radius.min, radius.max)
 			local x, z = somewhere(scenery, random, r + pad)
 			local ok = Scenery.clearOfSites(scenery, x, z, r + pad)
@@ -616,6 +617,20 @@ function Scenery.forIsland(plan: Layout.Plan, island: Layout.Island): WorldScene
 	-- Authored landmark footprints and their access lane, before random scenery.
 	table.insert(scenery.clear, { x = o.x - 64, z = o.z - 57, r = 27 })
 	table.insert(scenery.clear, { x = o.x - 58, z = o.z + 48, r = 25 })
+	-- Secondary scenes have reserved footprints, so seeded props cannot grow
+	-- through their structures. Their access paths join the existing loop.
+	table.insert(scenery.clear, { x = o.x + 65, z = o.z - 55, r = 22 })
+	table.insert(scenery.clear, { x = o.x + 46, z = o.z + 65, r = 19 })
+	table.insert(scenery.paths, {
+		a = { x = o.x + 60, z = o.z },
+		b = { x = o.x + 65, z = o.z - 55 },
+		width = 7,
+	})
+	table.insert(scenery.paths, {
+		a = { x = o.x + 42, z = o.z + 40 },
+		b = { x = o.x + 46, z = o.z + 65 },
+		width = 7,
+	})
 	table.insert(
 		scenery.paths,
 		{ a = { x = o.x - 58, z = o.z }, b = { x = o.x - 58, z = o.z + 90 }, width = 18 }

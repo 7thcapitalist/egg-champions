@@ -19,15 +19,15 @@
       "id": "planned",
       "status": "passed",
       "attempts": 0,
-      "note": "48 task briefs; planned gate passed with no dependency cycle.",
-      "updated": "2026-10-17T04:43:17Z"
+      "note": "49 tasks; planned gate passed 2026-10-17.",
+      "updated": "2026-10-17T05:04:33Z"
     },
     {
       "id": "built",
       "status": "passed",
       "attempts": 22,
-      "note": "48 tasks done; 866 Luau tests and six self-tests, Rojo, Selene and StyLua pass. TEST v92 reopened with 137 matching sources. Short HUD/hatch/equip repaired; actual portrait layouts captured. Final art, median-five pacing and live release checks remain open.",
-      "updated": "2026-10-17T04:43:17Z"
+      "note": "49 tasks; built gate passed; 871 Luau tests plus six self-tests; TEST v95 reopened, 139 matching sources. Visual composition/animation remain below approval.",
+      "updated": "2026-10-17T05:04:33Z"
     },
     {
       "id": "assets",

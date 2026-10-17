@@ -4,9 +4,12 @@ Atualizado em 2026-10-17. Trabalho local no Codex; nao representa uma execucao a
 
 ## Entrega atual
 
-- 48 tarefas no indice, todas done.
-- TEST publicado na versao 92 e reaberto da nuvem: 137 fontes conferidas com o build local.
-- 866 testes Luau e seis autotestes; gates planned e built passaram, incluindo Rojo, Selene e StyLua.
+- 49 tarefas no indice, todas done.
+- TEST publicado na versao 95 e reaberto da nuvem: 139 fontes conferidas com o build local.
+- 871 testes Luau e seis autotestes; gates planned e built passaram, incluindo Rojo, Selene e StyLua.
+- Cenarios secundarios proprios nos tres biomas, silhuetas corrigidas e movimentos 3D de ataque/recuo dos pets.
+- Fluxo real de hatch/equip repetido em 390x844: Shiny Puddlet equipado, +2 para +14 por clique, perfil temporario do Studio.
+- Relatorio atual: [authored-scenes-2026-10-17/REVIEW.md](authored-scenes-2026-10-17/REVIEW.md).
 - Corte do menu em tela baixa corrigido; HATCH visivel e EQUIP revelado automaticamente no inventario com rolagem.
 - Capturas portrait reais de layout em 320x720 e 390x844 com resolucao personalizada no Studio.
 - Relatorio: [short-viewport-2026-10-17/REVIEW.md](short-viewport-2026-10-17/REVIEW.md).
@@ -14,4 +17,4 @@ Atualizado em 2026-10-17. Trabalho local no Codex; nao representa uma execucao a
 
 ## Ainda aberto para lancamento
 
-Arte/composicao e animacao ainda em 3.5/5. Simulacao atual tem mediana de sete rebirths contra alvo de cinco. Comparacao completa de save/rejoin publicado, compra nova de passes e desempenho em celular fisico continuam sem aprovacao completa. Studio usa perfil temporario por API desativada. Os estagios worlds, playtested e published_test seguem pendentes porque seus gates ainda nao existem. Nenhuma publicacao em producao.
+Composicao e animacao ainda em 3.75/5 na revisao atual, abaixo do minimo quatro. Simulacao atual tem mediana de sete rebirths contra alvo de cinco. Comparacao completa de save/rejoin publicado, compra nova de passes e desempenho em celular fisico continuam sem aprovacao completa. Studio usa perfil temporario por API desativada. Os estagios worlds, playtested e published_test seguem pendentes porque seus gates ainda nao existem. Nenhuma publicacao em producao.
