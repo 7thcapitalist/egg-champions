@@ -1,5 +1,23 @@
 # Publicacao TESTE e aceitacao
 
+## Estado atual: versao 95
+
+- Publicacao confirmada pelo Output em 2026-10-17 01:02, America/New_York: publish notes v95 e Published new changes in Egg Champions Test.
+- TESTE reaberto da nuvem: place 101737317546942, universe 10769019206, PlaceVersion 95. As 139 fontes conferem por hash com o build; nenhuma fixture ou atributo de teste. Workspace de edicao: Terrain, SpawnLocation e Camera.
+- Cenarios secundarios nos tres biomas: pergola e fonte em terracos; pavilhao listrado e coral ramificado; piscina mineral e jardim de cristais. Footprints reservados e caminhos de acesso mantem a decoracao fora das rotas principais.
+- Ataque e recuo agora movem os modelos em 3D. Trinta especies usam oito familias de movimento, com curvas distintas para Tidewhale, Thundrake e Magmaroc. Um turno real pela interface e verificacoes de cancelamento, ocultacao e troca de modelo confirmaram retorno da pose no Studio.
+- Fluxo inicial repetido com entrada real pela interface em viewport efetiva 390x844: chocar Shiny Puddlet, abrir Pets, equipar e fechar; ganho passou de +2 para +14 por clique. Perfil temporario e passes ja possuidos ativos; nao e teste de save nem de progressao sem passes.
+- 871 testes Luau e seis self-tests; Rojo, Selene e StyLua passaram. A fabrica teve 18 testes Python aprovados. Evidencias: [revisao v95](reports/authored-scenes-2026-10-17/REVIEW.md), [fontes reabertas](reports/authored-scenes-2026-10-17/cloud-reopened.json) e [Output](reports/authored-scenes-2026-10-17/publish-output.txt).
+- Publicar e passar built nao significam aceitar o lancamento. A revisao visual atual reprova composicao e animacao, ambas em 3,75/5. O gate economy_tuned agora considera rebirths e falha na mediana sete contra meta cinco. Save/rejoin completo nesta versao, novas compras de passes e telefone fisico continuam sem validacao completa. Os gates worlds, playtested e published_test permanecem sem implementacao.
+
+## Interface em telas baixas: versao 92
+
+- TESTE publicado em 2026-10-17 e reaberto da nuvem na PlaceVersion 92: 137 fontes iguais ao build local, sem fixtures.
+- Menu horizontal em telas baixas, HATCH acessivel e EQUIP revelado automaticamente no inventario com rolagem; CLOSE permanece fixo. Layout nao restaura a faixa opcional de equipe sobre o menu ao trocar de tela.
+- Fluxo de hatch/equip exercitado em viewport efetiva 720x239,333. Capturas em 320x720 e 390x844 usaram resolucao personalizada do Studio; nao representam teste em telefone fisico.
+- 866 testes Luau e seis self-tests; gates planned e built passaram. Evidencias: [revisao v92](reports/short-viewport-2026-10-17/REVIEW.md) e [fontes reabertas](reports/short-viewport-2026-10-17/cloud-reopened.json).
+- Essa entrega corrigiu a limitacao de tela baixa registrada na revisao v88. Nao validou save/rejoin publicado, compras novas ou progressao completa.
+
 ## Composicao e movimento: versao 88
 
 - Publicada em 2026-10-17 00:20 local e reaberta da nuvem: place 101737317546942, universe 10769019206, PlaceVersion 88, 137 scripts iguais ao build e nenhuma fixture.
