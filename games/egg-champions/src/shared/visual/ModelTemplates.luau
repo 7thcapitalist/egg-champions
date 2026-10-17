@@ -30,6 +30,8 @@ export type Entry = {
 	mesh_id: number,
 	texture_id: number,
 	height: number,
+	parts: { any }?,
+	flying: boolean?,
 }
 
 export type Table = {

@@ -4,8 +4,8 @@
 
 	Builder.buildAll reads the plan from shared/world/Layout (which reads
 	Config.worlds) and the scenery plan from shared/world/Scenery, and builds,
-	for each world, one island: terrain (ground, shores, water, hills, ponds,
-	lava, paths, from server/World/Terrain), scenery props (trees, rocks,
+	for each world, one constructed island (ground, cliffs, water, hills, ponds,
+	lava, paths, from server/World/Landscape), scenery props (trees, rocks,
 	fences, lights), a name sign, one egg stand per egg, one gym arena and one
 	portal. Each world's instances go under one folder in Workspace,
 	"World_<id>", tagged with the Generated attribute, so a rebuild clears and
@@ -38,7 +38,7 @@ local PetLook = require(Shared:WaitForChild("visual"):WaitForChild("PetLook"))
 local WorldPalette = require(Shared:WaitForChild("world"):WaitForChild("WorldPalette"))
 local WorldNames = require(Shared:WaitForChild("world"):WaitForChild("Names"))
 local Kit = require(script.Parent:WaitForChild("Kit"))
-local WorldTerrain = require(script.Parent:WaitForChild("Terrain"))
+local WorldTerrain = require(script.Parent:WaitForChild("Landscape"))
 
 -- Each egg's configured model height in studs (GameConfig.models, built from
 -- assets/models.json), so a stand's sign clears its real egg. An egg with no
@@ -268,12 +268,13 @@ function Builder.buildAll(): Built
 		built.folders[island.worldId] = folder
 
 		local scenery = sceneries[island.worldId]
-		WorldTerrain.build(scenery)
+		WorldTerrain.build(scenery, folder)
 		Kit.sign(facing(scenery.signSpot, scenery.signLook), palette, island.name).Parent = folder
 		if island.worldIndex ~= plan.islands[1].worldIndex then
 			Kit.arrivalPad(at(plan.arrivals[island.worldId]), palette).Parent = folder
 		end
 		buildScenery(folder, scenery, palette)
+		task.wait()
 	end
 
 	local heights = eggHeights()
@@ -353,11 +354,15 @@ function Builder.buildAll(): Built
 			)
 		end
 		folder.Parent = Workspace
+		task.wait()
 	end
 
 	local spawn = Workspace:FindFirstChildOfClass("SpawnLocation")
 	if spawn ~= nil then
 		spawn.CFrame = at(plan.spawn) * CFrame.new(0, spawn.Size.Y / 2, 0)
+		spawn.Transparency = 1
+		spawn.CanCollide = false
+		spawn.Neutral = true
 	else
 		warn("[World] no SpawnLocation in Workspace; players spawn at the origin")
 	end

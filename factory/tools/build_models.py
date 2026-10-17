@@ -30,6 +30,7 @@ touching the real files. Standard library only.
 import argparse
 import hashlib
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -98,6 +99,31 @@ def build(manifest_bytes, pets, eggs):
         height = entry.get("height_studs")
         if isinstance(height, bool) or not isinstance(height, (int, float)) or not height > 0:
             errors.append("%s: height_studs %r is not a positive number" % (mid, height))
+        if "parts" in entry:
+            parts = entry["parts"]
+            if not isinstance(parts, list) or not 1 <= len(parts) <= 8:
+                errors.append("%s: parts must contain 1 to 8 mesh pieces" % mid)
+                continue
+            names = set()
+            for part in parts:
+                if not isinstance(part, dict):
+                    errors.append("%s: invalid mesh piece" % mid)
+                    continue
+                name = part.get("name")
+                if not isinstance(name, str) or not name or name in names:
+                    errors.append("%s: mesh piece names must be unique nonempty strings" % mid)
+                else:
+                    names.add(name)
+                for field in ("mesh_id", "texture_id"):
+                    if asset_id(part.get(field)) is None:
+                        errors.append("%s: piece %s has invalid %s" % (mid, name, field))
+                for field, length in (("size", 3), ("cframe", 12)):
+                    values = part.get(field)
+                    if (not isinstance(values, list) or len(values) != length
+                            or any(isinstance(n, bool) or not isinstance(n, (int, float))
+                                   or not math.isfinite(n) or (field == "size" and n <= 0)
+                                   for n in values)):
+                        errors.append("%s: piece %s has invalid %s" % (mid, name, field))
 
     for cid in list(pets) + list(eggs):
         if cid not in by_id:
@@ -119,6 +145,14 @@ def build(manifest_bytes, pets, eggs):
             for cid in list(pets) + list(eggs)
         ],
     }
+    for entry in table["entries"]:
+        source = by_id[entry["id"]]
+        if "parts" in source:
+            entry["parts"] = [dict(piece, mesh_id=asset_id(piece["mesh_id"]),
+                                   texture_id=asset_id(piece["texture_id"]))
+                              for piece in source["parts"]]
+            entry["visual_style"] = "FacetedCollector"
+            entry["flying"] = bool(source.get("flying", False))
     return table, []
 
 

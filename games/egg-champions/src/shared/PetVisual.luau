@@ -35,13 +35,68 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local ContentProvider = game:GetService("ContentProvider")
 
 local EffectsBudget = require(script.Parent.visual.EffectsBudget)
 local PetLook = require(script.Parent.visual.PetLook)
 local PetPortrait = require(script.Parent.visual.PetPortrait)
+local PetMotion = require(script.Parent.visual.PetMotion)
 local VariantFx = require(script.Parent.visual.VariantFx)
 
 local PetVisual = {}
+-- Gym opponents use the same original creature art as the collection.
+local LEADER_MASCOTS =
+	{ grass = "leafpup", fire = "emberkit", water = "brookdeer", electric = "voltibun" }
+
+-- A bounded shared loop animates only visible portraits, at 30 Hz.
+local previews: { [ViewportFrame]: Model } = setmetatable({}, { __mode = "k" }) :: any
+local function previewVisible(view: ViewportFrame): boolean
+	local at: Instance? = view
+	local point, size = view.AbsolutePosition, view.AbsoluteSize
+	while at ~= nil do
+		if at:IsA("ScreenGui") then
+			return at.Enabled
+		end
+		if at:IsA("GuiObject") then
+			if not at.Visible then
+				return false
+			end
+			if at.ClipsDescendants then
+				local p, s = at.AbsolutePosition, at.AbsoluteSize
+				if
+					point.X + size.X < p.X
+					or point.Y + size.Y < p.Y
+					or point.X > p.X + s.X
+					or point.Y > p.Y + s.Y
+				then
+					return false
+				end
+			end
+		end
+		at = at.Parent
+	end
+	return false
+end
+if RunService:IsClient() then
+	local elapsed = 0
+	RunService.RenderStepped:Connect(function(dt)
+		elapsed += dt
+		if elapsed < 1 / 30 then
+			return
+		end
+		elapsed = 0
+		local count = 0
+		for view, model in previews do
+			if model.Parent ~= nil and previewVisible(view) then
+				PetMotion.pose(model, os.clock(), 0)
+				count += 1
+				if count >= 12 then
+					break
+				end
+			end
+		end
+	end)
+end
 
 -- The block's depth and the band's thickness, as shares of its edge.
 local DEPTH_SHARE = 0.8
@@ -84,6 +139,9 @@ local function applyVariant(model: Model, look: PetLook.Look)
 	local mat = material(view.material :: string)
 	for _, part in model:GetDescendants() do
 		if part:IsA("BasePart") then
+			if part:GetAttribute("KeepColor") == true then
+				continue
+			end
 			if look.golden and part.Name == "Band" then
 				continue
 			end
@@ -91,6 +149,23 @@ local function applyVariant(model: Model, look: PetLook.Look)
 				part.Color = color(look.body)
 			end
 			part.Material = mat
+			-- TextureID ignores BasePart.Color. A translucent, untextured coat
+			-- gives textured pets a visible variant while retaining face details.
+			if part:IsA("MeshPart") and part.TextureID ~= "" then
+				local coat = part:Clone()
+				coat.Name = if look.golden then "GoldenCoat" else "ShinyCoat"
+				coat.TextureID = ""
+				coat.Color = if look.golden
+					then Color3.fromRGB(255, 198, 49)
+					else Color3.new(1, 1, 1)
+				coat.Material = if look.golden
+					then Enum.Material.Metal
+					else Enum.Material.SmoothPlastic
+				coat.Transparency = if look.golden then 0.38 else 0.82
+				coat.Size = part.Size * 1.003
+				coat.CastShadow = false
+				coat.Parent = model
+			end
 		end
 	end
 end
@@ -294,7 +369,8 @@ end
 
 -- A gym leader's pet, which has only a type.
 function PetVisual.createLeader(typeId: string): Model
-	return build(PetLook.resolveType(typeId, nil))
+	local mascot = LEADER_MASCOTS[typeId]
+	return build(if mascot then PetLook.resolve(mascot, nil) else PetLook.resolveType(typeId, nil))
 end
 
 -- The UI view of a pet: a transparent ViewportFrame filling `parent`, with
@@ -306,6 +382,9 @@ function PetVisual.view(
 	variant: string?,
 	typeId: string?
 ): ViewportFrame
+	if petId == nil and typeId ~= nil then
+		petId = LEADER_MASCOTS[typeId]
+	end
 	local look = if petId ~= nil
 		then PetLook.resolve(petId, variant)
 		else PetLook.resolveType(typeId :: string, nil)
@@ -332,6 +411,35 @@ function PetVisual.view(
 	end
 	local extents = centerModel(model)
 	model.Parent = viewport
+	previews[viewport] = model
+	local loading = Instance.new("TextLabel")
+	loading.Name = "LoadingPreview"
+	loading.Size = UDim2.fromScale(1, 1)
+	loading.BackgroundTransparency = 1
+	loading.Text = "Loading..."
+	loading.TextColor3 = Color3.fromRGB(220, 227, 240)
+	loading.Font = Enum.Font.GothamBold
+	loading.TextSize = 12
+	loading.ZIndex = 3
+	loading.Parent = viewport
+	local function preload(pet: Model)
+		loading.Visible = true
+		task.spawn(function()
+			local success = true
+			local ok = pcall(function()
+				ContentProvider:PreloadAsync({ pet }, function(_, status)
+					if status ~= Enum.AssetFetchStatus.Success then
+						success = false
+					end
+				end)
+			end)
+			if loading.Parent ~= nil and model == pet then
+				loading.Visible = not (ok and success)
+				loading.Text = "Preview unavailable"
+			end
+		end)
+	end
+	preload(model)
 
 	-- Pet models face local -Z. Keep the face visible at a slight angle, and
 	-- fit the real model bounds to each card's aspect ratio.
@@ -355,12 +463,17 @@ function PetVisual.view(
 	frame()
 	viewport.Destroying:Connect(function()
 		sizeConnection:Disconnect()
+		previews[viewport] = nil
 	end)
 
 	-- ModelLibrary may still be loading when a card opens. Upgrade this one
 	-- view when its template and first part replicate; leave the variant UI
 	-- layers in place. No screen-wide refresh or yield is needed.
-	if petId ~= nil and model:GetAttribute("UsesAsset") ~= true then
+	if
+		petId ~= nil
+		and model:GetAttribute("UsesAsset") ~= true
+		and model:GetAttribute("Procedural") ~= true
+	then
 		local waitingPetId = petId :: string
 		local folderConnection: RBXScriptConnection? = nil
 		local modelConnection: RBXScriptConnection? = nil
@@ -423,6 +536,8 @@ function PetVisual.view(
 			replacement.Parent = viewport
 			model:Destroy()
 			model = replacement
+			previews[viewport] = model
+			preload(model)
 			viewport:SetAttribute("PetKey", PetLook.key(resolved))
 			frame()
 			disconnectWatchers()
@@ -456,6 +571,9 @@ end
 
 -- The key of what a view shows, so callers rebuild only on change.
 function PetVisual.key(petId: string?, variant: string?, typeId: string?): string
+	if petId == nil and typeId ~= nil then
+		petId = LEADER_MASCOTS[typeId]
+	end
 	local look = if petId ~= nil
 		then PetLook.resolve(petId, variant)
 		else PetLook.resolveType(typeId :: string, nil)

@@ -417,6 +417,13 @@
       "file": "44-launch-quality.md",
       "depends_on": ["43"],
       "status": "done"
+    },
+    {
+      "id": "45",
+      "title": "Original Roblox visual direction",
+      "file": "45-visual-rework.md",
+      "depends_on": ["44"],
+      "status": "done"
     }
   ]
 }

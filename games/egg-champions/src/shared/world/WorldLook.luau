@@ -111,7 +111,7 @@ WorldLook.LOOKS = deepFreeze({
 		lighting = {
 			-- Bright morning.
 			clockTime = 9.5,
-			brightness = 2.6,
+			brightness = 2.1,
 			ambient = rgb(110, 112, 122),
 			outdoorAmbient = rgb(150, 152, 162),
 			atmosphere = {
@@ -124,11 +124,11 @@ WorldLook.LOOKS = deepFreeze({
 			},
 			colorCorrection = {
 				brightness = 0.03,
-				contrast = 0.08,
-				saturation = 0.15,
+				contrast = 0.03,
+				saturation = 0.04,
 				tint = rgb(255, 252, 245),
 			},
-			bloom = { intensity = 0.35, size = 20, threshold = 1.6 },
+			bloom = { intensity = 0.12, size = 20, threshold = 1.6 },
 			sky = { starCount = 0, sunSize = 14, moonSize = 11 },
 			water = {
 				color = rgb(64, 160, 190),
@@ -176,7 +176,7 @@ WorldLook.LOOKS = deepFreeze({
 		lighting = {
 			-- Warm and sunny.
 			clockTime = 13,
-			brightness = 3,
+			brightness = 2.3,
 			ambient = rgb(130, 122, 110),
 			outdoorAmbient = rgb(170, 160, 145),
 			atmosphere = {
@@ -190,10 +190,10 @@ WorldLook.LOOKS = deepFreeze({
 			colorCorrection = {
 				brightness = 0.04,
 				contrast = 0.1,
-				saturation = 0.2,
+				saturation = 0.08,
 				tint = rgb(255, 246, 230),
 			},
-			bloom = { intensity = 0.4, size = 24, threshold = 1.5 },
+			bloom = { intensity = 0.14, size = 24, threshold = 1.5 },
 			sky = { starCount = 0, sunSize = 18, moonSize = 11 },
 			water = {
 				color = rgb(40, 200, 200),
@@ -240,14 +240,14 @@ WorldLook.LOOKS = deepFreeze({
 		key = "ember_volcano",
 		lighting = {
 			-- Dusk, with an orange haze.
-			clockTime = 18.2,
-			brightness = 1.6,
-			ambient = rgb(110, 72, 60),
-			outdoorAmbient = rgb(120, 80, 70),
+			clockTime = 16.5,
+			brightness = 2,
+			ambient = rgb(135, 112, 135),
+			outdoorAmbient = rgb(145, 120, 145),
 			atmosphere = {
-				density = 0.42,
+				density = 0.3,
 				offset = 0.25,
-				haze = 2.6,
+				haze = 1.1,
 				glare = 0.6,
 				color = rgb(255, 150, 90),
 				decay = rgb(120, 50, 40),
@@ -258,7 +258,7 @@ WorldLook.LOOKS = deepFreeze({
 				saturation = 0.05,
 				tint = rgb(255, 225, 205),
 			},
-			bloom = { intensity = 0.5, size = 28, threshold = 1.2 },
+			bloom = { intensity = 0.18, size = 28, threshold = 1.2 },
 			sky = { starCount = 1500, sunSize = 21, moonSize = 11 },
 			water = {
 				color = rgb(90, 40, 30),

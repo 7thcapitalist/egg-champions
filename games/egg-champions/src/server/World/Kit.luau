@@ -11,8 +11,7 @@
 	naming its builder, so what was built can be counted.
 
 	Scenery props (trees, palms, rocks, bushes, flowers, fences) are built
-	from Ball, Cylinder and Wedge parts. The ground itself is terrain, built
-	by server/World/Terrain.
+	from Ball, Cylinder and Wedge parts. The constructed ground is built by server/World/Landscape.
 
 	Sizes here are prop geometry, not game numbers.
 ]]
@@ -73,7 +72,7 @@ end
 
 -- The font of every world sign: a heavy face whose letters keep together at
 -- any size, so a word never reads as split ("E gg").
-local SIGN_FONT = Enum.Font.GothamBlack
+local SIGN_FONT = Enum.Font.FredokaOne
 
 -- A floating text label above a part, sized in studs (so it scales with
 -- distance like the part does). `height` is how far the label's center sits
@@ -104,6 +103,8 @@ end
 -- (at its newlines), never inside a word.
 local BOARD_MARGIN = 0.08
 local function boardText(board: BasePart, text: string, color: Color3)
+	board.Color = ThemeColors.panel
+	board.Material = Enum.Material.SmoothPlastic
 	for _, face in { Enum.NormalId.Front, Enum.NormalId.Back } do
 		local gui = Instance.new("SurfaceGui")
 		gui.Name = "Label" .. face.Name
@@ -121,7 +122,7 @@ local function boardText(board: BasePart, text: string, color: Color3)
 		textLabel.TextColor3 = color
 		textLabel.TextStrokeTransparency = 0.3
 		textLabel.TextScaled = true
-		textLabel.TextWrapped = false
+		textLabel.TextWrapped = true
 		textLabel.Font = SIGN_FONT
 		textLabel.Parent = gui
 		gui.Parent = board
@@ -157,7 +158,7 @@ local function line(
 	textLabel.TextColor3 = color
 	textLabel.TextStrokeTransparency = 0.3
 	textLabel.TextScaled = true
-	textLabel.TextWrapped = false
+	textLabel.TextWrapped = true
 	textLabel.Font = SIGN_FONT
 	textLabel.Parent = gui
 end
@@ -202,14 +203,31 @@ function Kit.eggStand(
 	eggHeight: number?
 ): Model
 	local model = newModel("EggStand")
+	part(model, "BaseTrim", Vector3.new(9, 0.5, 9), base * CFrame.new(0, 0.25, 0), palette.accent)
 	local plinth = part(
 		model,
 		"Plinth",
 		Vector3.new(8, STAND_LABEL.plinth, 8),
 		base * CFrame.new(0, STAND_LABEL.plinth / 2, 0),
 		palette.trim,
-		Enum.Material.Marble
+		Enum.Material.SmoothPlastic
 	)
+	for _, side in { -1, 1 } do
+		part(
+			model,
+			"StandTrim",
+			Vector3.new(0.3, 2, 8.2),
+			base * CFrame.new(side * 4.05, 1.5, 0),
+			palette.accent
+		)
+		part(
+			model,
+			"StandTrim",
+			Vector3.new(8.2, 2, 0.3),
+			base * CFrame.new(0, 1.5, side * 4.05),
+			palette.accent
+		)
+	end
 	local egg = Instance.new("Model")
 	egg.Name = "Egg"
 	local low =
@@ -226,7 +244,8 @@ function Kit.eggStand(
 		palette.glow,
 		Enum.Material.Neon
 	)
-	trigger.Transparency = 0.4
+	trigger.Material = Enum.Material.SmoothPlastic
+	trigger.Transparency = 0.55
 	trigger.CanCollide = false
 	-- The sign sits just above the egg: plinth top, egg, then the sign.
 	local signPart = part(
@@ -358,28 +377,34 @@ function Kit.tree(base: CFrame, palette: Palette, scale: number, variant: number
 		1.6 * scale,
 		base * CFrame.new(0, height / 2, 0) * UPRIGHT,
 		palette.trunk,
-		Enum.Material.Wood
+		Enum.Material.SmoothPlastic
 	)
 	local g = palette.greens
-	ball(model, "Crown", 7 * scale, base * CFrame.new(0, height + 1.5 * scale, 0), pick(g, variant))
-	ball(
+	part(
+		model,
+		"Crown",
+		Vector3.new(7, 4, 7) * scale,
+		base * CFrame.new(0, height + 1.5 * scale, 0) * CFrame.Angles(0, 0.2, 0),
+		pick(g, variant)
+	)
+	part(
 		model,
 		"CrownLeft",
-		5.5 * scale,
+		Vector3.new(5.5, 3, 5.5) * scale,
 		base * CFrame.new(1.9 * scale, height + 0.2 * scale, 0.8 * scale),
 		pick(g, variant + 1)
 	)
-	ball(
+	part(
 		model,
 		"CrownRight",
-		5 * scale,
+		Vector3.new(5, 3.5, 5) * scale,
 		base * CFrame.new(-1.7 * scale, height + 0.6 * scale, -1.2 * scale),
 		pick(g, variant + 2)
 	)
-	ball(
+	part(
 		model,
 		"CrownTop",
-		4 * scale,
+		Vector3.new(4, 3, 4) * scale,
 		base * CFrame.new(0.3 * scale, height + 4.4 * scale, 0.2 * scale),
 		pick(g, variant + 1)
 	)
@@ -402,7 +427,7 @@ function Kit.palm(base: CFrame, palette: Palette, scale: number, variant: number
 			(1.5 - 0.15 * i) * scale,
 			at * CFrame.new(0, piece / 2, 0) * UPRIGHT,
 			palette.trunk,
-			Enum.Material.Wood
+			Enum.Material.SmoothPlastic
 		)
 		first = first or p
 		at = at * CFrame.new(0, piece * 0.95, 0)
@@ -436,7 +461,7 @@ function Kit.deadTree(base: CFrame, palette: Palette, scale: number, variant: nu
 		1.2 * scale,
 		base * CFrame.new(0, height / 2, 0) * UPRIGHT,
 		palette.trunk,
-		Enum.Material.Wood
+		Enum.Material.SmoothPlastic
 	)
 	for i = 1, 3 do
 		local length = (2.4 + (i + variant) % 3 * 0.5) * scale
@@ -451,7 +476,7 @@ function Kit.deadTree(base: CFrame, palette: Palette, scale: number, variant: nu
 				* CFrame.Angles(0, 0, 0.7)
 				* CFrame.new(length / 2, 0, 0),
 			palette.trunk,
-			Enum.Material.Wood
+			Enum.Material.SmoothPlastic
 		)
 	end
 	model.PrimaryPart = trunk
@@ -461,7 +486,7 @@ end
 -- Rock: a few balls and wedges, turned against each other.
 function Kit.rock(base: CFrame, palette: Palette, scale: number, _variant: number): Model
 	local model = newModel("Rock")
-	local material = Enum.Material.Rock
+	local material = Enum.Material.SmoothPlastic
 	local big = ball(
 		model,
 		"Big",
@@ -501,7 +526,7 @@ end
 -- Boulder: one big round stone, a wedge and a smaller stone.
 function Kit.boulder(base: CFrame, palette: Palette, scale: number, _variant: number): Model
 	local model = newModel("Boulder")
-	local material = Enum.Material.Slate
+	local material = Enum.Material.SmoothPlastic
 	local big =
 		ball(model, "Big", 5 * scale, base * CFrame.new(0, 1.8 * scale, 0), palette.rock, material)
 	wedge(
@@ -581,7 +606,7 @@ function Kit.fence(a: Vector3, b: Vector3, palette: Palette): Model
 		Vector3.new(0.8, 3, 0.8),
 		CFrame.new(a + Vector3.new(0, 1.5, 0)),
 		palette.trunk,
-		Enum.Material.Wood
+		Enum.Material.SmoothPlastic
 	)
 	local length = (b - a).Magnitude
 	for i, height in { 1.2, 2.3 } do
@@ -593,7 +618,7 @@ function Kit.fence(a: Vector3, b: Vector3, palette: Palette): Model
 			Vector3.new(0.3, 0.4, length),
 			CFrame.lookAt((from + to) / 2, to),
 			palette.trunk,
-			Enum.Material.Wood
+			Enum.Material.SmoothPlastic
 		)
 	end
 	model.PrimaryPart = post
@@ -684,7 +709,7 @@ function Kit.gymBuilding(
 		ARENA_STEP_DIAMETER,
 		base * CFrame.new(0, ARENA_STEP / 2, 0) * UPRIGHT,
 		palette.trim,
-		Enum.Material.Marble
+		Enum.Material.SmoothPlastic
 	)
 	cylinder(
 		model,
@@ -693,7 +718,7 @@ function Kit.gymBuilding(
 		ARENA_STEP_DIAMETER - 2,
 		base * CFrame.new(0, ARENA_STEP * 1.5, 0) * UPRIGHT,
 		palette.trim,
-		Enum.Material.Marble
+		Enum.Material.SmoothPlastic
 	)
 	-- A rim in the type color, just under the floor's edge.
 	cylinder(
@@ -712,7 +737,7 @@ function Kit.gymBuilding(
 		ARENA_FLOOR_DIAMETER,
 		base * CFrame.new(0, floorTop - ARENA_STEP / 2, 0) * UPRIGHT,
 		palette.trim,
-		Enum.Material.Concrete
+		Enum.Material.SmoothPlastic
 	)
 	for i, degrees in ARENA_PILLAR_ANGLES do
 		local angle = math.rad(degrees)
@@ -725,7 +750,7 @@ function Kit.gymBuilding(
 			1.8,
 			base * CFrame.new(x, floorTop + ARENA_PILLAR_HEIGHT / 2, z) * UPRIGHT,
 			palette.trim,
-			Enum.Material.Marble
+			Enum.Material.SmoothPlastic
 		)
 		part(
 			model,
@@ -752,7 +777,7 @@ function Kit.gymBuilding(
 		Vector3.new(6, 9, 0.3),
 		base * CFrame.new(0, floorTop + ARENA_PILLAR_HEIGHT - 5, backZ),
 		typeColor,
-		Enum.Material.Fabric
+		Enum.Material.SmoothPlastic
 	)
 	local badge = part(
 		model,
@@ -780,7 +805,7 @@ function Kit.gymBuilding(
 		Vector3.new(Scenery.GYM_SIGN.width, Scenery.GYM_SIGN.height, 0.6),
 		base * CFrame.new(0, Scenery.GYM_SIGN.y, ARENA_GATE_Z),
 		palette.accent,
-		Enum.Material.Wood
+		Enum.Material.SmoothPlastic
 	)
 	boardText(board, text, palette.text)
 	model.PrimaryPart = floor
@@ -804,7 +829,7 @@ function Kit.portalFrame(base: CFrame, palette: Palette, text: string): Model
 		Vector3.new(14, 1, 6),
 		base * CFrame.new(0, 0.5, 0),
 		palette.rock,
-		Enum.Material.Slate
+		Enum.Material.SmoothPlastic
 	)
 	local stoneHeight = PORTAL_POST_HEIGHT / 3
 	for side = -1, 1, 2 do
@@ -817,7 +842,7 @@ function Kit.portalFrame(base: CFrame, palette: Palette, text: string): Model
 					* CFrame.new(side * PORTAL_POST_X, 1 + stoneHeight * (i - 0.5), 0)
 					* CFrame.Angles(0, side * i * 0.12, 0),
 				palette.rock,
-				Enum.Material.Slate
+				Enum.Material.SmoothPlastic
 			)
 		end
 	end
@@ -838,7 +863,7 @@ function Kit.portalFrame(base: CFrame, palette: Palette, text: string): Model
 				)
 				* CFrame.Angles(0, 0, angle),
 			palette.rock,
-			Enum.Material.Slate
+			Enum.Material.SmoothPlastic
 		)
 		if k == 3 then
 			keystone = stone
@@ -895,7 +920,7 @@ function Kit.sign(base: CFrame, palette: Palette, text: string): Model
 			Vector3.new(b.post, top, b.post),
 			base * CFrame.new(side * (b.width + b.post) / 2, top / 2, 0),
 			palette.trunk,
-			Enum.Material.Wood
+			Enum.Material.SmoothPlastic
 		)
 		first = first or post
 	end
@@ -905,7 +930,7 @@ function Kit.sign(base: CFrame, palette: Palette, text: string): Model
 		Vector3.new(b.width, b.height, 0.5),
 		base * CFrame.new(0, b.y, 0),
 		palette.trim,
-		Enum.Material.Wood
+		Enum.Material.SmoothPlastic
 	)
 	boardText(board, text, palette.text)
 	model.PrimaryPart = first
@@ -921,7 +946,7 @@ function Kit.arrivalPad(base: CFrame, palette: Palette): Model
 		Vector3.new(12, 1, 12),
 		base * CFrame.new(0, 0.5, 0),
 		palette.trim,
-		Enum.Material.Marble
+		Enum.Material.SmoothPlastic
 	)
 	model.PrimaryPart = pad
 	return model

@@ -114,8 +114,8 @@ Scenery.FENCE_PARTS = 3
 Scenery.LIGHT_PARTS = 1
 -- An upper bound on the parts of the game props every world has (sign,
 -- arrival pad, gym, portal), and of each egg stand, for the budget estimate.
-Scenery.FIXED_PARTS = 80
-Scenery.STAND_PARTS = 8
+Scenery.FIXED_PARTS = 360
+Scenery.STAND_PARTS = 13
 
 -- Clear zone radii around the game props, in studs.
 Scenery.ARRIVAL_CLEAR = 14

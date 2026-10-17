@@ -107,6 +107,19 @@ Three files in `<game-dir>/assets/`:
 
   Exit 2 means the task is still running; run it again to resume it.
 
+  Segmented pets may record up to eight named pieces in `parts`, each with
+  `mesh_id`, `texture_id`, `size` and a 12-number local `cframe`. The builder
+  validates and preserves the poses. Verification checks every piece.
+
+  Studio MCP can run the same verification script on TEST. Save the returned
+  `results` with `models_sha256`, `universe_id`, `place_id` and `studio_id`, then
+  import that evidence without an Open Cloud key:
+
+      python factory/tools/verify_assets.py <game-dir> --studio-results <record.json>
+
+  Import rejects mismatched target IDs, model hashes or piece IDs. It records
+  `studio:<studio_id>` as its source, distinct from an Open Cloud task.
+
 ## CI
 
 The Roblox steps run in GitHub Actions on the owner's repo

@@ -1,6 +1,6 @@
 --!strict
 --[[
-	Followers: every player's equipped pets hover after them in the world.
+	Followers: equipped pets walk or fly after their player in the world.
 
 	The server only writes each player's team onto the Player as the
 	FollowerTeam attribute (shared/visual/Followers) when the team changes.
@@ -23,12 +23,15 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local FollowerMath = require(Shared:WaitForChild("visual"):WaitForChild("Followers"))
 local PetLook = require(Shared:WaitForChild("visual"):WaitForChild("PetLook"))
+local PetMotion = require(Shared:WaitForChild("visual"):WaitForChild("PetMotion"))
 
 local FOLDER_NAME = "PetFollowers"
 
 type Entry = {
 	key: string,
 	models: { Model },
+	floors: { number },
+	clearance: { number },
 }
 
 local Followers = {}
@@ -49,6 +52,7 @@ end
 
 local function build(player: Player, key: string): Entry
 	local models = {}
+	local clearance = {}
 	for _, member in FollowerMath.decode(key) do
 		local ok, model = pcall(PetVisual.create, member.petId, member.variant)
 		if ok and model ~= nil then
@@ -63,9 +67,11 @@ local function build(player: Player, key: string): Entry
 			model.Name = string.format("%s_%s", player.Name, model.Name)
 			model.Parent = folder
 			table.insert(models, model)
+			local box, size = model:GetBoundingBox()
+			table.insert(clearance, model:GetPivot().Position.Y - box.Position.Y + size.Y / 2)
 		end
 	end
-	local entry = { key = key, models = models }
+	local entry = { key = key, models = models, floors = {}, clearance = clearance }
 	entries[player] = entry
 	return entry
 end
@@ -92,6 +98,16 @@ local function step(dt: number)
 	local blend = FollowerMath.blend(dt)
 	local range = FollowerMath.LOOK.viewDistance
 
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	local excluded: { Instance } = { folder :: Folder }
+	for _, other in Players:GetPlayers() do
+		if other.Character ~= nil then
+			table.insert(excluded, other.Character :: Model)
+		end
+	end
+	params.FilterDescendantsInstances = excluded
+
 	for _, player in Players:GetPlayers() do
 		local root = rootOf(player)
 		local key = player:GetAttribute(FollowerMath.ATTRIBUTE)
@@ -110,15 +126,39 @@ local function step(dt: number)
 		local current = entry :: Entry
 		local count = #current.models
 		local base = root.CFrame
+		local moving = math.clamp(
+			Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude
+				/ 12,
+			0,
+			1
+		)
 		for index, model in current.models do
 			local o = FollowerMath.offset(index, count, seconds)
 			local spot = base * CFrame.new(o.x, o.y, o.z)
-			local target = CFrame.new(spot.Position) * base.Rotation
+			local hit = Workspace:Raycast(
+				spot.Position + Vector3.new(0, 12, 0),
+				Vector3.new(0, -40, 0),
+				params
+			)
+			local ground = if hit ~= nil then hit.Position.Y else root.Position.Y - 3
+			local floor = current.floors[index]
+			floor = if floor == nil then ground else floor + (ground - floor) * blend
+			current.floors[index] = floor
+			local flying = model:GetAttribute("Flying") == true
+			local lift = if flying
+				then 1 + (o.y - FollowerMath.LOOK.hover)
+				else math.abs(math.sin(seconds * 11)) * moving * 0.12
+			local target = CFrame.new(
+				spot.Position.X,
+				floor + current.clearance[index] + lift,
+				spot.Position.Z
+			) * base.Rotation
 			if fresh then
 				model:PivotTo(target)
 			else
 				model:PivotTo(model:GetPivot():Lerp(target, blend))
 			end
+			PetMotion.pose(model, seconds, moving)
 		end
 	end
 end
@@ -151,6 +191,7 @@ function Followers.mount()
 					if
 						model:GetAttribute("PetId") == source.Name
 						and model:GetAttribute("UsesAsset") ~= true
+						and model:GetAttribute("Procedural") ~= true
 					then
 						clear(player)
 						break

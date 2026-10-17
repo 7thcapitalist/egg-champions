@@ -9,15 +9,15 @@
 ]]
 
 local ThemeColors = table.freeze({
-	panel = Color3.fromRGB(18, 22, 31),
-	raised = Color3.fromRGB(30, 37, 50),
-	border = Color3.fromRGB(42, 50, 66),
+	panel = Color3.fromRGB(30, 40, 72),
+	raised = Color3.fromRGB(49, 63, 104),
+	border = Color3.fromRGB(100, 125, 176),
 	text = Color3.fromRGB(242, 244, 248),
 	muted = Color3.fromRGB(155, 166, 186),
-	gold = Color3.fromRGB(232, 179, 58),
+	gold = Color3.fromRGB(255, 210, 73),
 	badgeEmpty = Color3.fromRGB(90, 100, 120),
 	-- The egg shop's Hatch button and the dim behind a full screen panel.
-	hatch = Color3.fromRGB(31, 122, 69),
+	hatch = Color3.fromRGB(42, 170, 86),
 	white = Color3.fromRGB(255, 255, 255),
 	backdrop = Color3.fromRGB(0, 0, 0),
 	-- The gym battle (Battle.dc.html): arena ground, healthy HP and team

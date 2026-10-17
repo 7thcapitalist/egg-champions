@@ -180,6 +180,9 @@ local function tileButton(
 	pad(body, s.tilePad)
 	local bodyList = list(body, Enum.FillDirection.Vertical, s.markerGap)
 	bodyList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	if s.tileHorizontal then
+		bodyList:Destroy()
+	end
 	local pet = block(body, petId, s.tileBlock, variant)
 	pet.LayoutOrder = 1
 	if dim then
@@ -212,6 +215,15 @@ local function tileButton(
 		marks.AutomaticSize = Enum.AutomaticSize.XY
 		local marksList = list(marks, Enum.FillDirection.Horizontal, 6)
 		marksList.VerticalAlignment = Enum.VerticalAlignment.Center
+	end
+	if s.tileHorizontal then
+		local textX = s.tileBlock + s.tilePad
+		pet.Position = UDim2.fromOffset(0, 0)
+		label.Position = UDim2.fromOffset(textX, 0)
+		label.Size = UDim2.new(1, -textX, 0, s.tileName)
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		marks.Position = UDim2.fromOffset(textX, s.tileName + s.markerGap)
+		marks.Size = UDim2.new(1, -textX, 0, 0)
 	end
 	return tile, marks
 end
@@ -400,6 +412,8 @@ function Pets.mount(
 				applyLayout()
 			end
 		end
+	end, function()
+		return gui.AbsoluteSize.Y >= 560
 	end)
 
 	-- Body: content on the left, the detail panel on the right.

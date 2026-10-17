@@ -113,7 +113,7 @@ end
 -- onText and hidden while there is no line. The caller places and sizes it.
 -- onShown, when given, hears after every change whether the bar's slot is
 -- needed: a line shows, or the tutorial runs (reserved).
-function Guide.bar(parent: Instance, onShown: ((boolean) -> ())?): Frame
+function Guide.bar(parent: Instance, onShown: ((boolean) -> ())?, canShow: (() -> boolean)?): Frame
 	local bar = Instance.new("Frame")
 	bar.Name = "TutorialBar"
 	bar.BorderSizePixel = 0
@@ -134,7 +134,7 @@ function Guide.bar(parent: Instance, onShown: ((boolean) -> ())?): Frame
 	line.TextYAlignment = Enum.TextYAlignment.Center
 	local function show(value: string?)
 		line.Text = value or ""
-		bar.Visible = value ~= nil
+		bar.Visible = value ~= nil and (canShow == nil or canShow())
 		if onShown ~= nil then
 			onShown(value ~= nil or reserved)
 		end

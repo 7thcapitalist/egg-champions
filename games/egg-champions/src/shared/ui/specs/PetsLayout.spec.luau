@@ -118,12 +118,18 @@ return function()
 							l.grid.h
 						) .. " true"
 					)
-					expect(l.sizes.tileBlock >= 72).toBeTrue()
+					expect(l.sizes.tileBlock >= (if height < 420 then 64 else 72)).toBeTrue()
 					expect(l.tileWidth >= l.sizes.tileBlock + 2 * l.sizes.tilePad).toBeTrue()
 					expectInside("detail", l.equip, l.detail)
 					expect(l.detailScroll.h > 0).toBeTrue()
 				end
 			end
+		end)
+		it("shows a complete pet card inside the phone safe area", function()
+			local l = PetsLayout.compute(706, 281, 0, false, false, { tools = true })
+			expect(l.tileHeight + 2 * l.sizes.gridPad <= l.grid.h).toBeTrue()
+			expect(l.tileWidth >= l.sizes.tileBlock + 100).toBeTrue()
+			expectInside("phone equip", l.equip, l.detail)
 		end)
 	end)
 	describe("PetsLayout", function()

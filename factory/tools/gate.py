@@ -362,6 +362,24 @@ def positive_size(size):
     )
 
 
+def verified_model(result, model):
+    if not result.get("ok"):
+        return False
+    if "parts" not in result:
+        return "parts" not in model and positive_size(result.get("mesh_size"))
+    expected = model.get("parts", [{"name": "Mesh", "mesh_id": model["mesh_id"],
+                                    "texture_id": model["texture_id"]}])
+    actual = result["parts"]
+    return (isinstance(actual, list) and len(actual) == len(expected) and len(actual) > 0
+            and all(isinstance(got, dict) and got.get("ok") and got.get("mesh_ok")
+                    and positive_size(got.get("mesh_size"))
+                    and got.get("texture_status") == "Success"
+                    and got.get("name") == want["name"]
+                    and str(got.get("mesh_id")) == str(want["mesh_id"])
+                    and str(got.get("texture_id")) == str(want["texture_id"])
+                    for got, want in zip(actual, expected)))
+
+
 def gate_assets(game):
     assets = game / "assets"
     manifest_path = assets / "manifest.json"
@@ -421,7 +439,8 @@ def gate_assets(game):
         result = results.get(item_id)
         if result is None:
             return fail("%s has no result for %s" % (verify_path.as_posix(), item_id))
-        if not result.get("ok") or not positive_size(result.get("mesh_size")):
+        model = next(e for e in models["entries"] if e["id"] == item_id)
+        if not verified_model(result, model):
             return fail(
                 "%s: %s is not ok (%s)"
                 % (verify_path.as_posix(), item_id, result.get("error") or result.get("texture_status"))

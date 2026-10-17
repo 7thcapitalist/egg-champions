@@ -70,6 +70,7 @@ export type Sizes = {
 	tileGap: number,
 	tilePad: number,
 	tileBlock: number,
+	tileHorizontal: boolean?,
 	tileName: number,
 	marker: number,
 	markerGap: number,
@@ -231,6 +232,9 @@ end
 -- A tile's height: padding, pet view, name and every marker line.
 function PetsLayout.tileHeight(s: Sizes): number
 	local lines = PetsLayout.MARKER_LINES
+	if s.tileHorizontal then
+		return 2 * s.tilePad + math.max(s.tileBlock, s.tileName + lines * (s.marker + s.markerGap))
+	end
 	return 2 * s.tilePad
 		+ s.tileBlock
 		+ s.markerGap
@@ -280,6 +284,11 @@ function PetsLayout.compute(
 		copy.detailWidth = if compact then 230 else 300
 		copy.tileBlock = if compact then 80 else 104
 		copy.controlMin = if compact then 76 else 120
+		if height < 420 then
+			copy.tileHorizontal = true
+			copy.tileBlock = 64
+			copy.gridPad = 4
+		end
 		s = copy
 	end
 
@@ -375,7 +384,7 @@ function PetsLayout.compute(
 	end
 	local columns = PetsLayout.columnsFor(content.w)
 	if tools then
-		local minTile = if compact then 104 else 128
+		local minTile = if s.tileHorizontal then 200 elseif compact then 104 else 128
 		columns = math.clamp(
 			math.floor((free + s.tileGap) / (minTile + s.tileGap)),
 			1,

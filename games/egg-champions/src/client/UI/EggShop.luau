@@ -574,6 +574,8 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 						done(true)
 					end
 				end)
+			end, function(slot)
+				return eggView(slot, eggId)
 			end)
 		else
 			Guide.setHatching(false)

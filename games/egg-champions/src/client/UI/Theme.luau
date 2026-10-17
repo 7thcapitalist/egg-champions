@@ -44,7 +44,7 @@ end
 Theme.fonts = table.freeze({
 	body = Font.new("rbxasset://fonts/families/Roboto.json", Enum.FontWeight.Medium),
 	label = Font.new("rbxasset://fonts/families/Roboto.json", Enum.FontWeight.SemiBold),
-	heading = Font.new("rbxasset://fonts/families/RobotoCondensed.json", Enum.FontWeight.Bold),
+	heading = Font.fromEnum(Enum.Font.FredokaOne),
 })
 
 Theme.sizes = table.freeze({
@@ -52,9 +52,9 @@ Theme.sizes = table.freeze({
 	designWidth = 1280,
 	topBar = 64,
 	gutter = 24,
-	radius = 6,
-	slotRadius = 4,
-	border = 1,
+	radius = 12,
+	slotRadius = 8,
+	border = 2,
 	minTap = 44,
 	menuWidth = 132,
 	menuButton = 46,

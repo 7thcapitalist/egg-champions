@@ -20,6 +20,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local ModelTemplates = require(Shared:WaitForChild("visual"):WaitForChild("ModelTemplates"))
+local SegmentedTemplate = require(script.Parent.SegmentedTemplate)
 
 local ModelLibrary = {}
 
@@ -117,7 +118,8 @@ function ModelLibrary.start(): ModelTemplates.Report
 	-- order if a future generated table contains any.
 	local workerCount = math.min(if uniqueIds then ModelLibrary.LOAD_WORKERS else 1, #data.entries)
 	local done = Instance.new("BindableEvent")
-	local loaderKit = kit(folder())
+	local target = folder()
+	local loaderKit = kit(target)
 	for _ = 1, workerCount do
 		task.spawn(function()
 			while true do
@@ -128,7 +130,25 @@ function ModelLibrary.start(): ModelTemplates.Report
 				if entry == nil then
 					break
 				end
-				local ok, loaded = pcall(ModelTemplates.load, { entry }, loaderKit)
+				local ok, loaded = pcall(function(): ModelTemplates.Report
+					if entry.parts ~= nil then
+						local native = SegmentedTemplate.create(entry)
+						if native ~= nil then
+							native:SetAttribute("Kind", "pet")
+							local old = target:FindFirstChild(entry.id)
+							if old ~= nil then
+								old:Destroy()
+							end
+							native.Parent = target
+							return {
+								loaded = { entry.id },
+								failed = {},
+								modelIds = { [entry.id] = entry.id },
+							}
+						end
+					end
+					return ModelTemplates.load({ entry }, loaderKit)
+				end)
 				local partial: ModelTemplates.Report
 				if ok then
 					partial = loaded :: ModelTemplates.Report

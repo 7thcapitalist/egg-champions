@@ -1,33 +1,28 @@
 # Egg Champions: pet design sheet
 
-Approved by the owner on 2026-10-02. One line per pet. These lines are the
-asset agent's input: each becomes the subject of a mesh generation prompt.
+Visual direction updated by the owner on 2026-10-16: keep the original pet
+concepts and use Steal An Egg as a reference for faceted Roblox collector art.
+Reference: https://www.roblox.com/games/107778070777162/Steal-An-Egg
 
 ## Style rules
-- Battle monster from a monster-collecting game, not a plush toy. Lean body,
-  small head relative to the body, alert or braced stance.
-- The elemental feature is a physical thing on the body: real fire, leaves,
-  water, or lightning shapes, not a painted pattern.
-- Sharp eyes with attitude. No baby faces.
-- Four-legged creatures stand on all four legs. Flyers and swimmers hover in
-  a ready pose.
-- 6,000 triangles for creatures, 16,000 for the Fruit Edition characters.
-- Rarity shows in the design: Common is simple, Legendary is larger with more
-  elemental features.
-- All designs are original. No names or looks from any existing franchise.
-- Fruit Edition characters are humanoids with a fruit head and fruit-colored
-  skin, 8 studs tall.
+- Original elemental animal silhouettes with broad heads and expressive eyes.
+- Low-poly beveled volumes, saturated flat colors, clean readable faces.
+- The defining elemental feature is modeled: leaf ears, flame tails, water
+  fins, lightning horns. Preserve the species and concept in the roster below.
+- Quadrupeds stand on four legs; tadpoles keep their two front legs.
+- Around 4,000 triangles per pet, with automatically segmented movable limbs,
+  tails and wings. Use procedural local poses, without external animation IDs.
+- Common pets are simple; Legendary pets have larger distinctive silhouettes.
+- Fruit Edition preserves the avocado strongman, banana man and strawberry mage.
+- All models are original assets; no extracted meshes or textures from the reference.
 
-## Prompt lessons (from the model tests)
-- Say "monster", not "creature". Describe stance and expression.
-- For quadrupeds add: "quadruped, walking on all four paws, horizontal body,
-  never standing upright, not humanoid, no armor, no clothes".
-- Describe fire as an object: "an actual burning fire with separate
-  flickering tongues of flame".
-- Short, visual prompts beat long ones for humanoids.
-- Always generate asynchronously and poll. Use segmentation "none".
-- Models arrive at the workspace root, named with the prompt text, rotated.
-  Rename, zero the rotation, anchor, and scale to the target height.
+## Generation and integration
+- Generate asynchronously, at most two jobs at once. Record permanent mesh and
+  texture IDs plus each segment's size and local CFrame in the manifest.
+- Zero the model rotation and verify visually that its face points toward -Z.
+- Inspect the assembled model before replacing its prior approved asset.
+- Use automatic segmentation unless the user explicitly specifies a schema.
+- Remove authoring displays from the publishing DataModel after recording assets.
 
 ## World 1: Green Meadow
 | Pet | Egg | Rarity | Type | Look | Model |

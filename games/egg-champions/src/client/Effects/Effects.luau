@@ -49,6 +49,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
+local ContentProvider = game:GetService("ContentProvider")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local visual = Shared:WaitForChild("visual")
@@ -303,7 +304,8 @@ function Effects.playHatch(
 	parent: Instance,
 	shellColor: Color3,
 	reveals: { Reveal },
-	onDone: (() -> ())?
+	onDone: (() -> ())?,
+	drawEgg: ((Frame) -> boolean)?
 )
 	if #reveals == 0 then
 		if onDone ~= nil then
@@ -387,6 +389,16 @@ function Effects.playHatch(
 		end
 		local timing = EffectsBudget.hatchTiming(entry.rarity)
 		local rarityColor = Theme.rarityColor(entry.rarity)
+		-- Warm the winning pet while the egg shakes so the reveal has pixels ready.
+		task.spawn(function()
+			local templates = ReplicatedStorage:FindFirstChild("PetModels")
+			local template = if templates then templates:FindFirstChild(entry.petId) else nil
+			if template then
+				pcall(function()
+					ContentProvider:PreloadAsync({ template })
+				end)
+			end
+		end)
 
 		-- The egg shakes three times.
 		local egg = blank("Egg", stage)
@@ -395,6 +407,15 @@ function Effects.playHatch(
 		egg.Size = UDim2.fromOffset(HATCH.eggSize * 0.78, HATCH.eggSize)
 		egg.ZIndex = 52
 		corner(egg, UDim.new(0.5, 0))
+		if drawEgg ~= nil and drawEgg(egg) then
+			egg.BackgroundTransparency = 1
+			egg.Size = UDim2.fromOffset(HATCH.eggSize, HATCH.eggSize)
+			for _, child in egg:GetDescendants() do
+				if child:IsA("GuiObject") then
+					child.ZIndex = 52
+				end
+			end
+		end
 		for shake = 1, HATCH.shakes do
 			local side = if shake % 2 == 1 then 1 else -1
 			play(egg, timing.shakeSeconds, { Rotation = timing.shakeAngle * side }, true)
