@@ -57,7 +57,7 @@ regenerated. Stages with no check yet print "no gate yet" and exit 1, so
 | Stage | Gate today |
 | --- | --- |
 | `spec_parsed` | the validator passes and `manifest.json` matches the spec's current hash |
-| `economy_tuned` | the tuning report shows the time pacing targets met |
+| `economy_tuned` | the current tuning report meets every time and configured gym rebirth target |
 | `built` | every brief in the game's task index is ticked, and the Luau suite, rojo, selene and stylua pass |
 | `assets` | every pet and egg has a current entry in `assets/models.json`, the project maps it, `rojo build` passes, and `assets/verify.json` checked this exact `models.json` with every entry ok |
 | the rest | no gate yet |
@@ -72,6 +72,11 @@ include map composition, asset contact sheets, animation/effect budgets,
 onboarding and collection-value review. Validate review evidence with
 `python factory/tools/quality_review.py <game-dir> <review.json>`. It checks
 freshness and completeness; it does not replace visual inspection or stage gates.
+
+Reviews bind each evidence file to its SHA-256 and record requested and effective
+viewport dimensions. See [PUBLISHED-QA.md](PUBLISHED-QA.md) for save/rejoin, pass
+and natural progression evidence. A temporary Studio profile or a successful
+upload never substitutes for a published gameplay test.
 
 `python -B factory/tools/build_playtest.py <game-dir> <scenario>` builds a
 separate unpublished QA place under `<game-dir>/build/playtest/` without

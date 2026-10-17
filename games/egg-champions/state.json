@@ -10,10 +10,10 @@
     },
     {
       "id": "economy_tuned",
-      "status": "passed",
+      "status": "failed",
       "attempts": 1,
-      "note": "All 3 time targets met with legacy pet floor; final gym 7.70h and 7 rebirths versus unchanged target 5 remains a design gap.",
-      "updated": "2026-10-17T04:04:39Z"
+      "note": "Revised gate requires all configured rebirth targets. Current report: gym3 median 7 vs target 5; time targets pass. No tuning numbers changed.",
+      "updated": "2026-10-17T05:07:22Z"
     },
     {
       "id": "planned",

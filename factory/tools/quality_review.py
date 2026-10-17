@@ -36,8 +36,50 @@ def check(game, review):
             path = (game / entry).resolve()
             if not path.is_relative_to(game.resolve()) or not path.is_file():
                 errors.append(key + ": missing/local evidence outside game: " + entry)
+            elif review.get("evidence_sha256", {}).get(entry) != hashlib.sha256(path.read_bytes()).hexdigest():
+                errors.append(key + ": evidence hash missing or changed: " + entry)
     if not {"desktop", "mobile"}.issubset(set(review.get("viewports", []))):
         errors.append("desktop and mobile review required")
+    captures = review.get("viewport_captures", [])
+    if not isinstance(captures, list) or not captures:
+        errors.append("requested and effective viewport captures required")
+    else:
+        seen = set()
+        for capture in captures:
+            if not isinstance(capture, dict):
+                errors.append("invalid viewport capture")
+                continue
+            valid = True
+            for field in ("requested", "actual"):
+                size = capture.get(field)
+                if (not isinstance(size, list) or len(size) != 2 or
+                        any(type(n) not in (int, float) or not 0 < n < 16384 for n in size)):
+                    errors.append("viewport capture needs valid " + field + " dimensions")
+                    valid = False
+            if not valid:
+                continue
+            orientation = capture.get("orientation")
+            width, height = capture["actual"]
+            if orientation not in ("portrait", "landscape"):
+                errors.append("viewport capture needs explicit orientation")
+            elif (orientation == "portrait") != (height > width):
+                errors.append("viewport orientation differs from effective dimensions")
+            surface = capture.get("surface")
+            if surface not in ("desktop", "mobile"):
+                errors.append("viewport capture needs desktop/mobile surface")
+            else:
+                seen.add(surface)
+            entry = capture.get("evidence")
+            if not isinstance(entry, str) or not entry:
+                errors.append("viewport capture needs evidence")
+            else:
+                path = (game / entry).resolve()
+                if not path.is_relative_to(game.resolve()) or not path.is_file():
+                    errors.append("viewport capture evidence missing or outside game")
+                elif review.get("evidence_sha256", {}).get(entry) != hashlib.sha256(path.read_bytes()).hexdigest():
+                    errors.append("viewport capture evidence hash missing or changed")
+        if not {"desktop", "mobile"}.issubset(seen):
+            errors.append("effective desktop and mobile viewport captures required")
     return errors
 
 def main():

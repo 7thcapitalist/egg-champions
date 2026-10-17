@@ -34,9 +34,8 @@ STAGES = [
     "published_test",
 ]
 
-# The pacing targets that are about time. The report also scores rebirths per
-# gym, but that is a design question rather than a pacing one, so a miss
-# there does not hold up the build. See the economy_tuned gate in the brief.
+# Time and configured gym rebirth targets both count toward economy readiness.
+# A successful build does not waive a progression miss.
 TIME_TARGETS = ("First hatch", "Gym 1 beaten", "Final gym beaten")
 
 
@@ -134,7 +133,18 @@ def gate_economy_tuned(game):
     if not targets:
         return fail("%s has no results table. Rerun agent 2." % report.as_posix())
 
-    unscored = [t for t in TIME_TARGETS if t not in targets]
+    worlds, error = read_json(game / "config" / "worlds.json")
+    if error:
+        return fail(error)
+    if (not isinstance(worlds, list) or not worlds or
+            any(not isinstance(w, dict) or type(w.get("index")) is not int
+                or w["index"] < 1 for w in worlds)):
+        return fail("world config must contain positive integer gym indexes")
+    indexes = [w["index"] for w in worlds]
+    if len(set(indexes)) != len(indexes):
+        return fail("world config contains duplicate gym indexes")
+    required = TIME_TARGETS + tuple("Rebirths at gym %d" % i for i in sorted(indexes))
+    unscored = [t for t in required if t not in targets]
     if unscored:
         return fail(
             "%s does not score: %s. The report format changed; update this gate."
@@ -142,12 +152,12 @@ def gate_economy_tuned(game):
         )
 
     missed = [
-        "%s is %s" % (t, targets[t]) for t in TIME_TARGETS if not targets[t].startswith("MET")
+        "%s is %s" % (t, targets[t]) for t in required if targets[t] != "MET"
     ]
     if missed:
-        return fail("time pacing missed: " + "; ".join(missed))
+        return fail("economy targets missed: " + "; ".join(missed))
 
-    return ok("all %d time pacing targets met" % len(TIME_TARGETS))
+    return ok("all %d time and rebirth targets met" % len(required))
 
 
 # --------------------------------------------------------------------- built

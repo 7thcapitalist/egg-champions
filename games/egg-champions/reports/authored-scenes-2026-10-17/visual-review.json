@@ -58,5 +58,48 @@
         "reports/authored-scenes-2026-10-17/portrait-complete.jpg"
       ]
     }
-  }
+  },
+  "evidence_sha256": {
+    "reports/authored-scenes-2026-10-17/battle-ready.jpg": "81aa601a09fcffb3715a9510bac098066b6fec6323697792ba06027f14e154db",
+    "reports/authored-scenes-2026-10-17/coast.jpg": "3ed6f95a7b8f1ae8d5a04588184c0fa7f18c67a05dcdd94418b1ac08385639ad",
+    "reports/authored-scenes-2026-10-17/coral.jpg": "e3e3ece4b06cc7a222dc460dbfcb91e1ea6be7b5e17452fa0a4e3228c31552a4",
+    "reports/authored-scenes-2026-10-17/hero-motion-sheet.jpg": "1cc0ad785ec9689fe8a12f35089bfa113143a01e7ab8709bedae43379dac8fa4",
+    "reports/authored-scenes-2026-10-17/meadow.jpg": "0316532ec528cd69e4e73c18710b82aa266f4626f9e0e4620176682dbf4eed87",
+    "reports/authored-scenes-2026-10-17/mineral-pool.jpg": "381ff22240f84139da0d7c44620f8d6d818dd03fcd4eefacf37000dbdbcecf27",
+    "reports/authored-scenes-2026-10-17/motion-runtime.json": "7f62fa7fe462c791e9c8b7009779b12870a3bd07206d40a0c3df73385dc8822a",
+    "reports/authored-scenes-2026-10-17/pergola.jpg": "27df33ff47a6b01434410ed9d6f471dd8ce24df5c9973eabf52b5067d6577b99",
+    "reports/authored-scenes-2026-10-17/portrait-complete.jpg": "a47200b04a16faf78d06e8db6ffdd4b50e2fa38cf7d38a341cb23486b82cea5e",
+    "reports/authored-scenes-2026-10-17/portrait-eggs.jpg": "ea3c87bd4a7a399288bc878f92e6aa5e31d664e9ad6d7b0f11b3a3eff562c2b3",
+    "reports/authored-scenes-2026-10-17/portrait-equip.jpg": "f357c8f2e589db5f571accf27687865cb1c07a6d4c045922407fdb193de81a5f",
+    "reports/authored-scenes-2026-10-17/portrait-hud.jpg": "e3500acafe69af9c8e2f7017829ef5e5d33c25e6531489372f7700498178c825",
+    "reports/authored-scenes-2026-10-17/volcano.jpg": "cc3fbbadc99e3596307995f304e3d65369915d4d3e2566e700f89df265747537"
+  },
+  "viewport_captures": [
+    {
+      "surface": "desktop",
+      "orientation": "landscape",
+      "requested": [
+        960,
+        540
+      ],
+      "actual": [
+        958,
+        540
+      ],
+      "evidence": "reports/authored-scenes-2026-10-17/meadow.jpg"
+    },
+    {
+      "surface": "mobile",
+      "orientation": "portrait",
+      "requested": [
+        390,
+        844
+      ],
+      "actual": [
+        390,
+        844
+      ],
+      "evidence": "reports/authored-scenes-2026-10-17/portrait-equip.jpg"
+    }
+  ]
 }

@@ -66,6 +66,12 @@ issues. Require at least 4 in each area before calling visual quality approved.
 An automated evidence check validates completeness and freshness only; it cannot
 decide whether an image is attractive. User feedback overrides internal scores.
 
+The review JSON includes `evidence_sha256` (relative evidence path to SHA-256)
+and `viewport_captures`. Each capture records `surface` (desktop/mobile),
+`orientation` (portrait/landscape), `requested` and `actual` [width, height],
+and its relative `evidence` path. Bind the original evidence bytes, not a
+resaved or enhanced image. Replacing evidence requires another inspection.
+
 For phone UI review, record both requested device resolution and the actual
 camera/ScreenGui dimensions. A portrait device setting with a landscape capture
 is not portrait evidence. Include a short landscape viewport (720x239), portrait
