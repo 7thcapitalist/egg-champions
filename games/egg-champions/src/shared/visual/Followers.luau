@@ -128,6 +128,14 @@ function Followers.scaleFor(largest: number): number
 	if largest ~= largest or largest <= 0 or largest == math.huge then
 		return 1
 	end
+	-- Advance by traveled ground distance, not wall time. Teleports never become strides.
+	function Followers.stride(phase: number, distance: number): number
+		if distance ~= distance or distance <= 0 or distance > 80 then
+			return phase
+		end
+		return (phase + distance * 2 * math.pi / 3.2) % (2 * math.pi)
+	end
+
 	return Followers.LOOK.size / largest
 end
 
@@ -137,6 +145,14 @@ function Followers.blend(dt: number): number
 		return 0
 	end
 	return 1 - math.exp(-Followers.LOOK.catchUp * dt)
+end
+
+-- Advance by traveled ground distance, not wall time. Teleports never become strides.
+function Followers.stride(phase: number, distance: number): number
+	if distance ~= distance or distance <= 0 or distance > 80 then
+		return phase
+	end
+	return (phase + distance * 2 * math.pi / 3.2) % (2 * math.pi)
 end
 
 return Followers

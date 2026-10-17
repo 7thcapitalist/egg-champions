@@ -1,5 +1,12 @@
 # Publicacao TESTE e aceitacao
 
+## Composicao e movimento: versao 88
+
+- Publicada em 2026-10-17 00:20 local e reaberta da nuvem: place 101737317546942, universe 10769019206, PlaceVersion 88, 137 scripts iguais ao build e nenhuma fixture.
+- Copas arredondadas, lagoas circulares, circuito de retorno com bancos/lanternas, detalhes no moinho, horizonte amplo e outros cenarios ocultos localmente. Seguidores viram na direcao do deslocamento e animam passadas pela distancia percorrida.
+- 861 testes Luau, seis self-tests, Rojo, Selene e StyLua passaram. Evidencias: reports/composition-motion-2026-10-17/REVIEW.md e cloud-reopened.json.
+- Nao e aprovacao visual final: composicao, animacao e onboarding desta revisao ficaram em 3,5/5. Mobile horizontal conferido; portrait do emulador ficou inconsistente e a barra inferior corta na viewport horizontal muito baixa. A meta mediana de cinco rebirths segue aberta; o balanceamento nao foi alterado com base em experimentos inconclusivos de politica de equipe. Save completo, novas compras e telefone fisico continuam sem validacao adicional.
+
 ## Mapas, efeitos, tutorial e valor dos pets: versao 84
 
 - Publicacao confirmada em 2026-10-16 23:56 local pelo Output do Studio. TESTE: universe 10769019206, place 101737317546942.
@@ -44,7 +51,7 @@
 - Triple Hatch: Meadow x3 debitou 150 e criou tres UIDs distintos, com index atualizado.
 - EquipBest coins equipou os tres pets realmente obtidos; tutorial avancou para a proxima meta.
 - Lucky Eggs: payload habilitou o beneficio e a loja mostrou Epic 9% e Legendary 1%.
-- Progressao inicial sem recursos semeados: 75 cliques normais, espaçados 0,4 s, mais Auto Click. Saldo final observado 3.362, poder 16, tres pets. Isso nao valida ritmo de jogador sem passes nem gyms finais.
+- Progressao inicial sem recursos semeados: 75 cliques normais, espaÃ§ados 0,4 s, mais Auto Click. Saldo final observado 3.362, poder 16, tres pets. Isso nao valida ritmo de jogador sem passes nem gyms finais.
 
 ## Pendencias concretas
 

@@ -431,6 +431,7 @@
       "file": "46-worlds-and-pet-value.md",
       "depends_on": ["45"],
       "status": "done"
-    }
+    },
+    {"id":"47","title":"Composition, locomotion and pacing review","file":"47-composition-and-locomotion.md","depends_on":["46"],"status":"done"}
   ]
 }

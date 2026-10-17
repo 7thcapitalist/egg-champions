@@ -369,45 +369,34 @@ end
 -- Tree: a round trunk and layered rounded foliage in two or three greens.
 function Kit.tree(base: CFrame, palette: Palette, scale: number, variant: number): Model
 	local model = newModel("Tree")
-	local height = 7 * scale
+	local height = (7 + variant % 3) * scale
 	local trunk = cylinder(
 		model,
 		"Trunk",
 		height,
-		1.6 * scale,
+		1.5 * scale,
 		base * CFrame.new(0, height / 2, 0) * UPRIGHT,
 		palette.trunk,
 		Enum.Material.SmoothPlastic
 	)
-	local g = palette.greens
-	part(
-		model,
-		"Crown",
-		Vector3.new(7, 4, 7) * scale,
-		base * CFrame.new(0, height + 1.5 * scale, 0) * CFrame.Angles(0, 0.2, 0),
-		pick(g, variant)
-	)
-	part(
-		model,
-		"CrownLeft",
-		Vector3.new(5.5, 3, 5.5) * scale,
-		base * CFrame.new(1.9 * scale, height + 0.2 * scale, 0.8 * scale),
-		pick(g, variant + 1)
-	)
-	part(
-		model,
-		"CrownRight",
-		Vector3.new(5, 3.5, 5) * scale,
-		base * CFrame.new(-1.7 * scale, height + 0.6 * scale, -1.2 * scale),
-		pick(g, variant + 2)
-	)
-	part(
-		model,
-		"CrownTop",
-		Vector3.new(4, 3, 4) * scale,
-		base * CFrame.new(0.3 * scale, height + 4.4 * scale, 0.2 * scale),
-		pick(g, variant + 1)
-	)
+	-- Four overlapping lobes share a readable canopy, with no stacked cube silhouette.
+	local crowns = {
+		Vector3.new(0, 1.4, 0),
+		Vector3.new(2, 0, 0.7),
+		Vector3.new(-1.8, 0.2, -0.8),
+		Vector3.new(0.3, 3.5, 0),
+	}
+	for i, offset in crowns do
+		local crown = ball(
+			model,
+			"Canopy" .. i,
+			(if i == 1 then 7 else 5.5) * scale,
+			base * CFrame.new(Vector3.new(0, height, 0) + offset * scale),
+			pick(palette.greens, variant + i)
+		)
+		crown.Size *= Vector3.new(1, 0.76, 1)
+		crown.CanCollide = false
+	end
 	model.PrimaryPart = trunk
 	return model
 end

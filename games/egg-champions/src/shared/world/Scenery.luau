@@ -621,6 +621,17 @@ function Scenery.forIsland(plan: Layout.Plan, island: Layout.Island): WorldScene
 		{ a = { x = o.x - 58, z = o.z }, b = { x = o.x - 58, z = o.z + 90 }, width = 18 }
 	)
 	table.insert(scenery.paths, { a = here, b = { x = o.x - 58, z = o.z }, width = 10 })
+	-- A broad scenic return loop makes the southern half explorable; the path plan
+	-- excludes random props before placement.
+	local loop =
+		{ { -58, 0 }, { -86, 15 }, { -86, 60 }, { -42, 80 }, { 4, 72 }, { 42, 40 }, { 60, 0 } }
+	for i = 2, #loop do
+		table.insert(scenery.paths, {
+			a = { x = o.x + loop[i - 1][1], z = o.z + loop[i - 1][2] },
+			b = { x = o.x + loop[i][1], z = o.z + loop[i][2] },
+			width = 7,
+		})
+	end
 	table.insert(scenery.clear, { x = arrival.x, z = arrival.z, r = Scenery.ARRIVAL_CLEAR })
 	table.insert(scenery.clear, { x = signSpot.x, z = signSpot.z, r = Scenery.SIGN_CLEAR })
 	local stands = 0

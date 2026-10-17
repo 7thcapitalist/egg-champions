@@ -19,15 +19,15 @@
       "id": "planned",
       "status": "passed",
       "attempts": 0,
-      "note": "46 tasks; planned gate passed, no missing dependency or cycle.",
-      "updated": "2026-10-17T04:04:39Z"
+      "note": "47 task briefs; no missing dependencies or cycle.",
+      "updated": "2026-10-17T04:22:12Z"
     },
     {
       "id": "built",
       "status": "passed",
       "attempts": 22,
-      "note": "46 tasks complete; 859 Luau tests and 6 self-tests, Rojo, Selene, StyLua pass. TEST v84 reopened with 137 matching sources. Final visual approval remains open.",
-      "updated": "2026-10-17T04:04:39Z"
+      "note": "47 tasks done; 861 Luau tests, six self-tests, Rojo, Selene and StyLua pass. TEST v88 cloud reopened with 137 matching sources. Final art approval, portrait review and median-five pacing remain open.",
+      "updated": "2026-10-17T04:22:12Z"
     },
     {
       "id": "assets",

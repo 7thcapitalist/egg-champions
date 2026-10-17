@@ -4,7 +4,7 @@ local PetMotion = {}
 type Joint = { part: BasePart, rest: CFrame, pivot: CFrame, role: string }
 local cache: { [Model]: { Joint } } = setmetatable({}, { __mode = "k" }) :: any
 
-function PetMotion.pose(model: Model, seconds: number, moving: number)
+function PetMotion.pose(model: Model, seconds: number, moving: number, travelPhase: number?)
 	local joints = cache[model]
 	if joints == nil then
 		joints = {}
@@ -27,14 +27,15 @@ function PetMotion.pose(model: Model, seconds: number, moving: number)
 		cache[model] = joints
 	end
 	local base = model:GetPivot()
-	local stride = math.sin(seconds * 11) * math.clamp(moving, 0, 1) * 0.45
+	local stride = math.sin(travelPhase or seconds * 11) * math.clamp(moving, 0, 1) * 0.38
 	for _, joint in joints do
 		local role = joint.role
 		local turn = CFrame.identity
 		if role == "legA" or role == "legB" then
 			turn = CFrame.Angles(if role == "legA" then stride else -stride, 0, 0)
 		elseif role == "tail" then
-			turn = CFrame.Angles(0, math.sin(seconds * 3.2) * 0.16, 0)
+			turn =
+				CFrame.Angles(0, math.sin(seconds * (2 + moving * 1.5)) * (0.08 + moving * 0.12), 0)
 		elseif role == "wings" then
 			turn = CFrame.Angles(math.sin(seconds * 7) * 0.12, 0, 0)
 		elseif role == "bounce" then
@@ -45,7 +46,9 @@ function PetMotion.pose(model: Model, seconds: number, moving: number)
 			turn = CFrame.Angles(
 				0,
 				0,
-				math.sin(seconds * 6) * 0.27 * (if role == "wingL" then -1 else 1)
+				math.sin(seconds * (4.5 + moving * 2))
+					* (0.22 + moving * 0.16)
+					* (if role == "wingL" then -1 else 1)
 			)
 		end
 		joint.part.CFrame = base * joint.pivot * turn * joint.rest

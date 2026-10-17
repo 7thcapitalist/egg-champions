@@ -132,6 +132,21 @@ function Landmarks.build(theme: string, origin: Vector3, parent: Folder)
 			)
 		end
 		part("MillDoor", Vector3.new(4, 7, 0.3), CFrame.new(-58, 3.5, 54.7), wood)
+		for side = -1, 1, 2 do
+			part(
+				"MillWindowFrame",
+				Vector3.new(3.2, 3.8, 0.4),
+				CFrame.new(-58 + side * 5, 10, 54.7),
+				wood
+			)
+			part(
+				"MillWindow",
+				Vector3.new(2.5, 3.1, 0.5),
+				CFrame.new(-58 + side * 5, 10, 54.9),
+				Color3.fromRGB(136, 207, 218)
+			)
+		end
+		part("MillFoundation", Vector3.new(17, 1, 14), CFrame.new(-58, 0.5, 48), wood)
 		rotor("WindmillSails", Vector3.new(-58, 16, 55.5), cream, 11)
 		for i = 0, 15 do
 			part(
@@ -306,6 +321,36 @@ function Landmarks.build(theme: string, origin: Vector3, parent: Folder)
 				Color3.fromRGB(130, 113, 140)
 			)
 		end
+	end
+	-- Scenic resting spots are outside the walking loop and interaction corridors.
+	local accent = if theme == "green_meadow"
+		then teal
+		elseif theme == "coral_coast" then Color3.fromRGB(228, 102, 92)
+		else Color3.fromRGB(218, 131, 65)
+	for _, seat in { Vector3.new(-65, 0, 70), Vector3.new(29, 0, 58) } do
+		part("VistaSeat", Vector3.new(7, 0.6, 2.6), CFrame.new(seat + Vector3.new(0, 2, 0)), wood)
+		part(
+			"VistaBack",
+			Vector3.new(7, 2.2, 0.5),
+			CFrame.new(seat + Vector3.new(0, 3.4, 1.2)),
+			accent
+		)
+		for side = -1, 1, 2 do
+			part(
+				"SeatLeg",
+				Vector3.new(0.5, 2, 2.5),
+				CFrame.new(seat + Vector3.new(side * 2.7, 1, 0)),
+				wood
+			)
+		end
+		cylinder("LanternPole", 0.25, 7, seat + Vector3.new(5, 3.5, 0), wood)
+		local lantern = ball(
+			"PathLantern",
+			Vector3.one * 1.3,
+			seat + Vector3.new(5, 7.4, 0),
+			Color3.fromRGB(255, 230, 165)
+		)
+		lantern.Material = Enum.Material.Neon
 	end
 	folder.Parent = parent
 end

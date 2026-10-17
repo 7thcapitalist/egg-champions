@@ -108,4 +108,20 @@ return function()
 			expect(Followers.blend(1) <= 1).toBeTrue()
 		end)
 	end)
+	describe("distance-driven stride", function()
+		it("holds the pose at rest and ignores a teleport", function()
+			expect(Followers.stride(1.2, 0)).toEqual(1.2)
+			expect(Followers.stride(1.2, 100)).toEqual(1.2)
+		end)
+		it("covers the same gait at different frame rates", function()
+			local a, b = 0, 0
+			for _ = 1, 30 do
+				a = Followers.stride(a, 10 / 30)
+			end
+			for _ = 1, 144 do
+				b = Followers.stride(b, 10 / 144)
+			end
+			expect(a).toBeCloseTo(b)
+		end)
+	end)
 end

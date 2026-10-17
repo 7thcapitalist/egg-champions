@@ -67,12 +67,8 @@ function Landscape.build(scenery: Scenery.WorldScenery, parent: Folder)
 		ground
 	)
 	surface.Shape = Enum.PartType.Cylinder
-	local water = block(
-		"Sea",
-		Vector3.new(size + 110, 1, size + 110),
-		CFrame.new(o.x, -8, o.z),
-		rgb(palette.water)
-	)
+	local water =
+		block("Sea", Vector3.new(2048, 1, 2048), CFrame.new(o.x, -8, o.z), rgb(palette.water))
 	water.Material = Enum.Material.Glass
 	water.Transparency = 0.18
 	water.CanCollide = false
@@ -106,20 +102,35 @@ function Landscape.build(scenery: Scenery.WorldScenery, parent: Folder)
 		p.Shape = Enum.PartType.Ball
 	end
 	for _, pond in scenery.ponds do
-		block(
+		local rim = block(
 			"PondRim",
-			Vector3.new(pond.r * 2 + 2, 0.12, pond.r * 2 + 2),
-			CFrame.new(pond.x, 0.06, pond.z),
+			Vector3.new(0.14, pond.r * 2 + 2, pond.r * 2 + 2),
+			CFrame.new(pond.x, 0.06, pond.z) * CFrame.Angles(0, 0, math.pi / 2),
 			rgb(palette.trim)
 		)
-		local p = block(
+		rim.Shape = Enum.PartType.Cylinder
+		local pondWater = block(
 			"Pond",
-			Vector3.new(pond.r * 2, 0.15, pond.r * 2),
-			CFrame.new(pond.x, 0.15, pond.z),
+			Vector3.new(0.15, pond.r * 2, pond.r * 2),
+			CFrame.new(pond.x, 0.15, pond.z) * CFrame.Angles(0, 0, math.pi / 2),
 			rgb(palette.water)
 		)
-		p.Material = Enum.Material.Glass
-		p.Transparency = 0.12
+		pondWater.Shape, pondWater.Material, pondWater.Transparency =
+			Enum.PartType.Cylinder, Enum.Material.Glass, 0.12
+		for i = 0, 4 do
+			local angle = i * 1.2
+			local stone = block(
+				"PondStone",
+				Vector3.new(2.5, 1.1, 1.8),
+				CFrame.new(
+					pond.x + math.cos(angle) * (pond.r + 1),
+					0.4,
+					pond.z + math.sin(angle) * (pond.r + 1)
+				),
+				rock
+			)
+			stone.Shape = Enum.PartType.Ball
+		end
 	end
 	local function strip(
 		name: string,
@@ -159,6 +170,13 @@ function Landscape.build(scenery: Scenery.WorldScenery, parent: Folder)
 			0.09
 		)
 		strip("Path", path.a, path.b, path.width, rgb(palette.trim), false, 0.13)
+		local join = block(
+			"PathJoin",
+			Vector3.new(0.16, path.width, path.width),
+			CFrame.new(path.b.x, 0.13, path.b.z) * CFrame.Angles(0, 0, math.pi / 2),
+			rgb(palette.trim)
+		)
+		join.Shape, join.CanCollide = Enum.PartType.Cylinder, false
 	end
 	for _, stream in scenery.streams do
 		for i = 2, #stream.points do

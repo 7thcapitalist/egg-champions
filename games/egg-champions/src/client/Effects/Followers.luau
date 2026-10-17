@@ -33,6 +33,9 @@ type Entry = {
 	floors: { number },
 	clearance: { number },
 	motion: { number },
+	positions: { Vector3 },
+	phases: { number },
+	facing: { CFrame },
 }
 
 local Followers = {}
@@ -72,7 +75,16 @@ local function build(player: Player, key: string): Entry
 			table.insert(clearance, model:GetPivot().Position.Y - box.Position.Y + size.Y / 2)
 		end
 	end
-	local entry = { key = key, models = models, floors = {}, clearance = clearance, motion = {} }
+	local entry = {
+		key = key,
+		models = models,
+		floors = {},
+		clearance = clearance,
+		motion = {},
+		positions = {},
+		phases = {},
+		facing = {},
+	}
 	entries[player] = entry
 	return entry
 end
@@ -127,16 +139,7 @@ local function step(dt: number)
 		local current = entry :: Entry
 		local count = #current.models
 		local base = root.CFrame
-		local moving = math.clamp(
-			Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude
-				/ 12,
-			0,
-			1
-		)
 		for index, model in current.models do
-			local gait = (current.motion[index] or 0)
-				+ (moving - (current.motion[index] or 0)) * blend
-			current.motion[index] = gait
 			local phase = seconds + index * 0.71
 			local o = FollowerMath.offset(index, count, seconds)
 			local spot = base * CFrame.new(o.x, o.y, o.z)
@@ -150,24 +153,43 @@ local function step(dt: number)
 			floor = if floor == nil then ground else floor + (ground - floor) * blend
 			current.floors[index] = floor
 			local flying = model:GetAttribute("Flying") == true
-			local lift = if flying
-				then 1 + (o.y - FollowerMath.LOOK.hover)
-				else math.abs(math.sin(phase * 11)) * gait * 0.12
-			local target = CFrame.new(
-				spot.Position.X,
-				floor + current.clearance[index] + lift,
-				spot.Position.Z
-			) * base.Rotation * CFrame.Angles(
-				0,
-				math.sin(phase * 1.1) * 0.04 * (1 - gait),
-				math.sin(phase * 5.5) * gait * 0.035
-			)
-			if fresh then
-				model:PivotTo(target)
-			else
-				model:PivotTo(model:GetPivot():Lerp(target, blend))
+			local previous = current.positions[index] or spot.Position
+			local destination = Vector3.new(spot.Position.X, 0, spot.Position.Z)
+			local previousFlat = Vector3.new(previous.X, 0, previous.Z)
+			local teleport = (destination - previousFlat).Magnitude > 80
+			local position = if fresh or teleport
+				then destination
+				else previousFlat:Lerp(destination, blend)
+			local delta = position - previousFlat
+			local distance = if fresh or teleport then 0 else delta.Magnitude
+			current.positions[index] = position
+			local speed = if dt > 0 then distance / dt else 0
+			local gait = (current.motion[index] or 0)
+				+ (math.clamp(speed / 12, 0, 1) - (current.motion[index] or 0)) * blend
+			current.motion[index] = gait
+			local stride = FollowerMath.stride(current.phases[index] or index * 0.9, distance)
+			current.phases[index] = stride
+			local face = current.facing[index] or base.Rotation
+			if distance > 0.004 then
+				face = face:Lerp(CFrame.lookAt(Vector3.zero, delta), 1 - math.exp(-8 * dt))
+			elseif fresh or teleport then
+				face = base.Rotation
 			end
-			PetMotion.pose(model, phase, gait)
+			current.facing[index] = face
+			local lift = if flying
+				then 1 + math.sin(phase * 2.6) * 0.18
+				else (1 - math.cos(stride * 2)) * gait * 0.045
+			local target = CFrame.new(
+				position.X,
+				floor + current.clearance[index] + lift,
+				position.Z
+			) * face * CFrame.Angles(
+				if flying then -gait * 0.08 else math.sin(stride * 2) * gait * 0.018,
+				math.sin(phase * 0.9) * 0.035 * (1 - gait),
+				if flying then math.sin(phase * 2.6) * 0.035 else math.sin(stride) * gait * 0.025
+			)
+			model:PivotTo(target)
+			PetMotion.pose(model, phase, gait, stride)
 		end
 	end
 end

@@ -103,6 +103,22 @@ function WorldLighting.apply(look: WorldLook.Look, seconds: number)
 	end
 end
 
+-- Each biome owns its horizon. Local visibility never changes collision or progress.
+function WorldLighting.showWorld(worldId: string)
+	for _, world in Workspace:GetChildren() do
+		if world:IsA("Folder") and string.sub(world.Name, 1, 6) == "World_" then
+			local visible = world.Name == "World_" .. worldId
+			for _, item in world:GetDescendants() do
+				if item:IsA("BasePart") then
+					item.LocalTransparencyModifier = if visible then 0 else 1
+				elseif item:IsA("BillboardGui") or item:IsA("SurfaceGui") then
+					item.Enabled = visible
+				end
+			end
+		end
+	end
+end
+
 function WorldLighting.mount()
 	local plan = Layout.plan()
 	local looks: { [string]: WorldLook.Look } = {}
@@ -116,7 +132,13 @@ function WorldLighting.mount()
 	if first ~= nil then
 		current = first.worldId
 		WorldLighting.apply(looks[first.worldId], 0)
+		WorldLighting.showWorld(first.worldId)
 	end
+	Workspace.ChildAdded:Connect(function(child)
+		if child:IsA("Folder") and string.sub(child.Name, 1, 6) == "World_" and current then
+			WorldLighting.showWorld(current)
+		end
+	end)
 	task.spawn(function()
 		while true do
 			task.wait(CHECK_SECONDS)
@@ -128,6 +150,7 @@ function WorldLighting.mount()
 				local here = Scenery.islandAt(plan, root.Position.X, root.Position.Z)
 				if here ~= nil and here ~= current and looks[here] ~= nil then
 					current = here
+					WorldLighting.showWorld(here)
 					WorldLighting.apply(looks[here], FADE_SECONDS)
 				end
 			end

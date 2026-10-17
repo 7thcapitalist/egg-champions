@@ -166,8 +166,8 @@ return function()
 						expect(covered(portal.position.x, portal.position.z)).toBeTrue()
 					end
 				end
-				-- Gym, portal, landmark connector and boardwalk access.
-				expect(#s.paths).toEqual(4)
+				-- Gym, portal, landmark connector, boardwalk and six scenic loop segments.
+				expect(#s.paths).toEqual(10)
 			end
 		end)
 

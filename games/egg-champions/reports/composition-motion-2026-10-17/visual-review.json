@@ -1,0 +1,52 @@
+{
+  "source_sha256": "ee7b75020971d83a21113717b45d4928de099b9eb8a312a4586d05d16adef1c3",
+  "reviewer": "Codex Studio inspection",
+  "date": "2026-10-17",
+  "environment": "Studio",
+  "limitations": "Portrait emulation inconsistent; short landscape viewport clips controls. No physical-phone or complete save/pass validation. Not final visual approval.",
+  "viewports": [
+    "desktop",
+    "mobile"
+  ],
+  "categories": {
+    "composition": {
+      "score": 3.5,
+      "observation": "Open horizons and scenic loop; broad empty areas and shared hub structure remain.",
+      "evidence": [
+        "reports/composition-motion-2026-10-17/meadow-desktop.jpg",
+        "reports/composition-motion-2026-10-17/coast-desktop.jpg",
+        "reports/composition-motion-2026-10-17/volcano-desktop.jpg"
+      ]
+    },
+    "animation": {
+      "score": 3.5,
+      "observation": "Distance-linked strides and travel-facing observed through two turns and stops; more species-specific animation needed.",
+      "evidence": [
+        "reports/composition-motion-2026-10-17/movement-samples.json",
+        "reports/composition-motion-2026-10-17/followers-idle.jpg"
+      ]
+    },
+    "models": {
+      "score": 4,
+      "observation": "Hero assets retained and 36 templates loaded; rounded canopies and pond edges reviewed.",
+      "evidence": [
+        "reports/composition-motion-2026-10-17/followers-idle.jpg",
+        "reports/composition-motion-2026-10-17/meadow-desktop.jpg"
+      ]
+    },
+    "feedback": {
+      "score": 4,
+      "observation": "v84 feedback code retained; environmental motion remains active. No new hatch milestone acceptance claimed.",
+      "evidence": [
+        "reports/composition-motion-2026-10-17/REVIEW.md"
+      ]
+    },
+    "onboarding": {
+      "score": 3.5,
+      "observation": "Short landscape safe viewport clips lower toolbar; portrait emulator did not render requested orientation.",
+      "evidence": [
+        "reports/composition-motion-2026-10-17/mobile-landscape.jpg"
+      ]
+    }
+  }
+}
