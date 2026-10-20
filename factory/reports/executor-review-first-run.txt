@@ -1,0 +1,83 @@
+test_all_targets_pass (test_economy_gate.EconomyGateTests.test_all_targets_pass) ... ok
+test_final_rebirth_miss_fails_even_with_all_time_targets_met (test_economy_gate.EconomyGateTests.test_final_rebirth_miss_fails_even_with_all_time_targets_met) ... ok
+test_invalid_worlds_cannot_drop_targets (test_economy_gate.EconomyGateTests.test_invalid_worlds_cannot_drop_targets) ... ok
+test_missing_or_ambiguous_verdict_fails (test_economy_gate.EconomyGateTests.test_missing_or_ambiguous_verdict_fails) ... ok
+test_new_world_requires_another_target (test_economy_gate.EconomyGateTests.test_new_world_requires_another_target) ... ok
+test_append_interrupted_before_head_update_blocks (test_executor_policy.PolicyTests.test_append_interrupted_before_head_update_blocks) ... ok
+test_budget_and_measurement_fail_closed (test_executor_policy.PolicyTests.test_budget_and_measurement_fail_closed) ... ok
+test_budget_consumed_globally_and_cache_not_added (test_executor_policy.PolicyTests.test_budget_consumed_globally_and_cache_not_added) ... ok
+test_call_budget_consumed_even_on_failure (test_executor_policy.PolicyTests.test_call_budget_consumed_even_on_failure) ... ok
+test_conflicting_duplicate_turn_cannot_hide_usage (test_executor_policy.PolicyTests.test_conflicting_duplicate_turn_cannot_hide_usage) ... ok
+test_corrupt_ledger_blocks (test_executor_policy.PolicyTests.test_corrupt_ledger_blocks) ... ok
+test_crash_or_absent_usage_blocks_next_task (test_executor_policy.PolicyTests.test_crash_or_absent_usage_blocks_next_task) ... ok
+test_deleted_or_truncated_ledger_cannot_reset_budget (test_executor_policy.PolicyTests.test_deleted_or_truncated_ledger_cannot_reset_budget) ... ok
+test_duplicate_task_and_atomic_lock (test_executor_policy.PolicyTests.test_duplicate_task_and_atomic_lock) ... ok
+test_effective_model_mismatch_blocks_without_fallback (test_executor_policy.PolicyTests.test_effective_model_mismatch_blocks_without_fallback) ... ok
+test_invalid_model_effort_and_attempts (test_executor_policy.PolicyTests.test_invalid_model_effort_and_attempts) ... ok
+test_ledger_schema_mismatch_and_fake_success_are_rejected (test_executor_policy.PolicyTests.test_ledger_schema_mismatch_and_fake_success_are_rejected) ... ok
+test_metrics_multiple_turns_and_invalid_metrics (test_executor_policy.PolicyTests.test_metrics_multiple_turns_and_invalid_metrics) ... ok
+test_partial_later_turn_or_error_keeps_usage_unknown (test_executor_policy.PolicyTests.test_partial_later_turn_or_error_keeps_usage_unknown) ... ok
+test_persistent_task_deadline (test_executor_policy.PolicyTests.test_persistent_task_deadline) ... ok
+test_shorter_cli_deadline_survives_restart_and_clock_rollback (test_executor_policy.PolicyTests.test_shorter_cli_deadline_survives_restart_and_clock_rollback) ... ok
+test_timeout_after_completed_turn_still_blocks_budget (test_executor_policy.PolicyTests.test_timeout_after_completed_turn_still_blocks_budget) ... ok
+test_two_attempts_survive_restart_and_unknown_blocks (test_executor_policy.PolicyTests.test_two_attempts_survive_restart_and_unknown_blocks) ... ok
+test_requires_current_complete_review_and_local_evidence (test_quality_review.QualityReviewTests.test_requires_current_complete_review_and_local_evidence) ... ok
+test_failure_and_missing_final_cannot_pass (test_run_factory.CodexResultTests.test_failure_and_missing_final_cannot_pass) ... ok
+test_final_message_falls_back_to_agent_event (test_run_factory.CodexResultTests.test_final_message_falls_back_to_agent_event) ... ok
+test_kill_tree_stops_child_process (test_run_factory.CodexResultTests.test_kill_tree_stops_child_process) ... ok
+test_success_uses_jsonl_and_last_message (test_run_factory.CodexResultTests.test_success_uses_jsonl_and_last_message) ... ok
+test_codex_command_receives_role_and_saves_trace (test_run_factory.TemporaryGitFixture.test_codex_command_receives_role_and_saves_trace) ... ok
+test_commit_stays_local_by_default (test_run_factory.TemporaryGitFixture.test_commit_stays_local_by_default) ... ok
+test_context_and_attempt_limit_prevent_launch (test_run_factory.TemporaryGitFixture.test_context_and_attempt_limit_prevent_launch) ... ok
+test_deterministic_stage_does_not_call_ai (test_run_factory.TemporaryGitFixture.test_deterministic_stage_does_not_call_ai) ... ok
+test_execute_paused_preserves_files (test_run_factory.TemporaryGitFixture.test_execute_paused_preserves_files) ... ok
+test_failed_agent_run_retries_even_if_checks_pass (test_run_factory.TemporaryGitFixture.test_failed_agent_run_retries_even_if_checks_pass) ... ok
+test_failed_exit_with_partial_completed_usage_blocks_next_call (test_run_factory.TemporaryGitFixture.test_failed_exit_with_partial_completed_usage_blocks_next_call) ... ok
+test_finish_without_measured_call_is_refused_before_checks (test_run_factory.TemporaryGitFixture.test_finish_without_measured_call_is_refused_before_checks) ... ok
+test_invalid_runtime_model_never_uses_fallback (test_run_factory.TemporaryGitFixture.test_invalid_runtime_model_never_uses_fallback) ... ok
+test_lower_budget_is_enforced_before_second_call (test_run_factory.TemporaryGitFixture.test_lower_budget_is_enforced_before_second_call) ... ok
+test_path_guard_rejects_cross_scope_change (test_run_factory.TemporaryGitFixture.test_path_guard_rejects_cross_scope_change) ... ok
+test_pause_and_alternate_executor_never_launch (test_run_factory.TemporaryGitFixture.test_pause_and_alternate_executor_never_launch) ... ok
+test_policy_change_during_preparation_cannot_launch (test_run_factory.TemporaryGitFixture.test_policy_change_during_preparation_cannot_launch) ... ok
+test_policy_pause_is_reloaded_after_previous_read (test_run_factory.TemporaryGitFixture.test_policy_pause_is_reloaded_after_previous_read) ... ok
+test_restart_uses_attempt_two_in_prompt_report_and_ledger (test_run_factory.TemporaryGitFixture.test_restart_uses_attempt_two_in_prompt_report_and_ledger) ... ERROR
+test_script_verification_ticks_command_check (test_run_factory.TemporaryGitFixture.test_script_verification_ticks_command_check) ... ok
+test_timeout_records_usage_and_kills_mock_tree (test_run_factory.TemporaryGitFixture.test_timeout_records_usage_and_kills_mock_tree) ... ok
+test_untracked_import_blocks_preflight_without_deleting_it (test_run_factory.TemporaryGitFixture.test_untracked_import_blocks_preflight_without_deleting_it) ... ok
+test_invalid_transforms_and_duplicate_names_rejected (test_segmented_assets.SegmentedAssets.test_invalid_transforms_and_duplicate_names_rejected) ... ok
+test_missing_or_wrong_piece_cannot_pass (test_segmented_assets.SegmentedAssets.test_missing_or_wrong_piece_cannot_pass) ... ok
+test_pose_survives_build (test_segmented_assets.SegmentedAssets.test_pose_survives_build) ... ok
+
+======================================================================
+ERROR: test_restart_uses_attempt_two_in_prompt_report_and_ledger (test_run_factory.TemporaryGitFixture.test_restart_uses_attempt_two_in_prompt_report_and_ledger)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\joaov\Documents\Codex\2026-10-15\roblox-factory\factory\tests\test_run_factory.py", line 347, in test_restart_uses_attempt_two_in_prompt_report_and_ledger
+    resumed = Run(self.args)
+  File "C:\Users\joaov\Documents\Codex\2026-10-15\roblox-factory\factory\tools\run_factory.py", line 217, in __init__
+    self.root = self._repo_root(Path(args.game_dir))
+                ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\joaov\Documents\Codex\2026-10-15\roblox-factory\factory\tools\run_factory.py", line 278, in _repo_root
+    done = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"], cwd=game, capture_output=True, text=True
+    )
+  File "C:\Users\joaov\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 554, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+TypeError: 'Mock' object does not support the context manager protocol
+
+----------------------------------------------------------------------
+Ran 49 tests in 19.449s
+
+FAILED (errors=1)
+BLOCKED: production paused in factory/executor.json
+[2026-10-20T16:53:56Z] task 001: coder start (attempt 1 of 2: fixture)
+[2026-10-20T16:53:56Z] task 001: coder failed (failed)
+[2026-10-20T16:53:56Z] task 001: checks failed
+[2026-10-20T16:53:56Z] task 001: coder start (attempt 2 of 2: fixture)
+[2026-10-20T16:53:56Z] task 001: passed (attempt 2)
+[2026-10-20T16:53:56Z] task 001: committed (local-commit)
+[2026-10-20T16:54:06Z] check fixture: pass (python fixture.py)
+
+Executor hashes unchanged during tests: True
+{'factory\\executor.json': '72b3163cd6878c0ab5b16318da32781dfc92572006fe8d74d4f3fc4b75dc232e', 'factory\\tools\\executor_policy.py': 'd94714545978ab408d5c54915158eea0688783a2ccd38fa0fab88946454f9b26', 'factory\\tools\\run_factory.py': 'cb6adce387c2d122f933fd57b44f4e024d5dce87749a0f75ab96c21ff9d44433'}

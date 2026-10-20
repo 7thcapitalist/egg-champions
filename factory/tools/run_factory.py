@@ -5,20 +5,17 @@ Usage:
     python factory/tools/run_factory.py <game-dir> [options]
 
 Options:
-    --max-tasks N       build at most N tasks this run (default 5)
-    --task-minutes M    wall-clock limit for one task, all attempts (default 60)
-    --attempts N        tries per task or stage, the first included (default 3)
+    --max-tasks N       build at most N tasks this run (default 1)
+    --task-minutes M    wall-clock limit for one task, all attempts (default 10)
+    --attempts N        tries per task or stage, the first included (default/max 2)
     --unblock ID        set a blocked task back to pending before starting
     --push              push commits (default: local commits only)
-    --agent-cmd CMD     run CMD in place of `codex exec` for every agent run. For
-                        testing this tool only. CMD gets the prompt on stdin
-                        and FACTORY_AGENT, FACTORY_TASK and FACTORY_ATTEMPT in
-                        its environment.
+    --agent-cmd CMD     disabled; tests use subprocess mocks in fixtures.
 
 The loop reads `<game-dir>/state.json` and works on the first stage that has
 not passed:
 - A stage whose gate already passes is recorded as passed and skipped.
-- `spec_parsed`, `economy_tuned` and `planned` run their agent, then the gate.
+- `spec_parsed` and `economy_tuned` run scripts; `planned` uses one agent.
 - `built` walks `<game-dir>/tasks/index.json` in dependency order. Each task
   gets a fresh headless coder run on its one brief, then the orchestrator
   checks the result itself: only allowed paths changed, every Done-when box is
@@ -37,7 +34,6 @@ reaches git that the checks have not seen. Standard library only.
 import argparse
 import hashlib
 import json
-import math
 import os
 import re
 import shlex
@@ -54,6 +50,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import concurrent.futures  # noqa: E402
 import gate  # noqa: E402  lives next to this file
+from executor_policy import Ledger, PolicyError, exclusive, load_policy  # noqa: E402
 
 STAGE_AGENTS = {
     "spec_parsed": "spec-parser",
@@ -85,7 +82,7 @@ EXPERIMENT = re.compile(r"deliberately|\bbroken\b|\brevert\b", re.IGNORECASE)
 COMMIT_ITEM = re.compile(r"\bcommitted\b", re.IGNORECASE)
 
 CHECK_TIMEOUT = 600  # seconds, for one check command
-FEEDBACK_CHARS = 6000  # failing output handed back to the coder
+FEEDBACK_CHARS = 2000  # bounded failing output, never a full history
 EM_DASH = chr(0x2014)
 
 
@@ -229,6 +226,51 @@ class Run:
         self.headline = ""
         self.next_step = ""
         self.branch = self.git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+        common = self.git("rev-parse", "--git-common-dir").stdout.strip()
+        self.control_dir = (self.root / common).resolve() / "factory-executor"
+        self.ledger = Ledger(self.control_dir)
+        self.locked = False
+        self.deadlines = {}
+
+    def policy(self):
+        # Operators can pause or lower authorization while a run is active.
+        try:
+            return load_policy(self.root / "factory/executor.json")
+        except PolicyError as exc:
+            raise Stop(str(exc)) from exc
+
+    def next_attempt(self, label):
+        policy = self.policy()
+        try:
+            attempt = self.ledger.admit(policy, self.game + ":" + label)
+        except PolicyError as exc:
+            raise Stop(str(exc)) from exc
+        if attempt > min(2, self.args.attempts, policy["attempts"]):
+            raise Stop("task exhausted configured total attempts")
+        return attempt
+
+    def execute(self):
+        """Lock before state changes; production pause also covers --finish."""
+        try:
+            # A paused executor must not need write access to Git metadata.
+            if self.policy()["paused"]:
+                raise Stop("production paused in factory/executor.json")
+            with exclusive(self.control_dir):
+                self.locked = True
+                policy = self.policy()
+                if policy["paused"]:
+                    raise Stop("production paused in factory/executor.json")
+                if self.args.agent_cmd:
+                    raise Stop("--agent-cmd is disabled; use subprocess mocks in temporary fixtures")
+                if self.args.push:
+                    raise Stop("push disabled by executor policy; publication stays manual")
+                self.ledger.admit(policy, self.game + ":admission")
+                return self.finish(self.args.finish) if self.args.finish else self.go()
+        except (PolicyError, Stop, OSError) as exc:
+            print("BLOCKED: %s" % exc)
+            return 1
+        finally:
+            self.locked = False
 
     # ----------------------------------------------------------- utilities
 
@@ -442,23 +484,72 @@ class Run:
 
     def run_agent(self, agent, prompt, minutes, label, attempt):
         """Start one fresh headless agent run. Return (ok, result_text)."""
+        if self.policy()["paused"]:
+            raise Stop("production paused in factory/executor.json")
+        if not self.locked:
+            try:
+                with exclusive(self.control_dir):
+                    self.locked = True
+                    return self.run_agent(agent, prompt, minutes, label, attempt)
+            except (PolicyError, OSError) as exc:
+                raise Stop(str(exc)) from exc
+            finally:
+                self.locked = False
+        policy = self.policy()
+        if self.args.agent_cmd:
+            raise Stop("alternate executor disabled; use subprocess mocks")
+        if not 1 <= attempt <= min(2, policy["attempts"]):
+            raise Stop("at most two total attempts permitted")
+        task_key = self.game + ":" + label
+        try:
+            expected = self.ledger.admit(policy, task_key)
+            if attempt != expected or attempt > getattr(self.args, "attempts", 2):
+                raise PolicyError("attempt does not match persistent ledger")
+        except PolicyError as exc:
+            raise Stop(str(exc)) from exc
+        deadline = self.deadlines.setdefault(task_key, time.monotonic() + min(
+            policy["task_timeout_seconds"], getattr(self.args, "task_minutes", 10) * 60))
+        try:
+            seconds = min(policy["call_timeout_seconds"], minutes * 60, deadline - time.monotonic(),
+                          self.ledger.remaining_seconds(task_key, min(policy["task_timeout_seconds"],
+                                                        getattr(self.args, "task_minutes", 10) * 60)))
+        except PolicyError as exc:
+            raise Stop(str(exc)) from exc
+        if seconds <= 0:
+            raise Stop("task deadline exhausted")
         env = dict(os.environ, FACTORY_AGENT=agent, FACTORY_TASK=label, FACTORY_ATTEMPT=str(attempt))
         # The agent does not need publishing credentials. Do not pass them on.
         env.pop("ROBLOX_API_KEY", None)
-        if self.args.agent_cmd:
-            argv = shlex.split(self.args.agent_cmd, posix=os.name != "nt")
-        else:
-            exe = shutil.which("codex")
-            if exe is None:
-                raise Stop("the codex CLI is not on PATH")
-            prompt = self.role_instructions(agent) + "\n\n# Assignment for this run\n\n" + prompt
+        exe = shutil.which("codex")
+        if exe is None:
+            raise Stop("the codex CLI is not on PATH")
+        prompt = self.role_instructions(agent) + "\n\n# Assignment for this run\n\n" + prompt
+        if len(prompt) > policy["prompt_max_chars"]:
+            raise Stop("prompt exceeds context allowance; narrow the brief")
         scratch = self.game_path / "build"
         scratch.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="factory-codex-", dir=scratch) as temp_dir:
             last_message = Path(temp_dir) / "last-message.txt"
-            if not self.args.agent_cmd:
-                argv = [exe, "exec", "--sandbox", "workspace-write", "-c", "approval_policy=\"never\"",
-                        "--ephemeral", "--json", "--output-last-message", str(last_message), "-"]
+            argv = [exe, "exec", "--sandbox", "workspace-write", "-c", "approval_policy=\"never\"",
+                    "--model", policy["model"], "-c", 'model_reasoning_effort="%s"' % policy["effort"],
+                    "-c", "model_auto_compact_token_limit=16000",
+                    "-c", "model_context_window=24000",
+                    "-c", "features.multi_agent=false",
+                    "-c", "features.goals=false",
+                    "-c", "features.memories=false",
+                    "-c", "tool_output_token_limit=1500",
+                    "--ephemeral", "--json", "--output-last-message", str(last_message), "-"]
+            try:
+                if self.policy() != policy:
+                    raise PolicyError("policy changed during preparation; launch refused")
+                start = self.ledger.start(policy, task_key, agent,
+                                          task_seconds=getattr(self.args, "task_minutes", 10) * 60)
+            except PolicyError as exc:
+                raise Stop(str(exc)) from exc
+            t0 = time.monotonic()
+            out, err, final = "", "", ""
+            status = "launch_error"
+            ok = False
             try:
                 proc = subprocess.Popen(
                     argv, cwd=self.root, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -466,24 +557,31 @@ class Run:
                     start_new_session=os.name != "nt",
                     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
                 )
-            except OSError as exc:
-                return False, "could not start %s: %s" % (argv[0], exc)
-            try:
-                out, err = proc.communicate(prompt, timeout=max(60, minutes * 60))
+                status = "finished"
+                out, err = proc.communicate(prompt, timeout=seconds)
+                if proc.returncode != 0:
+                    status = "failed"
+                final = last_message.read_text(encoding="utf-8").strip() if last_message.is_file() else ""
+                ok, report = self.codex_result(proc.returncode, out, err, final)
             except subprocess.TimeoutExpired:
+                status = "timeout"
                 self.kill_tree(proc)
-                proc.communicate()
-                return False, "the %s run hit its time limit of %d minute(s) and was stopped" % (agent, minutes)
+                out, err = proc.communicate()
+                report = "the %s run hit its %.3f second limit and was stopped" % (agent, seconds)
             except KeyboardInterrupt:
+                status = "interrupted"
                 self.kill_tree(proc)
-                proc.communicate()
+                out, err = proc.communicate()
                 raise
-            final = last_message.read_text(encoding="utf-8").strip() if last_message.is_file() else ""
-        if self.args.agent_cmd:
-            return proc.returncode == 0, (out + err).strip()
-        trace = "%s/reports/agents/%s-attempt%d.jsonl" % (self.game, label, attempt)
-        self.write_owned(trace, out)
-        return self.codex_result(proc.returncode, out, err, final)
+            except OSError as exc:
+                report = "executor failed: %s" % exc
+            finally:
+                row = self.ledger.finish(start, out, time.monotonic() - t0, status, ok)
+                trace = "%s/reports/agents/%s-attempt%d.jsonl" % (self.game, label, start["attempt"])
+                self.write_owned(trace, out)
+        if not row["ok"] and ok:
+            report += "\nRequired usage unknown or effective model mismatch; review ledger."
+        return row["ok"], report
 
     def role_instructions(self, agent):
         """Load the portable body of the existing factory role definition."""
@@ -493,7 +591,11 @@ class Run:
             body = body.split("---\n", 2)[2]
         return ("# Factory role: %s\n\n" % agent + body.strip()
                 + "\n\nThe assignment below overrides role text about committing, pushing, "
-                  "publishing, or broad scope. Follow the assignment's local-only limits.")
+                  "publishing, tests, or broad scope. Read only the brief and named source files. "
+                  "Consult specific spec/config sections only when necessary. Do not read old "
+                  "reports, exports or full directory trees. Do not spawn agents or invoke AI. "
+                  "Do not run verification/status/tests: the orchestrator runs scripts once. "
+                  "Leave those checklist boxes for the orchestrator. Follow local-only limits.")
 
     @staticmethod
     def codex_result(returncode, stdout, stderr, final):
@@ -607,6 +709,7 @@ class Run:
             "line %d: %s" % (i["line"], one_line(i["text"], 100))
             for i in done_when_items(brief)
             if not i["ticked"] and not COMMIT_ITEM.search(i["text"])
+            and not brief_commands([i])
         ]
         if left:
             failures.append(("Done-when boxes left unticked", "\n".join(left)))
@@ -628,6 +731,12 @@ class Run:
             self.log("check %s" % task["id"], "pass" if ok else "FAIL", name)
             if not ok:
                 failures.append((name, tail(out, 2500)))
+        if not failures:
+            lines = brief.read_text(encoding="utf-8").splitlines(keepends=True)
+            for item in done_when_items(brief):
+                if brief_commands([item]) and not item["ticked"]:
+                    lines[item["line"] - 1] = lines[item["line"] - 1].replace("- [ ]", "- [x]", 1)
+            brief.write_text("".join(lines), encoding="utf-8")
         return failures
 
     # -------------------------------------------------------------- prompts
@@ -651,8 +760,9 @@ Rules for this run, on top of your agent instructions:
   `{g}/tasks/index.json`, `factory/` or `.claude/`, gets the whole attempt
   reverted.
 - Never read or print `.env`. Never publish anything.
-- Tick a Done-when box only after you ran its check and saw it pass. Leave a
-  box about committing to the orchestrator.
+- Do not run tests, status, gates or verification commands. Scripts in the
+  orchestrator do those once and tick command checks. Leave those boxes and
+  the box about committing to the orchestrator.
 
 When you finish, the orchestrator runs these itself and the task passes only
 if all of them pass and every Done-when box is ticked:
@@ -662,7 +772,7 @@ This is attempt {attempt} of {total}.""".format(
             brief=brief, g=g, checks=checks, attempt=attempt, total=self.args.attempts
         )
         if feedback:
-            text += "\n\nThe previous attempt failed. " + feedback
+            text += "\n\nThe previous attempt failed. " + tail(feedback, FEEDBACK_CHARS)
         return text + "\n\nEnd with a short report: what you built, each check and its result, and anything left.\n"
 
     def stage_prompt(self, stage, agent, gate_out, attempt, feedback):
@@ -680,12 +790,12 @@ Rules for this run, on top of your agent instructions:
 - Never read or print `.env`. Never publish anything.
 
 This is attempt {attempt} of {total}.""".format(
-            agent=agent, g=self.game, stage=stage, gate_out=gate_out,
+            agent=agent, g=self.game, stage=stage, gate_out=tail(gate_out, FEEDBACK_CHARS),
             writes=", ".join("`%s/%s`" % (self.game, w) for w in STAGE_WRITES[stage]),
             attempt=attempt, total=self.args.attempts,
         )
         if feedback:
-            text += "\n\nThe previous attempt failed. " + feedback
+            text += "\n\nThe previous attempt failed. " + tail(feedback, FEEDBACK_CHARS)
         return text + "\n\nEnd with a short report of what you did and what is left.\n"
 
     # ---------------------------------------------------------------- commit
@@ -715,9 +825,25 @@ This is attempt {attempt} of {total}.""".format(
 
     def stage_with_agent(self, stage):
         agent = STAGE_AGENTS[stage]
+        # These stages are deterministic: never pay an agent to run a script.
+        if stage in ("spec_parsed", "economy_tuned"):
+            g = self.game
+            argv = (["python", "factory/tools/parse_spec.py", g + "/spec.md", g + "/config"]
+                    if stage == "spec_parsed" else
+                    ["python", "factory/tools/simulate_economy.py", g + "/config", g + "/tuning"])
+            ran, output = self.run_check(argv, "zero")
+            ok, gate_out = self.run_gate(stage)
+            if not ran or not ok:
+                raise Stop("deterministic stage failed: " + tail(output + "\n" + gate_out, 2000))
+            self.state(stage, "passed", gate_out)
+            self.commit("Factory: %s passes deterministic gate" % stage)
+            return
+        first_attempt = self.next_attempt(stage)
+        limit = min(self.args.attempts, self.policy()["attempts"])
         self.state(stage, "running")
         feedback = ""
-        for attempt in range(1, self.args.attempts + 1):
+        attempted, accepted = False, False
+        for attempt in range(first_attempt, limit + 1):
             ok, gate_out = self.run_gate(stage)
             if ok:
                 break
@@ -727,9 +853,11 @@ This is attempt {attempt} of {total}.""".format(
                 agent, self.stage_prompt(stage, agent, gate_out, attempt, feedback),
                 self.args.task_minutes, stage, attempt,
             )
+            attempted, accepted = True, ran
             rel = self.save_agent_report(stage, attempt, report)
             breaks = self.guard(base, stage)
             if breaks:
+                accepted = False
                 self.revert_to(base)
                 self.log(stage, "REJECTED", "; ".join(breaks))
                 feedback = "It changed files it may not change, so all of it was reverted:\n" + "\n".join(breaks)
@@ -740,7 +868,9 @@ This is attempt {attempt} of {total}.""".format(
                 continue
             self.log(stage, "agent done", "report in %s" % rel)
         ok, gate_out = self.run_gate(stage)
-        if ok:
+        if ok and (not attempted or accepted):
+            if attempted:
+                self.ledger.task_done(self.game + ":" + stage)
             self.state(stage, "passed", gate_out.replace("OK: ", ""))
             self.log(stage, "passed", gate_out)
             self.commit("Factory: %s stage passes its gate" % stage)
@@ -788,14 +918,16 @@ This is attempt {attempt} of {total}.""".format(
 
     def build_task(self, task):
         tid = task["id"]
+        first_attempt = self.next_attempt("task-" + tid)
+        limit = min(self.args.attempts, self.policy()["attempts"])
         base = self.git("rev-parse", "HEAD").stdout.strip()
         deadline = time.time() + self.args.task_minutes * 60
         feedback = ""
         attempt = 0
         reports = []
-        for attempt in range(1, self.args.attempts + 1):
-            minutes_left = math.ceil((deadline - time.time()) / 60)
-            if minutes_left < 1:
+        for attempt in range(first_attempt, limit + 1):
+            minutes_left = (deadline - time.time()) / 60
+            if minutes_left <= 0:
                 feedback = "the task used its %d minute limit" % self.args.task_minutes
                 self.log("task %s" % tid, "out of time", feedback)
                 break
@@ -819,6 +951,7 @@ This is attempt {attempt} of {total}.""".format(
             if ran and not failures:
                 tick_commit_items(task["path"])
                 self.set_task_status(tid, "done")
+                self.ledger.task_done(self.game + ":task-" + tid)
                 self.log("task %s" % tid, "passed", "attempt %d" % attempt)
                 sha = self.commit("Task %s: %s\n\nBuilt by the coder agent through factory/tools/run_factory.py,\n"
                                   "attempt %d. Every check in the brief and the build checks pass." % (tid, task["title"], attempt))
@@ -883,6 +1016,15 @@ This is attempt {attempt} of {total}.""".format(
         report. The same path guard and checks as a normal attempt. Nothing
         is reverted on failure; the agent fixes it and runs again.
         """
+        if not self.locked or self.policy()["paused"]:
+            raise Stop("--finish requires an unpaused, locked execute()")
+        # --finish cannot manufacture a measured task after an unrecorded agent run.
+        rows = self.ledger.read()
+        if any(r["event"] == "task_done" and r["task"] == self.game + ":task-" + tid for r in rows):
+            raise Stop("task already completed; duplicate --finish refused")
+        previous = [r for r in rows if r["event"] == "finished" and r["task"] == self.game + ":task-" + tid]
+        if not previous or not previous[-1]["ok"]:
+            raise Stop("--finish requires a successful measured invocation for this task")
         task, reason = self.next_task()
         if task is None or task["id"] != tid:
             print("FINISH REFUSED: task %s is not the next runnable task (%s)" % (
@@ -909,6 +1051,7 @@ This is attempt {attempt} of {total}.""".format(
             return 1
         tick_commit_items(task["path"])
         self.set_task_status(tid, "done")
+        self.ledger.task_done(self.game + ":task-" + tid)
         self.log("task %s" % tid, "passed", "checked with --finish")
         sha = self.commit("Task %s: %s\n\nBuilt by the coder agent and checked by factory/tools/run_factory.py\n"
                           "--finish. Every check in the brief and the build checks pass." % (tid, task["title"]))
@@ -941,6 +1084,8 @@ This is attempt {attempt} of {total}.""".format(
             self.state("built", "pending", "task %s unblocked" % tid)
 
     def go(self):
+        if not self.locked:
+            raise Stop("use execute() to acquire the repository lock")
         self.preflight()
         self.log("run", "start", "%s on branch %s, max %d task(s)" % (self.game, self.branch, self.args.max_tasks))
         try:
@@ -971,16 +1116,21 @@ This is attempt {attempt} of {total}.""".format(
                     self.next_step = "Build the agent for `%s` (see factory/README.md), then run again." % stage
                     self.log(stage, "stop", "no agent for this stage yet")
                     break
-        except Stop as stop:
+        except (Stop, PolicyError) as stop:
+            self.preserve_partial = True
+            self.problems.append({"what": "executor", "reason": str(stop), "detail": ""})
             self.headline = "Stopped: %s." % str(stop).rstrip(".")
             self.log("run", "stop", str(stop))
         except KeyboardInterrupt:
+            self.preserve_partial = True
+            self.problems.append({"what": "executor", "reason": "interrupted", "detail": ""})
             self.headline = "Interrupted by a person."
             self.log("run", "stop", "interrupted")
         self.log("run", "end", "%d task(s) done, %d problem(s)" % (len(self.done), len(self.problems)))
         self.write_latest()
         try:
-            self.commit("Factory run report for %s" % self.game)
+            if not getattr(self, "preserve_partial", False):
+                self.commit("Factory run report for %s" % self.game)
         except Stop as stop:
             print("could not commit the run report: %s" % stop)
         print("\n" + (self.root / self.game / "reports/latest.md").read_text(encoding="utf-8"))
@@ -1031,26 +1181,43 @@ This is attempt {attempt} of {total}.""".format(
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Build one game from its state and task list")
     ap.add_argument("game_dir")
-    ap.add_argument("--max-tasks", type=int, default=5)
-    ap.add_argument("--task-minutes", type=int, default=60)
-    ap.add_argument("--attempts", type=int, default=3)
+    ap.add_argument("--max-tasks", type=int, default=1)
+    ap.add_argument("--task-minutes", type=int, default=10)
+    ap.add_argument("--attempts", type=int, default=2)
     ap.add_argument("--budget-usd", type=float, default=None,
                     help="unsupported by Codex; rejected to avoid implying a spend cap")
     ap.add_argument("--unblock", default=None, metavar="ID")
     push = ap.add_mutually_exclusive_group()
     push.add_argument("--push", action="store_true", help="explicitly allow pushing commits")
     push.add_argument("--no-push", action="store_true", help="legacy spelling; local commits are already the default")
-    ap.add_argument("--agent-cmd", default=None, help="for testing this tool: run CMD instead of codex")
+    ap.add_argument("--agent-cmd", default=None, help="disabled; use mocks, never another executor")
     ap.add_argument("--finish", default=None, metavar="ID",
                     help="check and commit task ID from the working tree, for short agent shells")
+    ap.add_argument("--executor-status", action="store_true", help="read-only policy/ledger, no AI")
     args = ap.parse_args(argv)
     if args.max_tasks < 1 or args.attempts < 1 or args.task_minutes < 1:
         ap.error("--max-tasks, --attempts and --task-minutes must be at least 1")
+    if args.attempts > 2:
+        ap.error("at most two total attempts are permitted")
     if args.budget_usd is not None:
         ap.error("--budget-usd is unsupported by codex exec; no USD spend cap is available")
-    if args.finish:
-        return Run(args).finish(args.finish)
-    return Run(args).go()
+    if args.executor_status:
+        run = Run(args)
+        try:
+            policy = run.policy()
+            rows = run.ledger.read()
+            try:
+                run.ledger.admit(policy, run.game + ":status")
+                admission = "available (not authorization to resume)"
+            except PolicyError as exc:
+                admission = str(exc)
+            print(json.dumps({"policy": policy, "admission": admission,
+                              "ledger_path": str(run.ledger.path), "ledger": rows}, indent=2))
+            return 0
+        except (PolicyError, Stop) as exc:
+            print("BLOCKED: %s" % exc)
+            return 1
+    return Run(args).execute()
 
 
 if __name__ == "__main__":
