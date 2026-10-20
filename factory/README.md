@@ -185,77 +185,118 @@ since their addresses change from run to run.
 
 ## Run the factory
 
-One command builds a game from where its `state.json` says it is, with nobody
-typing. Use a clean, isolated checkout; the orchestrator refuses a dirty
-working tree, including unrelated untracked files:
+Production is paused in `factory/executor.json`. Do not resume until the owner
+reviews both reports under `factory/reports/`. No live AI or publishing is
+needed for validation:
 
-    python factory/tools/run_factory.py <game-dir>
+    python -B factory/tools/run_factory.py games/egg-champions --executor-status
+    python -B -m unittest discover -s factory/tests -p 'test_*.py' -v
 
-See [`RUN-CODEX.md`](../RUN-CODEX.md) for the daily Codex procedure and the
-current game's validation commands.
+The policy is project-local and centralizes model, effort, timeouts and budgets.
+Default: `gpt-6-luna`, effort `low`, only that model allowed, at most two total
+attempts, one task per run, 300 seconds per invocation, 600 seconds per task.
+`--attempts` and `--task-minutes` can tighten limits but cannot loosen policy.
+There is no alternate executor or automatic model fallback. Push is disabled.
+Changing model requires explicit allowlist authorization; an unavailable model
+fails instead of selecting a more expensive model. Availability is not probed
+with a paid request. The local model cache listed the default on 2026-10-17.
 
-What it does, in order:
-- Works on the first stage that has not passed. A stage whose gate already
-  passes is recorded and skipped. `spec_parsed`, `economy_tuned` and
-  `planned` run their agent, then the gate, up to 3 tries.
-- `built` walks `<game-dir>/tasks/index.json` in dependency order. Each task
-  gets a fresh headless `codex exec` run on its one brief. The
-  coder does not commit. The orchestrator then checks the work itself:
-  - only allowed paths changed: `<game-dir>/src/`, `<game-dir>/tasks/`, test
-    files (`*.spec.luau`, `factory/tools/run_tests*`), and files the brief
-    names. A change to the spec, `config/`, `tuning/`, `state.json`, the task
-    index, `factory/`, `.claude/` or `.env` rejects the attempt and reverts
-    all of it;
-  - every Done-when box is ticked, and no changed file has an em dash;
-  - the brief's Done-when commands pass (`python`, `rojo`, `selene`,
-    `stylua`, and `grep ... finds no` checks are rerun; experiment items such
-    as "a deliberately broken ..." rely on the coder's tick);
-  - the test entry point, `rojo build`, `selene` and `stylua --check` pass.
-- Pass: the task is marked done and committed locally. Fail: the coder gets
-  the failing output and tries again, up to 3 tries in all. Still failing:
-  the work is saved to `<game-dir>/reports/blocked/task-<id>.patch`,
-  reverted, the task is marked blocked, and the run stops.
-- A stage with no agent yet (today `assets` onward) stops the run.
+Parsing and economy simulation use existing deterministic Python scripts.
+Planner/coder receive fresh prompts with just their role and assignment,
+bounded feedback (2,000 characters) and an initial prompt cap (14,000 characters).
+Instructions limit reads to named files and relevant spec/config sections.
+The orchestrator runs checks/status/gates through scripts, not a second AI
+review. Command checklist items are ticked after scripts pass. Experiments
+still require separate evidence; they are not silently marked passed.
+Child invocation options disable multi-agent, goals and memories, limit tool
+output and request a smaller context window. These runtime settings are not a
+hard ceiling on all context or all model requests (compaction can use AI).
 
-Limits: `--max-tasks` (default 5) tasks per run, `--task-minutes` (default 60)
-per task across its attempts, and `--attempts` (default 3). `--budget-usd` is
-rejected because Codex CLI has no equivalent measured spend cap here. Codex
-runs with `workspace-write` and `approval_policy=never`; the orchestrator's
-path guard and Git preflight enforce the task boundary. It removes
-`ROBLOX_API_KEY` from the agent environment. Nothing in the loop publishes.
-Commits stay local unless `--push` is explicitly supplied. Do not use
-`--push` on `main`: the CI workflow publishes the TEST place on relevant pushes.
+### Admission and measurement
 
-Every step adds a line to `<game-dir>/reports/run-log.md`. Every run ends by
-rewriting `<game-dir>/reports/latest.md`: what was done, what failed, the
-state now, and what to do next. Each agent's final report and JSONL trace are
-kept in `<game-dir>/reports/agents/`.
+Production remains paused, with `authorized_calls=0`, `authorized_tokens=0`
+and unknown subscription quota. The reported approximate 7% is not a budget
+authorization. No dollars or API-price estimates are used.
 
-### Resume after a blocked task
+After explicit owner approval, a project policy would need positive cumulative
+call/token authorizations and a quota snapshot with `remaining_percent`, Unix
+UTC `measured_at`, and a truthful `source`. A snapshot must be at most 300 seconds
+old, not future-dated, and above the configured floor (default 5%). There is no
+live subscription quota reader in this executor. A manual snapshot is an owner
+attestation, not independently verified telemetry. If it is unavailable or stale,
+admission is blocked. Do not fabricate measurements or automatically refresh
+timestamps. Budgets are cumulative across games in this Git repository; increasing
+them is new authorization, not a periodic reset.
 
-1. Read `<game-dir>/reports/latest.md`, then the coder reports and the saved
-   patch it names.
-2. Fix the cause. Usually that is the brief (a wrong premise, or a check no
-   machine can run), sometimes the code or a tool. To keep the coder's last
-   try, `git apply <game-dir>/reports/blocked/task-<id>.patch` and finish it.
-   Commit the fix.
-3. Run again with the task set back to pending:
+Policy is reloaded before every invocation and checked again after preparation;
+changed policy aborts that launch. Before each invocation, admission checks
+pause, quota, local budgets, ledger
+integrity, unfinished calls, unknown usage, model mismatch, duplicate completed
+tasks and persistent attempts. The CLI launch itself consumes a call even if it
+fails. Two attempts are total per game/task label across executor restarts, not
+two per new process. Reusing a task ID never resets authorization automatically.
 
-       python factory/tools/run_factory.py <game-dir> --unblock <id>
+### Durable ledger and exclusion
 
-A blocked stage other than `built` resumes the same way, after
-`python factory/tools/state.py set <game-dir> <stage> pending`.
+`git rev-parse --git-common-dir` locates `factory-executor/calls.jsonl` and
+`executor.lock`, shared by worktrees. A separate `ledger-head.json` records
+the row count and SHA-256 of the journal. Missing, truncated, changed or
+inconsistent journal/head blocks admission; a crash while updating these files
+also blocks. Legacy journals without a head require explicit review, not
+automatic migration or reset. The atomic lock covers the whole run and
+`--finish`; a second executor is rejected. A stale lock is never removed
+automatically. This metadata survives normal task rollback and is outside the
+agent change set. It is not part of commits: archive the ledger with review
+records before intentionally removing a checkout. Independent clones/machines
+have separate ledgers and locks; do not run them against the same authorization.
 
-`--agent-cmd CMD` swaps `codex exec` for another command, which gets the prompt
-on stdin. It exists only to test the orchestrator itself without spending
-agent runs.
+Each invocation writes a durable started record before spawning and a finished
+record with task, role, persistent attempt, requested model/effort, duration,
+status, reported effective models and usage. Completed task markers follow
+script verification and require the latest invocation to be successful and
+measured. `--finish` cannot finalize an unrecorded or already completed task.
+Start/finish identities, sequential attempt numbers and usage totals are
+validated on every ledger read. Each completed-turn usage record is preserved and summed
+per invocation. `input_tokens` already includes `cached_input_tokens`;
+`total_tokens = input_tokens + output_tokens`. Cache is never added again.
+Absent/malformed metrics and absent effective model/provider request count are
+JSON `null` (unknown), not zero. Interrupted, timed-out and nonzero-exit calls
+are conservatively unknown even if an earlier turn reported usage. A later
+unclosed turn, failure/error event or conflicting duplicate turn also makes
+the total unknown. Known earlier turns are preserved without pretending the
+whole invocation was measured. All these cases stop further admission. Reported model divergence also blocks
+further calls. Missing effective model alone remains explicitly unknown.
 
-`--finish ID` is for agents whose shell calls are cut short (for example a
-45 second limit). The agent builds task ID in the working tree and ticks its
-Done-when boxes, then runs
-`python factory/tools/run_factory.py <game-dir> --no-push --finish ID`.
-It applies the same path guard and checks as a normal attempt (the checks
-run side by side), then marks the task done and commits it. It skips the
-stage gates and the run report, and it never reverts: on failure it prints
-what failed and the agent fixes it and runs it again. Only the next runnable
-task can be finished.
+The CLI JSONL interface does not enumerate every internal provider request or
+its effective model. This ledger is per CLI invocation with reported turns,
+not invented per-request telemetry. CLI internal retries, server routing and
+already consumed subscription quota cannot be guaranteed by this wrapper.
+The two-attempt cap applies to executor launches. Runtime retry settings for
+built-in providers are not assumed to be enforceable. The token threshold is
+an admission check on already reported usage, not a mid-call output ceiling:
+one admitted call can exceed it before the CLI reports totals. The quota
+snapshot is also not a reservation against other chats using the same account.
+
+Timeouts stop the child process tree. The task deadline is shared across
+invocations and survives restart with the original deadline, including a
+shorter CLI task limit. Restart cannot reset the prompt/report attempt number
+or the task deadline. Backwards clock movement blocks admission. Script checks
+have their own timeout (600 seconds per command), and teardown/reporting can
+add time. No claim is made that the entire pipeline always exits within the
+model-call deadline. A governance stop preserves partial working changes for
+review and does not commit them as a successful task.
+
+These are local orchestration controls, not a security boundary against an
+agent deliberately running a nested CLI or editing Git metadata. The hash
+anchor is not signed: removing both journal and head, or deliberately rewriting
+both, cannot be distinguished from a fresh repository or valid history. Prompt rules
+forbid those actions; OS/runtime restrictions remain authoritative. No global
+config, credentials, permissions or billing are changed. The default CLI flags
+were checked using local help before this work; the denied temporary path was
+not retried. Runtime options also reference the
+[official configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+No live invocation was used to certify this installation's behavior.
+
+The existing dirty-tree preflight and path guard remain in force. This imported
+copy contains user files: do not stash, clean or reset it to make a run pass.
+No copying or runtime switching is a remedy for a security denial.
