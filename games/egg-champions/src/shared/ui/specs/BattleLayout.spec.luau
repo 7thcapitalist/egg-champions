@@ -12,6 +12,8 @@ return function()
 						{ 958, 540 },
 						{ 844, 390 },
 						{ 720, 239 },
+						{ 568, 239 },
+						{ 640, 320 },
 						{ 320, 720 },
 						{
 							390,
@@ -63,6 +65,27 @@ return function()
 			Runner.expect(p.playerPet.w >= 170 and p.leaderPet.w >= 170).toBeTrue()
 			Runner.expect(p.playerPanel.y >= 172 and p.giveUp.y + p.giveUp.h <= 844).toBeTrue()
 		end)
+		Runner.it(
+			"uses side status panels to recover creature height on short landscape",
+			function()
+				local p = Layout.compute(720, 239, 58)
+				Runner.expect(p.sidePanels).toBeTrue()
+				Runner.expect(p.playerPet.w >= 110 and p.leaderPet.w >= 110).toBeTrue()
+				Runner.expect(p.playerPanel.h >= 62 and p.leaderPanel.h >= 62).toBeTrue()
+				Runner.expect(p.playerPanel.x + p.playerPanel.w <= p.playerPet.x).toBeTrue()
+				Runner.expect(p.leaderPet.x + p.leaderPet.w <= p.leaderPanel.x).toBeTrue()
+			end
+		)
+		Runner.it(
+			"returns to full-width status panels when resizing to portrait or desktop",
+			function()
+				for _, size in { { 390, 844 }, { 320, 720 }, { 958, 540 }, { 844, 390 } } do
+					local p = Layout.compute(size[1], size[2], 36)
+					Runner.expect(not p.sidePanels).toBeTrue()
+					Runner.expect(p.playerPanel.y + p.playerPanel.h <= p.playerPet.y).toBeTrue()
+				end
+			end
+		)
 		Runner.it(
 			"allocates much more space to the desktop creature than the old scaled 150px card",
 			function()

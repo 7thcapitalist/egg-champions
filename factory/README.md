@@ -67,6 +67,10 @@ stage passed on its own word.
 
 ## Local Studio QA
 
+For bounded feature proposals based on primary references, see
+[FEATURE-RESEARCH.md](FEATURE-RESEARCH.md). Validation and brief drafting use
+scripts without model calls and do not start the executor.
+
 Before art/UI planning read [VISUAL-QUALITY.md](VISUAL-QUALITY.md). Plans must
 include map composition, asset contact sheets, animation/effect budgets,
 onboarding and collection-value review. Validate review evidence with

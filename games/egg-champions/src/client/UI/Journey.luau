@@ -2,6 +2,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Coins = require(ReplicatedStorage.Shared.rules.Coins)
+local CollectionGoals = require(ReplicatedStorage.Shared.ui.CollectionGoals)
+local EggShop = require(script.Parent.EggShop)
 local Theme = require(script.Parent.Theme)
 local State = require(script.Parent.State)
 local Screens = require(script.Parent.Screens)
@@ -72,6 +74,25 @@ function Journey.mount(playerGui: PlayerGui)
 	for i, world in Config.worlds do
 		rows[world.id] = row(world.id, i, 86)
 	end
+	local collectionTarget = row("CollectionTarget", 10, 80)
+	local targetEgg: string? = nil
+	local trackCollection = Instance.new("TextButton")
+	trackCollection.Name, trackCollection.Text = "TrackCollection", "OPEN TARGET EGG"
+	trackCollection.Size, trackCollection.LayoutOrder = UDim2.new(1, -10, 0, 44), 11
+	trackCollection.BackgroundColor3, trackCollection.TextColor3 =
+		Theme.colors.raised, Theme.colors.text
+	trackCollection.FontFace, trackCollection.TextSize = Theme.fonts.label, 16
+	trackCollection.Parent = scroll
+	trackCollection.Activated:Connect(function()
+		if targetEgg ~= nil then
+			gui.Enabled = false
+			EggShop.openAt(targetEgg)
+		end
+	end)
+	local collectionRows: { [string]: TextLabel } = {}
+	for i, egg in Config.eggs do
+		collectionRows[egg.id] = row("Collection_" .. egg.id, 20 + i, 64)
+	end
 	local bonuses = row("Bonuses", 100, 90)
 	local legacy = row("Legacy", 101, 92)
 	legacy.Text = string.format(
@@ -82,6 +103,35 @@ function Journey.mount(playerGui: PlayerGui)
 	legacy.TextColor3 = Theme.colors.muted
 	State.subscribe(function(payload)
 		local p = payload.profile
+		local goals, target = CollectionGoals.build(p)
+		targetEgg = if target ~= nil then target.eggId else nil
+		trackCollection.Visible = target ~= nil
+		collectionTarget.Text = if target ~= nil
+			then string.format(
+				"COLLECTION TRAIL\nNext: %s (%d/%d normal pets)\nMissing: %s",
+				target.name,
+				target.have,
+				target.need,
+				table.concat(target.missing, ", ")
+			)
+			else "COLLECTION TRAIL\nAll currently available sets are complete.\nUnlock the next world or inspect your collection in PETS > INDEX."
+		for _, goal in goals do
+			local label = collectionRows[goal.eggId]
+			local status = if goal.complete
+				then "COMPLETE"
+				else if goal.unlocked then "IN PROGRESS" else "LOCKED THIS RUN"
+			label.Text = string.format(
+				"%s | %s | %d/%d\n+%g%% coins on completion (automatic; normal pets only)",
+				goal.name,
+				status,
+				goal.have,
+				goal.need,
+				goal.bonusPercent
+			)
+			label.TextColor3 = if goal.complete
+				then Theme.colors.gold
+				else if goal.unlocked then Theme.colors.text else Theme.colors.muted
+		end
 		local badges = p.badges or {}
 		local beaten = p.gymsBeaten or {}
 		for i, world in Config.worlds do

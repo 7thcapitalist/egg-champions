@@ -481,7 +481,8 @@ function Battle.mount(
 			local head = root:FindFirstChild("Head") :: Frame
 			local bar = root:FindFirstChild("Bar") :: Frame
 			local numbers = root:FindFirstChild("Numbers") :: Frame
-			head.Size = UDim2.new(1, 0, 0, if plan.short then 16 else 20)
+			head.Size =
+				UDim2.new(1, 0, 0, if plan.sidePanels then 30 else if plan.short then 16 else 20)
 			bar.Size = UDim2.new(1, 0, 0, if plan.short then 5 else 7)
 			numbers.Size = UDim2.new(1, 0, 0, if plan.short then 13 else 16)
 			local team = root:FindFirstChild("Team") :: Frame
@@ -490,11 +491,29 @@ function Battle.mount(
 			local teamLabel = team:FindFirstChild("Label") :: TextLabel
 			teamLabel.TextSize = 10
 			panel.name.AutomaticSize = Enum.AutomaticSize.None
-			panel.name.Size = UDim2.new(1, -44, 1, 0)
+			panel.name.Size = if plan.sidePanels
+				then UDim2.new(1, 0, 0, 16)
+				else UDim2.new(1, -44, 1, 0)
 			panel.name.TextTruncate = Enum.TextTruncate.AtEnd
 			panel.name.TextSize = if plan.short then 13 else if plan.portrait then 14 else 20
 			panel.typeLabel.TextSize = 10
+			panel.typeLabel.AutomaticSize = Enum.AutomaticSize.None
+			panel.typeLabel.AnchorPoint = if plan.sidePanels
+				then Vector2.zero
+				else Vector2.new(1, 0.5)
+			panel.typeLabel.Position = if plan.sidePanels
+				then UDim2.fromOffset(0, 16)
+				else UDim2.fromScale(1, 0.5)
+			panel.typeLabel.Size = if plan.sidePanels
+				then UDim2.new(1, 0, 0, 12)
+				else UDim2.new(0, 44, 1, 0)
+			panel.typeLabel.TextXAlignment = if plan.sidePanels
+				then Enum.TextXAlignment.Left
+				else Enum.TextXAlignment.Right
 			panel.hp.TextSize = if plan.short then 11 else 13
+			panel.hp.AutomaticSize = Enum.AutomaticSize.None
+			panel.hp.Size = UDim2.new(1, if plan.short or plan.portrait then 0 else -74, 1, 0)
+			panel.hp.TextTruncate = Enum.TextTruncate.AtEnd
 			panel.speed.TextSize = 12
 			panel.speed.Visible = not plan.short and not plan.portrait
 		end

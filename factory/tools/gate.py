@@ -300,6 +300,16 @@ def gate_planned(game):
     if first["status"] != "done":
         return fail("task %s is '%s', expected 'done'" % (first["id"], first["status"]))
 
+    research_path = game / "design/feature-research.json"
+    if research_path.exists():
+        import feature_research
+        research, err = read_json(research_path)
+        if err:
+            return fail(err)
+        errors = feature_research.check(game, research)
+        if errors:
+            return fail("feature research: " + errors[0])
+
     return ok("%d task(s) planned, task %s done, no dependency cycle" % (len(tasks), first["id"]))
 
 

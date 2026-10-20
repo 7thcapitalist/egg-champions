@@ -20,6 +20,37 @@ function BattleLayout.compute(width: number, height: number, topInset: number)
 	local giveHeight = if portrait then 44 else buttonHeight
 	local rowHeight = if portrait then buttonHeight + gap + giveHeight else buttonHeight
 	local rowY = height - pad - rowHeight
+	-- A second horizontal HP row consumes most of a short screen. Keep status
+	-- at the outer edges, leaving the full middle height for both creatures.
+	if short and not portrait then
+		local statusWidth = math.min(148, panelWidth * 0.42)
+		local stageWidth = panelWidth - statusWidth - gap
+		local stageHeight = math.max(1, rowY - gap - top)
+		local petSize = math.max(1, math.min(stageWidth, stageHeight, 320))
+		local statusHeight = math.min(64, stageHeight)
+		local statusY = top + (stageHeight - statusHeight) / 2
+		local petY = top + (stageHeight - petSize) / 2
+		local petX = pad + statusWidth + gap + (stageWidth - petSize) / 2
+		local giveWidth = 80
+		local moveWidth = (width - pad * 2 - giveWidth - gap * 2) / 2
+		return {
+			short = short,
+			portrait = portrait,
+			sidePanels = true,
+			pad = pad,
+			gap = gap,
+			headerY = headerY,
+			headerHeight = headerHeight,
+			playerPanel = rect(pad, statusY, statusWidth, statusHeight),
+			leaderPanel = rect(width - pad - statusWidth, statusY, statusWidth, statusHeight),
+			playerPet = rect(petX, petY, petSize, petSize),
+			leaderPet = rect(width - petX - petSize, petY, petSize, petSize),
+			log = rect(pad, rowY, 1, 1),
+			move1 = rect(pad, rowY, moveWidth, buttonHeight),
+			move2 = rect(pad + moveWidth + gap, rowY, moveWidth, buttonHeight),
+			giveUp = rect(width - pad - giveWidth, rowY, giveWidth, buttonHeight),
+		}
+	end
 	local logHeight = if short then 0 else 44
 	local logY = rowY - gap - logHeight
 	local artTop = top + panelHeight + gap
@@ -31,6 +62,7 @@ function BattleLayout.compute(width: number, height: number, topInset: number)
 	return {
 		short = short,
 		portrait = portrait,
+		sidePanels = false,
 		pad = pad,
 		gap = gap,
 		headerY = headerY,

@@ -35,6 +35,7 @@ return {
 	worldSpecs["SceneLayout.spec"],
 	uiSpecs["Format.spec"],
 	uiSpecs["NextGoal.spec"],
+	uiSpecs["CollectionGoals.spec"],
 	uiSpecs["EdgeArrow.spec"],
 	uiSpecs["EggShopView.spec"],
 	uiSpecs["HatchReveal.spec"],
