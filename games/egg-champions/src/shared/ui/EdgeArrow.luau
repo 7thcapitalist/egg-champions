@@ -71,6 +71,38 @@ end
 
 export type Rect = { x: number, y: number, w: number, h: number }
 
+-- Moves an edge arrow (a square of side size, centred on the placement) off
+-- any HUD rect it would cover, such as the menu: just above the rect, or
+-- just below when there is no room above. The angle stays the same.
+function EdgeArrow.avoid(
+	placed: Placement,
+	size: number,
+	rects: { Rect },
+	viewport: Point,
+	gap: number
+): Placement
+	if not placed.visible then
+		return placed
+	end
+	local half = size / 2
+	local y = placed.y
+	for _, r in rects do
+		local overlaps = placed.x + half > r.x
+			and placed.x - half < r.x + r.w
+			and y + half > r.y
+			and y - half < r.y + r.h
+		if overlaps then
+			local above = r.y - gap - half
+			if above - half >= 0 then
+				y = above
+			else
+				y = math.min(r.y + r.h + gap + half, viewport.y - half)
+			end
+		end
+	end
+	return { visible = true, x = placed.x, y = y, angle = placed.angle }
+end
+
 function EdgeArrow.beside(
 	viewport: Point,
 	rect: Rect,

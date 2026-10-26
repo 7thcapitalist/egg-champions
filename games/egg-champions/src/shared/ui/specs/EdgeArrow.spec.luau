@@ -90,4 +90,29 @@ return function()
 			expect(placed.y <= SCREEN.y - SIZE / 2 + EPSILON).toBeTrue()
 		end)
 	end)
+
+	describe("EdgeArrow.avoid", function()
+		local MENU = { x = 24, y = 530, w = 170, h = 130 }
+
+		it("lifts an arrow that would cover the menu to just above it", function()
+			local placed = { visible = true, x = 48, y = 580, angle = 180 }
+			local moved = EdgeArrow.avoid(placed, 56, { MENU }, SCREEN, 8)
+			expect(moved.y).toBeCloseTo(MENU.y - 8 - 28, EPSILON)
+			expect(moved.x).toBeCloseTo(48, EPSILON)
+			expect(moved.angle).toBeCloseTo(180, EPSILON)
+		end)
+
+		it("leaves an arrow clear of the menu alone", function()
+			local placed = { visible = true, x = 48, y = 200, angle = 180 }
+			local moved = EdgeArrow.avoid(placed, 56, { MENU }, SCREEN, 8)
+			expect(moved.y).toBeCloseTo(200, EPSILON)
+		end)
+
+		it("goes below the rect when there is no room above", function()
+			local top = { x = 24, y = 10, w = 170, h = 100 }
+			local placed = { visible = true, x = 48, y = 50, angle = 180 }
+			local moved = EdgeArrow.avoid(placed, 56, { top }, SCREEN, 8)
+			expect(moved.y).toBeCloseTo(10 + 100 + 8 + 28, EPSILON)
+		end)
+	end)
 end

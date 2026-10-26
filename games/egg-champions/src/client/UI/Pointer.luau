@@ -23,9 +23,11 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local EdgeArrow = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ui"):WaitForChild("EdgeArrow"))
+local EdgeArrow =
+	require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ui"):WaitForChild("EdgeArrow"))
 
-local WorldNames = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("world"):WaitForChild("Names"))
+local WorldNames =
+	require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("world"):WaitForChild("Names"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
 
@@ -94,7 +96,8 @@ local function clear()
 end
 
 local function pulseOn(instance: Instance, goal: { [string]: any })
-	local info = TweenInfo.new(PULSE_SECONDS, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+	local info =
+		TweenInfo.new(PULSE_SECONDS, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
 	local tween = TweenService:Create(instance, info, goal)
 	tween:Play()
 	pulse = tween
@@ -184,7 +187,10 @@ local function outline(target: GuiObject)
 	stroke.Parent = box
 	box.Parent = target
 	shown = box
-	pulseOn(stroke, { Transparency = OUTLINE_PULSE_TRANSPARENCY, Thickness = OUTLINE_THICKNESS_PULSE })
+	pulseOn(
+		stroke,
+		{ Transparency = OUTLINE_PULSE_TRANSPARENCY, Thickness = OUTLINE_THICKNESS_PULSE }
+	)
 	pointArrow(target)
 end
 
@@ -206,7 +212,10 @@ local function highlightGym(worldId: string, training: boolean?)
 	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 	highlight.Parent = model
 	shown = highlight
-	pulseOn(highlight, { OutlineTransparency = GYM_OUTLINE_PULSE, FillTransparency = GYM_FILL_PULSE })
+	pulseOn(
+		highlight,
+		{ OutlineTransparency = GYM_OUTLINE_PULSE, FillTransparency = GYM_FILL_PULSE }
+	)
 
 	-- Where the beam ends: on the gym floor, or the model's pivot.
 	local floor = model:FindFirstChild("Floor", true)
@@ -316,6 +325,19 @@ local function highlightGym(worldId: string, training: boolean?)
 			projected.Z,
 			ARROW_MARGIN
 		)
+		-- Keep the arrow off the HUD menu (it sat on EGGS/PETS at the left edge).
+		local menuButton = targets["menu:Eggs"]
+		local menuFrame = if menuButton ~= nil then menuButton.Parent else nil
+		if menuFrame ~= nil and menuFrame:IsA("GuiObject") and menuFrame.Visible then
+			local p, s = menuFrame.AbsolutePosition, menuFrame.AbsoluteSize
+			placed = EdgeArrow.avoid(
+				placed,
+				ARROW_SIZE,
+				{ { x = p.X, y = p.Y, w = s.X, h = s.Y } },
+				{ x = size.X, y = size.Y },
+				8
+			)
+		end
 		holder.Visible = placed.visible
 		if placed.visible then
 			holder.Position = UDim2.fromOffset(placed.x, placed.y)

@@ -146,7 +146,13 @@ function Main.pulseCoins()
 	scale.Scale = 1
 	local t = TweenService:Create(
 		scale,
-		TweenInfo.new(EffectsBudget.CLICK.pulseSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, true),
+		TweenInfo.new(
+			EffectsBudget.CLICK.pulseSeconds,
+			Enum.EasingStyle.Quad,
+			Enum.EasingDirection.Out,
+			0,
+			true
+		),
 		{ Scale = EffectsBudget.CLICK.pulseScale }
 	)
 	pulseTween = t
@@ -539,7 +545,11 @@ local function number(value: any): number
 end
 
 -- Builds the main screen under playerGui and keeps it in step with State.
-function Main.mount(playerGui: PlayerGui, _click: RemoteEvent, skipTutorial: RemoteFunction?): ScreenGui
+function Main.mount(
+	playerGui: PlayerGui,
+	_click: RemoteEvent,
+	skipTutorial: RemoteFunction?
+): ScreenGui
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "Main"
 	gui.ResetOnSpawn = false
@@ -596,7 +606,8 @@ function Main.mount(playerGui: PlayerGui, _click: RemoteEvent, skipTutorial: Rem
 		if area.X <= 0 or area.Y <= 0 then
 			return
 		end
-		local layout = HudLayout.compute(area.X, area.Y, shownSlots, HudInsets.read(area), shownMenu)
+		local layout =
+			HudLayout.compute(area.X, area.Y, shownSlots, HudInsets.read(area), shownMenu)
 		local s = layout.sizes
 
 		local barRect = layout.topBar
@@ -604,7 +615,8 @@ function Main.mount(playerGui: PlayerGui, _click: RemoteEvent, skipTutorial: Rem
 		placeIn(top.coinsBox, layout.coins, barRect)
 		placeIn(top.world, layout.world, barRect)
 		local rebirthRect = layout.rebirths
-		top.rebirths.Position = UDim2.fromOffset(rebirthRect.x - barRect.x, rebirthRect.y - barRect.y)
+		top.rebirths.Position =
+			UDim2.fromOffset(rebirthRect.x - barRect.x, rebirthRect.y - barRect.y)
 		top.rebirths.Size = UDim2.fromOffset(rebirthRect.w, rebirthRect.h)
 		top.rebirths.TextWrapped = true
 		local coinSize = math.max(12, math.min(sizes.coin, layout.coins.h - 16))
@@ -754,8 +766,12 @@ function Main.mount(playerGui: PlayerGui, _click: RemoteEvent, skipTutorial: Rem
 				badgeCount += 1
 			end
 		end
-		top.rebirths.Text =
-			string.format("BADGES %d/%d >\nRebirths %s", badgeCount, #Config.worlds, Format.abbreviate(rebirths))
+		top.rebirths.Text = string.format(
+			"BADGES %d/%d >\nRebirths %s",
+			badgeCount,
+			#Config.worlds,
+			Format.abbreviate(rebirths)
+		)
 
 		local picked = NextGoal.pick(goalState, number(derived.rebirthCost))
 		tutorialStep = profile.tutorialStep
@@ -768,7 +784,8 @@ function Main.mount(playerGui: PlayerGui, _click: RemoteEvent, skipTutorial: Rem
 		local heldCard: Tutorial.Card? = nil
 		if tutorial ~= nil and tutorial.step == Tutorial.steps.gym and holdGym then
 			tutorial = nil
-			local waiting: Tutorial.Held = { kind = picked.kind, id = picked.id, ready = picked.ready }
+			local waiting: Tutorial.Held =
+				{ kind = picked.kind, id = picked.id, ready = picked.ready }
 			held = waiting
 			heldCard = Tutorial.heldCard(closedScreens, waiting)
 		end
@@ -797,8 +814,12 @@ function Main.mount(playerGui: PlayerGui, _click: RemoteEvent, skipTutorial: Rem
 					have = math.min(coins, price),
 					need = price,
 				}
-			elseif tutorial.step == Tutorial.steps.hatch or tutorial.step == Tutorial.steps.equip then
-				action = if tutorial.step == Tutorial.steps.hatch then GOAL_ACTION.egg else GOAL_ACTION.team
+			elseif
+				tutorial.step == Tutorial.steps.hatch or tutorial.step == Tutorial.steps.equip
+			then
+				action = if tutorial.step == Tutorial.steps.hatch
+					then GOAL_ACTION.egg
+					else GOAL_ACTION.team
 				picked.ready = true
 			else
 				-- The gym step: the first world's gym fee, or the gym itself
@@ -821,7 +842,9 @@ function Main.mount(playerGui: PlayerGui, _click: RemoteEvent, skipTutorial: Rem
 			nextText = NextGoal.nextLine(goalState, picked)
 			hintText = NextGoal.clickHint(goalState, picked)
 			if not picked.ready then
-				local counted = if picked.kind == "pets" or picked.kind == "team" then "Pets" else "Coins"
+				local counted = if picked.kind == "pets" or picked.kind == "team"
+					then "Pets"
+					else "Coins"
 				progress = { label = counted, have = picked.have, need = picked.need }
 			end
 		end
@@ -851,7 +874,9 @@ function Main.mount(playerGui: PlayerGui, _click: RemoteEvent, skipTutorial: Rem
 			if shown ~= nil then
 				goal.action.Visible = false
 				goal.bar.Visible = true
-				local share = if shown.need > 0 then math.clamp(shown.have / shown.need, 0, 1) else 1
+				local share = if shown.need > 0
+					then math.clamp(shown.have / shown.need, 0, 1)
+					else 1
 				goal.fill.Size = UDim2.fromScale(share, 1)
 				goal.barLabel.Text = string.format(
 					"%s %s / %s",
@@ -895,7 +920,9 @@ function Main.mount(playerGui: PlayerGui, _click: RemoteEvent, skipTutorial: Rem
 			applyLayout()
 		end
 
-		local powers = if type(derived.teamClickPower) == "table" then derived.teamClickPower else {}
+		local powers = if type(derived.teamClickPower) == "table"
+			then derived.teamClickPower
+			else {}
 		local equippedUids = {}
 		for _, uid in team do
 			if owned[uid] ~= nil then
@@ -939,7 +966,8 @@ function Main.mount(playerGui: PlayerGui, _click: RemoteEvent, skipTutorial: Rem
 		local goalReady = goal.action.Visible and goalScreen ~= nil
 		local gold = HudLayout.goldParts({
 			onboarding = onboarding,
-			pointer = (tutorial ~= nil and tutorial.target ~= nil) or (heldCard ~= nil and heldCard.target ~= nil),
+			pointer = (tutorial ~= nil and tutorial.target ~= nil)
+				or (heldCard ~= nil and heldCard.target ~= nil),
 			goalBar = goal.bar.Visible,
 			goalReady = goalReady,
 			menu = menuShown,

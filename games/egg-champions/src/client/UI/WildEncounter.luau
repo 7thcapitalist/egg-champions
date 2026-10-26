@@ -104,7 +104,8 @@ function UI.mount(parent: PlayerGui, remote: RemoteFunction)
 		portrait.Size = UDim2.new(0.4, -8, 0, l.portraitHeight)
 		short = l.height < 200
 		info.Position, info.Size =
-			UDim2.new(0.4, 0, 0, if short then 28 else 30), UDim2.new(0.6, -12, 0, if short then 28 else 56)
+			UDim2.new(0.4, 0, 0, if short then 28 else 30),
+			UDim2.new(0.6, -12, 0, if short then 28 else 56)
 		selector.Position = UDim2.new(0.4, 0, 0, if short then 56 else 88)
 	end
 	local function show()
@@ -115,7 +116,11 @@ function UI.mount(parent: PlayerGui, remote: RemoteFunction)
 			then math.max(0, math.ceil((current.boostUntil or 0) - workspace:GetServerTimeNow()))
 			else 0
 		boost.Visible = boostLeft > 0 and not hidden and not (available and opened)
-		boost.Text = string.format("TRAINING +%d%%  |  %ds", Config.constants.wild_training_bonus * 100, boostLeft)
+		boost.Text = string.format(
+			"TRAINING +%d%%  |  %ds",
+			Config.constants.wild_training_bonus * 100,
+			boostLeft
+		)
 		card.Visible = available and opened and not hidden or false
 		invite.Visible = available and not opened and not hidden or false
 		if not e then
@@ -164,7 +169,10 @@ function UI.mount(parent: PlayerGui, remote: RemoteFunction)
 			then "CAUGHT!"
 			elseif e.phase == "escaped" then "ESCAPED"
 			elseif count() == 0 then "GET PRISMS"
-			else string.format("THROW %.2f%%", Prisms.chance(e.petId, Config.prisms[tier].id) * 100)
+			else string.format(
+				"THROW %.2f%%",
+				Prisms.chance(e.petId, Config.prisms[tier].id) * 100
+			)
 	end
 	local function send(choice: string)
 		local e = current and current.encounter
@@ -179,7 +187,8 @@ function UI.mount(parent: PlayerGui, remote: RemoteFunction)
 		show()
 		if choice == "capture" then
 			local prism = Instance.new("Frame")
-			prism.Name, prism.Size, prism.Position = "CapturePrism", UDim2.fromOffset(24, 24), UDim2.new(1, -55, 1, -42)
+			prism.Name, prism.Size, prism.Position =
+				"CapturePrism", UDim2.fromOffset(24, 24), UDim2.new(1, -55, 1, -42)
 			prism.Rotation, prism.BackgroundColor3, prism.Parent =
 				45,
 				(if tier == 3
@@ -212,20 +221,31 @@ function UI.mount(parent: PlayerGui, remote: RemoteFunction)
 			elseif reply.phase == "defeated" then
 				resultText = "+"
 					.. Format.abbreviate(reply.rewardCoins or 0)
-					.. string.format(" COINS!\n+%d%% training.", Config.constants.wild_training_bonus * 100)
+					.. string.format(
+						" COINS!\n+%d%% training.",
+						Config.constants.wild_training_bonus * 100
+					)
 				if reply.dropId then
 					resultText ..= " +1 " .. string.upper(reply.dropId) .. " PRISM!"
 				end
 				PetVisual.react(portrait, "hit", 0.4)
 				Visitor.react("hit")
 			else
-				resultText = if reply.result == "perfect" then "PERFECT HIT!" else "Counter! Aim for gold."
-				PetVisual.react(portrait, if reply.result == "perfect" then "hit" else "attack", 0.3)
+				resultText = if reply.result == "perfect"
+					then "PERFECT HIT!"
+					else "Counter! Aim for gold."
+				PetVisual.react(
+					portrait,
+					if reply.result == "perfect" then "hit" else "attack",
+					0.3
+				)
 			end
 		else
 			resultText = if ok and reply.reason == "strike_cooldown"
 				then "Wait for the next gold window."
-				elseif ok and reply.reason == "no_prisms" then "No usable prism. Open the prism shop."
+				elseif
+					ok and reply.reason == "no_prisms"
+				then "No usable prism. Open the prism shop."
 				else "Encounter unavailable. Training continues."
 		end
 		show()
@@ -265,7 +285,8 @@ function UI.mount(parent: PlayerGui, remote: RemoteFunction)
 		if card.Visible then
 			local e = current and current.encounter
 			if e then
-				marker.Position = UDim2.fromScale(Wild.focus(e.startedAt, workspace:GetServerTimeNow()), 0.5)
+				marker.Position =
+					UDim2.fromScale(Wild.focus(e.startedAt, workspace:GetServerTimeNow()), 0.5)
 			end
 			if e and workspace:GetServerTimeNow() >= e.expiresAt then
 				show()

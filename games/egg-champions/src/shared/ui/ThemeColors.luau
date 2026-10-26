@@ -19,6 +19,8 @@ local ThemeColors = table.freeze({
 	pets = Color3.fromRGB(150, 92, 240),
 	rebirth = Color3.fromRGB(64, 196, 120),
 	shop = Color3.fromRGB(240, 82, 120),
+	-- The red face of every Close button.
+	close = Color3.fromRGB(232, 72, 72),
 	text = Color3.fromRGB(242, 244, 248),
 	muted = Color3.fromRGB(155, 166, 186),
 	gold = Color3.fromRGB(255, 210, 73),

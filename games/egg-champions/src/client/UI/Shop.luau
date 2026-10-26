@@ -65,7 +65,9 @@ local function loadPrices()
 end
 
 local function readPasses(payload: State.Payload?)
-	local list = if payload ~= nil and type(payload.derived.passes) == "table" then payload.derived.passes else {}
+	local list = if payload ~= nil and type(payload.derived.passes) == "table"
+		then payload.derived.passes
+		else {}
 	for _, entry in list do
 		if type(entry) == "table" and type(entry.id) == "string" then
 			owned[entry.id] = entry.owned == true
@@ -157,8 +159,8 @@ function Shop.mount(playerGui: PlayerGui)
 	close.Name = "Close"
 	close.AutoButtonColor = true
 	close.BorderSizePixel = 0
-	close.BackgroundColor3 = colors.panel
-	close.TextColor3 = colors.text
+	close.BackgroundColor3 = colors.close
+	close.TextColor3 = colors.white
 	close.FontFace = Theme.fonts.label
 	close.TextSize = textSizes.button
 	close.Text = Theme.label("Close")
@@ -185,7 +187,8 @@ function Shop.mount(playerGui: PlayerGui)
 	listLayout.Parent = list
 
 	local prisms = Instance.new("TextButton")
-	prisms.Name, prisms.Text, prisms.TextSize, prisms.FontFace = "Prisms", "CAPTURE PRISMS  >", 14, Theme.fonts.label
+	prisms.Name, prisms.Text, prisms.TextSize, prisms.FontFace =
+		"Prisms", "CAPTURE PRISMS  >", 14, Theme.fonts.label
 	prisms.Size, prisms.BackgroundColor3, prisms.TextColor3, prisms.Parent =
 		UDim2.new(1, -6, 0, 44), colors.raised, colors.gold, list
 	prisms.LayoutOrder = 0
@@ -264,9 +267,16 @@ function Shop.mount(playerGui: PlayerGui)
 					elseif id > 0 then "Loading..."
 					else "Soon"
 			)
-			row.button.TextColor3 = if isOwned then colors.gold elseif buyable then colors.text else colors.muted
+			-- Buyable passes get a green face; owned ones a quiet gold label.
+			row.button.BackgroundColor3 = if buyable and not isOwned
+				then colors.hatch
+				else colors.raised
+			row.button.TextColor3 = if isOwned
+				then colors.gold
+				elseif buyable then colors.white
+				else colors.muted
 			row.button.AutoButtonColor = not isOwned and buyable
-			row.stroke.Color = if isOwned or buyable then colors.gold else colors.outline
+			row.stroke.Color = if isOwned then colors.gold else colors.outline
 		end
 	end
 

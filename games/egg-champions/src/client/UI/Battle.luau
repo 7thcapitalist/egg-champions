@@ -236,7 +236,8 @@ local function hpPanel(name: string, parent: Instance, rightSide: boolean): HpPa
 	local markers = frame("Markers", team)
 	markers.LayoutOrder = 1
 	markers.AutomaticSize = Enum.AutomaticSize.XY
-	list(markers, Enum.FillDirection.Horizontal, 6).VerticalAlignment = Enum.VerticalAlignment.Center
+	list(markers, Enum.FillDirection.Horizontal, 6).VerticalAlignment =
+		Enum.VerticalAlignment.Center
 
 	return {
 		root = panel,
@@ -483,7 +484,8 @@ function Battle.mount(
 	log:GetPropertyChangedSignal("AbsoluteCanvasSize"):Connect(function()
 		-- Font measurement finishes after the initial deferred scroll. Follow
 		-- the newest line once the actual canvas height has settled too.
-		log.CanvasPosition = Vector2.new(0, math.max(0, log.AbsoluteCanvasSize.Y - log.AbsoluteWindowSize.Y))
+		log.CanvasPosition =
+			Vector2.new(0, math.max(0, log.AbsoluteCanvasSize.Y - log.AbsoluteWindowSize.Y))
 	end)
 
 	local move1 = moveButton("Move1", row, 2)
@@ -524,7 +526,8 @@ function Battle.mount(
 			local head = root:FindFirstChild("Head") :: Frame
 			local bar = root:FindFirstChild("Bar") :: Frame
 			local numbers = root:FindFirstChild("Numbers") :: Frame
-			head.Size = UDim2.new(1, 0, 0, if plan.sidePanels then 30 else if plan.short then 16 else 20)
+			head.Size =
+				UDim2.new(1, 0, 0, if plan.sidePanels then 30 else if plan.short then 16 else 20)
 			bar.Size = UDim2.new(1, 0, 0, if plan.short then 5 else 7)
 			numbers.Size = UDim2.new(1, 0, 0, if plan.short then 13 else 16)
 			local team = root:FindFirstChild("Team") :: Frame
@@ -533,20 +536,35 @@ function Battle.mount(
 			local teamLabel = team:FindFirstChild("Label") :: TextLabel
 			teamLabel.TextSize = 10
 			panel.name.AutomaticSize = Enum.AutomaticSize.None
-			panel.name.Size = if plan.sidePanels then UDim2.new(1, 0, 0, 16) else UDim2.new(1, -44, 1, 0)
+			panel.name.Size = if plan.sidePanels
+				then UDim2.new(1, 0, 0, 16)
+				else UDim2.new(1, -44, 1, 0)
 			panel.name.TextTruncate = Enum.TextTruncate.AtEnd
-			panel.name.TextSize = if plan.short then 13 else if plan.portrait or plan.sidePanels then 14 else 20
+			panel.name.TextSize = if plan.short
+				then 13
+				else if plan.portrait or plan.sidePanels then 14 else 20
 			panel.typeLabel.TextSize = 10
 			panel.typeLabel.AutomaticSize = Enum.AutomaticSize.None
-			panel.typeLabel.AnchorPoint = if plan.sidePanels then Vector2.zero else Vector2.new(1, 0.5)
-			panel.typeLabel.Position = if plan.sidePanels then UDim2.fromOffset(0, 16) else UDim2.fromScale(1, 0.5)
-			panel.typeLabel.Size = if plan.sidePanels then UDim2.new(1, 0, 0, 12) else UDim2.new(0, 44, 1, 0)
+			panel.typeLabel.AnchorPoint = if plan.sidePanels
+				then Vector2.zero
+				else Vector2.new(1, 0.5)
+			panel.typeLabel.Position = if plan.sidePanels
+				then UDim2.fromOffset(0, 16)
+				else UDim2.fromScale(1, 0.5)
+			panel.typeLabel.Size = if plan.sidePanels
+				then UDim2.new(1, 0, 0, 12)
+				else UDim2.new(0, 44, 1, 0)
 			panel.typeLabel.TextXAlignment = if plan.sidePanels
 				then Enum.TextXAlignment.Left
 				else Enum.TextXAlignment.Right
 			panel.hp.TextSize = if plan.short then 11 else 13
 			panel.hp.AutomaticSize = Enum.AutomaticSize.None
-			panel.hp.Size = UDim2.new(1, if plan.short or plan.portrait or plan.sidePanels then 0 else -74, 1, 0)
+			panel.hp.Size = UDim2.new(
+				1,
+				if plan.short or plan.portrait or plan.sidePanels then 0 else -74,
+				1,
+				0
+			)
 			panel.hp.TextTruncate = Enum.TextTruncate.AtEnd
 			panel.speed.TextSize = 12
 			panel.speed.Visible = not plan.short and not plan.portrait and not plan.sidePanels
@@ -658,9 +676,10 @@ function Battle.mount(
 		primary.Text = Theme.label(text)
 		primary.Active = enabled
 		primary.AutoButtonColor = enabled
-		primary.BackgroundColor3 = if enabled then colors.raised else colors.panel
-		primary.TextColor3 = if enabled then colors.gold else colors.muted
-		primaryStroke.Color = if enabled then colors.gold else colors.outline
+		-- Enabled: a green face that says "press me"; disabled stays dark.
+		primary.BackgroundColor3 = if enabled then colors.hatch else colors.panel
+		primary.TextColor3 = if enabled then colors.white else colors.muted
+		primaryStroke.Color = colors.outline
 	end
 
 	local function addLog(text: string, muted: boolean)
@@ -705,7 +724,12 @@ function Battle.mount(
 		end
 	end
 
-	local function renderPanel(panel: HpPanel, block: Frame, snapshot: BattleView.Snapshot, side: string)
+	local function renderPanel(
+		panel: HpPanel,
+		block: Frame,
+		snapshot: BattleView.Snapshot,
+		side: string
+	)
 		local sideView = if side == "player" then snapshot.player else snapshot.leader
 		local fighter = BattleView.active(snapshot, side)
 		if fighter == nil then
@@ -715,7 +739,8 @@ function Battle.mount(
 		end
 		local shown = fighter :: BattleView.FighterView
 		local index = math.min(sideView.active, #sideView.fighters)
-		panel.name.Text = Theme.label((BattleView.fighterName(snapshot, side, index):gsub("^Leader's ", "")))
+		panel.name.Text =
+			Theme.label((BattleView.fighterName(snapshot, side, index):gsub("^Leader's ", "")))
 		panel.typeLabel.Text = Theme.label(BattleView.typeName(shown.type))
 		panel.typeLabel.TextColor3 = Theme.typeColor(shown.type)
 		local share = BattleView.hpShare(shown.hp, shown.maxHp)
@@ -729,8 +754,11 @@ function Battle.mount(
 			end
 		end
 		for position, member in sideView.fighters do
-			local marker =
-				filled("Pet" .. position, if member.hp > 0 then colors.healthy else colors.fainted, panel.markers)
+			local marker = filled(
+				"Pet" .. position,
+				if member.hp > 0 then colors.healthy else colors.fainted,
+				panel.markers
+			)
 			marker.LayoutOrder = position
 			marker.Size = UDim2.fromOffset(LAYOUT.marker.X, LAYOUT.marker.Y)
 		end
@@ -741,7 +769,11 @@ function Battle.mount(
 		local view = block:FindFirstChild("PetView")
 		-- Rebuild when the pet or its fainted state changes, so a pet that
 		-- is up again gets its variant layers back at full strength.
-		if block:GetAttribute("PetKey") ~= key or block:GetAttribute("Fainted") ~= fainted or view == nil then
+		if
+			block:GetAttribute("PetKey") ~= key
+			or block:GetAttribute("Fainted") ~= fainted
+			or view == nil
+		then
 			view = PetVisual.view(block, shown.pet, shown.variant, shown.type)
 			block:SetAttribute("PetKey", key)
 			block:SetAttribute("Fainted", fainted)
@@ -836,11 +868,15 @@ function Battle.mount(
 		if left > 0 then
 			cardStatus.Text = BattleView.countdownText(left)
 			cardStatus.Visible = true
-		elseif cardStatus.Text == "" or string.find(cardStatus.Text, "try again", 1, true) ~= nil then
+		elseif
+			cardStatus.Text == "" or string.find(cardStatus.Text, "try again", 1, true) ~= nil
+		then
 			cardStatus.Text = ""
 			cardStatus.Visible = false
 		end
-		local label = if prompt.paid then "Fight" else string.format("Pay %s and fight", prompt.feeText)
+		local label = if prompt.paid
+			then "Fight"
+			else string.format("Pay %s and fight", prompt.feeText)
 		setPrimary(label, left <= 0 and not busy)
 	end
 
@@ -879,7 +915,9 @@ function Battle.mount(
 			if worldId ~= "" then
 				local payload = State.get()
 				local profile = if payload ~= nil then payload.profile else {}
-				Progress.playGymWin(ProgressEffects.gymWin(worldId, profile, reply.newBadge == true))
+				Progress.playGymWin(
+					ProgressEffects.gymWin(worldId, profile, reply.newBadge == true)
+				)
 			end
 			cardStatus.Text = ""
 			cardStatus.Visible = false

@@ -11,7 +11,12 @@ function OfflineReward.mount(playerGui: PlayerGui)
 	local shown = false
 	State.subscribe(function(payload: State.Payload)
 		local reward = payload.derived.offlineReward
-		if shown or type(reward) ~= "table" or type(reward.coins) ~= "number" or reward.coins <= 0 then
+		if
+			shown
+			or type(reward) ~= "table"
+			or type(reward.coins) ~= "number"
+			or reward.coins <= 0
+		then
 			return
 		end
 		shown = true

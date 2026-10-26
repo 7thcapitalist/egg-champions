@@ -79,7 +79,8 @@ function Journey.mount(playerGui: PlayerGui)
 	local trackCollection = Instance.new("TextButton")
 	trackCollection.Name, trackCollection.Text = "TrackCollection", "OPEN TARGET EGG"
 	trackCollection.Size, trackCollection.LayoutOrder = UDim2.new(1, -10, 0, 44), 0
-	trackCollection.BackgroundColor3, trackCollection.TextColor3 = Theme.colors.raised, Theme.colors.text
+	trackCollection.BackgroundColor3, trackCollection.TextColor3 =
+		Theme.colors.raised, Theme.colors.text
 	trackCollection.FontFace, trackCollection.TextSize = Theme.fonts.label, 16
 	trackCollection.Parent = scroll
 	trackCollection.Activated:Connect(function()
@@ -105,7 +106,9 @@ function Journey.mount(playerGui: PlayerGui)
 		local goals, target = CollectionGoals.build(p)
 		targetEgg = if target ~= nil then target.eggId else nil
 		trackCollection.Visible = target ~= nil
-		trackCollection.Text = if target ~= nil then "OPEN " .. string.upper(target.name) else "OPEN TARGET EGG"
+		trackCollection.Text = if target ~= nil
+			then "OPEN " .. string.upper(target.name)
+			else "OPEN TARGET EGG"
 		collectionTarget.Text = if target ~= nil
 			then string.format(
 				"COLLECTION TRAIL\nNext: %s (%d/%d normal pets)\nMissing: %s",

@@ -26,7 +26,8 @@ function Discovery.mount(parent: PlayerGui)
 	local close = Instance.new("TextButton")
 	close.Name, close.Text, close.TextSize = "Dismiss", "X", 16
 	close.BackgroundTransparency, close.TextColor3 = 1, Theme.colors.muted
-	close.Position, close.Size, close.Parent = UDim2.new(1, -44, 0, 0), UDim2.fromOffset(44, 44), frame
+	close.Position, close.Size, close.Parent =
+		UDim2.new(1, -44, 0, 0), UDim2.fromOffset(44, 44), frame
 	local dismissed, introduced = false, false
 	local latest: any = nil
 	local wildGui = parent:FindFirstChild("WildEncounter")
@@ -70,7 +71,9 @@ function Discovery.mount(parent: PlayerGui)
 			end
 		end
 		local camera = workspace.CurrentCamera
-		local spot = if camera then Layout.offer(camera.ViewportSize.X, camera.ViewportSize.Y, blockers) else nil
+		local spot = if camera
+			then Layout.offer(camera.ViewportSize.X, camera.ViewportSize.Y, blockers)
+			else nil
 		if spot then
 			frame.Position = UDim2.fromOffset(spot.x + spot.width, spot.y)
 		end
