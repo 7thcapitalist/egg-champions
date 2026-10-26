@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "prepared_local_date": "2026-10-20",
+  "title": "Egg Champions: Pet Clicker Simulator",
+  "brand": "Egg Champions",
+  "status": "draft",
+  "assets": [
+    {
+      "file": "marketing/icon-leafpup-v1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1850845,
+      "sha256": "2367d4515f0b9aeed21a9ee6d15300cdc1debfb00b9f082b6a7126388859d41c",
+      "status": "draft-review-required",
+      "uploaded": false
+    },
+    {
+      "file": "marketing/icon-leafpup-v2.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1776677,
+      "sha256": "9f30ee37b045feca7d77846f7a32f4b8307f11a416f4149312b9ce2c530567bd",
+      "status": "draft-review-required",
+      "uploaded": false
+    },
+    {
+      "file": "marketing/thumbnail-battle-v1.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1938886,
+      "sha256": "0974f8065d21c54106ccb61b75466b822c21c8bc3029fd4e5f14a1986182b096",
+      "status": "draft-review-required",
+      "uploaded": false
+    },
+    {
+      "file": "marketing/thumbnail-hatch-v1.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2131455,
+      "sha256": "443d7c6e3df9b66de1019b83b5cdd5dadf8370df30d58f91523bb31f020fa861",
+      "status": "draft-review-required",
+      "uploaded": false
+    },
+    {
+      "file": "marketing/thumbnail-hatch-v2.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1984455,
+      "sha256": "44ac7f52c60dc82f69a94f4d371c62861a240240bd696f952f9e1a30f20c1775",
+      "status": "draft-review-required",
+      "uploaded": false
+    }
+  ],
+  "descriptions": {
+    "en": {
+      "file": "marketing/description.en.txt",
+      "sha256": "fd6a2c2f20224164bc2ac49e5e446f357712da3178bf17b0da7fe363ae61a0f2"
+    },
+    "pt-BR": {
+      "file": "marketing/description.pt-BR.txt",
+      "sha256": "38721217ba2c57f12b991efd65241a311a83def912dff2d5f61e076d7655d11a"
+    }
+  },
+  "selected_candidates": {
+    "icon": "marketing/icon-leafpup-v2.png",
+    "thumbnail_primary": "marketing/thumbnail-battle-v1.png",
+    "thumbnail_alternative": "marketing/thumbnail-hatch-v2.png"
+  }
+}

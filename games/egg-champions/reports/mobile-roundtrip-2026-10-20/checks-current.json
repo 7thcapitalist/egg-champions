@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "date": "2026-10-21",
+  "build": {
+    "file": "build/mobile-buttons-2026-10-21.rbxl",
+    "sha256": "f1352ac189ab0047fd42b73bd59d34f154fb573336d6d854fbccadfdf726759f"
+  },
+  "source_sha256": "6a72202467d17cfc1c2a85aae0c6ee78c34c1529dba07bfdda820b08170fe625",
+  "luau": {
+    "passed": 886,
+    "failed": 0,
+    "runner_self_tests": 6
+  },
+  "selene": {
+    "errors": 0,
+    "warnings": 0,
+    "parse_errors": 0
+  },
+  "stylua": "passed",
+  "rojo": "passed",
+  "python_tests": {
+    "passed": 125,
+    "scope": "earlier in this session, before UI-only button revision"
+  },
+  "release_gates": {
+    "worlds": [
+      "evidence reference unavailable"
+    ],
+    "playtested": [
+      "evidence reference unavailable"
+    ],
+    "published_test": [
+      "evidence reference unavailable"
+    ]
+  }
+}

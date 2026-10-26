@@ -167,7 +167,8 @@ return function()
 					end
 				end
 				-- Main routes, six loop segments and two authored scene approaches.
-				expect(#s.paths).toEqual(12)
+				expect(#s.paths).toEqual(13)
+				expect(covered(island.origin.x - 26, island.origin.z - 4)).toBeTrue()
 				expect(covered(island.origin.x + 65, island.origin.z - 55)).toBeTrue()
 				expect(covered(island.origin.x + 46, island.origin.z + 65)).toBeTrue()
 			end

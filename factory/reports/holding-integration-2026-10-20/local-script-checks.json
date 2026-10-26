@@ -1,0 +1,54 @@
+{
+  "scope": "local script probes, not Paperclip runtime or AI generation",
+  "roles": {
+    "director": {
+      "role": "director",
+      "model_calls_requested": 0,
+      "publication": "disabled",
+      "status": "checked",
+      "release_errors": {
+        "worlds": [
+          "release manifest missing/current source binding invalid"
+        ],
+        "playtested": [
+          "release manifest missing/current source binding invalid"
+        ],
+        "published_test": [
+          "release manifest missing/current source binding invalid"
+        ]
+      },
+      "worker_setup": {
+        "directory_exists": false,
+        "note": "missing/dirty/worktree/task state blocks generation; no clone fallback"
+      },
+      "admission": {
+        "status": "blocked",
+        "reason": "holding budget blocked: ['codex: ledger semanal ausente']"
+      }
+    },
+    "analyst": {
+      "role": "analyst",
+      "model_calls_requested": 0,
+      "publication": "disabled",
+      "status": "checked",
+      "economy_gate_exit": 0,
+      "summary": "OK: all 6 time and rebirth targets met\n"
+    },
+    "research": {
+      "role": "research",
+      "model_calls_requested": 0,
+      "publication": "disabled",
+      "status": "checked",
+      "errors": [],
+      "scope": "existing evidence validation",
+      "current_trends": "unknown; no new research performed"
+    },
+    "engineer": {
+      "role": "engineer",
+      "model_calls_requested": 0,
+      "publication": "disabled",
+      "status": "blocked",
+      "reason": "Paperclip agent identity missing"
+    }
+  }
+}

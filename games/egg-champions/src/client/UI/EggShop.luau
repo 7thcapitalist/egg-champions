@@ -809,7 +809,7 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 		place(scroll, l.list, p.x, p.y)
 		place(footer, l.footer, p.x, p.y)
 		-- Give guidance its own row on phones so it never covers the title or balance.
-		guideHost.Visible = not (screen.X >= 600 and screen.Y < 360)
+		guideHost.Visible = not (screen.X > screen.Y and screen.Y < 360)
 		local guideRow = if Guide.reserved() and guideHost.Visible then 44 else 0
 		guideBar.AnchorPoint = Vector2.new(0, 0)
 		guideBar.Position = UDim2.fromOffset(0, s.header + 4)

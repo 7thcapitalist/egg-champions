@@ -190,6 +190,7 @@ def parse(markdown):
                     "leader_strength": slug(lead.group(3)),
                     "counter_type": slug(r["Counter"]),
                     "target_rebirths": num(r["Target rebirths"]),
+                    "cohort_power_factor": num(r.get("Cohort power", "100%")),
                 },
             }
         )
@@ -232,7 +233,25 @@ def parse(markdown):
             }
         )
 
+    extra = {}
+    if any("Prism" in header for header, _ in tables):
+        extra["prisms"] = [
+            {"id": slug(r["Prism"]), "name": r["Prism"],
+             "multiplier": num(r["Multiplier"]), "coin_price": num(r["Coin price"]),
+             "starter": num(r["Starter"]), "pack": num(r["Pack"]),
+             "test_product": num(r["TEST product"]), "base_robux": num(r["Base Robux"])}
+            for r in table(tables, "Prism", "Multiplier")]
+        extra["wild_rarities"] = [
+            {"id": slug(r["Wild rarity"]), "strength": num(r["Strength"]),
+             "capture_chance": num(r["Capture chance"])}
+            for r in table(tables, "Wild rarity", "Strength")]
+        extra["wild_areas"] = [
+            {"id": slug(r["Wild area"]),
+             "rarities": {slug(k): num(r[k]) for k in ("Common", "Uncommon", "Rare", "Epic", "Legendary")},
+             "drops": {slug(k): num(r[k + " drop"]) for k in ("Basic", "Refined", "Aurora")}}
+            for r in table(tables, "Wild area", "Basic drop")]
     return {
+        **extra,
         "constants": constants,
         "rarities": rarities,
         "roles": roles,

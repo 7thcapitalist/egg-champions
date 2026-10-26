@@ -2,12 +2,12 @@
   {
     "id": "2x_coins",
     "name": "2x Coins",
-    "effect": "Doubles coins per click"
+    "effect": "Doubles coins per training hit"
   },
   {
     "id": "auto_click",
     "name": "Auto Click",
-    "effect": "Clicks automatically"
+    "effect": "Adds one extra training hit per reward while inside a training ring"
   },
   {
     "id": "lucky_eggs",

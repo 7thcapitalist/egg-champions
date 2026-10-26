@@ -1,0 +1,26 @@
+{
+  "subject": null,
+  "build_sha256": "67f13be7e32e369968a4f443967a543ed905f9801082bd70348db237e0b0aced",
+  "place_id": null,
+  "place_version": null,
+  "session_id": null,
+  "capture_kind": null,
+  "captured_at": null,
+  "storage_mode": null,
+  "release_confirmed": false,
+  "release_evidence": null,
+  "profile": {
+    "version": null,
+    "coins": null,
+    "pets": null,
+    "team": null,
+    "index": null,
+    "badges": null,
+    "rebirths": null,
+    "gymsBeaten": null,
+    "feesPaid": null,
+    "gymRetryAt": null,
+    "playSeconds": null,
+    "tutorialStep": null
+  }
+}

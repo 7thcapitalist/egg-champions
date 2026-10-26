@@ -258,8 +258,15 @@ function Effects.mount(playerGui: PlayerGui, clickCredited: RemoteEvent)
 		return newBurst(Workspace.Terrain)
 	end)
 
-	clickCredited.OnClientEvent:Connect(function(amount: any)
+	clickCredited.OnClientEvent:Connect(function(amount: any, target: any)
 		if type(amount) == "number" then
+			local camera = Workspace.CurrentCamera
+			if typeof(target) == "Vector3" and camera then
+				local point, visible = camera:WorldToViewportPoint(target + Vector3.new(0, 6, 0))
+				if visible then
+					Effects.clicked(Vector2.new(point.X, point.Y))
+				end
+			end
 			Effects.credited(amount)
 		end
 	end)

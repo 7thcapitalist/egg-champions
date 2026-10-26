@@ -1,0 +1,57 @@
+{
+  "build_sha256": "67f13be7e32e369968a4f443967a543ed905f9801082bd70348db237e0b0aced",
+  "mode": null,
+  "subjects": [],
+  "cases": [
+    {
+      "id": "profile-isolation",
+      "status": "unknown",
+      "evidence": null
+    },
+    {
+      "id": "fee-once",
+      "status": "unknown",
+      "evidence": null
+    },
+    {
+      "id": "parallel-battles",
+      "status": "unknown",
+      "evidence": null
+    },
+    {
+      "id": "duplicate-start",
+      "status": "unknown",
+      "evidence": null
+    },
+    {
+      "id": "foreign-session",
+      "status": "unknown",
+      "evidence": null
+    },
+    {
+      "id": "foreign-pet",
+      "status": "unknown",
+      "evidence": null
+    },
+    {
+      "id": "retry-isolation",
+      "status": "unknown",
+      "evidence": null
+    },
+    {
+      "id": "rate-limit-isolation",
+      "status": "unknown",
+      "evidence": null
+    },
+    {
+      "id": "disconnect-rejoin",
+      "status": "unknown",
+      "evidence": null
+    },
+    {
+      "id": "remote-transport",
+      "status": "unknown",
+      "evidence": null
+    }
+  ]
+}

@@ -19,6 +19,7 @@ Screens.names = table.freeze({
 	Index = "Index",
 	Rebirth = "Rebirth",
 	Shop = "Shop",
+	Prisms = "Prisms",
 	Battle = "Battle",
 })
 

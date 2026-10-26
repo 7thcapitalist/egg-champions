@@ -5,6 +5,12 @@ Usage:
     python factory/tools/state.py show <game-dir>
     python factory/tools/state.py set <game-dir> <stage> <status> [--note TEXT]
     python factory/tools/state.py next <game-dir>
+    python factory/tools/state.py task <game-dir> <task-id> awaiting_windows
+
+`task ... awaiting_windows` records, in `<game-dir>/tasks/index.json`, that a
+running or blocked task has its code done and waits only on Windows checks
+(Studio, TEST place, physical phone). It is never used to send a task back
+to pending; run_factory.py owns every other task status.
 
 `<game-dir>/state.json` is the single record of progress for one game.
 `gate.py` decides whether a stage passes; this tool only records the answer,
@@ -125,6 +131,31 @@ def cmd_next(a):
     return 0
 
 
+TASK_FROM = ("running", "blocked")
+
+
+def cmd_task(a):
+    path = Path(a.game_dir) / "tasks" / "index.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    entries = data["tasks"] if isinstance(data, dict) else data
+    entry = next((e for e in entries if isinstance(e, dict) and str(e.get("id")) == a.task_id), None)
+    if entry is None:
+        print("task %s is not in %s" % (a.task_id, path.as_posix()), file=sys.stderr)
+        return 2
+    current = entry.get("status") or "pending"
+    if current == a.status:
+        print("task %s already %s" % (a.task_id, a.status))
+        return 0
+    if current not in TASK_FROM:
+        print("task %s is %s; only %s can become %s" % (a.task_id, current, "/".join(TASK_FROM), a.status),
+              file=sys.stderr)
+        return 2
+    entry["status"] = a.status
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print("task %s %s -> %s" % (a.task_id, current, a.status))
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Read and write one game's state file")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -139,6 +170,12 @@ def main(argv=None):
     p.add_argument("status", choices=STATUSES)
     p.add_argument("--note", default=None, help="why it is in this status")
     p.set_defaults(fn=cmd_set)
+
+    p = sub.add_parser("task", help="mark a task's code done, waiting on Windows checks")
+    p.add_argument("game_dir")
+    p.add_argument("task_id")
+    p.add_argument("status", choices=["awaiting_windows"])
+    p.set_defaults(fn=cmd_task)
 
     p = sub.add_parser("next", help="print the first stage that is not passed")
     p.add_argument("game_dir")

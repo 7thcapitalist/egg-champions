@@ -1,0 +1,111 @@
+[
+  {
+    "id": "d0ee5f1f-c3b1-45a1-a5db-64e66e760e8f",
+    "name": "Analista de Jogo",
+    "status": "paused",
+    "adapterType": "process",
+    "command": "C:\\Users\\joaov\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "args": [
+      "-B",
+      "C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/factory/tools/paperclip_agent.py",
+      "--role",
+      "analyst",
+      "--game",
+      "C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions",
+      "--worker-game",
+      "C:/Users/joaov/dev/_workspaces/roblox-protected/games/egg-champions",
+      "--hq",
+      "C:/Users/joaov/dev/holding-hq",
+      "--workspaces",
+      "C:/Users/joaov/dev/_workspaces",
+      "--company",
+      "aa28310d-794f-4e77-94b2-eeda186d4421"
+    ],
+    "heartbeat": {
+      "enabled": false,
+      "maxConcurrentRuns": 1
+    }
+  },
+  {
+    "id": "9da0ae5f-063f-482a-adfc-f73ff0800046",
+    "name": "Pesquisa de Tendências",
+    "status": "paused",
+    "adapterType": "process",
+    "command": "C:\\Users\\joaov\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "args": [
+      "-B",
+      "C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/factory/tools/paperclip_agent.py",
+      "--role",
+      "research",
+      "--game",
+      "C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions",
+      "--worker-game",
+      "C:/Users/joaov/dev/_workspaces/roblox-protected/games/egg-champions",
+      "--hq",
+      "C:/Users/joaov/dev/holding-hq",
+      "--workspaces",
+      "C:/Users/joaov/dev/_workspaces",
+      "--company",
+      "aa28310d-794f-4e77-94b2-eeda186d4421"
+    ],
+    "heartbeat": {
+      "enabled": false,
+      "maxConcurrentRuns": 1
+    }
+  },
+  {
+    "id": "bb9be172-4482-49a7-9153-f79b37adb1e8",
+    "name": "Engenheiro de Gameplay",
+    "status": "paused",
+    "adapterType": "process",
+    "command": "C:\\Users\\joaov\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "args": [
+      "-B",
+      "C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/factory/tools/paperclip_agent.py",
+      "--role",
+      "engineer",
+      "--game",
+      "C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions",
+      "--worker-game",
+      "C:/Users/joaov/dev/_workspaces/roblox-protected/games/egg-champions",
+      "--hq",
+      "C:/Users/joaov/dev/holding-hq",
+      "--workspaces",
+      "C:/Users/joaov/dev/_workspaces",
+      "--company",
+      "aa28310d-794f-4e77-94b2-eeda186d4421"
+    ],
+    "heartbeat": {
+      "enabled": false,
+      "maxConcurrentRuns": 1
+    }
+  },
+  {
+    "id": "92aae222-2961-4a9e-898f-f7752bcd4d5b",
+    "name": "Diretor do Estúdio",
+    "status": "paused",
+    "adapterType": "process",
+    "command": "C:\\Users\\joaov\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "args": [
+      "-B",
+      "C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/factory/tools/paperclip_agent.py",
+      "--role",
+      "director",
+      "--game",
+      "C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions",
+      "--worker-game",
+      "C:/Users/joaov/dev/_workspaces/roblox-protected/games/egg-champions",
+      "--hq",
+      "C:/Users/joaov/dev/holding-hq",
+      "--workspaces",
+      "C:/Users/joaov/dev/_workspaces",
+      "--company",
+      "aa28310d-794f-4e77-94b2-eeda186d4421"
+    ],
+    "heartbeat": {
+      "enabled": false,
+      "intervalSec": 7200,
+      "maxConcurrentRuns": 1
+    }
+  }
+]

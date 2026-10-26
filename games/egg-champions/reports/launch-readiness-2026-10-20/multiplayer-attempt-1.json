@@ -1,0 +1,49 @@
+{
+  "observed_via": "Roblox Studio MCP / StudioTestService.ExecuteMultiplayerTestAsync(2)",
+  "studio_id": "2efe64de-b818-48d3-bcfb-499ec8fc77a4",
+  "place_id": 0,
+  "edit_after_test": true,
+  "fixture_notes": "Separate QA build; fixture patched in memory, completion and 120s watchdog scripts added only to QA. Shipping sources unchanged. Declared build hash identifies the shipping candidate under test, not the modified QA binary.",
+  "ok": true,
+  "result": {
+    "subjects": [
+      "qa-a",
+      "qa-b"
+    ],
+    "build_sha256": "unknown",
+    "environment": "local-studio",
+    "status": "blocked",
+    "mode": "real-clients",
+    "cases": [
+      {
+        "id": "fee-once",
+        "status": "passed"
+      },
+      {
+        "id": "profile-isolation",
+        "status": "passed"
+      },
+      {
+        "id": "duplicate-start",
+        "status": "passed"
+      },
+      {
+        "id": "parallel-battles",
+        "status": "passed"
+      },
+      {
+        "id": "remote-transport",
+        "status": "passed"
+      },
+      {
+        "id": "foreign-session",
+        "status": "passed"
+      },
+      {
+        "id": "foreign-pet",
+        "status": "failed"
+      }
+    ],
+    "error": "ServerScriptService.BetaMultiplayer:38: beta fixture failed: foreign-pet"
+  }
+}

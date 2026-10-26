@@ -1,0 +1,27 @@
+{
+  "universe_id": 10769019206,
+  "place_id": 101737317546942,
+  "created_in_creator_hub": true,
+  "managed_pricing": false,
+  "products": [
+    {
+      "tier": "basic",
+      "id": 3721209790,
+      "amount": 10,
+      "base_robux": 19
+    },
+    {
+      "tier": "refined",
+      "id": 3721210003,
+      "amount": 5,
+      "base_robux": 49
+    },
+    {
+      "tier": "aurora",
+      "id": 3721210181,
+      "amount": 3,
+      "base_robux": 99
+    }
+  ],
+  "purchase_performed": false
+}

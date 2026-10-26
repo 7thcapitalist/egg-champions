@@ -40,6 +40,7 @@ local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Profile = require(Shared:WaitForChild("rules"):WaitForChild("Profile"))
+local Offline = require(Shared:WaitForChild("rules"):WaitForChild("Offline"))
 local SaveOrder = require(Shared:WaitForChild("rules"):WaitForChild("SaveOrder"))
 
 type Profile = Profile.Profile
@@ -52,6 +53,8 @@ type Session = {
 type Record = {
 	profile: any,
 	session: Session?,
+	offline: any?,
+	offlineReceipt: any?,
 }
 
 local STORE_NAME = "PlayerProfiles"
@@ -102,6 +105,27 @@ local offlineUsers: { [number]: boolean } = {}
 local leavingListeners: { (Player, Profile) -> () } = {}
 
 local Profiles = {}
+local offlineRate: (Player, Profile) -> number = function()
+	return 0
+end
+local offlineRewards: { [number]: any } = {}
+
+function Profiles.setOfflineRate(compute: (Player, Profile) -> number)
+	offlineRate = compute
+end
+
+function Profiles.offlineReward(player: Player): any
+	return offlineRewards[player.UserId] or { coins = 0, seconds = 0 }
+end
+
+-- Read-only provenance for QA snapshots. A temporary Studio profile must
+-- never be presented as proof that a DataStore save survived rejoin.
+function Profiles.persistenceMode(player: Player): string
+	if loaded[player] == nil then
+		return "unloaded"
+	end
+	return if offlineUsers[player.UserId] then "temporary" else "datastore"
+end
 
 local function keyFor(userId: number): string
 	return "user_" .. tostring(userId)
@@ -167,8 +191,7 @@ end
 -- "failed" when the DataStore could not be reached.
 local function claim(userId: number): (string, any)
 	local outcome = "failed"
-	local data: any = nil
-	local ok = update(userId, "claim", function(old: any): any
+	local ok, committed = update(userId, "claim", function(old: any): any
 		local record: Record = if type(old) == "table"
 			then old
 			else { profile = nil, session = nil }
@@ -178,14 +201,42 @@ local function claim(userId: number): (string, any)
 			return nil -- leave the record alone
 		end
 		outcome = "claimed"
-		data = record.profile
+		-- Consume only a readable profile. UpdateAsync may invoke this again;
+		-- the receipt belongs to this claim and rate=0 prevents another award.
+		if record.offlineReceipt == nil or record.offlineReceipt.jobId ~= jobId then
+			local coins, seconds = Offline.reward(record.offline, now)
+			local readable, migrated = pcall(Profile.migrate, record.profile)
+			if record.profile ~= nil and readable and #Profile.validate(migrated) == 0 then
+				if migrated.coins + coins == math.huge then
+					coins, seconds = 0, 0
+				end
+				migrated.coins += coins
+				record.profile = migrated
+				local previousOffline = record.offline
+				record.offline = { at = now, rate = 0 }
+				record.offlineReceipt = {
+					jobId = jobId,
+					coins = coins,
+					seconds = seconds,
+					at = now,
+					source = previousOffline,
+				}
+			end
+		end
 		record.session = { jobId = jobId, heartbeat = now }
 		return record
 	end)
 	if not ok then
 		return "failed", nil
 	end
-	return outcome, data
+	if outcome == "claimed" and type(committed) == "table" then
+		local receipt = committed.offlineReceipt
+		offlineRewards[userId] = if type(receipt) == "table" and receipt.jobId == jobId
+			then receipt
+			else { coins = 0, seconds = 0 }
+		return outcome, committed.profile
+	end
+	return outcome, nil
 end
 
 -- Waits for the lock, then migrates, validates and repairs the profile.
@@ -256,25 +307,40 @@ local function save(
 	player: Player,
 	profile: Profile,
 	release: boolean,
-	order: SaveOrder.State
+	order: SaveOrder.State,
+	requireCommit: boolean?
 ): boolean
 	local userId = player.UserId
 	while true do
 		local decision = SaveOrder.begin(order, release)
 		if decision == "skip" then
-			return true
+			return requireCommit ~= true
 		elseif decision == "run" then
 			break
 		end
 		task.wait(0.05)
 	end
 	local saved = false
+	local offlineSnapshot: any = nil
+	local persistence = if offlineUsers[userId] then "temporary" else "datastore"
 	if offlineUsers[userId] then
 		if release then
 			offlineUsers[userId] = nil
 		end
 		saved = true
 	else
+		local computed, rate = pcall(offlineRate, player, profile)
+		if
+			not computed
+			or type(rate) ~= "number"
+			or rate ~= rate
+			or rate < 0
+			or rate == math.huge
+		then
+			rate = 0
+		end
+		local snapshot = { at = os.time() + (if release then 0 else AUTOSAVE_SECONDS), rate = rate }
+		offlineSnapshot = snapshot
 		local lost = false
 		local ok = update(
 			userId,
@@ -291,6 +357,8 @@ local function save(
 					return nil
 				end
 				record.profile = profile
+				record.offline = snapshot
+				record.offlineReceipt = nil
 				record.session = if release then nil else { jobId = jobId, heartbeat = os.time() }
 				return record
 			end
@@ -301,6 +369,30 @@ local function save(
 		saved = ok and not lost
 	end
 	SaveOrder.finish(order)
+	-- Opt-in QA evidence only. Default game builds have neither attribute;
+	-- temporary Studio success must never look like a persistent write.
+	local qa = game:GetService("ServerScriptService")
+	local subject = player:GetAttribute("BetaSubject")
+	if qa:GetAttribute("BetaSaveEvidence") == true and type(subject) == "string" then
+		local traced = pcall(function()
+			print("[Beta save] " .. HttpService:JSONEncode({
+				subject = subject,
+				session_id = jobId,
+				place_id = game.PlaceId,
+				place_version = game.PlaceVersion,
+				build_sha256 = qa:GetAttribute("BetaBuildSha256") or "unknown",
+				storage_mode = persistence,
+				released = release,
+				saved_coins = profile.coins,
+				offline_snapshot = offlineSnapshot,
+				saved = saved and persistence == "datastore",
+				captured_at = DateTime.now():ToIsoDate(),
+			}))
+		end)
+		if not traced then
+			warn("[Beta save] evidence unavailable; do not approve the persistence test")
+		end
+	end
 	return saved
 end
 
@@ -330,6 +422,20 @@ local function recordPlaytime(player: Player, profile: Profile)
 end
 
 -- The loaded profile for a player, or nil while loading or after a failed load.
+-- A receipt may be acknowledged only after a real, serialized persistent commit.
+function Profiles.flush(player: Player): boolean
+	local profile, order = loaded[player], saveOrder[player]
+	if
+		not profile
+		or not order
+		or order.closing
+		or Profiles.persistenceMode(player) ~= "datastore"
+	then
+		return false
+	end
+	return save(player, profile, false, order, true)
+end
+
 function Profiles.get(player: Player): Profile?
 	return loaded[player]
 end
@@ -359,6 +465,7 @@ local function settleBeforeSave(player: Player, profile: Profile)
 end
 
 local function onJoin(player: Player)
+	offlineRewards[player.UserId] = nil
 	local profile, reason = load(player)
 	if profile == nil then
 		if player.Parent ~= nil then
@@ -391,6 +498,7 @@ local function onLeave(player: Player)
 	sessionClock[player] = nil
 	save(player, profile, true, order)
 	saveOrder[player] = nil
+	offlineRewards[player.UserId] = nil
 end
 
 local started = false

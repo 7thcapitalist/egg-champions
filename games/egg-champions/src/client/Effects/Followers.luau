@@ -23,6 +23,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local FollowerMath = require(Shared:WaitForChild("visual"):WaitForChild("Followers"))
 local PetLook = require(Shared:WaitForChild("visual"):WaitForChild("PetLook"))
+local TrainingSites = require(Shared:WaitForChild("world"):WaitForChild("TrainingSites"))
 local PetMotion = require(Shared:WaitForChild("visual"):WaitForChild("PetMotion"))
 
 local FOLDER_NAME = "PetFollowers"
@@ -139,10 +140,26 @@ local function step(dt: number)
 		local current = entry :: Entry
 		local count = #current.models
 		local base = root.CFrame
+		local trainingTarget = player:GetAttribute(TrainingSites.TARGET_ATTRIBUTE)
+		local trainingStart = player:GetAttribute(TrainingSites.START_ATTRIBUTE)
+		local training = typeof(trainingTarget) == "Vector3" and type(trainingStart) == "number"
 		for index, model in current.models do
 			local phase = seconds + index * 0.71
 			local o = FollowerMath.offset(index, count, seconds)
 			local spot = base * CFrame.new(o.x, o.y, o.z)
+			local effort = 0
+			if training then
+				local angle = (index - (count + 1) / 2) * 0.65
+				effort = math.max(
+					0,
+					math.sin((Workspace:GetServerTimeNow() - trainingStart) * 7 + index * 1.4)
+				)
+				local radius = 5.5 - effort * 1.4
+				spot = CFrame.new(
+					trainingTarget
+						+ Vector3.new(math.sin(angle) * radius, 1, math.cos(angle) * radius)
+				)
+			end
 			local hit = Workspace:Raycast(
 				spot.Position + Vector3.new(0, 12, 0),
 				Vector3.new(0, -40, 0),
@@ -175,9 +192,16 @@ local function step(dt: number)
 			elseif fresh or teleport then
 				face = base.Rotation
 			end
+			if training then
+				local aim = Vector3.new(trainingTarget.X, 0, trainingTarget.Z) - position
+				if aim.Magnitude > 0.01 then
+					face = CFrame.lookAt(Vector3.zero, aim)
+				end
+			end
 			current.facing[index] = face
-			local lift = if flying
-				then 1 + math.sin(phase * 2.6) * 0.18
+			local lift = if training
+				then effort * 0.65
+				elseif flying then 1 + math.sin(phase * 2.6) * 0.18
 				else (1 - math.cos(stride * 2)) * gait * 0.045
 			local target = CFrame.new(
 				position.X,
@@ -189,7 +213,7 @@ local function step(dt: number)
 				if flying then math.sin(phase * 2.6) * 0.035 else math.sin(stride) * gait * 0.025
 			)
 			model:PivotTo(target)
-			PetMotion.pose(model, phase, gait, stride)
+			PetMotion.pose(model, phase, gait, stride, effort)
 		end
 	end
 end

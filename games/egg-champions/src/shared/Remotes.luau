@@ -38,6 +38,8 @@ export type Name =
 	| "ProfileChanged"
 	| "Notice"
 	| "ClickCredited"
+	| "WildAction"
+	| "BuyPrism"
 	| "SkipTutorial"
 
 local Remotes = {}
@@ -60,6 +62,8 @@ Remotes.names = table.freeze({
 	ProfileChanged = "ProfileChanged" :: Name,
 	Notice = "Notice" :: Name,
 	ClickCredited = "ClickCredited" :: Name,
+	WildAction = "WildAction" :: Name,
+	BuyPrism = "BuyPrism" :: Name,
 	SkipTutorial = "SkipTutorial" :: Name,
 })
 
@@ -79,6 +83,8 @@ Remotes.list = table.freeze({
 	table.freeze({ name = Remotes.names.ProfileChanged, kind = "event" :: Kind }),
 	table.freeze({ name = Remotes.names.Notice, kind = "event" :: Kind }),
 	table.freeze({ name = Remotes.names.ClickCredited, kind = "event" :: Kind }),
+	table.freeze({ name = Remotes.names.WildAction, kind = "function" :: Kind }),
+	table.freeze({ name = Remotes.names.BuyPrism, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.SkipTutorial, kind = "function" :: Kind }),
 })
 

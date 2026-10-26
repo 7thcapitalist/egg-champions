@@ -6,7 +6,7 @@
 	for the step the server sent.
 
 	Steps, in order:
-		1 click: "Click anywhere to earn coins", until the player can afford
+		1 click: "Train at the practice target", until the player can afford
 		  the first egg.
 		2 hatch: "Open EGGS and hatch a pet". Points at the EGGS
 		  button, then at the first egg's HATCH button once the shop is open.
@@ -227,8 +227,8 @@ function Tutorial.card(step: any, screens: Screens): Card?
 		return {
 			step = step,
 			text = Tutorial.CLICK_LINE,
-			target = nil,
-			screenText = if anyOpen then "Close this screen and click to earn coins" else nil,
+			target = if anyOpen then nil else "training:" .. firstWorld.id,
+			screenText = if anyOpen then "Close this screen and enter the training ring" else nil,
 		}
 	elseif step == steps.hatch then
 		if screens.eggsOpen then
@@ -283,8 +283,8 @@ export type Held = {
 	ready: boolean,
 }
 
-Tutorial.CLICK_LINE = "Click anywhere to earn coins"
-Tutorial.EQUIPPED_LINE = "Pet equipped. Close this and click to earn more coins"
+Tutorial.CLICK_LINE = "Train at the practice target"
+Tutorial.EQUIPPED_LINE = "Pet equipped. Close this and enter the training ring"
 
 -- The card while the gym step waits on a small goal (the team is not full
 -- yet), so guidance never stops after the equip step. Short of coins, the
@@ -299,7 +299,7 @@ function Tutorial.heldCard(screens: Screens, held: Held): Card
 		if screens.petsOpen then
 			screenText = Tutorial.EQUIPPED_LINE
 		elseif anyOpen then
-			screenText = "Close this screen and click to earn coins"
+			screenText = "Close this screen and enter the training ring"
 		end
 		return { step = step, text = Tutorial.CLICK_LINE, target = nil, screenText = screenText }
 	end

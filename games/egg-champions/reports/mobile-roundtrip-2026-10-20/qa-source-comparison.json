@@ -1,0 +1,9 @@
+{
+  "expected": 145,
+  "observed": 145,
+  "changed": [
+    "ReplicatedStorage.Shared.ui.specs.BattleLayout.spec"
+  ],
+  "extra": [],
+  "scope": "compiled shipping sources including data modules; QA scripts excluded"
+}

@@ -11,3 +11,6 @@ games/*/build/*
 
 # Scratch folder for generated images and exports, not part of the build.
 Claude outputs/
+
+# Ambiente Python local (mini PC)
+.venv/

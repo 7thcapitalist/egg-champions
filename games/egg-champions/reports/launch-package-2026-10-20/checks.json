@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-10-21T02:24:09.778445+00:00",
+  "source_sha256": "f3fb52a87b0edd462ad81c90231feb49918eb4d1f8df60e98fbf0643234d2b54",
+  "build": {
+    "file": "build/launch-package-2026-10-20.rbxl",
+    "sha256": "1ae7d888a5795fdbb5323f232fb0a9998d13db82798b079ac10eba6f6a25cc58"
+  },
+  "checks": {
+    "python": {
+      "passed": 109,
+      "failed": 0
+    },
+    "luau": {
+      "passed": 882,
+      "failed": 0,
+      "runner_self_tests": 6
+    },
+    "selene": "passed-zero-findings",
+    "stylua": "passed",
+    "rojo_separate_build": "passed",
+    "spec_parsed_gate": "passed",
+    "economy_tuned_gate": "passed",
+    "planned_gate": "passed-53-tasks"
+  },
+  "release_errors": {
+    "worlds": [
+      "release manifest missing/current source binding invalid"
+    ],
+    "playtested": [
+      "release manifest missing/current source binding invalid"
+    ],
+    "published_test": [
+      "release manifest missing/current source binding invalid"
+    ]
+  },
+  "release_ready": false,
+  "factory_executor_launched": false,
+  "published": false,
+  "qa": {
+    "studio_id": "2efe64de-b818-48d3-bcfb-499ec8fc77a4",
+    "place_id": 0,
+    "profile": "seeded-temporary-only",
+    "source_binding": "older-local-QA-with-Battle-subtitle-only-patch",
+    "not_shipping_build_evidence": true,
+    "requested_landscape": [
+      720,
+      335
+    ],
+    "effective_landscape": [
+      720,
+      335.200012
+    ],
+    "portrait_robustness_viewport": [
+      320,
+      720
+    ],
+    "shipping_orientation": "LandscapeSensor",
+    "portrait_runtime_override": true,
+    "basic_subtitle": {
+      "text": "Always ready",
+      "text_fits": true,
+      "label_size": [
+        124,
+        16
+      ]
+    },
+    "move_button_size": [
+      144,
+      58
+    ],
+    "give_up_size": [
+      296,
+      44
+    ],
+    "actual_click_advanced_turn": [
+      1,
+      2
+    ],
+    "hp_after_attack": {
+      "player": "62 / 98",
+      "leader": "119 / 146"
+    },
+    "long_log_text_fits": false,
+    "screenshots": "displayed-in-conversation-not-archived",
+    "visual_approval": false,
+    "play_stopped": true,
+    "simulator_restored": true
+  }
+}

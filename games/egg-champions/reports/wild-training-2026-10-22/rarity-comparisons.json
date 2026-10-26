@@ -1,0 +1,257 @@
+[
+  {
+    "older": "abacatudo",
+    "next_egg_pet": "zapmoth",
+    "same_variant": true,
+    "training": [
+      40.0,
+      7.5
+    ],
+    "hp": [
+      260,
+      52
+    ],
+    "attack": [
+      52,
+      10
+    ]
+  },
+  {
+    "older": "abacatudo",
+    "next_egg_pet": "mossnail",
+    "same_variant": true,
+    "training": [
+      40.0,
+      10
+    ],
+    "hp": [
+      260,
+      90
+    ],
+    "attack": [
+      52,
+      18
+    ]
+  },
+  {
+    "older": "voltibun",
+    "next_egg_pet": "cinderhog",
+    "same_variant": true,
+    "training": [
+      1000,
+      200.0
+    ],
+    "hp": [
+      500,
+      390
+    ],
+    "attack": [
+      100,
+      78
+    ]
+  },
+  {
+    "older": "cinderhog",
+    "next_egg_pet": "bubblecrab",
+    "same_variant": true,
+    "training": [
+      200.0,
+      40
+    ],
+    "hp": [
+      390,
+      125
+    ],
+    "attack": [
+      78,
+      25
+    ]
+  },
+  {
+    "older": "cinderhog",
+    "next_egg_pet": "kelpony",
+    "same_variant": true,
+    "training": [
+      200.0,
+      120.0
+    ],
+    "hp": [
+      390,
+      105
+    ],
+    "attack": [
+      78,
+      21
+    ]
+  },
+  {
+    "older": "brookdeer",
+    "next_egg_pet": "pearlotter",
+    "same_variant": true,
+    "training": [
+      5000,
+      4800.0
+    ],
+    "hp": [
+      750,
+      350
+    ],
+    "attack": [
+      150,
+      70
+    ]
+  },
+  {
+    "older": "pearlotter",
+    "next_egg_pet": "driftgull",
+    "same_variant": true,
+    "training": [
+      4800.0,
+      450.0
+    ],
+    "hp": [
+      350,
+      140
+    ],
+    "attack": [
+      70,
+      28
+    ]
+  },
+  {
+    "older": "pearlotter",
+    "next_egg_pet": "fuzzbolt",
+    "same_variant": true,
+    "training": [
+      4800.0,
+      600
+    ],
+    "hp": [
+      350,
+      240
+    ],
+    "attack": [
+      70,
+      48
+    ]
+  },
+  {
+    "older": "tidewhale",
+    "next_egg_pet": "reefwyrm",
+    "same_variant": true,
+    "training": [
+      20000.0,
+      12000.0
+    ],
+    "hp": [
+      1625,
+      1040
+    ],
+    "attack": [
+      325,
+      208
+    ]
+  },
+  {
+    "older": "reefwyrm",
+    "next_egg_pet": "coalmole",
+    "same_variant": true,
+    "training": [
+      12000.0,
+      3000
+    ],
+    "hp": [
+      1040,
+      325
+    ],
+    "attack": [
+      208,
+      65
+    ]
+  },
+  {
+    "older": "reefwyrm",
+    "next_egg_pet": "steamtoad",
+    "same_variant": true,
+    "training": [
+      12000.0,
+      9000.0
+    ],
+    "hp": [
+      1040,
+      273
+    ],
+    "attack": [
+      208,
+      55
+    ]
+  },
+  {
+    "older": "thundrake",
+    "next_egg_pet": "ashwolf",
+    "same_variant": true,
+    "training": [
+      150000.0,
+      120000.0
+    ],
+    "hp": [
+      2600,
+      1690
+    ],
+    "attack": [
+      520,
+      338
+    ]
+  },
+  {
+    "older": "ashwolf",
+    "next_egg_pet": "sootbat",
+    "same_variant": true,
+    "training": [
+      120000.0,
+      37500.0
+    ],
+    "hp": [
+      1690,
+      350
+    ],
+    "attack": [
+      338,
+      70
+    ]
+  },
+  {
+    "older": "ashwolf",
+    "next_egg_pet": "geyserpup",
+    "same_variant": true,
+    "training": [
+      120000.0,
+      50000
+    ],
+    "hp": [
+      1690,
+      600
+    ],
+    "attack": [
+      338,
+      120
+    ]
+  },
+  {
+    "older": "thornback",
+    "next_egg_pet": "lavalynx",
+    "same_variant": true,
+    "training": [
+      3000000,
+      2000000
+    ],
+    "hp": [
+      3250,
+      2000
+    ],
+    "attack": [
+      650,
+      400
+    ]
+  }
+]

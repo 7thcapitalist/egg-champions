@@ -1,0 +1,23 @@
+[
+  {
+    "agentId": "92aae222-2961-4a9e-898f-f7752bcd4d5b",
+    "name": "Diretor do Estúdio",
+    "resumedStatus": "idle",
+    "runId": "ddad6614-e2c2-48ae-9e4e-10ca2ed9d22c",
+    "runStatus": "queued"
+  },
+  {
+    "agentId": "d0ee5f1f-c3b1-45a1-a5db-64e66e760e8f",
+    "name": "Analista de Jogo",
+    "resumedStatus": "idle",
+    "runId": "3ff787e1-862d-46a2-b372-3406202187f4",
+    "runStatus": "queued"
+  },
+  {
+    "agentId": "9da0ae5f-063f-482a-adfc-f73ff0800046",
+    "name": "Pesquisa de Tendências",
+    "resumedStatus": "idle",
+    "runId": "96f94eae-3dcd-4ed9-aa20-439ffef5a222",
+    "runStatus": "queued"
+  }
+]

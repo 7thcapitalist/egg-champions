@@ -415,27 +415,127 @@
       "id": "44",
       "title": "Launch quality and inventory usability",
       "file": "44-launch-quality.md",
-      "depends_on": ["43"],
+      "depends_on": [
+        "43"
+      ],
       "status": "done"
     },
     {
       "id": "45",
       "title": "Original Roblox visual direction",
       "file": "45-visual-rework.md",
-      "depends_on": ["44"],
+      "depends_on": [
+        "44"
+      ],
       "status": "done"
     },
     {
       "id": "46",
       "title": "World identity, feedback and lasting pet value",
       "file": "46-worlds-and-pet-value.md",
-      "depends_on": ["45"],
+      "depends_on": [
+        "45"
+      ],
       "status": "done"
     },
-    {"id":"47","title":"Composition, locomotion and pacing review","file":"47-composition-and-locomotion.md","depends_on":["46"],"status":"done"},
-    {"id":"48","title":"Reachable actions in short viewports","file":"48-short-viewport.md","depends_on":["47"],"status":"done"},
-    {"id":"49","title":"Authored scenes and creature battle motion","file":"49-authored-scenes-and-battle-motion.md","depends_on":["48"],"status":"done"},
-    {"id":"50","title":"Elevation and battle readability","file":"50-elevation-and-battle-readability.md","depends_on":["49"],"status":"running"},
-    {"id":"51","title":"Collection trail using existing egg bonuses","file":"51-collection-trail.md","depends_on":["50"],"status":"pending"}
+    {
+      "id": "47",
+      "title": "Composition, locomotion and pacing review",
+      "file": "47-composition-and-locomotion.md",
+      "depends_on": [
+        "46"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "48",
+      "title": "Reachable actions in short viewports",
+      "file": "48-short-viewport.md",
+      "depends_on": [
+        "47"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "49",
+      "title": "Authored scenes and creature battle motion",
+      "file": "49-authored-scenes-and-battle-motion.md",
+      "depends_on": [
+        "48"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "50",
+      "title": "Elevation and battle readability",
+      "file": "50-elevation-and-battle-readability.md",
+      "depends_on": [
+        "49"
+      ],
+      "status": "awaiting_windows"
+    },
+    {
+      "id": "51",
+      "title": "Collection trail using existing egg bonuses",
+      "file": "51-collection-trail.md",
+      "depends_on": [
+        "50"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "52",
+      "title": "Beta economy and validation",
+      "file": "52-beta-economy-and-validation.md",
+      "depends_on": [
+        "51"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "53",
+      "title": "Launch presentation",
+      "file": "53-launch-presentation.md",
+      "depends_on": [
+        "50"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "54",
+      "title": "Mobile log and TEST roundtrip",
+      "file": "54-mobile-log-and-test-roundtrip.md",
+      "depends_on": [
+        "50"
+      ],
+      "status": "awaiting_windows"
+    },
+    {
+      "id": "55",
+      "title": "Training grounds and offline pet income",
+      "file": "55-training-and-offline.md",
+      "depends_on": [
+        "54"
+      ],
+      "status": "awaiting_windows"
+    },
+    {
+      "id": "56",
+      "title": "Wild focus battles, capture prisms, collection rewards and pass discovery",
+      "file": "56-wild-encounters-and-rewards.md",
+      "depends_on": [
+        "55"
+      ],
+      "status": "awaiting_windows"
+    },
+    {
+      "id": "57",
+      "title": "Saved tiered prisms and biome wild encounters",
+      "file": "57-tiered-prisms-and-wild-areas.md",
+      "depends_on": [
+        "56"
+      ],
+      "status": "awaiting_windows"
+    }
   ]
 }

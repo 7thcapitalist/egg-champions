@@ -314,7 +314,7 @@ return function()
 				expect(goal.kind).toEqual(NextGoal.kinds.pets)
 			end
 			expect(NextGoal.needsCoins(state, goal)).toBeTrue()
-			expect(NextGoal.clickHint(state, goal)).toEqual("Click anywhere to earn coins")
+			expect(NextGoal.clickHint(state, goal)).toEqual("Train at the practice target")
 		end)
 
 		it("drops the line once the coins are there", function()

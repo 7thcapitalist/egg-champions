@@ -1,0 +1,31 @@
+# Wild training encounters and fixed pet value
+
+Owner-directed changes, 2026-10-22. Local implementation only; no native desktop control or TEST publication was performed in this turn.
+
+## Behavior
+
+Training stays at four payments per second. A private optional focus encounter appears after 20 continuous eligible training seconds. It draws a Common, Uncommon or Rare from the current unlocked world's first egg. The player times strikes on a moving gold window; the server validates time, cooldown, HP, counters, session identity and actual position/unlock/health/gym state. Walking, camera and hatching remain available. One noncolliding local creature reuses the existing biome's pet assets, with idle/attack/recoil motion; the compact card never sets a gym battle lock.
+
+Victory credits floor(base active coins per second * 5 * monster strength). Common/Uncommon/Rare strengths are 1/2/3 and scale encounter HP as well. Example at 100 coins/sec: 500/1000/1500 coins. The temporary wild multiplier is excluded from this calculation to avoid feedback. Victory also refreshes a 50% active training boost for 60 seconds, never stacking or extending a bank of time. It is not saved or included in offline rate.
+
+One free encounter-bound cyan/gold Capture Prism can be used after victory, with a server-owned 50% chance. Consume the attempt before resolving it. Success adds a normal pet with a new UID to the regular inventory and index, and advances the first-pet tutorial. Captures cannot be repeated by replaying the remote. No new save schema or paid capture item was added.
+
+Every pet's Training Power is fixed by its configured pet/variant. Retired Legacy floors are zero and ignored by the runtime. The Epic budget is 80x training / 4x battle, Legendary 1000x / 10x battle. These fixed budgets enforce every adjacent egg comparison: an Epic beats the next egg Common and Uncommon; a Legendary beats the next egg Epic in Training Power, HP and Attack at equal variants. Speed, type matchups and choices remain tactical. See rarity-comparisons.json for all 15 comparisons. No inventory-relative scaling remains in the power calculation or UI label. Existing pet records stay intact.
+
+Egg completion keeps the existing +10% egg factor. Completing a normal world set adds 10% to an extra collection factor; the full normal index adds another 20%. Multiply the egg factor by this extra factor. The full normal index earns 2.4x total (140% bonus). These are derived from the existing saved index, not one-shot claims. The index screen shows total bonuses and actual completion transitions trigger celebration; initial loading does not replay a claim.
+
+A dismissible gold-pulse pass callout appears after a first pet while training, and only for a pass whose ownership check completed and which is not owned. It opens the shop, never a payment prompt automatically. The shop fetches actual player-facing Roblox prices, disables purchase while price or ownership is unknown, and shows unavailable on lookup failure. Ownership remains server-controlled. The Roblox purchase dialog is still the final purchase confirmation.
+
+## Validation and limits
+
+900 Luau rule checks and 6 runner self-tests passed. All 135 factory Python tests passed. The actual WildService + TrainingService runtime fixture proves normal training during strikes, a single victory payment, active boost application/expiry, one pet/index insertion, replay rejection, unsuccessful capture, forged IDs, exit/gym rejection and player-removal cleanup. The existing two-hatch training fixture still passes. The economy simulator reuses identical expected-gain calculations and stable farm rankings; six seeded 40-hour trajectories (current fixed powers and legacy-config compatibility) match the uncached path exactly. A notes-only unchanged proposal reuses the same seeded results. Selene reports zero errors/warnings and Rojo builds the normal candidate.
+
+The new card has rectangle checks for 320x720, 390x844, 750x381, 720x239 and 1280x720. It uses full-screen coordinates consistently with the layout tests and leaves landscape side-control space. This does not prove physical touch behavior, art quality, timing fairness under network latency, model placement or render performance. The visitor/card/prism, shop prices/purchase flows and all mobile orientations still require actual in-engine review. Save/rejoin must confirm captures and automatic index bonuses on a published client. Temporary/mocked profiles are not persistence proof. No visual score or release stage is certified by these tests.
+
+The canonical economy simulation is recorded separately in tuning/report.md. It includes fixed rarity values and permanent world/full collection factors; it excludes optional wild skill wins, their rewards/boosts, and captures. It is a passive-training baseline, not an active-minigame forecast. Pacing failures must remain explicit and do not justify changing owner-requested powers or goalposts. Factory and launch gates remain incomplete.
+
+## Canonical passive forecast result
+
+300 players per configured rate, seed 1, 40-hour cap. First hatch: 6 seconds (met). Gym 1 median: 20.49 hours (missed 20-30 minutes). Final gym median: 21.59 hours (missed 6-8 hours). Rebirth medians: 0/0/0 against 0/2/5 (only gym 1 met). This automated greedy policy prioritizes repeated expected-value hatches and delays entering gyms; these medians are not observed human play times. The failure is recorded and needs policy/actual-player review. Requested rarity stats and pacing targets were not changed to make the gate pass. The final gym reference power regenerated as 0.530; all three gym rows in the candidate come from the completed tuner run.
+
+Normal local candidate: build/wild-training-2026-10-22.rbxl. Exact source/build hashes, test counts and publication=false are in validation.json. The release manifest points to this candidate and has no inherited visual/mobile/publication evidence. There are 182 mapped instances, 163 exact source hashes and 30 source/config additions or changes from the previous fast-hatch candidate. Source exports under build/ support a later explicit Studio synchronization and comparison; none were applied to Studio in this turn.

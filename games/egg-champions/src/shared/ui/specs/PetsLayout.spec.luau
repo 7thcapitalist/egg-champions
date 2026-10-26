@@ -386,11 +386,13 @@ return function()
 
 	describe("PetsLayout short viewport", function()
 		it("keeps Close fixed and every body control reachable by scrolling", function()
-			for _, height in { 239, 308, 359 } do
+			for _, screen in
+				{ { 568, 239 }, { 567, 237 }, { 720, 239 }, { 720, 308 }, { 720, 359 } }
+			do
 				for _, filters in { false, true } do
 					local l = PetsLayout.compute(
-						720,
-						height,
+						screen[1],
+						screen[2],
 						58,
 						false,
 						filters,

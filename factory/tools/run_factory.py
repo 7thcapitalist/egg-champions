@@ -377,7 +377,7 @@ class Run:
         for task in tasks:
             if task["status"] != "pending":
                 continue
-            if all(status.get(d) == "done" for d in task["depends_on"]):
+            if all(status.get(d) in gate.CODE_DONE for d in task["depends_on"]):
                 return task, None
         pending = [t["id"] for t in tasks if t["status"] == "pending"]
         if not pending:

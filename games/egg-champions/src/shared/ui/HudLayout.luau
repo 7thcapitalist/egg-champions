@@ -175,7 +175,7 @@ HudLayout.SIZES = table.freeze({
 		coinsWidth = 170,
 		worldWidth = 200,
 		rebirthsWidth = 100,
-		menuWidth = 104,
+		menuWidth = 84,
 		menuButton = 34,
 		menuGap = 4,
 		menuTop = 10,
@@ -290,10 +290,12 @@ function HudLayout.compute(
 	local s: Sizes = if compact then HudLayout.SIZES.compact else HudLayout.SIZES.normal
 	-- A short landscape viewport cannot fit the vertical menu below chat.
 	-- Keep the primary actions in one touch-sized row between the controls.
-	local horizontalMenu = width >= 600 and height < 360
+	local horizontalMenu = width > height and height < 360
 	if horizontalMenu then
 		s = table.clone(s)
 		s.menuButton = 40
+		s.goalPad = 4
+		s.goalLines = 1
 	end
 	local i: Insets = insets or HudLayout.NO_INSETS
 	local gap = HudLayout.INSET_GAP
@@ -374,8 +376,18 @@ function HudLayout.compute(
 	bandTop = math.max(bandTop, contentTop + s.menuTop)
 	local bandBottom = if compact then teamTop - s.menuGap else height - s.gutter
 	local menuY = bandTop + math.max(0, math.floor((bandBottom - bandTop - menuHeight) / 2))
+	local mobileLandscape = compact and width > height
+	if mobileLandscape and not horizontalMenu and chat == nil then
+		menuY = math.max(contentTop + s.menuTop, math.min(menuY, height - 148 - menuHeight))
+	end
 	local menu = rect("menu", s.gutter, menuY, s.menuWidth, menuHeight)
 	if horizontalMenu then
+		-- Keep the row between the mobile movement and jump controls even on
+		-- narrow landscape devices. All buttons retain their touch height.
+		s.menuWidth = math.max(
+			44,
+			math.min(s.menuWidth, math.floor((width - 280 - (count - 1) * s.menuGap) / count))
+		)
 		local menuWidth = count * s.menuWidth + (count - 1) * s.menuGap
 		menu = rect(
 			"menu",
@@ -406,7 +418,9 @@ function HudLayout.compute(
 			)
 		end
 		local teamWidth = slots * s.slotWidth + (slots - 1) * s.slotGap + s.teamPad * 2
-		local teamX = if compact then s.gutter else math.floor((width - teamWidth) / 2)
+		local teamX = if compact and not mobileLandscape
+			then s.gutter
+			else math.floor((width - teamWidth) / 2)
 		local t = rect("team", teamX, teamTop, teamWidth, teamHeight)
 		team = t
 		table.insert(parts, t)

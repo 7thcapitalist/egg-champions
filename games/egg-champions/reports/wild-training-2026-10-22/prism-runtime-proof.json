@@ -1,0 +1,114 @@
+{
+  "storage_mode": "temporary",
+  "published": false,
+  "scope": "Observed runtime before price-lookup failure-cache UI follow-up; gameplay modules unchanged.",
+  "flow": {
+    "paidBlocked": true,
+    "hatch": {
+      "pets": {
+        "1": {
+          "clickPower": 1,
+          "uid": "7af6cc29-af88-4278-873e-482c74ccf807",
+          "newInIndex": true,
+          "petId": "leafpup"
+        }
+      },
+      "ok": true,
+      "price": 50,
+      "eggId": "meadow"
+    },
+    "victory": {
+      "ok": true,
+      "phase": "defeated",
+      "petId": "zapmoth",
+      "rewardCoins": 250,
+      "result": "perfect"
+    },
+    "phaseBefore": "fighting",
+    "stockAfterBuy": 2,
+    "petId": "zapmoth",
+    "stockSpent": 1,
+    "capture": {
+      "ok": true,
+      "phase": "captured",
+      "petId": "zapmoth",
+      "rewardCoins": 0,
+      "result": "captured"
+    },
+    "replay": {
+      "ok": false,
+      "reason": "capture_unavailable"
+    },
+    "pulsesWhileHatching": 4,
+    "strength": 1.25,
+    "ok": true,
+    "petDelta": 1,
+    "hp": 125,
+    "pulsesDuringBattle": 38,
+    "stockAfterReplay": 1,
+    "buy": {
+      "ok": true,
+      "prismId": "basic"
+    }
+  },
+  "buyText": "UNAVAILABLE",
+  "viewport": {
+    "1": 750,
+    "2": 381
+  },
+  "oddsRows": 30,
+  "state": {
+    "pets": 2,
+    "index": {
+      "leafpup": {
+        "normal": true
+      },
+      "zapmoth": {
+        "normal": true
+      }
+    },
+    "encounter": {
+      "lastStrike": 1792693777.535429,
+      "phase": "fighting",
+      "hp": 100,
+      "id": "28506031-5ebc-43e7-98ba-105bb55f0c4c",
+      "misses": 0,
+      "petId": "leafpup",
+      "startedAt": 1792693778.085429,
+      "maxHp": 100,
+      "strength": 1,
+      "worldId": "green_meadow",
+      "rewardCoins": 200,
+      "expiresAt": 1792693898.085429
+    },
+    "prisms": {
+      "items": {
+        "1": {
+          "count": 1,
+          "paid": 0,
+          "earned": 1,
+          "productId": 3721209790,
+          "id": "basic"
+        },
+        "2": {
+          "count": 0,
+          "paid": 0,
+          "earned": 0,
+          "productId": 3721210003,
+          "id": "refined"
+        },
+        "3": {
+          "count": 0,
+          "paid": 0,
+          "earned": 0,
+          "productId": 3721210181,
+          "id": "aurora"
+        }
+      },
+      "paidAllowed": true,
+      "canPurchase": false
+    },
+    "coins": 9500
+  },
+  "buyEnabled": false
+}
