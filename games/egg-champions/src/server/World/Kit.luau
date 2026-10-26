@@ -941,4 +941,138 @@ function Kit.arrivalPad(base: CFrame, palette: Palette): Model
 	return model
 end
 
+-- An open training ring; the separate dummy model recoils locally on hits.
+function Kit.trainingGround(base: CFrame, palette: Palette, theme: string, radius: number): Model
+	local model = newModel("TrainingGround")
+	local coast = theme == "coral_coast"
+	local volcano = theme == "ember_volcano"
+	local pad = part(
+		model,
+		"Floor",
+		Vector3.new(radius * 2 + 3, 0.25, radius * 2 + 3),
+		base,
+		palette.ground
+	)
+	pad.Shape = Enum.PartType.Cylinder
+	pad.Size = Vector3.new(0.25, radius * 2 + 3, radius * 2 + 3)
+	pad.CFrame = base * CFrame.Angles(0, 0, math.pi / 2)
+	model.PrimaryPart = pad
+	local ring = part(
+		model,
+		"TrainingRing",
+		Vector3.new(0.12, radius * 2, radius * 2),
+		base * CFrame.new(0, 0.18, 0) * CFrame.Angles(0, 0, math.pi / 2),
+		palette.glow,
+		Enum.Material.Neon
+	)
+	ring.Shape = Enum.PartType.Cylinder
+	ring.Transparency = 0.78
+	ring.CanCollide = false
+	local material = if volcano
+		then Enum.Material.Slate
+		else if coast then Enum.Material.SmoothPlastic else Enum.Material.Wood
+	local bodyColor = if volcano
+		then palette.rock
+		else if coast then palette.accent else palette.trunk
+	local dummy = Instance.new("Model")
+	dummy.Name = "TrainingDummy"
+	dummy.Parent = model
+	local post = part(
+		dummy,
+		"Post",
+		Vector3.new(1.2, 3.6, 1.2),
+		base * CFrame.new(0, 2, 0),
+		palette.trim,
+		material
+	)
+	local body = part(
+		dummy,
+		"Target",
+		Vector3.new(3.5, 3.5, 2.2),
+		base * CFrame.new(0, 4.8, 0),
+		bodyColor,
+		material
+	)
+	dummy.PrimaryPart = body
+	local head = part(
+		dummy,
+		"Head",
+		Vector3.new(2.8, 2.5, 2.5),
+		base * CFrame.new(0, 7.6, 0),
+		if coast then palette.glow else bodyColor,
+		material
+	)
+	head.Shape = if volcano then Enum.PartType.Block else Enum.PartType.Ball
+	for _, side in { -1, 1 } do
+		part(
+			dummy,
+			"Arm",
+			Vector3.new(2.5, 0.9, 1.1),
+			base * CFrame.new(side * 2.7, 5.1, 0) * CFrame.Angles(0, 0, side * 0.22),
+			bodyColor,
+			material
+		)
+		local eye = part(
+			dummy,
+			"Eye",
+			Vector3.new(0.4, 0.45, 0.25),
+			base * CFrame.new(side * 0.65, 7.8, 1.23),
+			palette.glow,
+			Enum.Material.Neon
+		)
+		eye.Shape = Enum.PartType.Ball
+		if coast then
+			part(
+				dummy,
+				"CoralBranch",
+				Vector3.new(0.7, 2.6, 0.7),
+				base * CFrame.new(side * 2, 7.5, 0) * CFrame.Angles(0, 0, side * -0.45),
+				palette.glow
+			)
+		end
+	end
+	part(
+		dummy,
+		"TargetStripe",
+		Vector3.new(2.7, 0.35, 0.2),
+		base * CFrame.new(0, 4.8, 1.15),
+		palette.glow,
+		Enum.Material.Neon
+	)
+	if not coast and not volcano then
+		part(
+			dummy,
+			"LeafCrown",
+			Vector3.new(4, 0.45, 3),
+			base * CFrame.new(0, 8.9, 0) * CFrame.Angles(0, 0.25, 0),
+			palette.leaf,
+			Enum.Material.Grass
+		)
+	elseif volcano then
+		part(
+			dummy,
+			"LavaCore",
+			Vector3.new(1, 2.3, 0.25),
+			base * CFrame.new(0, 5.1, 1.22),
+			palette.glow,
+			Enum.Material.Neon
+		)
+	end
+	for _, child in dummy:GetDescendants() do
+		if child:IsA("BasePart") then
+			child.CanCollide = false
+			child.CanTouch = false
+		end
+	end
+	post.CanQuery = false
+	label(
+		head,
+		"TRAINING\nStand in the ring\nPets attack automatically",
+		Vector2.new(9, 3.5),
+		4,
+		palette.text
+	)
+	return model
+end
+
 return Kit

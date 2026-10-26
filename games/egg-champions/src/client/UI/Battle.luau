@@ -33,6 +33,7 @@
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextService = game:GetService("TextService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PetVisual = require(Shared:WaitForChild("PetVisual"))
@@ -266,7 +267,7 @@ local function moveButton(name: string, parent: Instance, order: number): MoveBu
 	words.VerticalAlignment = Enum.VerticalAlignment.Center
 	local title = Theme.text({
 		name = "Title",
-		font = Theme.fonts.heading,
+		font = Theme.fonts.label,
 		size = LAYOUT.moveName,
 		parent = b,
 	})
@@ -442,6 +443,50 @@ function Battle.mount(
 	Theme.panel(log)
 	pad(log, LAYOUT.panelPadX, 8)
 	list(log, Enum.FillDirection.Vertical, 4)
+	-- Wrapped AutomaticSize labels can retain a one-line height inside a short
+	-- scrolling viewport. Measure using the actual font and available width.
+	local function sizeLogLine(line: TextLabel)
+		local measuredWidth = -1
+		local revision = 0
+		local function resize()
+			local width = line.AbsoluteSize.X
+			if width <= 0 or width == measuredWidth then
+				return
+			end
+			measuredWidth = width
+			revision += 1
+			local requestedRevision = revision
+			task.spawn(function()
+				local params = Instance.new("GetTextBoundsParams")
+				params.Text = line.Text
+				params.Font = line.FontFace
+				params.Size = line.TextSize
+				params.Width = width
+				local success, bounds = pcall(function()
+					return TextService:GetTextBoundsAsync(params)
+				end)
+				params:Destroy()
+				if line.Parent ~= log or requestedRevision ~= revision then
+					return
+				end
+				if success then
+					line.AutomaticSize = Enum.AutomaticSize.None
+					line.Size = UDim2.new(1, -log.ScrollBarThickness, 0, math.ceil(bounds.Y) + 2)
+				else
+					-- Keep the engine fallback if the font cannot be measured.
+					line.AutomaticSize = Enum.AutomaticSize.Y
+				end
+			end)
+		end
+		line:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
+		task.defer(resize)
+	end
+	log:GetPropertyChangedSignal("AbsoluteCanvasSize"):Connect(function()
+		-- Font measurement finishes after the initial deferred scroll. Follow
+		-- the newest line once the actual canvas height has settled too.
+		log.CanvasPosition =
+			Vector2.new(0, math.max(0, log.AbsoluteCanvasSize.Y - log.AbsoluteWindowSize.Y))
+	end)
 
 	local move1 = moveButton("Move1", row, 2)
 	local move2 = moveButton("Move2", row, 3)
@@ -495,7 +540,9 @@ function Battle.mount(
 				then UDim2.new(1, 0, 0, 16)
 				else UDim2.new(1, -44, 1, 0)
 			panel.name.TextTruncate = Enum.TextTruncate.AtEnd
-			panel.name.TextSize = if plan.short then 13 else if plan.portrait then 14 else 20
+			panel.name.TextSize = if plan.short
+				then 13
+				else if plan.portrait or plan.sidePanels then 14 else 20
 			panel.typeLabel.TextSize = 10
 			panel.typeLabel.AutomaticSize = Enum.AutomaticSize.None
 			panel.typeLabel.AnchorPoint = if plan.sidePanels
@@ -512,10 +559,15 @@ function Battle.mount(
 				else Enum.TextXAlignment.Right
 			panel.hp.TextSize = if plan.short then 11 else 13
 			panel.hp.AutomaticSize = Enum.AutomaticSize.None
-			panel.hp.Size = UDim2.new(1, if plan.short or plan.portrait then 0 else -74, 1, 0)
+			panel.hp.Size = UDim2.new(
+				1,
+				if plan.short or plan.portrait or plan.sidePanels then 0 else -74,
+				1,
+				0
+			)
 			panel.hp.TextTruncate = Enum.TextTruncate.AtEnd
 			panel.speed.TextSize = 12
-			panel.speed.Visible = not plan.short and not plan.portrait
+			panel.speed.Visible = not plan.short and not plan.portrait and not plan.sidePanels
 		end
 		place(log, plan.log)
 		log.Visible = not plan.short
@@ -527,12 +579,12 @@ function Battle.mount(
 			movePad.PaddingLeft = UDim.new(0, 10)
 			movePad.PaddingRight = UDim.new(0, 10)
 			move.title.AutomaticSize = Enum.AutomaticSize.None
-			move.title.Size = UDim2.new(1, 0, 0, 22)
+			move.title.Size = UDim2.new(1, 0, 0, 18)
 			move.title.TextTruncate = Enum.TextTruncate.AtEnd
 			move.sub.AutomaticSize = Enum.AutomaticSize.None
 			move.sub.Size = UDim2.new(1, 0, 0, 16)
 			move.sub.TextTruncate = Enum.TextTruncate.AtEnd
-			move.title.TextSize = if plan.short or plan.portrait then 16 else 20
+			move.title.TextSize = if plan.short or plan.portrait then 14 else 16
 			move.sub.TextSize = 12
 			move.sub.Visible = not plan.short
 		end
@@ -639,10 +691,12 @@ function Battle.mount(
 			parent = log,
 		})
 		line.LayoutOrder = logCount
-		line.AutomaticSize = Enum.AutomaticSize.Y
-		line.Size = UDim2.fromScale(1, 0)
+		line.AutomaticSize = Enum.AutomaticSize.None
+		line.Size = UDim2.new(1, -log.ScrollBarThickness, 0, LAYOUT.logSize + 2)
 		line.TextWrapped = true
 		line.TextXAlignment = Enum.TextXAlignment.Left
+		line.TextYAlignment = Enum.TextYAlignment.Top
+		sizeLogLine(line)
 		-- Keep the log short; the oldest lines go first.
 		local lines = {}
 		for _, child in log:GetChildren() do
@@ -739,7 +793,7 @@ function Battle.mount(
 			return
 		end
 		move1.title.Text = Theme.label(BattleView.basicMoveName(fighter.type))
-		move1.sub.Text = "Basic attack. Always ready."
+		move1.sub.Text = "Always ready"
 		move1.stroke.Color = Theme.typeColor(fighter.type)
 		move1.button.Active = not waiting
 		move1.button.AutoButtonColor = not waiting

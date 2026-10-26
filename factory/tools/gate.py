@@ -485,12 +485,22 @@ def gate_assets(game):
 
 # ---------------------------------------------------------------------- main
 
+def gate_release(game, stage):
+    import release_readiness
+    errors = release_readiness.check(game, stage)
+    if errors:
+        return fail("%s: %s" % (stage, errors[0]))
+    return ok("%s: current build has bound review evidence; no publication performed" % stage)
+
 GATES = {
     "spec_parsed": gate_spec_parsed,
     "economy_tuned": gate_economy_tuned,
     "planned": gate_planned,
     "built": gate_built,
     "assets": gate_assets,
+    "worlds": lambda game: gate_release(game, "worlds"),
+    "playtested": lambda game: gate_release(game, "playtested"),
+    "published_test": lambda game: gate_release(game, "published_test"),
 }
 
 

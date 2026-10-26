@@ -40,6 +40,7 @@ local WorldNames = require(Shared:WaitForChild("world"):WaitForChild("Names"))
 local Kit = require(script.Parent:WaitForChild("Kit"))
 local WorldTerrain = require(script.Parent:WaitForChild("Landscape"))
 local Landmarks = require(script.Parent:WaitForChild("Landmarks"))
+local TrainingSites = require(Shared.world:WaitForChild("TrainingSites"))
 
 -- Each egg's configured model height in studs (GameConfig.models, built from
 -- assets/models.json), so a stand's sign clears its real egg. An egg with no
@@ -276,6 +277,22 @@ function Builder.buildAll(): Built
 		end
 		buildScenery(folder, scenery, palette)
 		Landmarks.build(scenery.theme, Vector3.new(scenery.origin.x, 0, scenery.origin.z), folder)
+		local trainingPoint = TrainingSites.position(island.origin)
+		local training = Kit.trainingGround(
+			at(trainingPoint),
+			palette,
+			scenery.theme,
+			Config.constants.training_radius
+		)
+		training.Name = TrainingSites.modelName(island.worldId)
+		training:SetAttribute("WorldId", island.worldId)
+		training:SetAttribute("WorldIndex", island.worldIndex)
+		training:SetAttribute(
+			"TrainingPosition",
+			Vector3.new(trainingPoint.x, trainingPoint.y, trainingPoint.z)
+		)
+		training.Parent = folder
+		training:AddTag(TrainingSites.TAG)
 		task.wait()
 	end
 

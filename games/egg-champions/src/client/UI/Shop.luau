@@ -38,7 +38,31 @@ type Row = {
 }
 
 local owned: { [string]: boolean } = {}
+local known: { [string]: boolean } = {}
 local products: { [string]: number } = {}
+local prices: { [number]: number } = {}
+local unavailable: { [number]: boolean } = {}
+local fetching: { [number]: boolean } = {}
+local refresh = function() end
+local function loadPrices()
+	for _, id in products do
+		if id > 0 and prices[id] == nil and not fetching[id] and not unavailable[id] then
+			fetching[id] = true
+			task.spawn(function()
+				local ok, info = pcall(function()
+					return MarketplaceService:GetProductInfoAsync(id, Enum.InfoType.GamePass)
+				end)
+				if ok and info.IsForSale and type(info.PriceInRobux) == "number" then
+					prices[id] = info.PriceInRobux
+				else
+					unavailable[id] = true
+				end
+				fetching[id] = nil
+				refresh()
+			end)
+		end
+	end
+end
 
 local function readPasses(payload: State.Payload?)
 	local list = if payload ~= nil and type(payload.derived.passes) == "table"
@@ -47,17 +71,18 @@ local function readPasses(payload: State.Payload?)
 	for _, entry in list do
 		if type(entry) == "table" and type(entry.id) == "string" then
 			owned[entry.id] = entry.owned == true
+			known[entry.id] = entry.known == true
 			products[entry.id] = if type(entry.productId) == "number" then entry.productId else 0
 		end
 	end
 end
 
 local function prompt(passId: string)
-	if owned[passId] == true then
+	if owned[passId] == true or not known[passId] then
 		return
 	end
 	local productId = products[passId]
-	if productId == nil or productId <= 0 then
+	if productId == nil or productId <= 0 or prices[productId] == nil then
 		return
 	end
 	pcall(function()
@@ -161,6 +186,16 @@ function Shop.mount(playerGui: PlayerGui)
 	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	listLayout.Parent = list
 
+	local prisms = Instance.new("TextButton")
+	prisms.Name, prisms.Text, prisms.TextSize, prisms.FontFace =
+		"Prisms", "CAPTURE PRISMS  >", 14, Theme.fonts.label
+	prisms.Size, prisms.BackgroundColor3, prisms.TextColor3, prisms.Parent =
+		UDim2.new(1, -6, 0, 44), colors.raised, colors.gold, list
+	prisms.LayoutOrder = 0
+	Theme.panel(prisms)
+	prisms.Activated:Connect(function()
+		Screens.open(Screens.names.Prisms)
+	end)
 	local rows: { [string]: Row } = {}
 	for position, pass in Config.passes do
 		local row = Instance.new("Frame")
@@ -217,12 +252,21 @@ function Shop.mount(playerGui: PlayerGui)
 	end
 
 	local function render()
+		loadPrices()
 		for _, pass in Config.passes do
 			local row = rows[pass.id]
 			local isOwned = owned[pass.id] == true
-			local buyable = (products[pass.id] or 0) > 0
-			row.button.Text =
-				Theme.label(if isOwned then "Owned" elseif buyable then "Buy" else "Soon")
+			local id = products[pass.id] or 0
+			local buyable = known[pass.id] == true and id > 0 and prices[id] ~= nil
+			row.button.Interactable = not isOwned and buyable
+			row.button.Text = Theme.label(
+				if isOwned
+					then "Owned"
+					elseif buyable then tostring(prices[id]) .. " ROBUX"
+					elseif unavailable[id] then "Unavailable"
+					elseif id > 0 then "Loading..."
+					else "Soon"
+			)
 			row.button.TextColor3 = if isOwned
 				then colors.gold
 				elseif buyable then colors.text
@@ -232,6 +276,7 @@ function Shop.mount(playerGui: PlayerGui)
 		end
 	end
 
+	refresh = render
 	local function hide()
 		gui.Enabled = false
 	end
@@ -248,6 +293,7 @@ function Shop.mount(playerGui: PlayerGui)
 	Screens.track(gui)
 	Screens.register(Screens.names.Shop, function()
 		readPasses(State.get())
+		table.clear(unavailable)
 		render()
 		gui.Enabled = true
 	end)

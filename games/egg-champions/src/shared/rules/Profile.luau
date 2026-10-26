@@ -36,6 +36,7 @@
 local Config = require(script.Parent.Parent.Config)
 local Progression = require(script.Parent.Progression)
 local Tutorial = require(script.Parent.Tutorial)
+local Prisms = require(script.Parent.Prisms)
 
 export type OwnedPet = {
 	uid: string,
@@ -56,6 +57,9 @@ export type Profile = {
 	gymRetryAt: { [string]: number },
 	playSeconds: number,
 	tutorialStep: number,
+	prisms: { [string]: number },
+	paidPrisms: { [string]: number },
+	purchaseReceipts: { [string]: boolean },
 }
 
 export type ProblemKind =
@@ -68,6 +72,8 @@ export type ProblemKind =
 	| "team_not_owned"
 	| "team_duplicate"
 	| "bad_tutorial_step"
+	| "bad_prisms"
+	| "bad_receipts"
 
 export type Problem = {
 	kind: ProblemKind,
@@ -75,7 +81,7 @@ export type Problem = {
 	repairable: boolean,
 }
 
-local CURRENT_VERSION = 5
+local CURRENT_VERSION = 6
 
 local Profile = {}
 
@@ -130,11 +136,21 @@ function Profile.new(): Profile
 		gymRetryAt = {},
 		playSeconds = 0,
 		tutorialStep = Tutorial.steps.click,
+		prisms = Prisms.initial(true),
+		paidPrisms = Prisms.initial(false),
+		purchaseReceipts = {},
 	}
 end
 
 -- One step per version: steps[n] turns a version n table into version n + 1.
 local steps: { [number]: (any) -> any } = {
+	[5] = function(data: any): any
+		data.prisms = data.prisms or Prisms.initial(true)
+		data.paidPrisms = data.paidPrisms or Prisms.initial(false)
+		data.purchaseReceipts = data.purchaseReceipts or {}
+		data.version = 6
+		return data
+	end,
 	[1] = function(data: any): any
 		data.gymsBeaten = data.gymsBeaten or {}
 		data.feesPaid = data.feesPaid or {}
@@ -229,6 +245,39 @@ function Profile.validate(profile: Profile): { Problem }
 		report(Profile.problems.negativeCoins, "coins is " .. tostring(profile.coins), false)
 	end
 
+	for _, field in { "prisms", "paidPrisms" } do
+		local stock = (profile :: any)[field]
+		if type(stock) ~= "table" then
+			report("bad_prisms", field .. " is not a table", false)
+		else
+			for id, count in stock do
+				if
+					not Prisms.definition(id)
+					or type(count) ~= "number"
+					or count ~= count
+					or count == math.huge
+					or count < 0
+					or count ~= math.floor(count)
+				then
+					report("bad_prisms", field .. " contains an invalid balance", false)
+				end
+			end
+			for _, p in Config.prisms do
+				if stock[p.id] == nil then
+					report("bad_prisms", "missing " .. p.id, false)
+				end
+			end
+		end
+	end
+	if type(profile.purchaseReceipts) ~= "table" then
+		report("bad_receipts", "receipts is not a table", false)
+	else
+		for id, received in profile.purchaseReceipts do
+			if type(id) ~= "string" or #id == 0 or received ~= true then
+				report("bad_receipts", "invalid receipt", false)
+			end
+		end
+	end
 	local owned: { [string]: boolean } = {}
 	for position, pet in profile.pets do
 		if knownPets[pet.petId] ~= true then

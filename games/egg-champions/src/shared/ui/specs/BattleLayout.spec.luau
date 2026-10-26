@@ -65,6 +65,13 @@ return function()
 			Runner.expect(p.playerPet.w >= 170 and p.leaderPet.w >= 170).toBeTrue()
 			Runner.expect(p.playerPanel.y >= 172 and p.giveUp.y + p.giveUp.h <= 844).toBeTrue()
 		end)
+		Runner.it("shows three wrapped log lines plus padding on portrait phones", function()
+			for _, size in { { 320, 720 }, { 390, 844 } } do
+				local p = Layout.compute(size[1], size[2], 58)
+				Runner.expect(p.log.h >= 3 * 16 + 16).toBeTrue()
+				Runner.expect(p.log.y + p.log.h <= p.move1.y).toBeTrue()
+			end
+		end)
 		Runner.it(
 			"uses side status panels to recover creature height on short landscape",
 			function()
@@ -79,13 +86,21 @@ return function()
 		Runner.it(
 			"returns to full-width status panels when resizing to portrait or desktop",
 			function()
-				for _, size in { { 390, 844 }, { 320, 720 }, { 958, 540 }, { 844, 390 } } do
+				for _, size in { { 390, 844 }, { 320, 720 }, { 958, 540 } } do
 					local p = Layout.compute(size[1], size[2], 36)
 					Runner.expect(not p.sidePanels).toBeTrue()
 					Runner.expect(p.playerPanel.y + p.playerPanel.h <= p.playerPet.y).toBeTrue()
 				end
 			end
 		)
+		Runner.it("keeps creatures and a readable log on landscape phones with a notch", function()
+			for _, size in { { 749, 381 }, { 844, 390 } } do
+				local p = Layout.compute(size[1], size[2], 58)
+				Runner.expect(p.sidePanels and not p.short).toBeTrue()
+				Runner.expect(p.playerPet.w >= 140 and p.leaderPet.w >= 140).toBeTrue()
+				Runner.expect(p.log.h >= 48 and p.log.y + p.log.h <= p.move1.y).toBeTrue()
+			end
+		end)
 		Runner.it(
 			"allocates much more space to the desktop creature than the old scaled 150px card",
 			function()

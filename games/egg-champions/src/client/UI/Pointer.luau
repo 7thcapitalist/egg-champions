@@ -47,6 +47,8 @@ local POINT_ARROW_BOUNCE = 12
 local POINT_ARROW_SECONDS = 0.7
 local POINT_ARROW_ORDER = 50
 local GYM_PREFIX = "gym:"
+local TRAINING_PREFIX = "training:"
+local TrainingSites = require(ReplicatedStorage.Shared.world.TrainingSites)
 -- How often a gym that is not in the world yet is looked for again.
 local GYM_RETRY_SECONDS = 1
 -- Gym highlight: fill and outline transparency at the two ends of the pulse.
@@ -192,8 +194,11 @@ local function outline(target: GuiObject)
 	pointArrow(target)
 end
 
-local function highlightGym(worldId: string)
-	local model = workspace:FindFirstChild(WorldNames.gymModel(worldId), true)
+local function highlightGym(worldId: string, training: boolean?)
+	local model = workspace:FindFirstChild(
+		if training then TrainingSites.modelName(worldId) else WorldNames.gymModel(worldId),
+		true
+	)
 	if model == nil or not model:IsA("Model") then
 		return
 	end
@@ -279,7 +284,7 @@ local function highlightGym(worldId: string)
 	label.Position = UDim2.new(0.5, 0, 1, 2)
 	label.Size = UDim2.fromOffset(ARROW_SIZE * 2, 18)
 	label.FontFace = Theme.fonts.label
-	label.Text = "GYM"
+	label.Text = if training then "TRAIN" else "GYM"
 	label.TextSize = Theme.textSizes.small
 	label.TextColor3 = Theme.colors.gold
 	label.TextStrokeTransparency = 0.4
@@ -333,6 +338,10 @@ local function refresh()
 	lastLook = os.clock()
 	local name = current
 	if name == nil then
+		return
+	end
+	if string.sub(name, 1, #TRAINING_PREFIX) == TRAINING_PREFIX then
+		highlightGym(string.sub(name, #TRAINING_PREFIX + 1), true)
 		return
 	end
 	if string.sub(name, 1, #GYM_PREFIX) == GYM_PREFIX then

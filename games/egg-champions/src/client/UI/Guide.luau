@@ -55,6 +55,7 @@ local hatching = false
 local closePending = false
 -- The world whose gym the beam points at outside the tutorial, or nil.
 local beamWorld: string? = nil
+local trainingWorld: string? = nil
 local petSelected = false
 local text: string? = nil
 local listeners: { (string?) -> () } = {}
@@ -74,8 +75,15 @@ function Guide.refresh()
 	local target = if card ~= nil then card.target else nil
 	-- The gym pointer (highlight, beam, edge arrow) is for the world view:
 	-- none of it shows while a screen covers the world.
-	if target ~= nil and string.sub(target, 1, 4) == "gym:" and Screens.anyOpen() then
+	if
+		target ~= nil
+		and (string.sub(target, 1, 4) == "gym:" or string.sub(target, 1, 9) == "training:")
+		and Screens.anyOpen()
+	then
 		target = nil
+	end
+	if target == nil and trainingWorld ~= nil and not Screens.anyOpen() then
+		target = "training:" .. trainingWorld
 	end
 	local beam = beamWorld
 	if target == nil and beam ~= nil and not Screens.anyOpen() then
@@ -207,5 +215,12 @@ function Guide.setPetSelected(selected: boolean)
 end
 
 Screens.onChange(Guide.refresh)
+
+function Guide.setTrainingBeam(worldId: string?)
+	if trainingWorld ~= worldId then
+		trainingWorld = worldId
+		Guide.refresh()
+	end
+end
 
 return Guide

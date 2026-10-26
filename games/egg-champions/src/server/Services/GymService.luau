@@ -320,6 +320,10 @@ local function onGiveUp(player: Player, profile: Profile, sessionId: any): (bool
 		}
 end
 
+function GymService.isBattling(player: Player): boolean
+	return running(player) ~= nil
+end
+
 function GymService.start()
 	Guard.onInvoke(Remotes.names.PayGymFee, onPayGymFee)
 	Guard.onInvoke(Remotes.names.StartBattle, onStartBattle)

@@ -1007,9 +1007,25 @@ function Pets.mount(
 		elseif tab == "index" and rebuild then
 			clear(indexScroll)
 			list(indexScroll, Enum.FillDirection.Vertical, 12)
+			local rewards = require(Shared.rules.CollectionRewards).summary(index)
+			local banner = Theme.text({
+				name = "PermanentBonus",
+				text = string.format(
+					"INDEX: +%.0f%% TRAINING | %d worlds | full set %s",
+					rewards.bonusPercent,
+					rewards.worlds,
+					if rewards.full then "COMPLETE" else "IN PROGRESS"
+				),
+				color = colors.gold,
+				parent = indexScroll,
+				size = 14,
+			})
+			banner.LayoutOrder = 0
+			banner.AutomaticSize, banner.Size, banner.TextWrapped =
+				Enum.AutomaticSize.Y, UDim2.new(1, -8, 0, 0), true
 			for position, row in PetsView.eggProgress(index) do
 				local section = frame(row.eggId, indexScroll)
-				section.LayoutOrder = position
+				section.LayoutOrder = position + 1
 				section.AutomaticSize = Enum.AutomaticSize.Y
 				section.Size = UDim2.new(1, -8, 0, 0)
 				list(section, Enum.FillDirection.Vertical, 8)

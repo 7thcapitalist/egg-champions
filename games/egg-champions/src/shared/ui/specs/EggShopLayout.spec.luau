@@ -35,13 +35,15 @@ end
 
 return function()
 	describe("EggShopLayout", function()
-		it("keeps HATCH reachable without scrolling on a 720x239 viewport", function()
-			local layout = EggShopLayout.compute(720, 239, 58)
-			local card = EggShopLayout.cardRect(layout, 1, 0)
-			local hatch = EggShopLayout.onScreen(card, layout.parts.hatchWide)
-			expect(EggShopLayout.inside(hatch, layout.list)).toBeTrue()
-			expect(hatch.h >= 40).toBeTrue()
-			expect(EggShopLayout.inside(layout.header, layout.panel)).toBeTrue()
+		it("keeps HATCH reachable without scrolling on short landscape viewports", function()
+			for _, size in { { 720, 239 }, { 568, 239 }, { 567, 237 } } do
+				local layout = EggShopLayout.compute(size[1], size[2], 58)
+				local card = EggShopLayout.cardRect(layout, 1, 0)
+				local hatch = EggShopLayout.onScreen(card, layout.parts.hatchWide)
+				expect(EggShopLayout.inside(hatch, layout.list)).toBeTrue()
+				expect(hatch.h >= 40).toBeTrue()
+				expect(EggShopLayout.inside(layout.header, layout.panel)).toBeTrue()
+			end
 		end)
 
 		it("puts the first card's HATCH inside the visible list at scroll 0", function()

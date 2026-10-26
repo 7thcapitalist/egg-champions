@@ -1,8 +1,11 @@
 {
   "spec": "games/egg-champions/spec.md",
-  "spec_sha256": "ac42b45b4a8a1275910ca0017a6ee3bb8382459d014cf7567e2731c00d622204",
+  "spec_sha256": "9634767d5145fdf9d44a8b9a82b082a1655dd4e7b5556c6fe6baa8e6d99b7c64",
   "counts": {
-    "constants": 26,
+    "prisms": 3,
+    "wild_rarities": 5,
+    "wild_areas": 3,
+    "constants": 57,
     "rarities": 5,
     "roles": 3,
     "variants": 2,

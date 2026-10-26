@@ -52,10 +52,9 @@
 	(Main.pulseCoins, called from Effects.onCredited); Effects draws the
 	"+N" at the cursor above this screen and plays the coin sound.
 
-	Clicking: there is no click button. A full screen transparent button sits
-	behind every panel and fires Click on press. Panels are Active so they
-	swallow their own presses, and a press over any panel is also ignored by
-	position, so pressing a menu button never earns a coin.
+	World clicks use passive input events, never a full-screen GuiButton.
+	Training rewards arrive from the server; joystick and camera drags stay with
+	Roblox's controls. Processed UI inputs and open screens never earn coins.
 
 	Every number shown comes from the server through ProfileChanged (see
 	State). Coins per click and each pet's click power are derived fields the
@@ -86,8 +85,7 @@ local colors = Theme.colors
 local sizes = Theme.sizes
 local textSizes = Theme.textSizes
 
--- Layering inside the ScreenGui. The click layer is lowest.
-local Z_CLICK = 1
+-- Layering inside the ScreenGui; the world has no input-capturing overlay.
 local Z_PANEL = 2
 
 -- Width of the tutorial SKIP button on the goal card, and the gap before it.
@@ -120,20 +118,11 @@ for _, pet in Config.pets do
 	petsById[pet.id] = pet
 end
 
-export type ClickListener = (position: Vector2) -> ()
-
 local Main = {}
 
-local clickListeners: { ClickListener } = {}
 -- Scales the coin counter for the pulse on each credited click.
 local coinPulse: UIScale? = nil
 local pulseTween: Tween? = nil
-
--- Called with the screen position of every world click, for the coin pop.
--- The server decides the amount.
-function Main.onWorldClick(listener: ClickListener)
-	table.insert(clickListeners, listener)
-end
 
 -- Pulses the coin counter once. Called for every click the server credited.
 function Main.pulseCoins()
@@ -522,25 +511,6 @@ local function buildTeam(parent: Instance): (Frame, UIListLayout, UIPadding, { S
 	return team, layout, padding, slots
 end
 
--- True when the point is inside any of the given panels.
-local function overAny(point: Vector2, panels: { GuiObject }): boolean
-	for _, p in panels do
-		if p.Visible then
-			local low = p.AbsolutePosition
-			local high = low + p.AbsoluteSize
-			if
-				point.X >= low.X
-				and point.X <= high.X
-				and point.Y >= low.Y
-				and point.Y <= high.Y
-			then
-				return true
-			end
-		end
-	end
-	return false
-end
-
 local function number(value: any): number
 	return if type(value) == "number" then value else 0
 end
@@ -548,7 +518,7 @@ end
 -- Builds the main screen under playerGui and keeps it in step with State.
 function Main.mount(
 	playerGui: PlayerGui,
-	click: RemoteEvent,
+	_click: RemoteEvent,
 	skipTutorial: RemoteFunction?
 ): ScreenGui
 	local gui = Instance.new("ScreenGui")
@@ -556,18 +526,6 @@ function Main.mount(
 	gui.ResetOnSpawn = false
 	gui.IgnoreGuiInset = true
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-	-- Behind everything: the world view. Pressing it earns coins.
-	local clickLayer = Instance.new("TextButton")
-	clickLayer.Name = "ClickLayer"
-	clickLayer.Text = ""
-	clickLayer.AutoButtonColor = false
-	clickLayer.BackgroundTransparency = 1
-	clickLayer.BorderSizePixel = 0
-	clickLayer.Size = UDim2.fromScale(1, 1)
-	clickLayer.ZIndex = Z_CLICK
-	clickLayer.Selectable = false
-	clickLayer.Parent = gui
 
 	-- Everything else, in full screen pixels. HudLayout keeps it clear of
 	-- Roblox's own buttons and chat window.
@@ -592,12 +550,12 @@ function Main.mount(
 	local menu = buildMenu(content)
 	local goal = buildGoal(content)
 	local teamFrame, teamLayout, teamPadding, slots = buildTeam(content)
-	local panels: { GuiObject } = { top.bar, menu.frame, goal.frame, teamFrame }
 
 	local shownSlots = 0
 	-- How many menu buttons show (HudLayout.menuShown); two on minute one.
 	local shownMenu = 2
 	local goalWanted = true
+	local nextLineWanted = false
 	-- The goal state of the last render, and the world whose "Next" line the
 	-- player tapped, for the gym beam.
 	local lastGoalState: NextGoal.State? = nil
@@ -642,12 +600,14 @@ function Main.mount(
 			then Enum.FillDirection.Horizontal
 			else Enum.FillDirection.Vertical
 		for _, b in menu.buttons do
+			b.TextSize = if layout.compact then 13 else textSizes.button
 			b.Size = if layout.horizontalMenu
 				then UDim2.fromOffset(s.menuWidth, s.menuButton)
 				else UDim2.new(1, 0, 0, s.menuButton)
 		end
 
 		place(goal.frame, layout.goal)
+		goal.nextLine.Visible = nextLineWanted and not layout.horizontalMenu
 		goal.line.Position = UDim2.fromOffset(s.goalPad, s.goalPad)
 		-- The line has the card's full width; SKIP shares the button row.
 		local skipRoom = if goal.skip.Visible then SKIP_WIDTH + SKIP_GAP else 0
@@ -717,17 +677,6 @@ function Main.mount(
 		skipping = false
 	end)
 
-	clickLayer.MouseButton1Down:Connect(function(x: number, y: number)
-		local point = Vector2.new(x, y)
-		if overAny(point, panels) then
-			return
-		end
-		click:FireServer()
-		for _, listener in clickListeners do
-			task.spawn(listener, point)
-		end
-	end)
-
 	local function render(payload: State.Payload)
 		local profile = payload.profile
 		local derived = payload.derived
@@ -774,7 +723,11 @@ function Main.mount(
 
 		top.coins.Text = Format.abbreviate(coins)
 		top.perClick.Text = Theme.label(
-			string.format("+%s per click", Format.abbreviate(number(derived.coinsPerClick)))
+			string.format(
+				"TRAIN +%s / %ss",
+				Format.abbreviate(number(derived.coinsPerTrainingTick)),
+				tostring(Config.constants.training_tick_seconds)
+			)
 		)
 		local world = NextGoal.currentWorld(goalState)
 		top.world.Text = Theme.label(world.name)
@@ -871,12 +824,13 @@ function Main.mount(
 		goal.nextLine.Text = secondText or ""
 		goal.nextLine:SetAttribute("Link", hintText == nil and nextText ~= nil)
 		goal.nextLine.TextColor3 = if hintText ~= nil then colors.text else colors.muted
-		if goal.nextLine.Visible ~= nextShown then
-			goal.nextLine.Visible = nextShown
+		if nextLineWanted ~= nextShown then
+			nextLineWanted = nextShown
 			applyLayout()
 		end
 		lastGoalState = goalState
-		Guide.setGymBeam(NextGoal.gymBeam(goalState, tappedWorld))
+		Guide.setGymBeam(if hintText == nil then NextGoal.gymBeam(goalState, tappedWorld) else nil)
+		Guide.setTrainingBeam(if hintText ~= nil then world.id else nil)
 
 		if picked.ready and action ~= nil then
 			goalScreen = action.screen
@@ -963,7 +917,7 @@ function Main.mount(
 				slot.name.TextColor3 = colors.text
 				local power = powers[uid]
 				slot.power.Text = if type(power) == "number"
-					then string.format("Click +%s", Format.abbreviate(power))
+					then string.format("Power +%s", Format.abbreviate(power))
 					else ""
 			else
 				slot.stripe.BackgroundColor3 = colors.border

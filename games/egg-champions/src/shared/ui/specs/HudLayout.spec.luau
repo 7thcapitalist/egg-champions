@@ -139,11 +139,18 @@ return function()
 						end
 					)
 					it(
-						string.format("puts the menu below 45%% and below the chat at %s", label),
+						string.format(
+							"keeps the menu below chat and clear of touch controls at %s",
+							label
+						),
 						function()
 							local layout = HudLayout.compute(width, height, teamSize, insets)
-							expect(layout.menu.y >= height * HudLayout.MENU_BELOW).toBeTrue()
 							local c = insets.chat
+							if layout.compact and width > height and c == nil then
+								expect(layout.menu.y >= layout.contentTop + layout.sizes.menuTop).toBeTrue()
+							else
+								expect(layout.menu.y >= height * HudLayout.MENU_BELOW).toBeTrue()
+							end
 							if c ~= nil then
 								expect(layout.menu.y >= c.y + c.h).toBeTrue()
 							end
@@ -168,9 +175,9 @@ return function()
 								expect(team.x + team.w <= width - layout.sizes.gutter).toBeTrue()
 							elseif layout.compact then
 								expect(team.y >= height * 0.75).toBeTrue()
-								-- Bottom left, ending before the middle of the screen.
-								expect(team.x).toEqual(layout.sizes.gutter)
-								expect(team.x + team.w <= width / 2).toBeTrue()
+								-- Centre the strip between the movement and jump controls.
+								expect(math.abs(team.x + team.w / 2 - width / 2) <= 1).toBeTrue()
+								expect(team.x >= 140 and team.x + team.w <= width - 140).toBeTrue()
 							else
 								local centre = team.x + team.w / 2
 								expect(math.abs(centre - width / 2) <= 1).toBeTrue()
@@ -237,6 +244,8 @@ return function()
 		for _, screen in
 			{
 				{ width = 720, height = 239 },
+				{ width = 568, height = 239 },
+				{ width = 567, height = 237 },
 				{ width = 842, height = 308 },
 				{ width = 844, height = 359 },
 			}

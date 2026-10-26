@@ -21,6 +21,7 @@
 local Layout = require(script.Parent.Layout)
 local WorldLook = require(script.Parent.WorldLook)
 local SceneLayout = require(script.Parent.SceneLayout)
+local TrainingSites = require(script.Parent.TrainingSites)
 
 export type P = { x: number, z: number }
 export type Circle = { x: number, z: number, r: number }
@@ -645,6 +646,12 @@ function Scenery.forIsland(plan: Layout.Plan, island: Layout.Island): WorldScene
 		})
 	end
 	table.insert(scenery.clear, { x = arrival.x, z = arrival.z, r = Scenery.ARRIVAL_CLEAR })
+	local training = TrainingSites.position(island.origin)
+	table.insert(scenery.clear, { x = training.x, z = training.z, r = TrainingSites.CLEAR_RADIUS })
+	table.insert(
+		scenery.paths,
+		{ a = { x = arrival.x, z = arrival.z }, b = { x = training.x, z = training.z }, width = 8 }
+	)
 	table.insert(scenery.clear, { x = signSpot.x, z = signSpot.z, r = Scenery.SIGN_CLEAR })
 	local stands = 0
 	for _, stand in plan.eggStands do
