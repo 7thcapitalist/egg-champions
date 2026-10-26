@@ -102,6 +102,15 @@ local MENU_SCREEN: { [string]: string } = {
 	Shop = Screens.names.Shop,
 }
 local MENU_ACCENT = "Shop"
+-- Each menu button gets its own bright face, so the menu reads at a glance
+-- instead of as a column of identical dark boxes. (Emoji icons render
+-- unreliably next to Fredoka, so the color carries the meaning.)
+local MENU_FACE: { [string]: Color3 } = {
+	Eggs = colors.eggs,
+	Pets = colors.pets,
+	Rebirth = colors.rebirth,
+	Shop = colors.shop,
+}
 
 local GOAL_ACTION: { [string]: { label: string, screen: string } } = {
 	pets = { label = "Open eggs", screen = Screens.names.Eggs },
@@ -137,13 +146,7 @@ function Main.pulseCoins()
 	scale.Scale = 1
 	local t = TweenService:Create(
 		scale,
-		TweenInfo.new(
-			EffectsBudget.CLICK.pulseSeconds,
-			Enum.EasingStyle.Quad,
-			Enum.EasingDirection.Out,
-			0,
-			true
-		),
+		TweenInfo.new(EffectsBudget.CLICK.pulseSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, true),
 		{ Scale = EffectsBudget.CLICK.pulseScale }
 	)
 	pulseTween = t
@@ -243,19 +246,34 @@ type TopBar = {
 }
 
 local function buildTopBar(parent: Instance): TopBar
-	local bar = panel("TopBar", parent, 0)
+	-- No full-width header: the bar only holds floating pills over the world.
+	local bar = frame("TopBar", parent)
+	bar.ZIndex = Z_PANEL
 	bar.Position = UDim2.fromScale(0, 0)
 
-	local coinsBox = frame("Coins", bar)
+	local coinsBox = panel("Coins", bar)
+	local coinsPad = Instance.new("UIPadding")
+	coinsPad.PaddingLeft = UDim.new(0, 8)
+	coinsPad.PaddingRight = UDim.new(0, 10)
+	coinsPad.Parent = coinsBox
 	local coin = frame("Coin", coinsBox)
 	coin.BackgroundTransparency = 0
 	coin.BackgroundColor3 = colors.gold
 	coin.AnchorPoint = Vector2.new(0, 0.5)
 	coin.Position = UDim2.fromScale(0, 0.5)
 	coin.Size = UDim2.fromOffset(sizes.coin, sizes.coin)
+	coin.ZIndex = Z_PANEL + 1
 	local round = Instance.new("UICorner")
 	round.CornerRadius = UDim.new(0.5, 0)
 	round.Parent = coin
+	local coinRing = Instance.new("UIStroke")
+	coinRing.Color = colors.outline
+	coinRing.Thickness = 2.5
+	coinRing.Parent = coin
+	local coinShine = Instance.new("UIGradient")
+	coinShine.Color = ColorSequence.new(Color3.fromRGB(255, 244, 190), Color3.fromRGB(230, 150, 20))
+	coinShine.Rotation = 60
+	coinShine.Parent = coin
 
 	local textLeft = sizes.coin + 10
 	local coins = fitted({
@@ -289,8 +307,8 @@ local function buildTopBar(parent: Instance): TopBar
 		name = "Rebirths",
 		parent = bar,
 		font = Theme.fonts.label,
-		maxSize = textSizes.small,
-		color = colors.muted,
+		maxSize = textSizes.small + 2,
+		color = colors.text,
 		align = Enum.TextXAlignment.Right,
 	})
 	rebirths.Text = Theme.label("Rebirths 0")
@@ -321,6 +339,10 @@ local function buildMenu(parent: Instance): Menu
 	for position, entry in HudLayout.MENU do
 		local b = button(entry, entry, menu, false)
 		b.LayoutOrder = position
+		local face = MENU_FACE[entry]
+		if face ~= nil then
+			b.BackgroundColor3 = face
+		end
 		local screen = MENU_SCREEN[entry]
 		Pointer.register("menu:" .. entry, b)
 		b.Activated:Connect(function()
@@ -407,14 +429,15 @@ local function buildGoal(parent: Instance): GoalCard
 	-- out of reach.
 	local bar = frame("Progress", goal)
 	bar.BackgroundTransparency = 0
-	bar.BackgroundColor3 = colors.raised
+	-- A dark track with a green fill, like a game progress bar.
+	bar.BackgroundColor3 = colors.outline
 	bar.ClipsDescendants = true
 	bar.ZIndex = Z_PANEL
 	bar.Visible = false
 	Theme.panel(bar, sizes.radius)
 	local fill = frame("Fill", bar)
 	fill.BackgroundTransparency = 0
-	fill.BackgroundColor3 = colors.border
+	fill.BackgroundColor3 = colors.hatch
 	fill.Size = UDim2.fromScale(0, 1)
 	fill.ZIndex = Z_PANEL
 	local barLabel = fitted({
@@ -516,11 +539,7 @@ local function number(value: any): number
 end
 
 -- Builds the main screen under playerGui and keeps it in step with State.
-function Main.mount(
-	playerGui: PlayerGui,
-	_click: RemoteEvent,
-	skipTutorial: RemoteFunction?
-): ScreenGui
+function Main.mount(playerGui: PlayerGui, _click: RemoteEvent, skipTutorial: RemoteFunction?): ScreenGui
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "Main"
 	gui.ResetOnSpawn = false
@@ -577,8 +596,7 @@ function Main.mount(
 		if area.X <= 0 or area.Y <= 0 then
 			return
 		end
-		local layout =
-			HudLayout.compute(area.X, area.Y, shownSlots, HudInsets.read(area), shownMenu)
+		local layout = HudLayout.compute(area.X, area.Y, shownSlots, HudInsets.read(area), shownMenu)
 		local s = layout.sizes
 
 		local barRect = layout.topBar
@@ -586,8 +604,7 @@ function Main.mount(
 		placeIn(top.coinsBox, layout.coins, barRect)
 		placeIn(top.world, layout.world, barRect)
 		local rebirthRect = layout.rebirths
-		top.rebirths.Position =
-			UDim2.fromOffset(rebirthRect.x - barRect.x, rebirthRect.y - barRect.y)
+		top.rebirths.Position = UDim2.fromOffset(rebirthRect.x - barRect.x, rebirthRect.y - barRect.y)
 		top.rebirths.Size = UDim2.fromOffset(rebirthRect.w, rebirthRect.h)
 		top.rebirths.TextWrapped = true
 		local coinSize = math.max(12, math.min(sizes.coin, layout.coins.h - 16))
@@ -737,12 +754,8 @@ function Main.mount(
 				badgeCount += 1
 			end
 		end
-		top.rebirths.Text = string.format(
-			"BADGES %d/%d >\nRebirths %s",
-			badgeCount,
-			#Config.worlds,
-			Format.abbreviate(rebirths)
-		)
+		top.rebirths.Text =
+			string.format("BADGES %d/%d >\nRebirths %s", badgeCount, #Config.worlds, Format.abbreviate(rebirths))
 
 		local picked = NextGoal.pick(goalState, number(derived.rebirthCost))
 		tutorialStep = profile.tutorialStep
@@ -755,8 +768,7 @@ function Main.mount(
 		local heldCard: Tutorial.Card? = nil
 		if tutorial ~= nil and tutorial.step == Tutorial.steps.gym and holdGym then
 			tutorial = nil
-			local waiting: Tutorial.Held =
-				{ kind = picked.kind, id = picked.id, ready = picked.ready }
+			local waiting: Tutorial.Held = { kind = picked.kind, id = picked.id, ready = picked.ready }
 			held = waiting
 			heldCard = Tutorial.heldCard(closedScreens, waiting)
 		end
@@ -785,12 +797,8 @@ function Main.mount(
 					have = math.min(coins, price),
 					need = price,
 				}
-			elseif
-				tutorial.step == Tutorial.steps.hatch or tutorial.step == Tutorial.steps.equip
-			then
-				action = if tutorial.step == Tutorial.steps.hatch
-					then GOAL_ACTION.egg
-					else GOAL_ACTION.team
+			elseif tutorial.step == Tutorial.steps.hatch or tutorial.step == Tutorial.steps.equip then
+				action = if tutorial.step == Tutorial.steps.hatch then GOAL_ACTION.egg else GOAL_ACTION.team
 				picked.ready = true
 			else
 				-- The gym step: the first world's gym fee, or the gym itself
@@ -813,9 +821,7 @@ function Main.mount(
 			nextText = NextGoal.nextLine(goalState, picked)
 			hintText = NextGoal.clickHint(goalState, picked)
 			if not picked.ready then
-				local counted = if picked.kind == "pets" or picked.kind == "team"
-					then "Pets"
-					else "Coins"
+				local counted = if picked.kind == "pets" or picked.kind == "team" then "Pets" else "Coins"
 				progress = { label = counted, have = picked.have, need = picked.need }
 			end
 		end
@@ -837,7 +843,7 @@ function Main.mount(
 			goal.action.Visible = true
 			goal.bar.Visible = false
 			goal.action.Text = Theme.label(action.label)
-			goal.action.BackgroundColor3 = colors.panel
+			goal.action.BackgroundColor3 = colors.hatch
 			goal.action.AutoButtonColor = true
 		else
 			goalScreen = nil
@@ -845,9 +851,7 @@ function Main.mount(
 			if shown ~= nil then
 				goal.action.Visible = false
 				goal.bar.Visible = true
-				local share = if shown.need > 0
-					then math.clamp(shown.have / shown.need, 0, 1)
-					else 1
+				local share = if shown.need > 0 then math.clamp(shown.have / shown.need, 0, 1) else 1
 				goal.fill.Size = UDim2.fromScale(share, 1)
 				goal.barLabel.Text = string.format(
 					"%s %s / %s",
@@ -865,7 +869,7 @@ function Main.mount(
 				goal.action.Text = Theme.label("Not enough coins")
 				goal.action.TextColor3 = colors.muted
 				goal.action.BackgroundColor3 = colors.raised
-				goal.actionStroke.Color = colors.border
+				goal.actionStroke.Color = colors.outline
 				goal.action.AutoButtonColor = false
 			end
 		end
@@ -891,9 +895,7 @@ function Main.mount(
 			applyLayout()
 		end
 
-		local powers = if type(derived.teamClickPower) == "table"
-			then derived.teamClickPower
-			else {}
+		local powers = if type(derived.teamClickPower) == "table" then derived.teamClickPower else {}
 		local equippedUids = {}
 		for _, uid in team do
 			if owned[uid] ~= nil then
@@ -937,8 +939,7 @@ function Main.mount(
 		local goalReady = goal.action.Visible and goalScreen ~= nil
 		local gold = HudLayout.goldParts({
 			onboarding = onboarding,
-			pointer = (tutorial ~= nil and tutorial.target ~= nil)
-				or (heldCard ~= nil and heldCard.target ~= nil),
+			pointer = (tutorial ~= nil and tutorial.target ~= nil) or (heldCard ~= nil and heldCard.target ~= nil),
 			goalBar = goal.bar.Visible,
 			goalReady = goalReady,
 			menu = menuShown,
@@ -949,19 +950,20 @@ function Main.mount(
 		end
 		top.perClick.TextColor3 = if isGold("perClick") then colors.gold else colors.text
 		for _, b in menu.buttons do
+			-- Menu faces are colored, so the accent is a thick gold ring, not gold text.
 			local accent = b.Name == MENU_ACCENT and isGold("menu:" .. MENU_ACCENT)
-			b.TextColor3 = if accent then colors.gold else colors.text
 			local stroke = b:FindFirstChildOfClass("UIStroke")
 			if stroke ~= nil then
-				stroke.Color = if accent then colors.gold else colors.border
+				stroke.Color = if accent then colors.gold else colors.outline
+				stroke.Thickness = if accent then 4 else 2.5
 			end
 		end
 		if goalReady then
 			local accent = isGold("goal")
 			goal.action.TextColor3 = if accent then colors.gold else colors.text
-			goal.actionStroke.Color = if accent then colors.gold else colors.text
+			goal.actionStroke.Color = if accent then colors.gold else colors.outline
 		end
-		goal.fill.BackgroundColor3 = if isGold("goalBar") then colors.gold else colors.border
+		goal.fill.BackgroundColor3 = if isGold("goalBar") then colors.gold else colors.hatch
 		local powerColor = if isGold("slotPowers") then colors.gold else colors.text
 		for _, slot in slots do
 			slot.power.TextColor3 = powerColor

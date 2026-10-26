@@ -9,9 +9,16 @@
 ]]
 
 local ThemeColors = table.freeze({
-	panel = Color3.fromRGB(30, 40, 72),
-	raised = Color3.fromRGB(49, 63, 104),
-	border = Color3.fromRGB(100, 125, 176),
+	panel = Color3.fromRGB(38, 54, 120),
+	raised = Color3.fromRGB(60, 84, 168),
+	border = Color3.fromRGB(110, 146, 230),
+	-- The thick dark outline around every panel, button and heading.
+	outline = Color3.fromRGB(14, 16, 40),
+	-- Menu button faces, one color per entry.
+	eggs = Color3.fromRGB(255, 176, 46),
+	pets = Color3.fromRGB(150, 92, 240),
+	rebirth = Color3.fromRGB(64, 196, 120),
+	shop = Color3.fromRGB(240, 82, 120),
 	text = Color3.fromRGB(242, 244, 248),
 	muted = Color3.fromRGB(155, 166, 186),
 	gold = Color3.fromRGB(255, 210, 73),

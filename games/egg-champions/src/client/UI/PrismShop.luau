@@ -11,8 +11,7 @@ local State = require(script.Parent.State)
 local UI = {}
 function UI.mount(parent: PlayerGui, remote: RemoteFunction)
 	local gui = Instance.new("ScreenGui")
-	gui.Name, gui.IgnoreGuiInset, gui.ResetOnSpawn, gui.DisplayOrder, gui.Enabled =
-		"PrismShop", true, false, 30, false
+	gui.Name, gui.IgnoreGuiInset, gui.ResetOnSpawn, gui.DisplayOrder, gui.Enabled = "PrismShop", true, false, 30, false
 	gui.Parent = parent
 	local dim = Instance.new("TextButton")
 	dim.Text, dim.Size, dim.BackgroundColor3, dim.BackgroundTransparency, dim.Parent =
@@ -20,8 +19,7 @@ function UI.mount(parent: PlayerGui, remote: RemoteFunction)
 	local card = Instance.new("Frame")
 	card.Name, card.Active, card.AnchorPoint, card.Position =
 		"Card", true, Vector2.new(0.5, 0.5), UDim2.fromScale(0.5, 0.5)
-	card.Size, card.BackgroundColor3, card.Parent =
-		UDim2.fromScale(0.9, 0.88), Theme.colors.panel, dim
+	card.Size, card.BackgroundColor3, card.Parent = UDim2.fromScale(0.9, 0.88), Theme.colors.panel, dim
 	Theme.panel(card)
 	local limit = Instance.new("UISizeConstraint")
 	limit.MaxSize, limit.Parent = Vector2.new(460, 390), card
@@ -52,14 +50,11 @@ function UI.mount(parent: PlayerGui, remote: RemoteFunction)
 	notice.AutomaticSize, notice.TextWrapped = Enum.AutomaticSize.None, true
 	notice.Position, notice.Size = UDim2.fromOffset(12, 48), UDim2.new(1, -24, 0, 36)
 	local list = Instance.new("ScrollingFrame")
-	list.Name, list.BackgroundTransparency, list.BorderSizePixel, list.ScrollBarThickness =
-		"Items", 1, 0, 5
-	list.Position, list.Size, list.CanvasSize =
-		UDim2.fromOffset(12, 88), UDim2.new(1, -24, 1, -148), UDim2.new()
+	list.Name, list.BackgroundTransparency, list.BorderSizePixel, list.ScrollBarThickness = "Items", 1, 0, 5
+	list.Position, list.Size, list.CanvasSize = UDim2.fromOffset(12, 88), UDim2.new(1, -24, 1, -148), UDim2.new()
 	list.AutomaticCanvasSize, list.Parent = Enum.AutomaticSize.Y, card
 	local layout = Instance.new("UIListLayout")
-	layout.Padding, layout.SortOrder, layout.Parent =
-		UDim.new(0, 8), Enum.SortOrder.LayoutOrder, list
+	layout.Padding, layout.SortOrder, layout.Parent = UDim.new(0, 8), Enum.SortOrder.LayoutOrder, list
 	local back = button("Back", "BACK", card)
 	back.Position, back.Visible = UDim2.new(0, 12, 1, -52), false
 	local buy = button("BuyPack", "CHECKING...", card)
@@ -108,8 +103,7 @@ function UI.mount(parent: PlayerGui, remote: RemoteFunction)
 					parent = list,
 					size = 13,
 				})
-				label.LayoutOrder, label.AutomaticSize, label.Size =
-					i, Enum.AutomaticSize.None, UDim2.new(1, -8, 0, 24)
+				label.LayoutOrder, label.AutomaticSize, label.Size = i, Enum.AutomaticSize.None, UDim2.new(1, -8, 0, 24)
 			end
 		else
 			title.Text = "CAPTURE PRISMS"

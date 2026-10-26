@@ -230,13 +230,7 @@ end
 
 -- One marker line on a tile: full width, cut off with an ellipsis rather
 -- than running out of the tile.
-local function tileMarker(
-	parent: Instance,
-	s: PetsLayout.Sizes,
-	text: string,
-	color: Color3,
-	order: number
-)
+local function tileMarker(parent: Instance, s: PetsLayout.Sizes, text: string, color: Color3, order: number)
 	local line = Theme.text({
 		name = "Marker",
 		text = Theme.label(text),
@@ -280,7 +274,7 @@ local function seenMark(parent: Instance, name: string, seen: boolean, color: Co
 	corner.Parent = dot
 	local stroke = Instance.new("UIStroke")
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	stroke.Color = if seen then color else colors.border
+	stroke.Color = if seen then color else colors.outline
 	stroke.Parent = dot
 	Theme.text({
 		name = "Letter",
@@ -616,11 +610,8 @@ function Pets.mount(
 			return
 		end
 		local payload = State.get()
-		local info = PetsView.detail(
-			choice.petId,
-			choice.variant,
-			PetsView.anchor(if payload then payload.profile.pets else {})
-		)
+		local info =
+			PetsView.detail(choice.petId, choice.variant, PetsView.anchor(if payload then payload.profile.pets else {}))
 		local parts = PetsView.detailParts(info, beginner, battleOpen)
 		local pet = Config.petById[choice.petId]
 
@@ -655,9 +646,7 @@ function Pets.mount(
 		local variantName = info.variantName
 		local wordLines: { { text: string, color: Color3 } } = {
 			{
-				text = if variantName ~= nil
-					then variantName .. "  " .. info.rarityName
-					else info.rarityName,
+				text = if variantName ~= nil then variantName .. "  " .. info.rarityName else info.rarityName,
 				color = if variantName ~= nil then colors.gold else Theme.rarityColor(pet.rarity),
 			},
 			{
@@ -685,8 +674,7 @@ function Pets.mount(
 		local uid = choice.uid
 		if uid ~= nil then
 			local equipped = teamUids[uid] == true
-			local action =
-				button("Equip", equipSlot, Theme.label(if equipped then "Unequip" else "Equip"))
+			local action = button("Equip", equipSlot, Theme.label(if equipped then "Unequip" else "Equip"))
 			-- Inset in its slot, so the outline is never clipped and never
 			-- touches the pet picture above.
 			local inner = layout.equipButton
@@ -804,17 +792,8 @@ function Pets.mount(
 	end
 
 	local function indexTile(parent: Instance, tile: PetsView.IndexTile, order: number)
-		local b, marks = tileButton(
-			parent,
-			layout.sizes,
-			tile.petId,
-			tile.petId,
-			tile.rarity,
-			order,
-			not tile.seenAny,
-			false,
-			nil
-		)
+		local b, marks =
+			tileButton(parent, layout.sizes, tile.petId, tile.petId, tile.rarity, order, not tile.seenAny, false, nil)
 		seenMark(marks, "Normal", tile.seen.normal, colors.text, 1)
 		seenMark(marks, "Shiny", tile.seen.shiny, colors.gold, 2)
 		seenMark(marks, "Golden", tile.seen.golden, colors.gold, 3)
@@ -857,7 +836,7 @@ function Pets.mount(
 			view.button.Text = Theme.label(labels[key])
 			local active = key == tab
 			view.button.TextColor3 = if active then colors.gold else colors.muted
-			view.stroke.Color = if active then colors.gold else colors.border
+			view.stroke.Color = if active then colors.gold else colors.outline
 		end
 		petsPage.Visible = tab == "pets"
 		indexScroll.Visible = tab == "index"
@@ -885,9 +864,7 @@ function Pets.mount(
 			end
 		end
 		if selected == nil and tab ~= "pets" then
-			local first = if tab == "fruit"
-				then PetsView.fruitTiles(index)[1]
-				else PetsView.indexTiles(index)[1]
+			local first = if tab == "fruit" then PetsView.fruitTiles(index)[1] else PetsView.indexTiles(index)[1]
 			if first ~= nil then
 				selected = { petId = first.petId }
 			end
@@ -949,8 +926,7 @@ function Pets.mount(
 			hint.TextColor3 = if message ~= nil then colors.gold else colors.muted
 			filtersButton.Text = if showFilters then "HIDE" else "FILTERS"
 			sortButton.Text = Theme.label("Sort: " .. PetsView.SORT_NAMES[sortKey])
-			rarityButton.Text =
-				Theme.label("Rarity: " .. PetsView.filterName("rarity", filter.rarity))
+			rarityButton.Text = Theme.label("Rarity: " .. PetsView.filterName("rarity", filter.rarity))
 			typeButton.Text = Theme.label("Type: " .. PetsView.filterName("type", filter.type))
 			eggButton.Text = Theme.label("Egg: " .. PetsView.filterName("egg", filter.egg))
 			local arranged = PetsView.arrange(tiles, sortKey, filter)
@@ -1000,9 +976,7 @@ function Pets.mount(
 			for uid, b in ownedButtons do
 				local chosen = selected
 				local stroke = b:FindFirstChildOfClass("UIStroke") :: UIStroke
-				stroke.Color = if chosen ~= nil and chosen.uid == uid
-					then colors.gold
-					else colors.border
+				stroke.Color = if chosen ~= nil and chosen.uid == uid then colors.gold else colors.outline
 			end
 		elseif tab == "index" and rebuild then
 			clear(indexScroll)
@@ -1021,8 +995,7 @@ function Pets.mount(
 				size = 14,
 			})
 			banner.LayoutOrder = 0
-			banner.AutomaticSize, banner.Size, banner.TextWrapped =
-				Enum.AutomaticSize.Y, UDim2.new(1, -8, 0, 0), true
+			banner.AutomaticSize, banner.Size, banner.TextWrapped = Enum.AutomaticSize.Y, UDim2.new(1, -8, 0, 0), true
 			for position, row in PetsView.eggProgress(index) do
 				local section = frame(row.eggId, indexScroll)
 				section.LayoutOrder = position + 1
@@ -1045,9 +1018,7 @@ function Pets.mount(
 				marker(head, string.format("%d / %d", row.seen, row.total), colors.muted, 2)
 				marker(
 					head,
-					if row.complete
-						then "Complete " .. row.bonusText
-						else "Complete for " .. row.bonusText,
+					if row.complete then "Complete " .. row.bonusText else "Complete for " .. row.bonusText,
 					if row.complete then colors.gold else colors.muted,
 					3
 				)
@@ -1071,15 +1042,9 @@ function Pets.mount(
 		renderDetail(teamUids, PetsView.beginner(#tiles, Guide.reserved()))
 		local now = selected
 		Guide.setPetSelected(now ~= nil and now.uid ~= nil)
-		if
-			layout.bodyViewport ~= nil
-			and now ~= nil
-			and now.uid ~= nil
-			and now.uid ~= revealedSelection
-		then
+		if layout.bodyViewport ~= nil and now ~= nil and now.uid ~= nil and now.uid ~= revealedSelection then
 			revealedSelection = now.uid
-			bodyViewport.CanvasPosition =
-				Vector2.new(0, PetsLayout.revealScroll(layout, layout.equipButton))
+			bodyViewport.CanvasPosition = Vector2.new(0, PetsLayout.revealScroll(layout, layout.equipButton))
 		end
 	end
 
@@ -1110,8 +1075,7 @@ function Pets.mount(
 			view.button.Size = UDim2.fromOffset(0, tabHeight)
 			view.button.TextSize = if l.compact then textSizes.small + 1 else textSizes.button
 		end
-		close.Size =
-			UDim2.fromOffset(if l.compact then 80 else 100, math.min(sizes.minTap, s.header))
+		close.Size = UDim2.fromOffset(if l.compact then 80 else 100, math.min(sizes.minTap, s.header))
 		local portrait = gui.AbsoluteSize.X < 500
 		tabsFrame.AnchorPoint = Vector2.new(0, if portrait then 0 else 0.5)
 		tabsFrame.Position = if portrait then UDim2.fromOffset(0, 44) else UDim2.fromScale(0, 0.5)
@@ -1124,9 +1088,7 @@ function Pets.mount(
 			local tabPad = view.button:FindFirstChildOfClass("UIPadding") :: UIPadding
 			tabPad.PaddingLeft = UDim.new(0, if portrait then 4 else 16)
 			tabPad.PaddingRight = tabPad.PaddingLeft
-			view.button.AutomaticSize = if portrait
-				then Enum.AutomaticSize.None
-				else Enum.AutomaticSize.X
+			view.button.AutomaticSize = if portrait then Enum.AutomaticSize.None else Enum.AutomaticSize.X
 			if portrait then
 				view.button.Size = UDim2.fromOffset(math.floor((l.header.w - 16) / 3), 32)
 			end

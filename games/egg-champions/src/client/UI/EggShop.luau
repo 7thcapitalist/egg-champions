@@ -56,8 +56,7 @@ local Pointer = require(script.Parent:WaitForChild("Pointer"))
 local Guide = require(script.Parent:WaitForChild("Guide"))
 local Reveal = require(script.Parent:WaitForChild("Reveal"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
-local Effects =
-	require((script.Parent :: Instance).Parent:WaitForChild("Effects"):WaitForChild("Effects"))
+local Effects = require((script.Parent :: Instance).Parent:WaitForChild("Effects"):WaitForChild("Effects"))
 local State = require(script.Parent:WaitForChild("State"))
 
 local colors = Theme.colors
@@ -167,7 +166,7 @@ local function style(b: TextButton, stroke: UIStroke, look: Look)
 	else
 		b.BackgroundColor3 = colors.panel
 		b.TextColor3 = colors.muted
-		stroke.Color = colors.border
+		stroke.Color = colors.outline
 		stroke.Transparency = 0
 	end
 end
@@ -241,8 +240,7 @@ local function eggCopy(template: Instance): (Model?, number)
 	if parts > 0 then
 		local box, extents = copy:GetBoundingBox()
 		copy:PivotTo(box:Inverse() * copy:GetPivot())
-		distance =
-			EggShopView.eggCameraDistance(extents.X, extents.Y, extents.Z, EGG_FOV, EGG_FRAME)
+		distance = EggShopView.eggCameraDistance(extents.X, extents.Y, extents.Z, EGG_FOV, EGG_FRAME)
 	end
 	if EggShopView.eggSource(true, true, parts, distance) ~= "model" then
 		copy:Destroy()
@@ -266,7 +264,7 @@ local function eggShape(slot: Frame, eggId: string)
 	local stroke = Instance.new("UIStroke")
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	stroke.Thickness = 2
-	stroke.Color = colors.border
+	stroke.Color = colors.outline
 	stroke.Parent = shell
 end
 
@@ -834,10 +832,8 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			local autoWidth = math.floor((parts.toggle.w - s.innerGap) / 2)
 			view.auto.Position = UDim2.fromOffset(parts.toggle.x, parts.toggle.y)
 			view.auto.Size = UDim2.fromOffset(autoWidth, parts.toggle.h)
-			view.toggle.Position =
-				UDim2.fromOffset(parts.toggle.x + autoWidth + s.innerGap, parts.toggle.y)
-			view.toggle.Size =
-				UDim2.fromOffset(parts.toggle.w - autoWidth - s.innerGap, parts.toggle.h)
+			view.toggle.Position = UDim2.fromOffset(parts.toggle.x + autoWidth + s.innerGap, parts.toggle.y)
+			view.toggle.Size = UDim2.fromOffset(parts.toggle.w - autoWidth - s.innerGap, parts.toggle.h)
 			place(view.oddsPanel, parts.odds, 0, 0)
 			place(view.result, parts.result, 0, 0)
 			view.name.TextSize = s.cardTitle
@@ -906,12 +902,8 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 			listed[data.eggId] = true
 			local view = cards[data.eggId]
 			view.price.Text = data.priceText
-			view.price.TextColor3 = if data.affordable and not data.locked
-				then colors.gold
-				else colors.muted
-			view.lock.Text = if data.locked and data.unlockText ~= nil
-				then Theme.label(data.unlockText)
-				else ""
+			view.price.TextColor3 = if data.affordable and not data.locked then colors.gold else colors.muted
+			view.lock.Text = if data.locked and data.unlockText ~= nil then Theme.label(data.unlockText) else ""
 			view.lock.Visible = data.locked
 			for row, line in data.pets do
 				local nameLabel = view.names[row]
@@ -927,15 +919,13 @@ function EggShop.mount(playerGui: PlayerGui, buyEgg: RemoteFunction): ScreenGui
 				view.hatch.Text = Theme.label("Locked")
 				style(view.hatch, view.hatchStroke, "muted")
 			elseif not data.affordable then
-				view.hatch.Text =
-					Theme.label(string.format("Need %s more", Format.commas(data.short)))
+				view.hatch.Text = Theme.label(string.format("Need %s more", Format.commas(data.short)))
 				style(view.hatch, view.hatchStroke, "muted")
 			else
 				view.hatch.Text = Theme.label("Hatch")
 				style(view.hatch, view.hatchStroke, "hatch")
 			end
-			local showsTriple =
-				EggShopView.showsTriple(profile.tutorialStep, ownsTriple, data.locked)
+			local showsTriple = EggShopView.showsTriple(profile.tutorialStep, ownsTriple, data.locked)
 			if showsTriple ~= view.showsTriple then
 				view.showsTriple = showsTriple
 				if layout ~= nil then

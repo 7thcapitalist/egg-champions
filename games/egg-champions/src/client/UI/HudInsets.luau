@@ -20,8 +20,7 @@ local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextChatService = game:GetService("TextChatService")
 
-local HudLayout =
-	require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ui"):WaitForChild("HudLayout"))
+local HudLayout = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ui"):WaitForChild("HudLayout"))
 
 local HudInsets = {}
 
@@ -51,12 +50,7 @@ local function chatRect(screen: Vector2, top: number): HudLayout.Rect?
 	if not ok or enabled ~= true then
 		return nil
 	end
-	if
-		typeof(position) == "Vector2"
-		and typeof(size) == "Vector2"
-		and size.X > 0
-		and size.Y > 0
-	then
+	if typeof(position) == "Vector2" and typeof(size) == "Vector2" and size.X > 0 and size.Y > 0 then
 		return {
 			name = "chat",
 			x = math.floor(position.X),

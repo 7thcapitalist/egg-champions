@@ -53,14 +53,7 @@ local function blank(name: string, parent: Instance): Frame
 	return f
 end
 
-local function line(
-	parent: Instance,
-	name: string,
-	text: string,
-	color: Color3,
-	size: number,
-	order: number
-)
+local function line(parent: Instance, name: string, text: string, color: Color3, size: number, order: number)
 	local label = Theme.text({
 		name = name,
 		text = text,
