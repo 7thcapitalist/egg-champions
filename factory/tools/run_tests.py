@@ -616,7 +616,9 @@ def run_suite(game_dir, luau, pin, out):
     script = script.replace("%DATA%", ",\n".join(data))
     script = script.replace("%FILES%", collect(shared, game_dir))
 
-    with tempfile.TemporaryDirectory(prefix="run_tests_") as tmp:
+    scratch = game_dir / "build"
+    scratch.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="run_tests_", dir=scratch) as tmp:
         boot = Path(tmp) / "bootstrap.luau"
         boot.write_text(script, encoding="utf-8")
         try:
@@ -723,10 +725,12 @@ SELF_TESTS = (
 )
 
 
-def self_test(runner_source, luau, pin):
+def self_test(runner_source, luau, pin, game_dir):
     """Run the harness on the fixture games. Returns a list of problems, empty when all behave."""
     problems = []
-    with tempfile.TemporaryDirectory(prefix="run_tests_self_") as tmp:
+    scratch = game_dir / "build"
+    scratch.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="run_tests_self_", dir=scratch) as tmp:
         for index, (name, files, want_code, want_texts) in enumerate(SELF_TESTS):
             game = Path(tmp) / ("fixture%d" % index)
             shared = game / "src" / "shared"
@@ -762,7 +766,7 @@ def main(argv):
 
     runner = shared / "testing" / "Runner.luau"
     if runner.is_file():
-        problems = self_test(runner.read_text(encoding="utf-8"), luau, pin)
+        problems = self_test(runner.read_text(encoding="utf-8"), luau, pin, game_dir)
         for line in problems:
             print("FAIL run_tests " + line)
         if problems:

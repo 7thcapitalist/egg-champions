@@ -18,28 +18,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PetLook = require(Shared:WaitForChild("visual"):WaitForChild("PetLook"))
+local ThemeColors = require(Shared:WaitForChild("ui"):WaitForChild("ThemeColors"))
 
 local Theme = {}
 
-Theme.colors = table.freeze({
-	panel = Color3.fromRGB(18, 22, 31),
-	raised = Color3.fromRGB(30, 37, 50),
-	border = Color3.fromRGB(42, 50, 66),
-	text = Color3.fromRGB(242, 244, 248),
-	muted = Color3.fromRGB(155, 166, 186),
-	gold = Color3.fromRGB(232, 179, 58),
-	badgeEmpty = Color3.fromRGB(90, 100, 120),
-	-- The egg shop's Hatch button and the dim behind a full screen panel.
-	hatch = Color3.fromRGB(31, 122, 69),
-	white = Color3.fromRGB(255, 255, 255),
-	backdrop = Color3.fromRGB(0, 0, 0),
-	-- The gym battle (Battle.dc.html): arena ground, healthy HP and team
-	-- markers, and a fainted team marker. Low HP uses gold.
-	arena = Color3.fromRGB(51, 80, 62),
-	arenaFloor = Color3.fromRGB(38, 61, 47),
-	healthy = Color3.fromRGB(76, 191, 115),
-	fainted = Color3.fromRGB(74, 84, 104),
-})
+-- The colors live in shared/ui/ThemeColors, so the server's world signs
+-- use the same ones.
+Theme.colors = ThemeColors
 
 -- Type and rarity colors come from PetLook, so the UI and the 3D pets agree.
 local function color(c: PetLook.RGB): Color3
@@ -59,7 +44,7 @@ end
 Theme.fonts = table.freeze({
 	body = Font.new("rbxasset://fonts/families/Roboto.json", Enum.FontWeight.Medium),
 	label = Font.new("rbxasset://fonts/families/Roboto.json", Enum.FontWeight.SemiBold),
-	heading = Font.new("rbxasset://fonts/families/RobotoCondensed.json", Enum.FontWeight.Bold),
+	heading = Font.fromEnum(Enum.Font.FredokaOne),
 })
 
 Theme.sizes = table.freeze({
@@ -67,9 +52,9 @@ Theme.sizes = table.freeze({
 	designWidth = 1280,
 	topBar = 64,
 	gutter = 24,
-	radius = 6,
-	slotRadius = 4,
-	border = 1,
+	radius = 12,
+	slotRadius = 8,
+	border = 2,
 	minTap = 44,
 	menuWidth = 132,
 	menuButton = 46,
@@ -101,14 +86,22 @@ end
 
 -- Small corner radius and a thin border, the look of every panel.
 function Theme.panel(frame: GuiObject, radius: number?, borderColor: Color3?)
+	local isButton = frame:IsA("GuiButton")
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, radius or Theme.sizes.radius)
+	corner.CornerRadius = UDim.new(0, if isButton then 8 else radius or Theme.sizes.radius)
 	corner.Parent = frame
 	local stroke = Instance.new("UIStroke")
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	stroke.Color = borderColor or Theme.colors.border
-	stroke.Thickness = Theme.sizes.border
+	stroke.Thickness = if isButton then 1 else Theme.sizes.border
+	stroke.Transparency = if isButton then 0.2 else 0
 	stroke.Parent = frame
+	if isButton then
+		local gradient = Instance.new("UIGradient")
+		gradient.Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(0.86, 0.89, 0.94))
+		gradient.Rotation = 90
+		gradient.Parent = frame
+	end
 end
 
 -- A text label with the theme's defaults and no background.

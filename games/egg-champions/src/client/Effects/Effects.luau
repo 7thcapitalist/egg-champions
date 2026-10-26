@@ -16,6 +16,10 @@
 	- The server answers each accepted click with ClickCredited and the coins
 	  it added. That amount pops up at the oldest waiting click, rises and
 	  fades, and a small coin burst plays in the world at the same point.
+	  The pop is drawn above the HUD (a higher DisplayOrder than UI/Main).
+	- Each credited click also plays a short coin sound (at most one per
+	  CLICK.soundGap seconds) and calls the onCredited listeners, which is
+	  how Main pulses the coin counter.
 	- Labels and burst emitters come from pools capped by the budget, so 20
 	  clicks a second recycle the same instances and never queue more.
 
@@ -45,6 +49,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
+local ContentProvider = game:GetService("ContentProvider")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local visual = Shared:WaitForChild("visual")
@@ -92,6 +97,9 @@ local pops: Pool.Pool<Pop>? = nil
 local bursts: Pool.Pool<Burst>? = nil
 local pending: Pool.Queue<Vector2> = Pool.newQueue(CLICK.pendingMax)
 local popLayer: ScreenGui? = nil
+local coinSound: Sound? = nil
+local lastSound = -math.huge
+local creditedListeners: { (amount: number) -> () } = {}
 
 local function newPop(parent: Instance): Pop
 	local label = Theme.text({
@@ -114,6 +122,7 @@ local function newBurst(holder: Instance): Burst
 	attachment.Name = "CoinBurst"
 	local emitter = Instance.new("ParticleEmitter")
 	emitter.Enabled = false
+	emitter.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	emitter.Rate = 0
 	emitter.Color = ColorSequence.new(Theme.colors.gold)
 	emitter.LightEmission = 0.5
@@ -208,6 +217,21 @@ function Effects.credited(amount: number)
 	local at = position :: Vector2
 	playPop(at, amount)
 	playBurst(at)
+	local sound = coinSound
+	local now = os.clock()
+	if sound ~= nil and now - lastSound >= CLICK.soundGap then
+		lastSound = now
+		sound.TimePosition = 0
+		sound:Play()
+	end
+	for _, listener in creditedListeners do
+		task.spawn(listener, amount)
+	end
+end
+
+-- Calls listener with the amount of every credited click.
+function Effects.onCredited(listener: (amount: number) -> ())
+	table.insert(creditedListeners, listener)
 end
 
 -- Builds the pools and listens for credited clicks. Call once.
@@ -220,6 +244,13 @@ function Effects.mount(playerGui: PlayerGui, clickCredited: RemoteEvent)
 	gui.Parent = playerGui
 	popLayer = gui
 
+	local sound = Instance.new("Sound")
+	sound.Name = "CoinSound"
+	sound.SoundId = CLICK.sound
+	sound.Volume = CLICK.soundVolume
+	sound.Parent = gui
+	coinSound = sound
+
 	pops = Pool.new(CLICK.maxLive, function(): Pop
 		return newPop(gui)
 	end)
@@ -227,8 +258,15 @@ function Effects.mount(playerGui: PlayerGui, clickCredited: RemoteEvent)
 		return newBurst(Workspace.Terrain)
 	end)
 
-	clickCredited.OnClientEvent:Connect(function(amount: any)
+	clickCredited.OnClientEvent:Connect(function(amount: any, target: any)
 		if type(amount) == "number" then
+			local camera = Workspace.CurrentCamera
+			if typeof(target) == "Vector3" and camera then
+				local point, visible = camera:WorldToViewportPoint(target + Vector3.new(0, 6, 0))
+				if visible then
+					Effects.clicked(Vector2.new(point.X, point.Y))
+				end
+			end
 			Effects.credited(amount)
 		end
 	end)
@@ -274,7 +312,8 @@ function Effects.playHatch(
 	parent: Instance,
 	shellColor: Color3,
 	reveals: { Reveal },
-	onDone: (() -> ())?
+	onDone: (() -> ())?,
+	drawEgg: ((Frame) -> boolean)?
 )
 	if #reveals == 0 then
 		if onDone ~= nil then
@@ -358,6 +397,16 @@ function Effects.playHatch(
 		end
 		local timing = EffectsBudget.hatchTiming(entry.rarity)
 		local rarityColor = Theme.rarityColor(entry.rarity)
+		-- Warm the winning pet while the egg shakes so the reveal has pixels ready.
+		task.spawn(function()
+			local templates = ReplicatedStorage:FindFirstChild("PetModels")
+			local template = if templates then templates:FindFirstChild(entry.petId) else nil
+			if template then
+				pcall(function()
+					ContentProvider:PreloadAsync({ template })
+				end)
+			end
+		end)
 
 		-- The egg shakes three times.
 		local egg = blank("Egg", stage)
@@ -366,6 +415,15 @@ function Effects.playHatch(
 		egg.Size = UDim2.fromOffset(HATCH.eggSize * 0.78, HATCH.eggSize)
 		egg.ZIndex = 52
 		corner(egg, UDim.new(0.5, 0))
+		if drawEgg ~= nil and drawEgg(egg) then
+			egg.BackgroundTransparency = 1
+			egg.Size = UDim2.fromOffset(HATCH.eggSize, HATCH.eggSize)
+			for _, child in egg:GetDescendants() do
+				if child:IsA("GuiObject") then
+					child.ZIndex = 52
+				end
+			end
+		end
 		for shake = 1, HATCH.shakes do
 			local side = if shake % 2 == 1 then 1 else -1
 			play(egg, timing.shakeSeconds, { Rotation = timing.shakeAngle * side }, true)
@@ -883,9 +941,11 @@ function Effects.playBattle(event: any): number
 	end
 	if cue.hop then
 		hop(side)
+		PetVisual.react(side.block, "attack", cue.seconds)
 	end
 	if cue.hit then
 		hit(side)
+		PetVisual.react(side.block, "hit", cue.seconds)
 	end
 	local look = cue.burst
 	if look ~= nil then
@@ -944,6 +1004,7 @@ function Effects.resetBattle()
 	end
 	table.clear(battleTweens)
 	for _, side in sides do
+		PetVisual.clearReactions(side.block)
 		side.block.Position = side.base
 		side.scale.Scale = 1
 		side.flash.BackgroundTransparency = 1
@@ -954,6 +1015,22 @@ function Effects.resetBattle()
 	hideAll(dots)
 	hideAll(bars)
 	hideAll(labels)
+end
+
+-- Layout changes interrupt presentation only. Preserve the dispatcher metadata
+-- so a damage event after resize retains its attack type and special cue.
+function Effects.reflowBattle()
+	local positions = {}
+	for key, side in sides do
+		positions[key] = side.block.Position
+	end
+	local savedDispatcher = dispatcher
+	Effects.resetBattle()
+	dispatcher = savedDispatcher
+	for key, side in sides do
+		side.base = positions[key]
+		side.block.Position = side.base
+	end
 end
 
 return Effects

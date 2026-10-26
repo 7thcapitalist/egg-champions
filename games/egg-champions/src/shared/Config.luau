@@ -24,6 +24,17 @@ export type Constants = {
 	roblox_title: string,
 	team_size: number,
 	pets_per_egg: number,
+	character_walk_speed: number,
+	offline_max_seconds: number,
+	offline_rate_fraction: number,
+	training_tick_seconds: number,
+	training_hits_per_tick: number,
+	training_auto_bonus_hits: number,
+	training_radius: number,
+	training_max_vertical: number,
+	training_hatch_pause_seconds: number,
+	legacy_epic_floor: number,
+	legacy_legendary_floor: number,
 	basic_move_power: number,
 	special_cooldown_turns: number,
 	type_bonus_strong: number,
@@ -36,6 +47,30 @@ export type Constants = {
 	rebirth_coin_bonus: number,
 	rebirth_battle_bonus: number,
 	index_egg_bonus: number,
+	wild_spawn_seconds: number,
+	wild_encounter_seconds: number,
+	wild_uncommon_strength: number,
+	wild_rare_strength: number,
+	wild_hp: number,
+	wild_reward_seconds: number,
+	wild_focus_period: number,
+	wild_focus_window: number,
+	wild_strike_cooldown: number,
+	wild_focus_damage: number,
+	wild_damage: number,
+	wild_max_misses: number,
+	wild_capture_chance: number,
+	wild_visitor_chance: number,
+	wild_prism_drop_chance: number,
+	wild_capture_cap: number,
+	wild_origin_penalty: number,
+	wild_origin_strength: number,
+	wild_second_egg_factor: number,
+	wild_training_bonus: number,
+	wild_boost_seconds: number,
+	index_world_bonus: number,
+	index_full_bonus: number,
+
 	speed_min: number,
 	speed_max: number,
 	pacing_first_hatch_minutes: number,
@@ -109,6 +144,7 @@ export type WorldGym = {
 	leader_strength: string,
 	counter_type: string,
 	target_rebirths: number,
+	cohort_power_factor: number?,
 }
 
 export type World = {
@@ -198,6 +234,9 @@ local passes: { Pass } = require(GameConfig:WaitForChild("passes"))
 local eggs: { Egg } = require(GameConfig:WaitForChild("eggs"))
 local worlds: { World } = require(GameConfig:WaitForChild("worlds"))
 local pets: { Pet } = require(GameConfig:WaitForChild("pets"))
+local prisms: { any } = require(GameConfig:WaitForChild("prisms"))
+local wildRarities: { any } = require(GameConfig:WaitForChild("wild_rarities"))
+local wildAreas: { any } = require(GameConfig:WaitForChild("wild_areas"))
 local manifest: Manifest = require(GameConfig:WaitForChild("manifest"))
 local gymsFile: GymsFile = require(GameConfig:WaitForChild("gyms"))
 local gyms: { Gym } = gymsFile.gyms
@@ -324,6 +363,9 @@ end
 
 local Config = {
 	constants = constants,
+	prisms = prisms,
+	wildRarities = wildRarities,
+	wildAreas = wildAreas,
 
 	pets = pets,
 	eggs = eggs,

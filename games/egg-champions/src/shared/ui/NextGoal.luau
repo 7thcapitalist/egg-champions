@@ -8,9 +8,24 @@
 		1. the gym is beaten (only possible in the last world): the rebirth
 		   cost, which the server sends as a derived field;
 		2. the gym fee is already paid: the gym itself, ready to fight;
-		3. an egg of this world the player has never hatched a pet from, the
-		   cheapest first, while it costs less than the gym fee;
-		4. otherwise the gym fee.
+		3. fewer pets owned than constants.team_size: "Hatch N more pets",
+		   counted in pets (ready once the cheapest egg of the world is
+		   affordable);
+		4. a team with an open slot: "Fill your team of N", counted in team
+		   slots (always ready: it costs nothing);
+		5. an egg of this world the player has never hatched a pet from, the
+		   cheapest first, while it costs less than the gym fee: "Save for
+		   the <egg>";
+		6. otherwise the gym fee.
+
+	Steps 3 to 5 are the small goals between the tutorial and the first gym,
+	so the first minutes never show only a far away gym fee. Steps 3 and 4
+	need petCount and teamCount in the state; without them they are skipped.
+
+	Under a small goal (steps 3 to 5) the card also shows a muted second line
+	naming the gym it leads to and the gym fee, such as "Next: <world> Gym
+	(50K)" (nextLine). Tapping it turns on the beam to that gym, and the beam
+	turns on by itself once the team is full (gymBeam).
 
 	Every price comes from config or from the server. Nothing here changes the
 	state it is given.
@@ -18,8 +33,9 @@
 
 local Config = require(script.Parent.Parent.Config)
 local Progression = require(script.Parent.Parent.rules.Progression)
+local Format = require(script.Parent.Format)
 
-export type Kind = "egg" | "gym" | "rebirth"
+export type Kind = "pets" | "team" | "egg" | "gym" | "rebirth"
 
 export type State = {
 	coins: number,
@@ -27,16 +43,21 @@ export type State = {
 	index: { [string]: any },
 	gymsBeaten: { [string]: boolean },
 	feesPaid: { [string]: boolean },
+	-- Pets owned and pets on the team, when known.
+	petCount: number?,
+	teamCount: number?,
 }
 
 export type Goal = {
 	kind: Kind,
-	-- The egg id for an egg goal, otherwise the world id.
+	-- The egg id for an egg goal, the cheapest egg of the world for a pets
+	-- goal, otherwise the world id.
 	id: string,
 	worldIndex: number,
 	title: string,
 	detail: string,
 	-- Coins counted toward the goal (never more than need) and the target.
+	-- For pets and team goals these count pets, not coins.
 	have: number,
 	need: number,
 	-- 0 to 1, for the progress bar.
@@ -48,6 +69,8 @@ export type Goal = {
 local NextGoal = {}
 
 NextGoal.kinds = table.freeze({
+	pets = "pets" :: Kind,
+	team = "team" :: Kind,
 	egg = "egg" :: Kind,
 	gym = "gym" :: Kind,
 	rebirth = "rebirth" :: Kind,
@@ -114,7 +137,51 @@ end
 
 local function rebirthDetail(): string
 	local percent = math.floor(Config.constants.rebirth_coin_bonus * 100 + 0.5)
-	return string.format("Rebirth for +%d%% coins per click. Pets and badges stay.", percent)
+	return string.format("Rebirth for +%d%% training coins. Pets and badges stay.", percent)
+end
+
+-- The cheapest egg of a world.
+function NextGoal.cheapestEgg(world: Config.World): Config.Egg
+	local best: Config.Egg? = nil
+	for _, eggId in world.eggs do
+		local egg = Config.eggById[eggId]
+		if best == nil or egg.price < best.price then
+			best = egg
+		end
+	end
+	assert(best ~= nil, "NextGoal.cheapestEgg: the world has no eggs")
+	return best
+end
+
+-- True for the small goals shown before a gym: while one of these is the
+-- goal, the tutorial's gym step waits and the card shows the goal instead.
+function NextGoal.beforeGym(goal: Goal): boolean
+	return goal.kind == NextGoal.kinds.pets
+		or goal.kind == NextGoal.kinds.team
+		or goal.kind == NextGoal.kinds.egg
+end
+
+local function counted(
+	kind: Kind,
+	id: string,
+	world: Config.World,
+	title: string,
+	detail: string,
+	have: number,
+	need: number,
+	ready: boolean
+): Goal
+	return {
+		kind = kind,
+		id = id,
+		worldIndex = world.index,
+		title = title,
+		detail = detail,
+		have = math.clamp(have, 0, need),
+		need = need,
+		progress = if need <= 0 then 1 else math.clamp(have / need, 0, 1),
+		ready = ready,
+	}
 end
 
 -- The goal to show for this state. rebirthCost is the cost the server sent.
@@ -150,6 +217,37 @@ function NextGoal.pick(state: State, rebirthCost: number): Goal
 		)
 	end
 
+	local teamSize = Config.constants.team_size
+	local petCount = state.petCount
+	if petCount ~= nil and petCount < teamSize then
+		local egg = NextGoal.cheapestEgg(world)
+		local more = teamSize - petCount
+		return counted(
+			NextGoal.kinds.pets,
+			egg.id,
+			world,
+			string.format("Hatch %d more %s", more, if more == 1 then "pet" else "pets"),
+			"Hatch pets to fill your team.",
+			petCount,
+			teamSize,
+			coins >= egg.price
+		)
+	end
+
+	local teamCount = state.teamCount
+	if teamCount ~= nil and petCount ~= nil and teamCount < math.min(petCount, teamSize) then
+		return counted(
+			NextGoal.kinds.team,
+			world.id,
+			world,
+			string.format("Fill your team of %d", teamSize),
+			"Equip pets in PETS. Every team pet adds training power.",
+			teamCount,
+			teamSize,
+			true
+		)
+	end
+
 	local nextEgg: Config.Egg? = nil
 	for _, eggId in world.eggs do
 		local egg = Config.eggById[eggId]
@@ -164,7 +262,7 @@ function NextGoal.pick(state: State, rebirthCost: number): Goal
 			NextGoal.kinds.egg,
 			nextEgg.id,
 			world,
-			nextEgg.name,
+			"Save for the " .. nextEgg.name,
 			"Hatch it for new pets for your team.",
 			coins,
 			nextEgg.price,
@@ -173,6 +271,59 @@ function NextGoal.pick(state: State, rebirthCost: number): Goal
 	end
 
 	return build(NextGoal.kinds.gym, world.id, world, gymTitle, gymDetail(world), coins, fee, false)
+end
+
+-- The muted second line under a small goal: the gym of the current world
+-- and its fee from config. Nil for any other goal.
+function NextGoal.nextLine(state: State, goal: Goal): string?
+	if not NextGoal.beforeGym(goal) then
+		return nil
+	end
+	local world = NextGoal.currentWorld(state)
+	return string.format("Next: %s Gym (%s)", world.name, Format.abbreviate(world.gym.fee))
+end
+
+NextGoal.CLICK_HINT = "Train at the practice target"
+
+-- True when the goal waits on coins the player does not have yet: an egg,
+-- a gym fee or a rebirth short of its price, or more pets to hatch while the
+-- cheapest egg is out of reach. A team goal and a paid gym never wait on
+-- coins.
+function NextGoal.needsCoins(state: State, goal: Goal): boolean
+	if goal.kind == NextGoal.kinds.team then
+		return false
+	end
+	if goal.kind == NextGoal.kinds.pets then
+		local egg: Config.Egg? = rawget(Config.eggById :: any, goal.id)
+		return egg ~= nil and state.coins < egg.price
+	end
+	return not goal.ready and state.coins < goal.need
+end
+
+-- The short "Train at the practice target" line the goal card keeps while
+-- the goal waits on coins (needsCoins), or nil.
+function NextGoal.clickHint(state: State, goal: Goal): string?
+	return if NextGoal.needsCoins(state, goal) then NextGoal.CLICK_HINT else nil
+end
+
+-- True when every team slot holds a pet.
+function NextGoal.teamFull(state: State): boolean
+	local teamCount = state.teamCount
+	return teamCount ~= nil and teamCount >= Config.constants.team_size
+end
+
+-- The world whose gym the beam points at, or nil for no beam. The beam is
+-- on when the player tapped the next line in this world (tappedWorldId) or
+-- the team is full, until that world's gym is beaten.
+function NextGoal.gymBeam(state: State, tappedWorldId: string?): string?
+	local world = NextGoal.currentWorld(state)
+	if state.gymsBeaten[world.id] == true then
+		return nil
+	end
+	if tappedWorldId == world.id or NextGoal.teamFull(state) then
+		return world.id
+	end
+	return nil
 end
 
 return NextGoal

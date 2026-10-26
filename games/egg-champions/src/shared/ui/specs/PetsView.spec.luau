@@ -240,11 +240,70 @@ return function()
 				expect(detail.moves[1].kind).toEqual("basic")
 				local special = Config.specialById[pet.special]
 				expect(detail.moves[2].name).toEqual(special.name)
-				expect(string.find(detail.moves[2].text, special.effect, 1, true) ~= nil).toBeTrue()
+				expect(detail.moves[2].text).toEqual(
+					PetsView.specialText(
+						special,
+						Config.typeById[pet.type].name,
+						if pet.special_off_type ~= nil
+							then Config.typeById[pet.special_off_type].name
+							else nil
+					)
+				)
 				expect(detail.typeName).toEqual(Config.typeById[pet.type].name)
 				expect(detail.roleName).toEqual(Config.roleById[pet.role].name)
 				expect(detail.editionName ~= nil).toEqual(pet.edition ~= nil)
 			end
+		end)
+
+		it("shows special moves with their real numbers from config", function()
+			local cooldown = tostring(Config.constants.special_cooldown_turns)
+			local function has(text: string, part: string): boolean
+				return string.find(text, part, 1, true) ~= nil
+			end
+			for _, special in Config.specials do
+				local text = PetsView.specialText(special, "Fire", "Water")
+				expect(has(text, "after " .. cooldown .. " turns")).toBeTrue()
+				if special.kind == "heal" then
+					expect(
+						has(
+							text,
+							"restores " .. PetsView.number(special.value * 100) .. "% of max HP"
+						)
+					).toBeTrue()
+				elseif special.kind == "guard" or special.kind == "speed" then
+					expect(has(text, PetsView.number(special.value * 100) .. "%")).toBeTrue()
+				elseif special.kind == "drain" then
+					expect(has(text, PetsView.number(special.power) .. " power")).toBeTrue()
+					expect(has(text, PetsView.number(special.value * 100) .. "%")).toBeTrue()
+				elseif special.kind == "attack" then
+					expect(
+						has(text, "Fire attack with " .. PetsView.number(special.power) .. " power")
+					).toBeTrue()
+				elseif special.kind == "offtype" then
+					expect(
+						has(
+							text,
+							"Water attack with " .. PetsView.number(special.power) .. " power"
+						)
+					).toBeTrue()
+				end
+			end
+			local heal = Config.specialById.heal
+			if heal ~= nil and heal.value == 0.3 then
+				expect(PetsView.specialText(heal, "Fire", nil)).toEqual(
+					"restores 30% of max HP. Ready again after " .. cooldown .. " turns"
+				)
+			end
+		end)
+
+		it("labels a tile's Click Power", function()
+			expect(PetsView.clickText(3)).toEqual("Click +3")
+			expect(PetsView.clickText(2.5)).toEqual("Click +2.5")
+			local pet = Config.pets[1]
+			local tiles = PetsView.tiles({ { uid = "a", petId = pet.id } }, {})
+			expect(tiles[1].clickPowerText).toEqual(
+				"Click +" .. PetsView.number(Coins.clickPowerOf({ petId = pet.id, variant = nil }))
+			)
 		end)
 
 		it("turns server refusals into readable messages", function()
@@ -265,6 +324,114 @@ return function()
 			expect(PetsView.number(2.4)).toEqual("2.4")
 			expect(PetsView.number(58.8)).toEqual("58.8")
 			expect(PetsView.number(1500)).toEqual("1,500")
+		end)
+	end)
+	describe("PetsView with few pets", function()
+		it("keeps collection tabs accessible even before the first hatch", function()
+			for count = 0, PetsView.FULL_SCREEN_PETS - 1 do
+				local parts = PetsView.screenParts(count)
+				expect(parts.filters).toBeFalse()
+				expect(table.concat(parts.tabs, ",")).toEqual("pets,index,fruit")
+			end
+			local full = PetsView.screenParts(PetsView.FULL_SCREEN_PETS)
+			expect(full.filters).toBeTrue()
+			expect(table.concat(full.tabs, ",")).toEqual("pets,index,fruit")
+		end)
+	end)
+
+	describe("Inventory search and refresh", function()
+		it("finds names, types and variants without case sensitivity or pattern parsing", function()
+			local tiles = PetsView.tiles(sampleOwned(), {})
+			local name = tiles[1].name
+			local found =
+				PetsView.arrange(tiles, nil, { query = "  " .. string.upper(name) .. "  " })
+			expect(#found >= 1).toBeTrue()
+			for _, tile in found do
+				expect(tile.name).toEqual(name)
+			end
+			local variantName = Config.variants[1].name
+			local variants = PetsView.arrange(tiles, nil, { query = variantName })
+			expect(#variants).toEqual(1)
+			expect(variants[1].uid).toEqual("u4")
+			expect(#PetsView.arrange(tiles, nil, { query = "[" })).toEqual(0)
+		end)
+
+		it("combines search with filters and leaves the inventory untouched", function()
+			local tiles = PetsView.tiles(sampleOwned(), {})
+			local wanted = tiles[3]
+			local found =
+				PetsView.arrange(tiles, nil, { query = wanted.typeName, rarity = wanted.rarity })
+			expect(#found >= 1).toBeTrue()
+			for _, tile in found do
+				expect(tile.rarity).toEqual(wanted.rarity)
+			end
+			expect(#tiles).toEqual(6)
+		end)
+
+		it("ignores coin and playtime pushes but detects team and discoveries", function()
+			local profile =
+				{ pets = sampleOwned(), team = {}, index = {}, coins = 50, playSeconds = 0 }
+			local before = PetsView.signature(profile)
+			profile.coins = 5000
+			profile.playSeconds = 100
+			expect(PetsView.signature(profile)).toEqual(before)
+			table.insert(profile.team, "u1")
+			local equipped = PetsView.signature(profile)
+			expect(equipped == before).toBeFalse()
+			profile.index[Config.pets[1].id] = { golden = true }
+			expect(PetsView.signature(profile) == equipped).toBeFalse()
+		end)
+	end)
+
+	describe("PetsView stats", function()
+		it("shows HP and Attack as whole numbers", function()
+			expect(PetsView.whole(37.5)).toEqual("38")
+			expect(PetsView.whole(12.2)).toEqual("12")
+			expect(PetsView.whole(1500.4)).toEqual("1,500")
+			for _, pet in Config.pets do
+				for _, variant in Config.variants do
+					local detail = PetsView.detail(pet.id, variant.id)
+					for _, stat in detail.stats do
+						if stat.label == "HP" or stat.label == "Attack" then
+							expect(string.find(stat.value, ".", 1, true) == nil).toBeTrue()
+						end
+					end
+				end
+			end
+		end)
+	end)
+	describe("PetsView beginner detail", function()
+		it("is a beginner while the tutorial runs or with fewer than 4 pets", function()
+			local full = PetsView.FULL_SCREEN_PETS
+			expect(full).toEqual(4)
+			expect(PetsView.beginner(0, false)).toBeTrue()
+			expect(PetsView.beginner(full - 1, false)).toBeTrue()
+			expect(PetsView.beginner(full, false)).toBeFalse()
+			expect(PetsView.beginner(full + 5, true)).toBeTrue()
+		end)
+
+		it("shows only Click Power until Battle stats is opened", function()
+			local pet = Config.pets[1]
+			local info = PetsView.detail(pet.id, nil)
+			local closed = PetsView.detailParts(info, true, false)
+			expect(#closed.stats).toEqual(1)
+			expect(closed.stats[1].label).toEqual("Click Power")
+			expect(closed.moves).toBeFalse()
+			expect(closed.toggle).toEqual(PetsView.BATTLE_TOGGLE.closed)
+			expect(closed.typeLine).toEqual(info.typeName)
+			local open = PetsView.detailParts(info, true, true)
+			expect(#open.stats).toEqual(#info.stats)
+			expect(open.moves).toBeTrue()
+			expect(open.toggle).toEqual(PetsView.BATTLE_TOGGLE.open)
+		end)
+
+		it("shows everything with no toggle to a player past the beginning", function()
+			local pet = Config.pets[1]
+			local info = PetsView.detail(pet.id, nil)
+			local parts = PetsView.detailParts(info, false, false)
+			expect(#parts.stats).toEqual(#info.stats)
+			expect(parts.moves).toBeTrue()
+			expect(parts.toggle).toEqual(nil)
 		end)
 	end)
 end

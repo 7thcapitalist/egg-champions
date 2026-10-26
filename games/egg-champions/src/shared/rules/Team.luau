@@ -3,7 +3,7 @@
 	Team: which owned pets may be equipped.
 
 	There is one team. The same equipped list earns coins per click and fights
-	gym battles, so nothing here knows which of the two a caller wants.
+	gym battles. Equip Best can rank for either purpose before replacing it.
 
 	A team is a plain list of pet uids, in equip order. The owned pets are a
 	plain list of uids too. Every function leaves its inputs untouched: equip
@@ -14,9 +14,16 @@
 ]]
 
 local Config = require(script.Parent.Parent.Config)
+local Coins = require(script.Parent.Coins)
+local Battle = require(script.Parent.Battle)
 
 export type Uid = string
 export type TeamList = { Uid }
+export type OwnedPet = {
+	uid: Uid,
+	petId: string,
+	variant: string?,
+}
 
 export type Reason = "not_owned" | "already_equipped" | "team_full" | "not_equipped"
 
@@ -72,6 +79,69 @@ function Team.unequip(team: TeamList, petUid: Uid): (TeamList?, Reason?)
 	local nextTeam = table.clone(team)
 	table.remove(nextTeam, position)
 	return nextTeam, nil
+end
+
+-- Replace the whole team with the strongest owned pets for coins per click.
+-- Ties keep inventory order, including when two variants have equal power.
+-- The caller passes server-owned profile pets, never client rankings or uids.
+type Ranked = { uid: Uid, power: number, speed: number, index: number }
+
+local function bestFromRanked(ranked: { Ranked }): TeamList
+	table.sort(ranked, function(a, b)
+		if a.power ~= b.power then
+			return a.power > b.power
+		end
+		if a.speed ~= b.speed then
+			return a.speed > b.speed
+		end
+		return a.index < b.index
+	end)
+	local team: TeamList = {}
+	local seen: { [Uid]: boolean } = {}
+	for _, pet in ranked do
+		if not seen[pet.uid] then
+			table.insert(team, pet.uid)
+			seen[pet.uid] = true
+			if #team >= Team.maxSize() then
+				break
+			end
+		end
+	end
+	return team
+end
+
+function Team.bestForCoins(owned: { OwnedPet }): TeamList
+	local ranked: { Ranked } = {}
+	local anchor = Coins.legacyAnchor(owned)
+	for index, pet in owned do
+		table.insert(
+			ranked,
+			{ uid = pet.uid, power = Coins.clickPowerOf(pet, anchor), speed = 0, index = index }
+		)
+	end
+	return bestFromRanked(ranked)
+end
+
+-- A general battle recommendation, not an opponent-specific matchup.
+-- HP and Attack use the same multiplier as battle start; Speed breaks equal
+-- strength scores, and inventory order breaks a remaining tie.
+function Team.bestForBattle(owned: { OwnedPet }, rebirths: number): TeamList
+	local ranked: { Ranked } = {}
+	for index, pet in owned do
+		local fighter = Battle.fighterFromPet(pet.petId, pet.variant)
+		local multiplier = Battle.playerMultiplier(rebirths, pet.variant)
+		table.insert(ranked, {
+			uid = pet.uid,
+			power = (fighter.hp * multiplier) * (fighter.attack * multiplier),
+			speed = fighter.speed,
+			index = index,
+		})
+	end
+	return bestFromRanked(ranked)
+end
+
+function Team.unequipAll(): TeamList
+	return {}
 end
 
 return Team

@@ -18,12 +18,16 @@
 		playSeconds: total seconds played over every earlier session, kept
 			through rebirth. The server adds the current session's time on
 			every save and when the player leaves (see Profile.playSecondsAfter).
+		tutorialStep: the first-time tutorial step (see Tutorial), kept
+			through rebirth.
 
 	Schema versions:
 		1: coins, pets, team, index, badges, rebirths.
 		2: adds gymsBeaten and feesPaid (task 06 progression).
 		3: adds gymRetryAt, so a gym retry wait survives leaving and rejoining.
 		4: adds playSeconds, so analytics can report total play time.
+		5: adds tutorialStep. An older save gets Tutorial.initialFor, so a
+		   player who already owns a pet skips the first three steps.
 
 	The version is a storage format number, not a game number, so it lives here
 	rather than in config. Every function leaves its input untouched.
@@ -31,6 +35,8 @@
 
 local Config = require(script.Parent.Parent.Config)
 local Progression = require(script.Parent.Progression)
+local Tutorial = require(script.Parent.Tutorial)
+local Prisms = require(script.Parent.Prisms)
 
 export type OwnedPet = {
 	uid: string,
@@ -50,6 +56,10 @@ export type Profile = {
 	feesPaid: Progression.Flags,
 	gymRetryAt: { [string]: number },
 	playSeconds: number,
+	tutorialStep: number,
+	prisms: { [string]: number },
+	paidPrisms: { [string]: number },
+	purchaseReceipts: { [string]: boolean },
 }
 
 export type ProblemKind =
@@ -61,6 +71,9 @@ export type ProblemKind =
 	| "team_too_long"
 	| "team_not_owned"
 	| "team_duplicate"
+	| "bad_tutorial_step"
+	| "bad_prisms"
+	| "bad_receipts"
 
 export type Problem = {
 	kind: ProblemKind,
@@ -68,7 +81,7 @@ export type Problem = {
 	repairable: boolean,
 }
 
-local CURRENT_VERSION = 4
+local CURRENT_VERSION = 6
 
 local Profile = {}
 
@@ -83,6 +96,7 @@ Profile.problems = table.freeze({
 	teamTooLong = "team_too_long" :: ProblemKind,
 	teamNotOwned = "team_not_owned" :: ProblemKind,
 	teamDuplicate = "team_duplicate" :: ProblemKind,
+	badTutorialStep = "bad_tutorial_step" :: ProblemKind,
 })
 
 local function deepCopy(value: any): any
@@ -97,6 +111,16 @@ local function deepCopy(value: any): any
 end
 
 -- The empty profile a brand new player starts with.
+-- True when a save store error means Studio has no access to API services:
+-- Roblox's "StudioAccessToApisNotAllowed", "API access is not enabled", or
+-- an error that starts with "403:". Retrying can not fix these.
+function Profile.isNoAccessError(err: any): boolean
+	local text = tostring(err)
+	return string.find(text, "StudioAccessToApisNotAllowed", 1, true) ~= nil
+		or string.find(text, "API access is not enabled", 1, true) ~= nil
+		or string.sub(text, 1, 4) == "403:"
+end
+
 function Profile.new(): Profile
 	local state = Progression.newState()
 	return {
@@ -111,11 +135,22 @@ function Profile.new(): Profile
 		feesPaid = state.feesPaid,
 		gymRetryAt = {},
 		playSeconds = 0,
+		tutorialStep = Tutorial.steps.click,
+		prisms = Prisms.initial(true),
+		paidPrisms = Prisms.initial(false),
+		purchaseReceipts = {},
 	}
 end
 
 -- One step per version: steps[n] turns a version n table into version n + 1.
 local steps: { [number]: (any) -> any } = {
+	[5] = function(data: any): any
+		data.prisms = data.prisms or Prisms.initial(true)
+		data.paidPrisms = data.paidPrisms or Prisms.initial(false)
+		data.purchaseReceipts = data.purchaseReceipts or {}
+		data.version = 6
+		return data
+	end,
 	[1] = function(data: any): any
 		data.gymsBeaten = data.gymsBeaten or {}
 		data.feesPaid = data.feesPaid or {}
@@ -130,6 +165,11 @@ local steps: { [number]: (any) -> any } = {
 	[3] = function(data: any): any
 		data.playSeconds = if type(data.playSeconds) == "number" then data.playSeconds else 0
 		data.version = 4
+		return data
+	end,
+	[4] = function(data: any): any
+		data.tutorialStep = Tutorial.initialFor(data)
+		data.version = 5
 		return data
 	end,
 }
@@ -205,6 +245,39 @@ function Profile.validate(profile: Profile): { Problem }
 		report(Profile.problems.negativeCoins, "coins is " .. tostring(profile.coins), false)
 	end
 
+	for _, field in { "prisms", "paidPrisms" } do
+		local stock = (profile :: any)[field]
+		if type(stock) ~= "table" then
+			report("bad_prisms", field .. " is not a table", false)
+		else
+			for id, count in stock do
+				if
+					not Prisms.definition(id)
+					or type(count) ~= "number"
+					or count ~= count
+					or count == math.huge
+					or count < 0
+					or count ~= math.floor(count)
+				then
+					report("bad_prisms", field .. " contains an invalid balance", false)
+				end
+			end
+			for _, p in Config.prisms do
+				if stock[p.id] == nil then
+					report("bad_prisms", "missing " .. p.id, false)
+				end
+			end
+		end
+	end
+	if type(profile.purchaseReceipts) ~= "table" then
+		report("bad_receipts", "receipts is not a table", false)
+	else
+		for id, received in profile.purchaseReceipts do
+			if type(id) ~= "string" or #id == 0 or received ~= true then
+				report("bad_receipts", "invalid receipt", false)
+			end
+		end
+	end
 	local owned: { [string]: boolean } = {}
 	for position, pet in profile.pets do
 		if knownPets[pet.petId] ~= true then
@@ -261,12 +334,20 @@ function Profile.validate(profile: Profile): { Problem }
 		equipped[uid] = true
 	end
 
+	if not Tutorial.isStep(profile.tutorialStep) then
+		report(
+			Profile.problems.badTutorialStep,
+			"tutorialStep is " .. tostring(profile.tutorialStep),
+			true
+		)
+	end
+
 	return problems
 end
 
 -- Fixes what can be fixed without losing anything the player earned: drops
 -- team entries that are not owned or repeated, then trims the team to
--- team_size. Returns a new profile and the problems that remain, which are
+-- team_size, and works out a broken tutorial step again. Returns a new profile and the problems that remain, which are
 -- the ones that must not be trusted.
 function Profile.repair(profile: Profile): (Profile, { Problem })
 	local fixed: Profile = deepCopy(profile)
@@ -283,6 +364,9 @@ function Profile.repair(profile: Profile): (Profile, { Problem })
 		end
 	end
 	fixed.team = team
+	if not Tutorial.isStep(fixed.tutorialStep) then
+		fixed.tutorialStep = Tutorial.initialFor(fixed :: any)
+	end
 	return fixed, Profile.validate(fixed)
 end
 

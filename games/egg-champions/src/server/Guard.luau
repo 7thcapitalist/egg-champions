@@ -8,6 +8,9 @@
 
 	- A player with no loaded profile is rejected before the handler runs.
 	- Every rejection is logged with the player, the remote and the reason.
+	- Every RemoteFunction (SkipTutorial included) is rate limited per player
+	  and per remote: past INVOKE_LIMIT calls in INVOKE_WINDOW_SECONDS the
+	  call is refused with "rate_limited" before the handler runs.
 	- A handler that errors is logged and answered with "server_error"; it
 	  never leaks the error text to the client.
 	- After a request succeeds, the player's state is pushed down through
@@ -21,6 +24,7 @@
 	a reason. The client gets { ok = true, ... } or { ok = false, reason = ... }.
 ]]
 
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -28,6 +32,7 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local Requests = require(Shared:WaitForChild("net"):WaitForChild("Requests"))
 local Profile = require(Shared:WaitForChild("rules"):WaitForChild("Profile"))
 local Profiles = require(script.Parent:WaitForChild("Profiles"))
+local Followers = require(Shared:WaitForChild("visual"):WaitForChild("Followers"))
 
 type Profile = Profile.Profile
 
@@ -35,12 +40,18 @@ export type EventHandler = (Player, Profile, ...any) -> ()
 export type InvokeHandler = (Player, Profile, ...any) -> (boolean, any, any?)
 
 local SERVER_ERROR = "server_error"
+-- Request flood limits for RemoteFunctions: anti abuse timing, not game
+-- numbers. Far above what a person clicking a button can send.
+local INVOKE_LIMIT = 8
+local INVOKE_WINDOW_SECONDS = 1
 
 local Guard = {}
 
 local instances: { [string]: Instance } = {}
 local derivedFields: { [string]: (Player, Profile) -> any } = {}
 local started = false
+-- One limiter per RemoteFunction, keyed by player.
+local invokeLimiters: { [string]: Requests.RateLimiter } = {}
 
 local function deepCopy(value: any): any
 	if type(value) ~= "table" then
@@ -82,7 +93,8 @@ function Guard.addDerived(field: string, compute: (Player, Profile) -> any)
 	derivedFields[field] = compute
 end
 
--- Sends the player's current state down through ProfileChanged.
+-- Sends the player's current state down through ProfileChanged, and keeps
+-- the player's FollowerTeam attribute (shared/visual/Followers) in step.
 function Guard.push(player: Player)
 	local profile = Profiles.get(player)
 	if profile == nil or player.Parent == nil then
@@ -99,6 +111,12 @@ function Guard.push(player: Player)
 	end
 	local event = remote(Remotes.names.ProfileChanged) :: RemoteEvent
 	event:FireClient(player, { profile = deepCopy(profile), derived = derived })
+	-- The equipped team, for every client's pet followers. Roblox only
+	-- replicates the attribute when the string changes.
+	local team = Followers.encode(profile.pets, profile.team)
+	if player:GetAttribute(Followers.ATTRIBUTE) ~= team then
+		player:SetAttribute(Followers.ATTRIBUTE, team)
+	end
 end
 
 -- Sends the player a short message through Notice, such as why a portal
@@ -162,7 +180,18 @@ end
 function Guard.onInvoke(name: string, handler: InvokeHandler)
 	expectKind(name, "function")
 	local fn = remote(name) :: RemoteFunction
+	local limiter = Requests.newRateLimiter(INVOKE_LIMIT, INVOKE_WINDOW_SECONDS)
+	invokeLimiters[name] = limiter
 	fn.OnServerInvoke = function(player: Player, ...: any): any
+		local allowed, dropped = Requests.allow(limiter, player, os.clock())
+		if not allowed then
+			-- Log the first refusal of a window only, so a flood can not
+			-- flood the log too.
+			if dropped == 1 then
+				Guard.reject(player, name, Requests.reasons.rateLimited)
+			end
+			return { ok = false, reason = Requests.reasons.rateLimited }
+		end
 		local profile = Profiles.get(player)
 		if profile == nil then
 			Guard.reject(player, name, Requests.reasons.noProfile)
@@ -222,6 +251,12 @@ function Guard.start()
 
 	Profiles.onLoaded(function(player: Player, _profile: Profile)
 		Guard.push(player)
+	end)
+
+	Players.PlayerRemoving:Connect(function(player: Player)
+		for _, limiter in invokeLimiters do
+			Requests.forget(limiter, player)
+		end
 	end)
 end
 

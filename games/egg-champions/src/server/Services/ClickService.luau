@@ -1,20 +1,6 @@
 --!strict
---[[
-	ClickService: coins for clicks.
+-- Server-only training rewards. Historical names preserve saved-stat compatibility.
 
-	The client fires Click with nothing else; it never sends an amount. Each
-	accepted click adds Coins.perClick for the player's equipped team, rebirths,
-	completed eggs and pass multiplier, all worked out here on the server.
-
-	Clicks past MAX_CLICKS_PER_SECOND in any one second are dropped, not
-	credited. The first drop in each window is logged; logging every dropped
-	click from a spamming client would flood the Output.
-
-	Each accepted click also sends the credited amount back through
-	ClickCredited, so the client's coin pop shows what the server added.
-]]
-
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -23,23 +9,21 @@ local Coins = require(rules:WaitForChild("Coins"))
 local PetIndex = require(rules:WaitForChild("PetIndex"))
 local Profile = require(rules:WaitForChild("Profile"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
-local Requests = require(Shared:WaitForChild("net"):WaitForChild("Requests"))
+local Offline = require(rules:WaitForChild("Offline"))
+local Config = require(Shared:WaitForChild("Config"))
+local Profiles = require(script.Parent.Parent:WaitForChild("Profiles"))
+local Training = require(rules:WaitForChild("Training"))
+local PassEffects = require(rules:WaitForChild("PassEffects"))
 
 local server = script.Parent.Parent
 local Guard = require(server:WaitForChild("Guard"))
 local Passes = require(server:WaitForChild("Passes"))
+local TutorialService = require(script.Parent:WaitForChild("TutorialService"))
 
 type Profile = Profile.Profile
 
--- A plausible human maximum. Anti cheat, not a game number.
-local MAX_CLICKS_PER_SECOND = 20
-local WINDOW_SECONDS = 1
-
+local CollectionRewards = require(rules.CollectionRewards)
 local ClickService = {}
-
-ClickService.MAX_CLICKS_PER_SECOND = MAX_CLICKS_PER_SECOND
-
-local limiter = Requests.newRateLimiter(MAX_CLICKS_PER_SECOND, WINDOW_SECONDS)
 
 -- The equipped team as Coins reads it: each uid resolved to its pet.
 local function equippedPets(profile: Profile): { Coins.OwnedPet }
@@ -58,33 +42,23 @@ local function equippedPets(profile: Profile): { Coins.OwnedPet }
 end
 
 function ClickService.coinsPerClick(player: Player, profile: Profile): number
-	return Coins.perClick({
-		team = equippedPets(profile),
-		rebirths = profile.rebirths,
-		completedEggs = PetIndex.completedEggs(profile.index),
-		passMultiplier = Passes.coinMultiplier(player),
-	})
+	return CollectionRewards.summary(profile.index).extraMultiplier
+		* Coins.perClick({
+			team = equippedPets(profile),
+			rebirths = profile.rebirths,
+			completedEggs = PetIndex.completedEggs(profile.index),
+			passMultiplier = Passes.coinMultiplier(player),
+			legacyAnchor = Coins.legacyAnchor(profile.pets),
+		})
 end
 
-local function onClick(player: Player, profile: Profile)
-	local allowed, dropped = Requests.allow(limiter, player, os.clock())
-	if not allowed then
-		if dropped == 1 then
-			Guard.reject(player, Remotes.names.Click, Requests.reasons.rateLimited)
-		end
-		return
-	end
-	local credited = ClickService.coinsPerClick(player, profile)
+-- Only TrainingService can call this; legacy Click remotes have no handler.
+function ClickService.train(player: Player, profile: Profile, hits: number, target: Vector3)
+	local credited = ClickService.coinsPerClick(player, profile) * hits
 	profile.coins += credited
+	TutorialService.note(profile, "coins")
 	Guard.push(player)
-	Guard.fire(player, Remotes.names.ClickCredited, credited)
-end
-
--- One click the server makes for an Auto Click owner (see PassService). It
--- skips the rate limit, which is for client clicks; the server sets the rate.
-function ClickService.autoClick(player: Player, profile: Profile)
-	profile.coins += ClickService.coinsPerClick(player, profile)
-	Guard.push(player)
+	Guard.fire(player, Remotes.names.ClickCredited, credited, target)
 end
 
 -- Each equipped pet's own Click Power, keyed by uid, for the team bar. The
@@ -95,21 +69,34 @@ function ClickService.teamClickPower(_player: Player, profile: Profile): { [stri
 		byUid[pet.uid] = pet
 	end
 	local powers: { [string]: number } = {}
+	local anchor = Coins.legacyAnchor(profile.pets)
 	for _, uid in profile.team do
 		local pet = byUid[uid]
 		if pet ~= nil then
-			powers[uid] = Coins.clickPowerOf({ petId = pet.petId, variant = pet.variant })
+			powers[uid] = Coins.clickPowerOf({ petId = pet.petId, variant = pet.variant }, anchor)
 		end
 	end
 	return powers
 end
 
 function ClickService.start()
+	Guard.addDerived("collectionRewards", function(_player, profile)
+		return CollectionRewards.summary(profile.index)
+	end)
+	Profiles.setOfflineRate(function(player: Player, profile: Profile): number
+		local active = ClickService.coinsPerClick(player, profile)
+			* Training.hits(PassEffects.autoClick(Passes.owned(player)))
+			/ Config.constants.training_tick_seconds
+		return Offline.rate(active, #profile.team > 0)
+	end)
+	Guard.addDerived("offlineReward", function(player: Player)
+		return Profiles.offlineReward(player)
+	end)
 	Guard.addDerived("coinsPerClick", ClickService.coinsPerClick)
 	Guard.addDerived("teamClickPower", ClickService.teamClickPower)
-	Guard.onEvent(Remotes.names.Click, onClick)
-	Players.PlayerRemoving:Connect(function(player: Player)
-		Requests.forget(limiter, player)
+	Guard.addDerived("coinsPerTrainingTick", function(player: Player, profile: Profile): number
+		return ClickService.coinsPerClick(player, profile)
+			* Training.hits(PassEffects.autoClick(Passes.owned(player)))
 	end)
 end
 

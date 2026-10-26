@@ -28,15 +28,15 @@
     "name": "Epic",
     "order": 4,
     "hatch_chance": 0.045,
-    "click_mult": 10,
-    "battle_mult": 2
+    "click_mult": 80,
+    "battle_mult": 4
   },
   {
     "id": "legendary",
     "name": "Legendary",
     "order": 5,
     "hatch_chance": 0.005,
-    "click_mult": 30,
-    "battle_mult": 3
+    "click_mult": 1000,
+    "battle_mult": 10
   }
 ]

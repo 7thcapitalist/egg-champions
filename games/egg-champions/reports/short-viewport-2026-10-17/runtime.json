@@ -1,0 +1,102 @@
+{
+  "qa48short": {
+    "teamVisible": false,
+    "buttons": {
+      "1": {
+        "visible": true,
+        "pos": "254, 133",
+        "name": "Eggs",
+        "size": "104, 40"
+      },
+      "2": {
+        "visible": true,
+        "pos": "362, 133",
+        "name": "Pets",
+        "size": "104, 40"
+      },
+      "3": {
+        "visible": false,
+        "pos": "254, 209",
+        "name": "Rebirth",
+        "size": "104, 40"
+      },
+      "4": {
+        "visible": false,
+        "pos": "254, 247",
+        "name": "Shop",
+        "size": "104, 40"
+      }
+    },
+    "viewport": "720, 239.333328",
+    "texts": {
+      "1": {
+        "name": "Total",
+        "text": "118"
+      },
+      "2": {
+        "name": "PerClick",
+        "text": "+4 PER CLICK"
+      },
+      "3": {
+        "name": "World",
+        "text": "GREEN MEADOW"
+      },
+      "4": {
+        "name": "Rebirths",
+        "text": "BADGES 0/3 >\nRebirths 0"
+      },
+      "5": {
+        "name": "Line",
+        "text": "Hatch 2 more pets"
+      },
+      "6": {
+        "name": "Label",
+        "text": "Coins for your first egg 48 / 50"
+      },
+      "7": {
+        "name": "Name",
+        "text": "Leafpup"
+      },
+      "8": {
+        "name": "Power",
+        "text": "Click +1"
+      },
+      "9": {
+        "name": "Name",
+        "text": ""
+      },
+      "10": {
+        "name": "Power",
+        "text": ""
+      },
+      "11": {
+        "name": "Name",
+        "text": ""
+      },
+      "12": {
+        "name": "Power",
+        "text": ""
+      }
+    },
+    "content": "720, 239.333328",
+    "menuVisible": true
+  },
+  "qa48portrait320": {
+    "device": "hd_1080",
+    "content": "320, 720",
+    "viewport": "320, 720"
+  },
+  "qa48portrait390": {
+    "device": "hd_1080",
+    "content": "390, 844",
+    "viewport": "390, 844"
+  },
+  "note": "Studio hd_1080 custom resolution; actual camera and GUI dimensions measured. Portrait images are portrait. No physical phone or touch performance claim.",
+  "checks": [
+    "Native MCP clicks opened EGGS, PETS and tutorial OPEN EGGS.",
+    "HATCH succeeded on temporary Studio profile.",
+    "Final short layout auto-scrolled selected Leafpup EQUIP fully inside body, native click equipped it, HUD changed +2 to +4.",
+    "Closing Pets retained horizontal menu and hidden team strip.",
+    "Earlier Abacatudo hatch/equip changed +2 to +12; no save validation."
+  ]
+}

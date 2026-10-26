@@ -1,0 +1,5 @@
+2026-10-16
+Command: python -B factory/tools/gate.py games/egg-champions built
+Exit code: 0
+OK: 44 task(s) done, and run_tests, rojo, selene and stylua all pass
+Gate rerun after the late-template follower fix. Existing suite: 759 game tests and 6 runner self-tests; no new test count claimed.

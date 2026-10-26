@@ -1,0 +1,260 @@
+[
+  {
+    "agentId": "92aae222-2961-4a9e-898f-f7752bcd4d5b",
+    "runId": "ddad6614-e2c2-48ae-9e4e-10ca2ed9d22c",
+    "status": "succeeded",
+    "startedAt": "2026-10-21T05:03:10.644Z",
+    "finishedAt": "2026-10-21T05:03:31.202Z",
+    "exitCode": 0,
+    "error": null,
+    "resultJson": {
+      "stderr": "",
+      "stdout": "{\r\n  \"role\": \"director\",\r\n  \"model_calls_requested\": 0,\r\n  \"publication\": \"disabled\",\r\n  \"status\": \"checked\",\r\n  \"release_errors\": {\r\n    \"worlds\": [\r\n      \"release manifest missing/current source binding invalid\"\r\n    ],\r\n    \"playtested\": [\r\n      \"release manifest missing/current source binding invalid\"\r\n    ],\r\n    \"published_test\": [\r\n      \"release manifest missing/current source binding invalid\"\r\n    ]\r\n  },\r\n  \"worker_setup\": {\r\n    \"directory_exists\": true,\r\n    \"note\": \"missing/dirty/worktree/task state blocks generation; no clone fallback\"\r\n  },\r\n  \"admission\": {\r\n    \"status\": \"blocked\",\r\n    \"reason\": \"holding budget blocked: ['codex: sem mediÃ§Ã£o', 'codex: reset semanal desconhecido']\"\r\n  }\r\n}\r\n",
+      "stopReason": "completed",
+      "timeoutFired": false,
+      "timeoutSource": "config",
+      "configFreshness": {
+        "session": {
+          "reset": false,
+          "categories": [
+            "adapter",
+            "adapterConfig",
+            "agentRuntimeConfig",
+            "instructions",
+            "issueOverrides",
+            "workspaceConfig",
+            "environment",
+            "envBindings",
+            "secrets",
+            "runtimeSkills"
+          ],
+          "resetReasons": [],
+          "nextFingerprint": "v1:sha256:f7be5f795ec165f8d27732172bb0ca29a5a99650d8fbc00d64145b8faedaa5ec",
+          "changedCategories": [],
+          "taskSessionReused": false,
+          "fingerprintVersion": 1,
+          "taskSessionAvailable": false,
+          "storedFingerprintPresent": false
+        },
+        "version": 1,
+        "workspace": {
+          "action": "create",
+          "reasons": [],
+          "categories": [
+            "mode",
+            "projectWorkspace",
+            "strategy",
+            "repo",
+            "lifecycleCommands",
+            "runtimeServices",
+            "environment",
+            "realization"
+          ],
+          "reuseRequested": false,
+          "nextFingerprint": "v1:sha256:763e4236ae8d90435470ac7e6003f42744b92266c52e970b219fb4cba9b1ab4f",
+          "workspaceReused": false,
+          "activeWorkspaceId": null,
+          "changedCategories": [],
+          "storedFingerprint": null,
+          "fingerprintVersion": 1,
+          "inferredFingerprint": null,
+          "previousWorkspaceId": null,
+          "configSnapshotRefreshed": false,
+          "storedFingerprintPresent": false
+        }
+      },
+      "timeoutConfigured": true,
+      "effectiveTimeoutSec": 3700,
+      "presentationDecision": {
+        "schema": "paperclip.run_presentation_decision.v1",
+        "commentId": null,
+        "reasonCodes": [
+          "no_user_facing_response"
+        ],
+        "chosenSource": "none",
+        "commentAction": "none",
+        "sourceEventId": null,
+        "resolverVersion": "1",
+        "activityDisposition": "collapse"
+      }
+    },
+    "log": {
+      "runId": "ddad6614-e2c2-48ae-9e4e-10ca2ed9d22c",
+      "store": "local_file",
+      "logRef": "aa28310d-794f-4e77-94b2-eeda186d4421\\92aae222-2961-4a9e-898f-f7752bcd4d5b\\ddad6614-e2c2-48ae-9e4e-10ca2ed9d22c.ndjson",
+      "content": "{\"ts\":\"2026-10-21T05:03:20.026Z\",\"attemptId\":\"9f77c1df-27ee-4b0d-b51a-75895ed7f244\",\"stream\":\"stdout\",\"chunk\":\"[paperclip] No project or prior session workspace was available. Using fallback workspace \\\"C:\\\\Users\\\\joaov\\\\.paperclip\\\\instances\\\\default\\\\workspaces\\\\92aae222-2961-4a9e-898f-f7752bcd4d5b\\\" for this run.\\n\",\"seq\":1}\n{\"ts\":\"2026-10-21T05:03:31.068Z\",\"attemptId\":\"9f77c1df-27ee-4b0d-b51a-75895ed7f244\",\"stream\":\"stdout\",\"chunk\":\"{\\r\\n  \\\"role\\\": \\\"director\\\",\\r\\n  \\\"model_calls_requested\\\": 0,\\r\\n  \\\"publication\\\": \\\"disabled\\\",\\r\\n  \\\"status\\\": \\\"checked\\\",\\r\\n  \\\"release_errors\\\": {\\r\\n    \\\"worlds\\\": [\\r\\n      \\\"release manifest missing/current source binding invalid\\\"\\r\\n    ],\\r\\n    \\\"playtested\\\": [\\r\\n      \\\"release manifest missing/current source binding invalid\\\"\\r\\n    ],\\r\\n    \\\"published_test\\\": [\\r\\n      \\\"release manifest missing/current source binding invalid\\\"\\r\\n    ]\\r\\n  },\\r\\n  \\\"worker_setup\\\": {\\r\\n    \\\"directory_exists\\\": true,\\r\\n    \\\"note\\\": \\\"missing/dirty/worktree/task state blocks generation; no clone fallback\\\"\\r\\n  },\\r\\n  \\\"admission\\\": {\\r\\n    \\\"status\\\": \\\"blocked\\\",\\r\\n    \\\"reason\\\": \\\"holding budget blocked: ['codex: sem mediÃ§Ã£o', 'codex: reset semanal desconhecido']\\\"\\r\\n  }\\r\\n}\\r\\n\",\"seq\":2}\n"
+    }
+  },
+  {
+    "agentId": "d0ee5f1f-c3b1-45a1-a5db-64e66e760e8f",
+    "runId": "3ff787e1-862d-46a2-b372-3406202187f4",
+    "status": "succeeded",
+    "startedAt": "2026-10-21T05:03:16.238Z",
+    "finishedAt": "2026-10-21T05:03:30.41Z",
+    "exitCode": 0,
+    "error": null,
+    "resultJson": {
+      "stderr": "",
+      "stdout": "{\r\n  \"role\": \"analyst\",\r\n  \"model_calls_requested\": 0,\r\n  \"publication\": \"disabled\",\r\n  \"status\": \"checked\",\r\n  \"economy_gate_exit\": 0,\r\n  \"summary\": \"OK: all 6 time and rebirth targets met\\n\"\r\n}\r\n",
+      "stopReason": "completed",
+      "timeoutFired": false,
+      "timeoutSource": "config",
+      "configFreshness": {
+        "session": {
+          "reset": false,
+          "categories": [
+            "adapter",
+            "adapterConfig",
+            "agentRuntimeConfig",
+            "instructions",
+            "issueOverrides",
+            "workspaceConfig",
+            "environment",
+            "envBindings",
+            "secrets",
+            "runtimeSkills"
+          ],
+          "resetReasons": [],
+          "nextFingerprint": "v1:sha256:07b2da538ef7a378fa4065579449ddbe630162300ac0cbad45cce39fae870631",
+          "changedCategories": [],
+          "taskSessionReused": false,
+          "fingerprintVersion": 1,
+          "taskSessionAvailable": false,
+          "storedFingerprintPresent": false
+        },
+        "version": 1,
+        "workspace": {
+          "action": "create",
+          "reasons": [],
+          "categories": [
+            "mode",
+            "projectWorkspace",
+            "strategy",
+            "repo",
+            "lifecycleCommands",
+            "runtimeServices",
+            "environment",
+            "realization"
+          ],
+          "reuseRequested": false,
+          "nextFingerprint": "v1:sha256:763e4236ae8d90435470ac7e6003f42744b92266c52e970b219fb4cba9b1ab4f",
+          "workspaceReused": false,
+          "activeWorkspaceId": null,
+          "changedCategories": [],
+          "storedFingerprint": null,
+          "fingerprintVersion": 1,
+          "inferredFingerprint": null,
+          "previousWorkspaceId": null,
+          "configSnapshotRefreshed": false,
+          "storedFingerprintPresent": false
+        }
+      },
+      "timeoutConfigured": true,
+      "effectiveTimeoutSec": 3700,
+      "presentationDecision": {
+        "schema": "paperclip.run_presentation_decision.v1",
+        "commentId": null,
+        "reasonCodes": [
+          "no_user_facing_response"
+        ],
+        "chosenSource": "none",
+        "commentAction": "none",
+        "sourceEventId": null,
+        "resolverVersion": "1",
+        "activityDisposition": "collapse"
+      }
+    },
+    "log": {
+      "runId": "3ff787e1-862d-46a2-b372-3406202187f4",
+      "store": "local_file",
+      "logRef": "aa28310d-794f-4e77-94b2-eeda186d4421\\d0ee5f1f-c3b1-45a1-a5db-64e66e760e8f\\3ff787e1-862d-46a2-b372-3406202187f4.ndjson",
+      "content": "{\"ts\":\"2026-10-21T05:03:27.880Z\",\"attemptId\":\"315c3d08-b51f-468c-94d1-a0982dd0f771\",\"stream\":\"stdout\",\"chunk\":\"[paperclip] No project or prior session workspace was available. Using fallback workspace \\\"C:\\\\Users\\\\joaov\\\\.paperclip\\\\instances\\\\default\\\\workspaces\\\\d0ee5f1f-c3b1-45a1-a5db-64e66e760e8f\\\" for this run.\\n\",\"seq\":1}\n{\"ts\":\"2026-10-21T05:03:30.294Z\",\"attemptId\":\"315c3d08-b51f-468c-94d1-a0982dd0f771\",\"stream\":\"stdout\",\"chunk\":\"{\\r\\n  \\\"role\\\": \\\"analyst\\\",\\r\\n  \\\"model_calls_requested\\\": 0,\\r\\n  \\\"publication\\\": \\\"disabled\\\",\\r\\n  \\\"status\\\": \\\"checked\\\",\\r\\n  \\\"economy_gate_exit\\\": 0,\\r\\n  \\\"summary\\\": \\\"OK: all 6 time and rebirth targets met\\\\n\\\"\\r\\n}\\r\\n\",\"seq\":2}\n"
+    }
+  },
+  {
+    "agentId": "9da0ae5f-063f-482a-adfc-f73ff0800046",
+    "runId": "96f94eae-3dcd-4ed9-aa20-439ffef5a222",
+    "status": "succeeded",
+    "startedAt": "2026-10-21T05:03:27.839Z",
+    "finishedAt": "2026-10-21T05:03:30.398Z",
+    "exitCode": 0,
+    "error": null,
+    "resultJson": {
+      "stderr": "",
+      "stdout": "{\r\n  \"role\": \"research\",\r\n  \"model_calls_requested\": 0,\r\n  \"publication\": \"disabled\",\r\n  \"status\": \"checked\",\r\n  \"errors\": [],\r\n  \"scope\": \"existing evidence validation\",\r\n  \"current_trends\": \"unknown; no new research performed\"\r\n}\r\n",
+      "stopReason": "completed",
+      "timeoutFired": false,
+      "timeoutSource": "config",
+      "configFreshness": {
+        "session": {
+          "reset": false,
+          "categories": [
+            "adapter",
+            "adapterConfig",
+            "agentRuntimeConfig",
+            "instructions",
+            "issueOverrides",
+            "workspaceConfig",
+            "environment",
+            "envBindings",
+            "secrets",
+            "runtimeSkills"
+          ],
+          "resetReasons": [],
+          "nextFingerprint": "v1:sha256:fb8914d227cbed1d2263643e5bb0194c7fa56f1e2e87d626fd27fd05c6fd1822",
+          "changedCategories": [],
+          "taskSessionReused": false,
+          "fingerprintVersion": 1,
+          "taskSessionAvailable": false,
+          "storedFingerprintPresent": false
+        },
+        "version": 1,
+        "workspace": {
+          "action": "create",
+          "reasons": [],
+          "categories": [
+            "mode",
+            "projectWorkspace",
+            "strategy",
+            "repo",
+            "lifecycleCommands",
+            "runtimeServices",
+            "environment",
+            "realization"
+          ],
+          "reuseRequested": false,
+          "nextFingerprint": "v1:sha256:763e4236ae8d90435470ac7e6003f42744b92266c52e970b219fb4cba9b1ab4f",
+          "workspaceReused": false,
+          "activeWorkspaceId": null,
+          "changedCategories": [],
+          "storedFingerprint": null,
+          "fingerprintVersion": 1,
+          "inferredFingerprint": null,
+          "previousWorkspaceId": null,
+          "configSnapshotRefreshed": false,
+          "storedFingerprintPresent": false
+        }
+      },
+      "timeoutConfigured": true,
+      "effectiveTimeoutSec": 3700,
+      "presentationDecision": {
+        "schema": "paperclip.run_presentation_decision.v1",
+        "commentId": null,
+        "reasonCodes": [
+          "no_user_facing_response"
+        ],
+        "chosenSource": "none",
+        "commentAction": "none",
+        "sourceEventId": null,
+        "resolverVersion": "1",
+        "activityDisposition": "collapse"
+      }
+    },
+    "log": {
+      "runId": "96f94eae-3dcd-4ed9-aa20-439ffef5a222",
+      "store": "local_file",
+      "logRef": "aa28310d-794f-4e77-94b2-eeda186d4421\\9da0ae5f-063f-482a-adfc-f73ff0800046\\96f94eae-3dcd-4ed9-aa20-439ffef5a222.ndjson",
+      "content": "{\"ts\":\"2026-10-21T05:03:29.038Z\",\"attemptId\":\"99d1445a-0a3c-40b8-b778-f90db3707b5d\",\"stream\":\"stdout\",\"chunk\":\"[paperclip] No project or prior session workspace was available. Using fallback workspace \\\"C:\\\\Users\\\\joaov\\\\.paperclip\\\\instances\\\\default\\\\workspaces\\\\9da0ae5f-063f-482a-adfc-f73ff0800046\\\" for this run.\\n\",\"seq\":1}\n{\"ts\":\"2026-10-21T05:03:30.301Z\",\"attemptId\":\"99d1445a-0a3c-40b8-b778-f90db3707b5d\",\"stream\":\"stdout\",\"chunk\":\"{\\r\\n  \\\"role\\\": \\\"research\\\",\\r\\n  \\\"model_calls_requested\\\": 0,\\r\\n  \\\"publication\\\": \\\"disabled\\\",\\r\\n  \\\"status\\\": \\\"checked\\\",\\r\\n  \\\"errors\\\": [],\\r\\n  \\\"scope\\\": \\\"existing evidence validation\\\",\\r\\n  \\\"current_trends\\\": \\\"unknown; no new research performed\\\"\\r\\n}\\r\\n\",\"seq\":2}\n"
+    }
+  }
+]

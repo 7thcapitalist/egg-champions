@@ -17,6 +17,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local rules = Shared:WaitForChild("rules")
 local Config = require(Shared:WaitForChild("Config"))
+local Coins = require(rules:WaitForChild("Coins"))
 local Hatch = require(rules:WaitForChild("Hatch"))
 local PassEffects = require(rules:WaitForChild("PassEffects"))
 local PetIndex = require(rules:WaitForChild("PetIndex"))
@@ -29,6 +30,7 @@ local server = script.Parent.Parent
 local Guard = require(server:WaitForChild("Guard"))
 local Passes = require(server:WaitForChild("Passes"))
 local Analytics = require(server:WaitForChild("Analytics"))
+local TutorialService = require(script.Parent:WaitForChild("TutorialService"))
 
 type Profile = Profile.Profile
 
@@ -88,6 +90,8 @@ local function onBuyEgg(
 			petId = pet.petId,
 			variant = pet.variant,
 			newInIndex = newInIndex,
+			-- For the hatch reveal's "Click +N"; the client only shows it.
+			clickPower = Coins.clickPowerOf({ petId = pet.petId, variant = pet.variant }),
 		})
 	end
 	Analytics.track(player, "egg_bought", {
@@ -103,6 +107,7 @@ local function onBuyEgg(
 			variant = result.variant or Analytics.NORMAL_VARIANT,
 		})
 	end
+	TutorialService.note(profile, "hatched")
 	if firstEver then
 		Analytics.track(player, "first_hatch", Analytics.withPlaytime(player, {}))
 	end

@@ -1,0 +1,64 @@
+{
+  "user_date": "2026-10-20",
+  "full_suite_passed": 124,
+  "focused_suite_after_final_cli_error_handler_passed": 39,
+  "generation_calls": 0,
+  "effective_model": null,
+  "input_tokens": null,
+  "cached_input_tokens": null,
+  "output_tokens": null,
+  "node_syntax": "passed",
+  "legacy_policy_and_dot_executor": "unchanged",
+  "game_source_binding": {
+    "previous": "e8398dad19f35dc4a7ab7d1102602f334dd569de28c7d1b46b7a921307a4ff72",
+    "current": "f3fb52a87b0edd462ad81c90231feb49918eb4d1f8df60e98fbf0643234d2b54",
+    "matches_previous": false,
+    "concurrent_edits_preserved": true,
+    "release_errors": {
+      "worlds": [
+        "release manifest missing/current source binding invalid"
+      ],
+      "playtested": [
+        "release manifest missing/current source binding invalid"
+      ],
+      "published_test": [
+        "release manifest missing/current source binding invalid"
+      ]
+    }
+  },
+  "agents_configured_process": 4,
+  "agents_paused": 4,
+  "heartbeat_enabled": false,
+  "authorization_intent": {
+    "calls": 2,
+    "tokens": 20000,
+    "quota_percentage_points": 1,
+    "reserve_percent": 15,
+    "historical_usage_pct": null,
+    "installed": false
+  },
+  "activation": "blocked by effective filesystem write denial; no retry or alternate path",
+  "shared_model_ledger_rows": 0,
+  "sha256": {
+    "factory/tools/holding_worker.py": "0abd3938303f8df9969a3d65ca07acf330d872beac0458822120b258884326a7",
+    "factory/tools/holding_authorization.py": "02b71ce0fa4be251819a16a5797c5ed6e024757533b8a50d32073d4391ef12c9",
+    "factory/tools/paperclip_agent.py": "cf0ae1961f181dbe941fe9a4b22d55255c1f9f0a6931198ea779880f80b37203",
+    "factory/holding/guard.mjs": "9e475b29baef455a6cd588928c0545312a34a03e75f43bfad4b70bb9b7e9dc4b",
+    "factory/tests/test_holding_integration.py": "aed74452c714abf4d36246c75d4d44ac7e107896056e7688b4c6e2eb7b23a249",
+    "factory/tests/test_holding_guard.py": "facf641d825fca1a6b5a76be051f0c53ce0c3c07191883867baa21c9d1528847",
+    "factory/tests/test_holding_worker.py": "eb3afc4c8ac4e162892fcd9a8ddb1b50a7162919a28ef91b692924149e1b560d",
+    "factory/reports/holding-integration-2026-10-20/01-implementation.md": "d678676d5a67e4d72a0781e9a97c7cae5d9ced60f27de97ffecdd036665d3ced",
+    "factory/reports/holding-integration-2026-10-20/02-validation.md": "f5ee6ec93f42b5bc21f350b816a63c648c6b45d9a439b69b3f49f167d2428a05",
+    "factory/reports/holding-integration-2026-10-20/agents-before.json": "5a9fb5ca869b3af0abd0a74d77d81da05d9171a5c0390f9336d7c7c1ca6c0140",
+    "factory/reports/holding-integration-2026-10-20/agents-configured.json": "c0be7fb3dc9b936674decb4402588e177ffb70954ef315673c7cdcb6f0e992cf",
+    "factory/reports/holding-integration-2026-10-20/agents-final.json": "426ad7e194916da03bc49e05aa2e8e5de2dc5b9f236a09826ee66513f97b6ca0",
+    "factory/reports/holding-integration-2026-10-20/authorization-intent.json": "f615597229edb75984471c6d44e8ab7d452e2e036a05dfb1c82cea444a49b6b5",
+    "factory/reports/holding-integration-2026-10-20/filesystem-blocks.json": "c227c7dec473e014a3208cdf5b15b37bfba186c39b2bc906a0c105a40a8fa974",
+    "factory/reports/holding-integration-2026-10-20/guard-before.mjs": "f40eea0bf916f405cf7a2df0bcc5c10d30b10a1d64a8a28f7836f790f96abf64",
+    "factory/reports/holding-integration-2026-10-20/guard-deployment.json": "d6572adb25185c5fce6756532a498baa17df284667868a6c0cc218c7a0771366",
+    "factory/reports/holding-integration-2026-10-20/local-script-checks.json": "308e64127814cfdf7cc85c46b2e66585b666c519005edc5fd0fa3aeb2b114c82",
+    "factory/reports/holding-integration-2026-10-20/task-final.json": "2da54cf3697d48751ae7cc243a143f6840bf2ec32d269377ae2b54d533d475e8",
+    "factory/reports/holding-integration-2026-10-20/tests-final.txt": "1791158116070727ec0f01b1c5fbe04c8b818c160be0af14c2f31be019bbfd25",
+    "factory/reports/holding-integration-2026-10-20/tests.txt": "a448d0144df3a152905c83cf8080301d17882bd4b2538091e247bf91ff5fc4ca"
+  }
+}

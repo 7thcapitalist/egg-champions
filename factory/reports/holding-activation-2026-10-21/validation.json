@@ -1,0 +1,10 @@
+{
+  "evidence_assertions": "passed",
+  "protected_files_unchanged_from_HEAD": [
+    "factory/executor.json",
+    "factory/tools/run_factory.py",
+    "factory/tools/executor_policy.py"
+  ],
+  "new_model_calls": 0,
+  "publication": false
+}

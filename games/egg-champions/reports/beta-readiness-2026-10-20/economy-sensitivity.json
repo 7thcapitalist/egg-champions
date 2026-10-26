@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-20",
+  "canonical": {
+    "seed": 1,
+    "players_per_click_rate": 300,
+    "click_rates": [
+      4,
+      2,
+      8
+    ],
+    "first_hatch_seconds": 16,
+    "gym1_minutes": 25.4,
+    "final_hours": 6.83,
+    "median_rebirths": [
+      0,
+      2,
+      5
+    ],
+    "all_six_targets": "MET"
+  },
+  "sensitivity": [
+    {
+      "seed": 2,
+      "players_per_click_rate": 300,
+      "final_hours": 6.52,
+      "median_rebirths": [
+        0,
+        3,
+        5
+      ],
+      "all_six_targets": "NO: gym2 3 vs target2"
+    },
+    {
+      "seed": 3,
+      "players_per_click_rate": 300,
+      "final_hours": 6.83,
+      "median_rebirths": [
+        0,
+        2,
+        5
+      ],
+      "all_six_targets": "MET"
+    }
+  ],
+  "sampling_limitation": "One shared RNG per click rate: changing late progression shifts subsequent player draws. Early leader stats are identical; seed2 baseline gym2 median was 2, adjusted sample was 3. These are not paired per-player comparisons. Do not claim an early-gym mechanical regression or universal pacing guarantee.",
+  "runtime_validation": "not performed; predictions only"
+}

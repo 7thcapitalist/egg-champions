@@ -10,8 +10,25 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local function movement(player: Player)
+	local function characterAdded(character: Model)
+		local humanoid = character:WaitForChild("Humanoid", 10)
+		if humanoid and humanoid:IsA("Humanoid") then
+			humanoid.WalkSpeed = Config.constants.character_walk_speed
+		end
+	end
+	player.CharacterAdded:Connect(characterAdded)
+	if player.Character then
+		task.spawn(characterAdded, player.Character)
+	end
+end
+Players.PlayerAdded:Connect(movement)
+for _, player in Players:GetPlayers() do
+	movement(player)
+end
 local Profiles = require(script:WaitForChild("Profiles"))
 local Guard = require(script:WaitForChild("Guard"))
 local Analytics = require(script:WaitForChild("Analytics"))
@@ -24,6 +41,8 @@ local TeamService = require(Services:WaitForChild("TeamService"))
 local GymService = require(Services:WaitForChild("GymService"))
 local RebirthService = require(Services:WaitForChild("RebirthService"))
 local PassService = require(Services:WaitForChild("PassService"))
+local TutorialService = require(Services:WaitForChild("TutorialService"))
+local TrainingService = require(Services:WaitForChild("TrainingService"))
 
 local World = script:WaitForChild("World")
 local Builder = require(World:WaitForChild("Builder"))
@@ -52,14 +71,18 @@ print(
 -- Pet and egg models load in their own thread; until one loads, PetVisual
 -- shows its placeholder block.
 task.spawn(ModelLibrary.start)
+-- Each egg stand swaps its placeholder for the egg's model once it loads.
+task.spawn(Builder.dressEggStands, built, ModelLibrary.FOLDER)
 
 Guard.start()
+require(Services.PrismService).start()
 ClickService.start()
 ShopService.start()
 TeamService.start()
 GymService.start()
 RebirthService.start()
-PassService.start(ClickService.autoClick)
+PassService.start()
+TutorialService.start()
 Portals.start(built)
 -- Session start and end, and the analytics flush loop. Before Profiles.start,
 -- so the first profile load already counts as a session start.
@@ -70,3 +93,4 @@ Profiles.onLoaded(function(player: Player)
 	Guard.push(player)
 end)
 Profiles.start()
+TrainingService.start()

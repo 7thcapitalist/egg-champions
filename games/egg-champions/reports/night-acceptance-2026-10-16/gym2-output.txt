@@ -1,0 +1,13 @@
+06:56:36.707  [Profiles] save store unavailable in Studio; temporary profiles will not be saved: You must publish this place to the web to access DataStore.  -  Server - Profiles:75
+  06:56:36.724  Egg Champions server ready: 30 pets, 6 eggs, 3 worlds  -  Server - Server:33
+  06:56:36.741  worlds built: 6 egg stands, 3 gyms, 3 portals  -  Server - Server:44
+  06:56:36.743  [Playtest] local QA fixture active: gym2  -  Server - PlaytestScenario:388
+  06:56:36.855  [Profiles] user 11750959877: save store unreachable in Studio; playing on a temporary profile that is not saved  -  Server - Profiles:111
+  06:56:37.035  client ready  -  Client - Client:161
+  06:56:37.045  [Playtest] gym2 ready for jvcarvalho70; coins=10000000 pets=3 rebirths=3  -  Server - PlaytestScenario:333
+  06:56:38.762   ▶ [Roblox][CorePackages.Packages._Index.UIBlox.UIBlox.Logger] [UIBlox - Warning] - FoundationProvider not found. Please ensure that the FoundationProvider is present in the component tree. CorePackages.Packages._Index.UIBlox.UIBlox.App.Style.AppStyleProvider:178 function AppStyleProvider CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberHooks.new:3196 function renderWithHooks CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberBeginWork.new:209 function renderWithHooks CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberBeginWork.new:1577 function mountIndeterminateComponent CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberBeginWork.new:3485 function beginWork CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:255 CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:1977 CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:1953 CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:1896 CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:915 CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:860 CorePackages.Packages._Index.Scheduler.Scheduler.Scheduler:320 CorePackages.Packages._Index.Scheduler.Scheduler.Scheduler:268 CorePackages.Packages._Index.Scheduler.Scheduler.forks.SchedulerHostConfig.default:260 function doWork CorePackages.Packages._Index.Scheduler.Scheduler.forks.SchedulerHostConfig.default:296 function performWorkUntilDeadline  (x5)  -  Client
+
+
+
+
+  06:56:40.956  ModelLibrary: 36 of 36 models loaded, 0 left as placeholders  -  Server - ModelLibrary:174

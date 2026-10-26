@@ -1,0 +1,32 @@
+[
+  {
+    "id": "basic",
+    "name": "Basic",
+    "multiplier": 1,
+    "coin_price": 500,
+    "starter": 1,
+    "pack": 10,
+    "test_product": 3721209790,
+    "base_robux": 19
+  },
+  {
+    "id": "refined",
+    "name": "Refined",
+    "multiplier": 3,
+    "coin_price": 0,
+    "starter": 0,
+    "pack": 5,
+    "test_product": 3721210003,
+    "base_robux": 49
+  },
+  {
+    "id": "aurora",
+    "name": "Aurora",
+    "multiplier": 8,
+    "coin_price": 0,
+    "starter": 0,
+    "pack": 3,
+    "test_product": 3721210181,
+    "base_robux": 99
+  }
+]

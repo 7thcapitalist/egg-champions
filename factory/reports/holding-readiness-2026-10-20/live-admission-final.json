@@ -1,0 +1,39 @@
+{
+  "exit_code": 3,
+  "result": {
+    "verdict": "UNKNOWN",
+    "studio": "roblox",
+    "provider_scope": [
+      "codex"
+    ],
+    "reasons": [
+      "codex: ledger semanal ausente"
+    ],
+    "usage": {
+      "codex": {
+        "used_pct_of_plan": null,
+        "cap_pct_of_plan": 30
+      }
+    },
+    "quota": {
+      "codex": {
+        "used_pct": 51,
+        "five_hour_pct": null,
+        "resets_at": "2026-10-27T15:31:45.000Z",
+        "measured_at": "2026-10-20T22:30:15.921Z",
+        "age_min": 0,
+        "plan": "prolite",
+        "paid_credits": false,
+        "source": "C:\\Users\\joaov\\.codex\\sessions\\2026\\10\\17\\rollout-2026-10-17T02-25-17-01a14889-4217-7e53-b485-f86fcf4d37b9.jsonl"
+      },
+      "claude": {
+        "used_pct": 16,
+        "five_hour_pct": 27,
+        "resets_at": "2026-10-26T21:00:00.000Z",
+        "measured_at": "2026-10-20T22:30:21.335Z",
+        "age_min": 0,
+        "source": "C:\\Users\\joaov\\.habblaud\\usage\\.claude.json"
+      }
+    }
+  }
+}

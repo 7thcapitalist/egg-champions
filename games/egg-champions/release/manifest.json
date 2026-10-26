@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "source_sha256": "62ca705316f294085612e7abfd946643764aab7949809f20b34640d8a346acc0",
+  "build": {
+    "file": "build/prisms-2026-10-22.rbxl",
+    "sha256": "e810e558c52fd8b3567dab2bb9d5dc52b6878cf5ca34279bbd89acd5be3aba50"
+  },
+  "visual": null,
+  "traversal": null,
+  "mobile": null,
+  "multiplayer": null,
+  "slow_network": null,
+  "natural_progression": null,
+  "save_before": null,
+  "save_after": null,
+  "publication": null,
+  "passes": null
+}

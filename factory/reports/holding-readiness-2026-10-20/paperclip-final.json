@@ -1,0 +1,88 @@
+{
+  "captured_at": "2026-10-20T22:28:50.2173134+00:00",
+  "agents": [
+    {
+      "name": "Analista de Jogo",
+      "status": "paused"
+    },
+    {
+      "name": "Pesquisa de Tendências",
+      "status": "paused"
+    },
+    {
+      "name": "Engenheiro de Gameplay",
+      "status": "paused"
+    },
+    {
+      "name": "Diretor do Estúdio",
+      "status": "paused"
+    }
+  ],
+  "tasks": [
+    {
+      "identifier": "ROB-13",
+      "title": "Fábrica: integrar admissão da holding ao executor protegido",
+      "status": "blocked"
+    },
+    {
+      "identifier": "ROB-11",
+      "title": "Studio: validar batalha em paisagem curta (Tarefa 50)",
+      "status": "done"
+    },
+    {
+      "identifier": "ROB-4",
+      "title": "Gates worlds, playtested, published_test existindo e passando",
+      "status": "todo"
+    },
+    {
+      "identifier": "ROB-5",
+      "title": "Tarefa 50: elevação e legibilidade da batalha (parte de código)",
+      "status": "blocked"
+    },
+    {
+      "identifier": "ROB-2",
+      "title": "Plano do checklist de lançamento (8 itens)",
+      "status": "done"
+    },
+    {
+      "identifier": "ROB-1",
+      "title": "Gate economy_tuned: gym 3 com mediana de 7 rebirths (meta 5)",
+      "status": "done"
+    },
+    {
+      "identifier": "ROB-12",
+      "title": "Manter o Painel do negócio atualizado (data/roblox.json)",
+      "status": "in_review"
+    },
+    {
+      "identifier": "ROB-9",
+      "title": "Teste em celular físico e rede lenta",
+      "status": "todo"
+    },
+    {
+      "identifier": "ROB-6",
+      "title": "Revisão de composição/animação >= 4/5 (hoje 3,75)",
+      "status": "in_review"
+    },
+    {
+      "identifier": "ROB-10",
+      "title": "Gyms 2 e 3 jogados de forma natural até o fim",
+      "status": "todo"
+    },
+    {
+      "identifier": "ROB-8",
+      "title": "Compra de passes verificada no TESTE",
+      "status": "todo"
+    },
+    {
+      "identifier": "ROB-7",
+      "title": "Save/rejoin com DataStore real no TESTE",
+      "status": "todo"
+    },
+    {
+      "identifier": "ROB-3",
+      "title": "Tendências Roblox: 5 gêneros/mecânicas em alta agora",
+      "status": "blocked"
+    }
+  ]
+}

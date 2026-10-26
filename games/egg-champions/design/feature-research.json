@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": "ps99-98",
+      "url": "https://www.biggames.io/post/pet-simulator-99-update-98",
+      "kind": "official_update",
+      "available": true,
+      "checked_at": "2026-10-20",
+      "observation": "Update dated October 17: group encounter, exploration and expeditions.",
+      "limitations": "Publisher description; not played here and no causality or ranking inferred."
+    },
+    {
+      "id": "ps99-97",
+      "url": "https://www.biggames.io/post/pet-simulator-99-update-97",
+      "kind": "official_update",
+      "available": true,
+      "checked_at": "2026-10-20",
+      "observation": "Update dated October 10: daily quests and seasonal progression.",
+      "limitations": "Reference mechanics only; economy and audience differ."
+    },
+    {
+      "id": "garden",
+      "url": "https://www.roblox.com/games/126884695634066/Grow-a-Garden",
+      "kind": "official_description",
+      "available": true,
+      "checked_at": "2026-10-20",
+      "observation": "Description emphasizes growing, collecting and offline growth.",
+      "limitations": "Description only; no retention or live popularity measurement."
+    },
+    {
+      "id": "charts",
+      "url": "https://www.roblox.com/charts",
+      "kind": "charts_snapshot",
+      "available": false,
+      "checked_at": "2026-10-20",
+      "observation": "Page required JavaScript; ranking was unavailable to this research.",
+      "limitations": "No current rank or concurrent-player claim is supported."
+    }
+  ],
+  "features": [
+    {
+      "id": "collection-trail",
+      "title": "Collection trail using existing egg bonuses",
+      "decision": "adopt",
+      "approved": true,
+      "rationale": "Make existing collection progress and next action visible without adding economy.",
+      "adaptation": "Show normal-pet sets and missing species in Journey; suggest an unlocked incomplete egg and open its existing shop. Existing server index and bonus remain authoritative.",
+      "source_ids": [
+        "garden",
+        "ps99-98"
+      ],
+      "changes_economy": false,
+      "changes_persistence": false,
+      "task_id": "51",
+      "scope_paths": [
+        "src/client/UI/Journey.luau",
+        "src/shared/ui/CollectionGoals.luau",
+        "src/shared/ui/specs/CollectionGoals.spec.luau",
+        "src/shared/testing/specs.luau"
+      ],
+      "build": [
+        "Pure read-only goal selector using Config and existing unlock rules.",
+        "Journey set rows and target egg button; no claims, new rewards or save fields."
+      ],
+      "automated_checks": [
+        "Deterministic normal/variant, completion, unlock and no-mutation tests pass.",
+        "Luau suite, Selene, StyLua and separate Rojo build pass."
+      ],
+      "engine_checks": [
+        "Inspect Journey scrolling and target shop on mobile and desktop with a temporary profile."
+      ]
+    },
+    {
+      "id": "daily-quests",
+      "title": "Daily quests",
+      "decision": "defer",
+      "rationale": "Needs server clock, reward budget and reset/save contract.",
+      "adaptation": "Create an original Egg Champions design before implementation. Needs server clock, reward budget and reset/save contract.",
+      "source_ids": [
+        "ps99-97"
+      ]
+    },
+    {
+      "id": "cooperative-encounters",
+      "title": "Cooperative encounters",
+      "decision": "defer",
+      "rationale": "Needs contribution validation, multiplayer tests and reward budget.",
+      "adaptation": "Create an original Egg Champions design before implementation. Needs contribution validation, multiplayer tests and reward budget.",
+      "source_ids": [
+        "ps99-98"
+      ]
+    },
+    {
+      "id": "offline-expeditions",
+      "title": "Offline expeditions",
+      "decision": "defer",
+      "rationale": "Needs capped catch-up, atomic saves and economy tuning.",
+      "adaptation": "Create an original Egg Champions design before implementation. Needs capped catch-up, atomic saves and economy tuning.",
+      "source_ids": [
+        "garden",
+        "ps99-98"
+      ]
+    },
+    {
+      "id": "exploration-trails",
+      "title": "World exploration trails",
+      "decision": "defer",
+      "rationale": "Needs original authored routes, traversal review and any reward contract.",
+      "adaptation": "Create an original Egg Champions design before implementation. Needs original authored routes, traversal review and any reward contract.",
+      "source_ids": [
+        "ps99-98"
+      ]
+    },
+    {
+      "id": "seasonal-events",
+      "title": "Seasonal events",
+      "decision": "defer",
+      "rationale": "Needs schedule, original assets and economy contract.",
+      "adaptation": "Create an original Egg Champions design before implementation. Needs schedule, original assets and economy contract.",
+      "source_ids": [
+        "ps99-97"
+      ]
+    }
+  ]
+}

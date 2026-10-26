@@ -1,0 +1,127 @@
+{
+  "source_sha256": "7b21717df13ea349f1883891791fc3bff6659115bef5931ff6de57b612584469",
+  "reviewer": "Codex Studio inspection",
+  "date": "2026-10-17",
+  "environment": "Studio",
+  "limitations": "Composition below four; custom Studio viewports, no phone hardware. Onboarding evidence carried forward unchanged from v95, not repeated. Temporary profiles cannot prove saves. New purchases and natural progression remain unverified.",
+  "viewports": [
+    "desktop",
+    "mobile"
+  ],
+  "categories": {
+    "composition": {
+      "score": 3.75,
+      "observation": "Raised connected destinations; broad flat ground and repeated outline still visible.",
+      "evidence": [
+        "reports/elevation-battle-2026-10-17/meadow.jpg",
+        "reports/elevation-battle-2026-10-17/coast.jpg",
+        "reports/elevation-battle-2026-10-17/volcano.jpg",
+        "reports/elevation-battle-2026-10-17/pergola.jpg",
+        "reports/elevation-battle-2026-10-17/coral-approach.jpg",
+        "reports/elevation-battle-2026-10-17/mineral-approach.jpg"
+      ]
+    },
+    "models": {
+      "score": 4,
+      "observation": "Whale and opponent readable at regular desktop/portrait. Extremely short viewport remains small.",
+      "evidence": [
+        "reports/elevation-battle-2026-10-17/battle-desktop.jpg",
+        "reports/elevation-battle-2026-10-17/battle-portrait.jpg",
+        "reports/elevation-battle-2026-10-17/battle-short.jpg"
+      ]
+    },
+    "animation": {
+      "score": 4,
+      "observation": "Live attack/recoil returned to rest after resize; next move healed and replaced opponent.",
+      "evidence": [
+        "reports/elevation-battle-2026-10-17/validated-qa.json",
+        "reports/elevation-battle-2026-10-17/battle-small-portrait.jpg"
+      ]
+    },
+    "feedback": {
+      "score": 4,
+      "observation": "Turn, HP, healing and special cooldown observed through real UI.",
+      "evidence": [
+        "reports/elevation-battle-2026-10-17/battle-portrait.jpg",
+        "reports/elevation-battle-2026-10-17/battle-small-portrait.jpg"
+      ]
+    },
+    "onboarding": {
+      "score": 4,
+      "observation": "Carried forward v95 first hatch/equip evidence; tutorial files unchanged. Not rerun this pass.",
+      "evidence": [
+        "reports/authored-scenes-2026-10-17/portrait-equip.jpg",
+        "reports/authored-scenes-2026-10-17/portrait-complete.jpg"
+      ]
+    }
+  },
+  "evidence_sha256": {
+    "reports/authored-scenes-2026-10-17/portrait-complete.jpg": "a47200b04a16faf78d06e8db6ffdd4b50e2fa38cf7d38a341cb23486b82cea5e",
+    "reports/authored-scenes-2026-10-17/portrait-equip.jpg": "f357c8f2e589db5f571accf27687865cb1c07a6d4c045922407fdb193de81a5f",
+    "reports/elevation-battle-2026-10-17/battle-desktop.jpg": "d20751faa64df8016a339477311ff7e451eb56c38270ff82696ad3f931e989da",
+    "reports/elevation-battle-2026-10-17/battle-portrait.jpg": "2e1626e1fd87944730bbd138a43e184c0cbd0e17d629518510f2072d0f0f310f",
+    "reports/elevation-battle-2026-10-17/battle-short.jpg": "da54c8eb7617eb860458eb7abf502d22c89c68b0f10c23aca911d74a49ddea30",
+    "reports/elevation-battle-2026-10-17/battle-small-portrait.jpg": "e0088b97258ac2b24ecdf386a72ec6549b79432391a258a704589a68d4bd806b",
+    "reports/elevation-battle-2026-10-17/coast.jpg": "0b95b08fb8e0306a045912117f448f7f9b4202f30097250de849efaaebe095bc",
+    "reports/elevation-battle-2026-10-17/coral-approach.jpg": "6faadcaf724f6f2941d8a4870b6456ec587402d78c89d8e6d76874a9bf7b6f23",
+    "reports/elevation-battle-2026-10-17/meadow.jpg": "13dc8fd587dc45efb0438528e49fabd64e85d6e9014130a15019a5b3ccd5f233",
+    "reports/elevation-battle-2026-10-17/mineral-approach.jpg": "4f9e71d3c7be103f5ab942d6663036e46127a883b0619bb97b0ebf50f498550a",
+    "reports/elevation-battle-2026-10-17/pergola.jpg": "382ac10a96482b715c3b349de1ca7a77b5531304e10547d85ec6c58ec9e08f78",
+    "reports/elevation-battle-2026-10-17/validated-qa.json": "a445ce03b92fa88ea7c2f56d633c6e9803efca936dd853595c92b47de9d6a3de",
+    "reports/elevation-battle-2026-10-17/volcano.jpg": "9689cff46b2c5daec2cd5205487620b42d53711506992e675704494bc95d8e5e"
+  },
+  "viewport_captures": [
+    {
+      "surface": "desktop",
+      "orientation": "landscape",
+      "requested": [
+        960,
+        540
+      ],
+      "actual": [
+        958,
+        540
+      ],
+      "evidence": "reports/elevation-battle-2026-10-17/battle-desktop.jpg"
+    },
+    {
+      "surface": "mobile",
+      "orientation": "portrait",
+      "requested": [
+        390,
+        844
+      ],
+      "actual": [
+        390,
+        844
+      ],
+      "evidence": "reports/elevation-battle-2026-10-17/battle-portrait.jpg"
+    },
+    {
+      "surface": "mobile",
+      "orientation": "portrait",
+      "requested": [
+        320,
+        720
+      ],
+      "actual": [
+        320,
+        720
+      ],
+      "evidence": "reports/elevation-battle-2026-10-17/battle-small-portrait.jpg"
+    },
+    {
+      "surface": "mobile",
+      "orientation": "landscape",
+      "requested": [
+        720,
+        239
+      ],
+      "actual": [
+        720,
+        239.333328
+      ],
+      "evidence": "reports/elevation-battle-2026-10-17/battle-short.jpg"
+    }
+  ]
+}

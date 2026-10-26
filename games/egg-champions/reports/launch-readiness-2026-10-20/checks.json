@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-20",
+  "python_tests": 86,
+  "luau_tests": 882,
+  "runner_self_tests": 6,
+  "selene": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "stylua": "passed",
+  "rojo_new_qa": "passed",
+  "real_local_multiplayer_passed": 9,
+  "disconnect_rejoin": "unknown",
+  "release_cli_exit": 1,
+  "release": {
+    "schema": 1,
+    "game": "C:\\Users\\joaov\\Documents\\Codex\\2026-10-15\\roblox-factory\\games\\egg-champions",
+    "scope": "release-evidence-only",
+    "ready": false,
+    "errors": {
+      "worlds": [
+        "evidence reference unavailable"
+      ],
+      "playtested": [
+        "evidence reference unavailable"
+      ],
+      "published_test": [
+        "evidence reference unavailable"
+      ]
+    }
+  },
+  "factory_paused": true,
+  "paperclip_agent_state": "unknown-network-permission-denied",
+  "source_sha256": "e8398dad19f35dc4a7ab7d1102602f334dd569de28c7d1b46b7a921307a4ff72",
+  "sha256": {
+    "factory/tools/release_readiness.py": "8355825dc848a8f78e5450db1badf08deb611c037ebc82c10e62bb20a90c9683",
+    "factory/tests/test_release_readiness.py": "31f6b5326e603726866ed57063299b2994d63fb7e3da2701598b81e745804216",
+    "factory/tools/gate.py": "fc13de5ac659735446c7056e4983b17afb84cb37672b6f3a6403495173752473",
+    "factory/tools/beta_multiplayer.server.luau": "f7abd50f300be8e850999419d4339a1b596ebc4a33f7c01fc2109b975c7fe2de",
+    "factory/HOLDING-CONTEXT.md": "ba24ffebb75a88b0a0c9ad0bc5f9c0d78c16b2c7232a546b12ee3814b1d5ad05",
+    "games/egg-champions/release/manifest.json": "bd376f326257561b96036bbe964c0e7eb9abbc9659e253f35694c2390e969140",
+    "games/egg-champions/release/README.md": "34c29cd7bb1568aa07b032a97e3522a110a35a0b98cbbbb6ccdb2c7aef580064",
+    "games/egg-champions/reports/launch-readiness-2026-10-20/README.md": "fba14fd8204a7bbdc620146fdf79c9bde6c8af2c545a6ef2619dcacc34ceb654",
+    "games/egg-champions/build/beta-candidate-2026-10-20.rbxl": "67f13be7e32e369968a4f443967a543ed905f9801082bd70348db237e0b0aced",
+    "games/egg-champions/build/launch-review-2026-10-20/beta-local.rbxl": "eb12b277ddee4282755327f2f3e26c4e2b1f7529ea4838d431b720f677c4854d",
+    "games/egg-champions/build/task50-studio-recovery.rbxl": "ad283d3af33f30eba3bda24a6af67f77a39cb21e3cbc2d71bfb2955485b79de0",
+    "factory/executor.json": "72b3163cd6878c0ab5b16318da32781dfc92572006fe8d74d4f3fc4b75dc232e",
+    "C:/Users/joaov/dev/holding-hq/studios/roblox/STATE.md": "65c06927c73f98ec9f93ce72e989ca19a137b37b9a64a0d6ac425c47d5195461",
+    "C:/Users/joaov/dev/holding-hq/studios/roblox/LOCAL-RELEASE.md": "4b3c08e7ae7d9f0fd3330c58d9aab7230487b0f12de7423870b44e85f098fbca"
+  },
+  "limitations": "Counts do not replace observed release evidence. Studio screenshots displayed inline, not archived. No publication or live model invocation."
+}

@@ -58,6 +58,13 @@ EffectsBudget.CLICK = table.freeze({
 	-- Clicks waiting for the server's credited amount.
 	pendingMax = 24,
 	pendingSeconds = 1.5,
+	-- The coin counter pulses on each credited click.
+	pulseScale = 1.12,
+	pulseSeconds = 0.08,
+	-- A short coin sound, at most once per soundGap seconds.
+	sound = "rbxasset://sounds/electronicpingshort.wav",
+	soundVolume = 0.35,
+	soundGap = 0.06,
 })
 
 -- Hatch sequence, shared by every rarity.
@@ -304,7 +311,7 @@ EffectsBudget.VARIANT_VIEW = table.freeze({
 		twinkles = table.freeze({
 			image = SPARKLE_IMAGE,
 			color = rgb(255, 255, 255),
-			size = 0.18,
+			size = 0.085,
 			seconds = 0.9,
 			stagger = 0.3,
 			spots = table.freeze({
@@ -456,5 +463,21 @@ function EffectsBudget.sequenceSeconds(rarityIds: { string }): number
 	end
 	return seconds
 end
+
+-- Follower pets in the world: placed beside the player, not on the camera
+-- line behind them, and kept small so the avatar stays in view.
+EffectsBudget.FOLLOWER = table.freeze({
+	-- Sideways distance from the root part, in studs. Slots alternate left
+	-- and right, so no pet sits on the line between camera and avatar.
+	side = 3.5,
+	-- How far behind the root part the first pair sits, in studs.
+	behind = 1.5,
+	-- Each further pair sits this much further behind, in studs.
+	rowGap = 2.5,
+	-- The largest dimension of a follower model, in studs.
+	size = 2.5,
+	-- A standard character's height, in studs, for the "half as tall" check.
+	characterHeight = 5,
+})
 
 return EffectsBudget

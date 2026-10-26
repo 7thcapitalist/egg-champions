@@ -1,0 +1,579 @@
+{
+  "universe": 10769019206,
+  "version": 95,
+  "place": 101737317546942,
+  "attributes": [],
+  "workspace": [
+    {
+      "name": "Terrain",
+      "class": "Terrain"
+    },
+    {
+      "name": "SpawnLocation",
+      "class": "SpawnLocation"
+    },
+    {
+      "name": "Camera",
+      "class": "Camera"
+    }
+  ],
+  "sources": [
+    {
+      "hash": 1427857747,
+      "path": "StarterPlayer.StarterPlayerScripts.Client"
+    },
+    {
+      "hash": 991130143,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.Effects.Effects"
+    },
+    {
+      "hash": 3121652578,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.Effects.Progress"
+    },
+    {
+      "hash": 277952790,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.Effects.Followers"
+    },
+    {
+      "hash": 1517791282,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.Effects.WorldLighting"
+    },
+    {
+      "hash": 962447371,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.Effects.Ambience"
+    },
+    {
+      "hash": 1613230164,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.Effects.Milestones"
+    },
+    {
+      "hash": 1705236518,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.Battle"
+    },
+    {
+      "hash": 3435814438,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.EggShop"
+    },
+    {
+      "hash": 2247143573,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.Main"
+    },
+    {
+      "hash": 198408137,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.Pets"
+    },
+    {
+      "hash": 3508151069,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.Rebirth"
+    },
+    {
+      "hash": 434832353,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.Screens"
+    },
+    {
+      "hash": 810344827,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.State"
+    },
+    {
+      "hash": 2690989470,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.Theme"
+    },
+    {
+      "hash": 3885908212,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.Pointer"
+    },
+    {
+      "hash": 3632730709,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.Shop"
+    },
+    {
+      "hash": 1257676476,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.Guide"
+    },
+    {
+      "hash": 1567619775,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.HudInsets"
+    },
+    {
+      "hash": 410855674,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.Reveal"
+    },
+    {
+      "hash": 2206482247,
+      "path": "StarterPlayer.StarterPlayerScripts.Client.UI.Journey"
+    },
+    {
+      "hash": 4072781217,
+      "path": "ReplicatedStorage.GameConfig.constants"
+    },
+    {
+      "hash": 3614022035,
+      "path": "ReplicatedStorage.GameConfig.eggs"
+    },
+    {
+      "hash": 557230908,
+      "path": "ReplicatedStorage.GameConfig.manifest"
+    },
+    {
+      "hash": 2228672175,
+      "path": "ReplicatedStorage.GameConfig.passes"
+    },
+    {
+      "hash": 2731877538,
+      "path": "ReplicatedStorage.GameConfig.pets"
+    },
+    {
+      "hash": 4180615575,
+      "path": "ReplicatedStorage.GameConfig.rarities"
+    },
+    {
+      "hash": 2430717123,
+      "path": "ReplicatedStorage.GameConfig.roles"
+    },
+    {
+      "hash": 547563043,
+      "path": "ReplicatedStorage.GameConfig.specials"
+    },
+    {
+      "hash": 679512821,
+      "path": "ReplicatedStorage.GameConfig.types"
+    },
+    {
+      "hash": 850339957,
+      "path": "ReplicatedStorage.GameConfig.variants"
+    },
+    {
+      "hash": 842854121,
+      "path": "ReplicatedStorage.GameConfig.worlds"
+    },
+    {
+      "hash": 1894569939,
+      "path": "ReplicatedStorage.GameConfig.gyms"
+    },
+    {
+      "hash": 985670899,
+      "path": "ReplicatedStorage.GameConfig.models"
+    },
+    {
+      "hash": 2125246593,
+      "path": "ReplicatedStorage.Shared.Config"
+    },
+    {
+      "hash": 1267644082,
+      "path": "ReplicatedStorage.Shared.PetVisual"
+    },
+    {
+      "hash": 4096635577,
+      "path": "ReplicatedStorage.Shared.Remotes"
+    },
+    {
+      "hash": 2119005893,
+      "path": "ReplicatedStorage.Shared.analytics.Events"
+    },
+    {
+      "hash": 3485304536,
+      "path": "ReplicatedStorage.Shared.analytics.Queue"
+    },
+    {
+      "hash": 3676826931,
+      "path": "ReplicatedStorage.Shared.analytics.specs.Events.spec"
+    },
+    {
+      "hash": 187246569,
+      "path": "ReplicatedStorage.Shared.net.Requests"
+    },
+    {
+      "hash": 1397611412,
+      "path": "ReplicatedStorage.Shared.net.specs.Requests.spec"
+    },
+    {
+      "hash": 712634456,
+      "path": "ReplicatedStorage.Shared.rules.Battle"
+    },
+    {
+      "hash": 4273729835,
+      "path": "ReplicatedStorage.Shared.rules.Coins"
+    },
+    {
+      "hash": 1096075474,
+      "path": "ReplicatedStorage.Shared.rules.Gym"
+    },
+    {
+      "hash": 2799803687,
+      "path": "ReplicatedStorage.Shared.rules.Hatch"
+    },
+    {
+      "hash": 3723755430,
+      "path": "ReplicatedStorage.Shared.rules.PassEffects"
+    },
+    {
+      "hash": 1928015915,
+      "path": "ReplicatedStorage.Shared.rules.PetIndex"
+    },
+    {
+      "hash": 527471033,
+      "path": "ReplicatedStorage.Shared.rules.Profile"
+    },
+    {
+      "hash": 2065803361,
+      "path": "ReplicatedStorage.Shared.rules.Progression"
+    },
+    {
+      "hash": 2321939691,
+      "path": "ReplicatedStorage.Shared.rules.Rebirth"
+    },
+    {
+      "hash": 2929418959,
+      "path": "ReplicatedStorage.Shared.rules.Team"
+    },
+    {
+      "hash": 1749904133,
+      "path": "ReplicatedStorage.Shared.rules.Tutorial"
+    },
+    {
+      "hash": 2260622701,
+      "path": "ReplicatedStorage.Shared.rules.SaveOrder"
+    },
+    {
+      "hash": 381023951,
+      "path": "ReplicatedStorage.Shared.rules.specs.Battle.spec"
+    },
+    {
+      "hash": 2056409458,
+      "path": "ReplicatedStorage.Shared.rules.specs.Coins.spec"
+    },
+    {
+      "hash": 1236613342,
+      "path": "ReplicatedStorage.Shared.rules.specs.Gym.spec"
+    },
+    {
+      "hash": 2238332603,
+      "path": "ReplicatedStorage.Shared.rules.specs.Hatch.spec"
+    },
+    {
+      "hash": 4013361482,
+      "path": "ReplicatedStorage.Shared.rules.specs.PassEffects.spec"
+    },
+    {
+      "hash": 3406977644,
+      "path": "ReplicatedStorage.Shared.rules.specs.PetIndex.spec"
+    },
+    {
+      "hash": 4273667146,
+      "path": "ReplicatedStorage.Shared.rules.specs.Profile.spec"
+    },
+    {
+      "hash": 3878451166,
+      "path": "ReplicatedStorage.Shared.rules.specs.Progression.spec"
+    },
+    {
+      "hash": 577420519,
+      "path": "ReplicatedStorage.Shared.rules.specs.Rebirth.spec"
+    },
+    {
+      "hash": 2977248193,
+      "path": "ReplicatedStorage.Shared.rules.specs.Team.spec"
+    },
+    {
+      "hash": 2072105611,
+      "path": "ReplicatedStorage.Shared.rules.specs.Tutorial.spec"
+    },
+    {
+      "hash": 3677200259,
+      "path": "ReplicatedStorage.Shared.rules.specs.SaveOrder.spec"
+    },
+    {
+      "hash": 3003510792,
+      "path": "ReplicatedStorage.Shared.rules.specs.Legacy.spec"
+    },
+    {
+      "hash": 434180202,
+      "path": "ReplicatedStorage.Shared.testing.Runner"
+    },
+    {
+      "hash": 2589132779,
+      "path": "ReplicatedStorage.Shared.testing.Runner.spec"
+    },
+    {
+      "hash": 1636244762,
+      "path": "ReplicatedStorage.Shared.testing.specs"
+    },
+    {
+      "hash": 3338191905,
+      "path": "ReplicatedStorage.Shared.ui.BattleView"
+    },
+    {
+      "hash": 1072999123,
+      "path": "ReplicatedStorage.Shared.ui.EggShopView"
+    },
+    {
+      "hash": 746167900,
+      "path": "ReplicatedStorage.Shared.ui.Format"
+    },
+    {
+      "hash": 3240124249,
+      "path": "ReplicatedStorage.Shared.ui.NextGoal"
+    },
+    {
+      "hash": 3971104027,
+      "path": "ReplicatedStorage.Shared.ui.PetsView"
+    },
+    {
+      "hash": 2542005122,
+      "path": "ReplicatedStorage.Shared.ui.HudLayout"
+    },
+    {
+      "hash": 1660277413,
+      "path": "ReplicatedStorage.Shared.ui.EdgeArrow"
+    },
+    {
+      "hash": 2936589582,
+      "path": "ReplicatedStorage.Shared.ui.EggShopLayout"
+    },
+    {
+      "hash": 1221783118,
+      "path": "ReplicatedStorage.Shared.ui.PetsLayout"
+    },
+    {
+      "hash": 4293655619,
+      "path": "ReplicatedStorage.Shared.ui.ThemeColors"
+    },
+    {
+      "hash": 2075381684,
+      "path": "ReplicatedStorage.Shared.ui.HatchReveal"
+    },
+    {
+      "hash": 324204744,
+      "path": "ReplicatedStorage.Shared.ui.specs.BattleView.spec"
+    },
+    {
+      "hash": 2255991160,
+      "path": "ReplicatedStorage.Shared.ui.specs.EggShopView.spec"
+    },
+    {
+      "hash": 658784257,
+      "path": "ReplicatedStorage.Shared.ui.specs.Format.spec"
+    },
+    {
+      "hash": 2096020233,
+      "path": "ReplicatedStorage.Shared.ui.specs.NextGoal.spec"
+    },
+    {
+      "hash": 2099646937,
+      "path": "ReplicatedStorage.Shared.ui.specs.PetsView.spec"
+    },
+    {
+      "hash": 3410496115,
+      "path": "ReplicatedStorage.Shared.ui.specs.HudLayout.spec"
+    },
+    {
+      "hash": 2161052726,
+      "path": "ReplicatedStorage.Shared.ui.specs.EdgeArrow.spec"
+    },
+    {
+      "hash": 2225419168,
+      "path": "ReplicatedStorage.Shared.ui.specs.EggShopLayout.spec"
+    },
+    {
+      "hash": 3211655043,
+      "path": "ReplicatedStorage.Shared.ui.specs.HatchReveal.spec"
+    },
+    {
+      "hash": 309463645,
+      "path": "ReplicatedStorage.Shared.ui.specs.PetsLayout.spec"
+    },
+    {
+      "hash": 1634803451,
+      "path": "ReplicatedStorage.Shared.visual.BattleEffects"
+    },
+    {
+      "hash": 3974398231,
+      "path": "ReplicatedStorage.Shared.visual.EffectsBudget"
+    },
+    {
+      "hash": 2415882306,
+      "path": "ReplicatedStorage.Shared.visual.ModelTemplates"
+    },
+    {
+      "hash": 2386764895,
+      "path": "ReplicatedStorage.Shared.visual.PetLook"
+    },
+    {
+      "hash": 2410181297,
+      "path": "ReplicatedStorage.Shared.visual.Pool"
+    },
+    {
+      "hash": 1365617153,
+      "path": "ReplicatedStorage.Shared.visual.ProgressEffects"
+    },
+    {
+      "hash": 2475261354,
+      "path": "ReplicatedStorage.Shared.visual.VariantFx"
+    },
+    {
+      "hash": 2139011946,
+      "path": "ReplicatedStorage.Shared.visual.Followers"
+    },
+    {
+      "hash": 1279402386,
+      "path": "ReplicatedStorage.Shared.visual.PetPortrait"
+    },
+    {
+      "hash": 2871738234,
+      "path": "ReplicatedStorage.Shared.visual.PetMotion"
+    },
+    {
+      "hash": 2661339049,
+      "path": "ReplicatedStorage.Shared.visual.PetFinishing"
+    },
+    {
+      "hash": 1409367286,
+      "path": "ReplicatedStorage.Shared.visual.BattleMotion"
+    },
+    {
+      "hash": 130598550,
+      "path": "ReplicatedStorage.Shared.visual.specs.BattleEffects.spec"
+    },
+    {
+      "hash": 2077826841,
+      "path": "ReplicatedStorage.Shared.visual.specs.Effects.spec"
+    },
+    {
+      "hash": 3465504810,
+      "path": "ReplicatedStorage.Shared.visual.specs.ModelTemplates.spec"
+    },
+    {
+      "hash": 3712399248,
+      "path": "ReplicatedStorage.Shared.visual.specs.PetLook.spec"
+    },
+    {
+      "hash": 3638886094,
+      "path": "ReplicatedStorage.Shared.visual.specs.Progress.spec"
+    },
+    {
+      "hash": 3826121459,
+      "path": "ReplicatedStorage.Shared.visual.specs.VariantView.spec"
+    },
+    {
+      "hash": 3174458547,
+      "path": "ReplicatedStorage.Shared.visual.specs.Followers.spec"
+    },
+    {
+      "hash": 1164782890,
+      "path": "ReplicatedStorage.Shared.visual.specs.PetPortrait.spec"
+    },
+    {
+      "hash": 3447172423,
+      "path": "ReplicatedStorage.Shared.visual.specs.BattleMotion.spec"
+    },
+    {
+      "hash": 1367739577,
+      "path": "ReplicatedStorage.Shared.world.Layout"
+    },
+    {
+      "hash": 1325330458,
+      "path": "ReplicatedStorage.Shared.world.WorldPalette"
+    },
+    {
+      "hash": 220270512,
+      "path": "ReplicatedStorage.Shared.world.Names"
+    },
+    {
+      "hash": 447631591,
+      "path": "ReplicatedStorage.Shared.world.Scenery"
+    },
+    {
+      "hash": 1633739956,
+      "path": "ReplicatedStorage.Shared.world.WorldLook"
+    },
+    {
+      "hash": 4064477286,
+      "path": "ReplicatedStorage.Shared.world.specs.Layout.spec"
+    },
+    {
+      "hash": 3693269939,
+      "path": "ReplicatedStorage.Shared.world.specs.Scenery.spec"
+    },
+    {
+      "hash": 3322370423,
+      "path": "ServerScriptService.Server"
+    },
+    {
+      "hash": 2449623750,
+      "path": "ServerScriptService.Server.Analytics"
+    },
+    {
+      "hash": 3117694996,
+      "path": "ServerScriptService.Server.Guard"
+    },
+    {
+      "hash": 1359139075,
+      "path": "ServerScriptService.Server.ModelLibrary"
+    },
+    {
+      "hash": 2394763521,
+      "path": "ServerScriptService.Server.Passes"
+    },
+    {
+      "hash": 3599702526,
+      "path": "ServerScriptService.Server.Profiles"
+    },
+    {
+      "hash": 3926253299,
+      "path": "ServerScriptService.Server.SegmentedTemplate"
+    },
+    {
+      "hash": 1940901695,
+      "path": "ServerScriptService.Server.Services.ClickService"
+    },
+    {
+      "hash": 3022122746,
+      "path": "ServerScriptService.Server.Services.GymService"
+    },
+    {
+      "hash": 1322734247,
+      "path": "ServerScriptService.Server.Services.PassService"
+    },
+    {
+      "hash": 2830872500,
+      "path": "ServerScriptService.Server.Services.RebirthService"
+    },
+    {
+      "hash": 3392435407,
+      "path": "ServerScriptService.Server.Services.ShopService"
+    },
+    {
+      "hash": 3784432829,
+      "path": "ServerScriptService.Server.Services.TeamService"
+    },
+    {
+      "hash": 2797704561,
+      "path": "ServerScriptService.Server.Services.TutorialService"
+    },
+    {
+      "hash": 1968440675,
+      "path": "ServerScriptService.Server.World.Builder"
+    },
+    {
+      "hash": 1498127459,
+      "path": "ServerScriptService.Server.World.Kit"
+    },
+    {
+      "hash": 2397557745,
+      "path": "ServerScriptService.Server.World.Portals"
+    },
+    {
+      "hash": 784114584,
+      "path": "ServerScriptService.Server.World.Terrain"
+    },
+    {
+      "hash": 917873332,
+      "path": "ServerScriptService.Server.World.Landscape"
+    },
+    {
+      "hash": 3144100946,
+      "path": "ServerScriptService.Server.World.Landmarks"
+    }
+  ],
+  "verifiedShippingSources": 139
+}

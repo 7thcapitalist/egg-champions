@@ -40,6 +40,8 @@ local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Profile = require(Shared:WaitForChild("rules"):WaitForChild("Profile"))
+local Offline = require(Shared:WaitForChild("rules"):WaitForChild("Offline"))
+local SaveOrder = require(Shared:WaitForChild("rules"):WaitForChild("SaveOrder"))
 
 type Profile = Profile.Profile
 
@@ -51,6 +53,8 @@ type Session = {
 type Record = {
 	profile: any,
 	session: Session?,
+	offline: any?,
+	offlineReceipt: any?,
 }
 
 local STORE_NAME = "PlayerProfiles"
@@ -61,18 +65,67 @@ local LOCK_MAX_WAIT_SECONDS = LOCK_STALE_SECONDS + 60
 local CALL_ATTEMPTS = 5
 local CALL_BACKOFF_SECONDS = 2
 
-local store = DataStoreService:GetDataStore(STORE_NAME)
+-- An unpublished local .rbxl can reject GetDataStore itself, before any
+-- UpdateAsync call. In Studio, use the same temporary profile fallback as a
+-- failed UpdateAsync; never let this fallback run on a live server.
+local store: GlobalDataStore? = nil
+local storeOk, storeResult = pcall(function(): GlobalDataStore
+	return DataStoreService:GetDataStore(STORE_NAME)
+end)
+if storeOk then
+	store = storeResult
+elseif RunService:IsStudio() then
+	warn(
+		"[Profiles] save store unavailable in Studio; temporary profiles will not be saved: "
+			.. tostring(storeResult)
+	)
+else
+	error(storeResult)
+end
+
+-- True when this error means Studio has API access turned off. Retrying can
+-- not fix it, so the first such error ends the retries and the player gets
+-- the temporary profile.
+local function studioAccessDenied(err: any): boolean
+	return RunService:IsStudio() and Profile.isNoAccessError(err)
+end
 
 -- Studio servers share the empty JobId, so give each one its own id.
 local jobId = if game.JobId ~= "" then game.JobId else "studio-" .. HttpService:GenerateGUID(false)
 
 local loaded: { [Player]: Profile } = {}
+local saveOrder: { [Player]: SaveOrder.State } = {}
 -- Per loaded player: playSeconds when the session began, and when it began.
 local sessionClock: { [Player]: { base: number, startedAt: number } } = {}
 local loadedListeners: { (Player, Profile) -> () } = {}
+-- Studio play sessions where the save store cannot be reached (Studio Access
+-- to API Services off). They play on a temporary profile that is never saved,
+-- instead of being kicked.
+local offlineUsers: { [number]: boolean } = {}
 local leavingListeners: { (Player, Profile) -> () } = {}
 
 local Profiles = {}
+local offlineRate: (Player, Profile) -> number = function()
+	return 0
+end
+local offlineRewards: { [number]: any } = {}
+
+function Profiles.setOfflineRate(compute: (Player, Profile) -> number)
+	offlineRate = compute
+end
+
+function Profiles.offlineReward(player: Player): any
+	return offlineRewards[player.UserId] or { coins = 0, seconds = 0 }
+end
+
+-- Read-only provenance for QA snapshots. A temporary Studio profile must
+-- never be presented as proof that a DataStore save survived rejoin.
+function Profiles.persistenceMode(player: Player): string
+	if loaded[player] == nil then
+		return "unloaded"
+	end
+	return if offlineUsers[player.UserId] then "temporary" else "datastore"
+end
 
 local function keyFor(userId: number): string
 	return "user_" .. tostring(userId)
@@ -84,11 +137,15 @@ end
 
 -- Runs UpdateAsync with a bounded retry. Returns ok and the stored result.
 local function update(userId: number, label: string, transform: (any) -> any): (boolean, any)
+	local availableStore = store
+	if availableStore == nil then
+		return false, nil
+	end
 	local key = keyFor(userId)
 	local lastError: any = nil
 	for attempt = 1, CALL_ATTEMPTS do
 		local ok, result = pcall(function()
-			return store:UpdateAsync(key, transform)
+			return availableStore:UpdateAsync(key, transform)
 		end)
 		if ok then
 			return true, result
@@ -104,6 +161,10 @@ local function update(userId: number, label: string, transform: (any) -> any): (
 				tostring(result)
 			)
 		)
+		if studioAccessDenied(result) then
+			log(userId, label .. " stopped: Studio has no access to API services")
+			return false, nil
+		end
 		if attempt < CALL_ATTEMPTS then
 			task.wait(CALL_BACKOFF_SECONDS * attempt)
 		end
@@ -130,8 +191,7 @@ end
 -- "failed" when the DataStore could not be reached.
 local function claim(userId: number): (string, any)
 	local outcome = "failed"
-	local data: any = nil
-	local ok = update(userId, "claim", function(old: any): any
+	local ok, committed = update(userId, "claim", function(old: any): any
 		local record: Record = if type(old) == "table"
 			then old
 			else { profile = nil, session = nil }
@@ -141,14 +201,42 @@ local function claim(userId: number): (string, any)
 			return nil -- leave the record alone
 		end
 		outcome = "claimed"
-		data = record.profile
+		-- Consume only a readable profile. UpdateAsync may invoke this again;
+		-- the receipt belongs to this claim and rate=0 prevents another award.
+		if record.offlineReceipt == nil or record.offlineReceipt.jobId ~= jobId then
+			local coins, seconds = Offline.reward(record.offline, now)
+			local readable, migrated = pcall(Profile.migrate, record.profile)
+			if record.profile ~= nil and readable and #Profile.validate(migrated) == 0 then
+				if migrated.coins + coins == math.huge then
+					coins, seconds = 0, 0
+				end
+				migrated.coins += coins
+				record.profile = migrated
+				local previousOffline = record.offline
+				record.offline = { at = now, rate = 0 }
+				record.offlineReceipt = {
+					jobId = jobId,
+					coins = coins,
+					seconds = seconds,
+					at = now,
+					source = previousOffline,
+				}
+			end
+		end
 		record.session = { jobId = jobId, heartbeat = now }
 		return record
 	end)
 	if not ok then
 		return "failed", nil
 	end
-	return outcome, data
+	if outcome == "claimed" and type(committed) == "table" then
+		local receipt = committed.offlineReceipt
+		offlineRewards[userId] = if type(receipt) == "table" and receipt.jobId == jobId
+			then receipt
+			else { coins = 0, seconds = 0 }
+		return outcome, committed.profile
+	end
+	return outcome, nil
 end
 
 -- Waits for the lock, then migrates, validates and repairs the profile.
@@ -173,6 +261,14 @@ local function load(player: Player): (Profile?, string?)
 		task.wait(LOCK_RETRY_SECONDS)
 	end
 	if outcome == "failed" then
+		if RunService:IsStudio() then
+			log(
+				userId,
+				"save store unreachable in Studio; playing on a temporary profile that is not saved"
+			)
+			offlineUsers[userId] = true
+			return Profile.new(), nil
+		end
 		return nil, "Your save could not be loaded right now. Please rejoin."
 	end
 
@@ -207,30 +303,97 @@ end
 
 -- Writes the profile and refreshes (or releases) the lock. Refuses to write
 -- when another server has taken the lock, so a stale server never overwrites.
-local function save(userId: number, profile: Profile, release: boolean): boolean
-	local lost = false
-	local ok = update(
-		userId,
-		if release then "save and release" else "autosave",
-		function(old: any): any
-			local record: Record = if type(old) == "table"
-				then old
-				else { profile = nil, session = nil }
-			local session = record.session
-			if session ~= nil and session.jobId ~= jobId then
-				lost = true
-				return nil
-			end
-			record.profile = profile
-			record.session = if release then nil else { jobId = jobId, heartbeat = os.time() }
-			return record
+local function save(
+	player: Player,
+	profile: Profile,
+	release: boolean,
+	order: SaveOrder.State,
+	requireCommit: boolean?
+): boolean
+	local userId = player.UserId
+	while true do
+		local decision = SaveOrder.begin(order, release)
+		if decision == "skip" then
+			return requireCommit ~= true
+		elseif decision == "run" then
+			break
 		end
-	)
-	if lost then
-		log(userId, "lock is held by another server, this save was not written")
-		return false
+		task.wait(0.05)
 	end
-	return ok
+	local saved = false
+	local offlineSnapshot: any = nil
+	local persistence = if offlineUsers[userId] then "temporary" else "datastore"
+	if offlineUsers[userId] then
+		if release then
+			offlineUsers[userId] = nil
+		end
+		saved = true
+	else
+		local computed, rate = pcall(offlineRate, player, profile)
+		if
+			not computed
+			or type(rate) ~= "number"
+			or rate ~= rate
+			or rate < 0
+			or rate == math.huge
+		then
+			rate = 0
+		end
+		local snapshot = { at = os.time() + (if release then 0 else AUTOSAVE_SECONDS), rate = rate }
+		offlineSnapshot = snapshot
+		local lost = false
+		local ok = update(
+			userId,
+			if release then "save and release" else "autosave",
+			function(old: any): any
+				local record: Record = if type(old) == "table"
+					then old
+					else { profile = nil, session = nil }
+				local session = record.session
+				if
+					not SaveOrder.ownsSession(if session ~= nil then session.jobId else nil, jobId)
+				then
+					lost = true
+					return nil
+				end
+				record.profile = profile
+				record.offline = snapshot
+				record.offlineReceipt = nil
+				record.session = if release then nil else { jobId = jobId, heartbeat = os.time() }
+				return record
+			end
+		)
+		if lost then
+			log(userId, "session lock is missing or held by another server; save was not written")
+		end
+		saved = ok and not lost
+	end
+	SaveOrder.finish(order)
+	-- Opt-in QA evidence only. Default game builds have neither attribute;
+	-- temporary Studio success must never look like a persistent write.
+	local qa = game:GetService("ServerScriptService")
+	local subject = player:GetAttribute("BetaSubject")
+	if qa:GetAttribute("BetaSaveEvidence") == true and type(subject) == "string" then
+		local traced = pcall(function()
+			print("[Beta save] " .. HttpService:JSONEncode({
+				subject = subject,
+				session_id = jobId,
+				place_id = game.PlaceId,
+				place_version = game.PlaceVersion,
+				build_sha256 = qa:GetAttribute("BetaBuildSha256") or "unknown",
+				storage_mode = persistence,
+				released = release,
+				saved_coins = profile.coins,
+				offline_snapshot = offlineSnapshot,
+				saved = saved and persistence == "datastore",
+				captured_at = DateTime.now():ToIsoDate(),
+			}))
+		end)
+		if not traced then
+			warn("[Beta save] evidence unavailable; do not approve the persistence test")
+		end
+	end
+	return saved
 end
 
 -- Whole seconds since this player's profile loaded in this session, or 0.
@@ -259,6 +422,20 @@ local function recordPlaytime(player: Player, profile: Profile)
 end
 
 -- The loaded profile for a player, or nil while loading or after a failed load.
+-- A receipt may be acknowledged only after a real, serialized persistent commit.
+function Profiles.flush(player: Player): boolean
+	local profile, order = loaded[player], saveOrder[player]
+	if
+		not profile
+		or not order
+		or order.closing
+		or Profiles.persistenceMode(player) ~= "datastore"
+	then
+		return false
+	end
+	return save(player, profile, false, order, true)
+end
+
 function Profiles.get(player: Player): Profile?
 	return loaded[player]
 end
@@ -288,6 +465,7 @@ local function settleBeforeSave(player: Player, profile: Profile)
 end
 
 local function onJoin(player: Player)
+	offlineRewards[player.UserId] = nil
 	local profile, reason = load(player)
 	if profile == nil then
 		if player.Parent ~= nil then
@@ -297,10 +475,11 @@ local function onJoin(player: Player)
 	end
 	if player.Parent == nil then
 		-- Left while loading: release the lock without changing anything.
-		save(player.UserId, profile, true)
+		save(player, profile, true, SaveOrder.new())
 		return
 	end
 	loaded[player] = profile
+	saveOrder[player] = SaveOrder.new()
 	sessionClock[player] = { base = profile.playSeconds, startedAt = os.clock() }
 	for _, listener in loadedListeners do
 		task.spawn(listener, player, profile)
@@ -309,14 +488,17 @@ end
 
 local function onLeave(player: Player)
 	local profile = loaded[player]
-	if profile == nil then
+	local order = saveOrder[player]
+	if profile == nil or order == nil then
 		return
 	end
 	settleBeforeSave(player, profile)
 	recordPlaytime(player, profile)
 	loaded[player] = nil
 	sessionClock[player] = nil
-	save(player.UserId, profile, true)
+	save(player, profile, true, order)
+	saveOrder[player] = nil
+	offlineRewards[player.UserId] = nil
 end
 
 local started = false
@@ -339,7 +521,10 @@ function Profiles.start()
 			task.wait(AUTOSAVE_SECONDS)
 			for player, profile in loaded do
 				recordPlaytime(player, profile)
-				task.spawn(save, player.UserId, profile, false)
+				local order = saveOrder[player]
+				if order ~= nil then
+					task.spawn(save, player, profile, false, order)
+				end
 			end
 		end
 	end)
@@ -352,10 +537,14 @@ function Profiles.start()
 		end
 		for player, profile in loaded do
 			pending += 1
+			local order = saveOrder[player]
 			loaded[player] = nil
 			sessionClock[player] = nil
 			task.spawn(function()
-				save(player.UserId, profile, true)
+				if order ~= nil then
+					save(player, profile, true, order)
+					saveOrder[player] = nil
+				end
 				pending -= 1
 			end)
 		end

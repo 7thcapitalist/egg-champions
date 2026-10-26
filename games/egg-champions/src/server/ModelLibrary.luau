@@ -20,10 +20,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local ModelTemplates = require(Shared:WaitForChild("visual"):WaitForChild("ModelTemplates"))
+local SegmentedTemplate = require(script.Parent.SegmentedTemplate)
 
 local ModelLibrary = {}
 
 ModelLibrary.FOLDER = "PetModels"
+-- CreateMeshPartAsync yields on asset retrieval. A small worker pool lets
+-- independent pets become available without waiting for earlier retries.
+ModelLibrary.LOAD_WORKERS = 4
 
 local function folder(): Folder
 	local found = ReplicatedStorage:FindFirstChild(ModelLibrary.FOLDER)
@@ -98,8 +102,95 @@ function ModelLibrary.start(): ModelTemplates.Report
 		return { loaded = {}, failed = {}, modelIds = {} }
 	end
 	local data = require(source) :: ModelTemplates.Table
-	local report = ModelTemplates.load(data.entries, kit(folder()))
-	ModelTemplates.applySeam(report.modelIds)
+	local results: { [number]: ModelTemplates.Report } = {}
+	local cursor = 0
+	local finished = 0
+	local seen: { [string]: boolean } = {}
+	local uniqueIds = true
+	for _, entry in data.entries do
+		if seen[entry.id] then
+			uniqueIds = false
+			break
+		end
+		seen[entry.id] = true
+	end
+	-- Duplicate template names replace one another. Preserve their input
+	-- order if a future generated table contains any.
+	local workerCount = math.min(if uniqueIds then ModelLibrary.LOAD_WORKERS else 1, #data.entries)
+	local done = Instance.new("BindableEvent")
+	local target = folder()
+	local loaderKit = kit(target)
+	for _ = 1, workerCount do
+		task.spawn(function()
+			while true do
+				-- No yield between taking an index and advancing the cursor.
+				cursor += 1
+				local index = cursor
+				local entry = data.entries[index]
+				if entry == nil then
+					break
+				end
+				local ok, loaded = pcall(function(): ModelTemplates.Report
+					if entry.parts ~= nil then
+						local native = SegmentedTemplate.create(entry)
+						if native ~= nil then
+							native:SetAttribute("Kind", "pet")
+							local old = target:FindFirstChild(entry.id)
+							if old ~= nil then
+								old:Destroy()
+							end
+							native.Parent = target
+							return {
+								loaded = { entry.id },
+								failed = {},
+								modelIds = { [entry.id] = entry.id },
+							}
+						end
+					end
+					return ModelTemplates.load({ entry }, loaderKit)
+				end)
+				local partial: ModelTemplates.Report
+				if ok then
+					partial = loaded :: ModelTemplates.Report
+				else
+					local reason = tostring(loaded)
+					warn(
+						string.format("ModelLibrary: %s stays a placeholder: %s", entry.id, reason)
+					)
+					partial = {
+						loaded = {},
+						failed = { { id = entry.id, reason = reason } },
+						modelIds = {},
+					}
+				end
+				results[index] = partial
+				-- The template is already parented by dress. Make the server's
+				-- PetVisual seam available as soon as this entry succeeds too.
+				ModelTemplates.applySeam(partial.modelIds)
+			end
+			finished += 1
+			if finished == workerCount then
+				done:Fire()
+			end
+		end)
+	end
+	if finished < workerCount then
+		done.Event:Wait()
+	end
+	done:Destroy()
+	local report: ModelTemplates.Report = { loaded = {}, failed = {}, modelIds = {} }
+	for index = 1, #data.entries do
+		local partial = results[index]
+		for _, id in partial.loaded do
+			table.insert(report.loaded, id)
+		end
+		for _, failure in partial.failed do
+			table.insert(report.failed, failure)
+		end
+		for petId, modelId in partial.modelIds do
+			report.modelIds[petId] = modelId
+		end
+	end
 	print(
 		string.format(
 			"ModelLibrary: %d of %d models loaded, %d left as placeholders",

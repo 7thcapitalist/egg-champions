@@ -17,7 +17,8 @@
 			with a result table, { ok = true, ... } or { ok = false, reason }.
 
 	The only thing a client ever sends is a choice: which egg, which pet uid,
-	which world, which battle session, which move. Never an amount.
+	which world, which battle session, which move, or SkipTutorial with
+	nothing at all. Never an amount.
 ]]
 
 export type Kind = "event" | "function"
@@ -27,6 +28,8 @@ export type Name =
 	| "BuyEgg"
 	| "Equip"
 	| "Unequip"
+	| "EquipBest"
+	| "UnequipAll"
 	| "PayGymFee"
 	| "StartBattle"
 	| "BattleMove"
@@ -35,6 +38,9 @@ export type Name =
 	| "ProfileChanged"
 	| "Notice"
 	| "ClickCredited"
+	| "WildAction"
+	| "BuyPrism"
+	| "SkipTutorial"
 
 local Remotes = {}
 
@@ -46,6 +52,8 @@ Remotes.names = table.freeze({
 	BuyEgg = "BuyEgg" :: Name,
 	Equip = "Equip" :: Name,
 	Unequip = "Unequip" :: Name,
+	EquipBest = "EquipBest" :: Name,
+	UnequipAll = "UnequipAll" :: Name,
 	PayGymFee = "PayGymFee" :: Name,
 	StartBattle = "StartBattle" :: Name,
 	BattleMove = "BattleMove" :: Name,
@@ -54,6 +62,9 @@ Remotes.names = table.freeze({
 	ProfileChanged = "ProfileChanged" :: Name,
 	Notice = "Notice" :: Name,
 	ClickCredited = "ClickCredited" :: Name,
+	WildAction = "WildAction" :: Name,
+	BuyPrism = "BuyPrism" :: Name,
+	SkipTutorial = "SkipTutorial" :: Name,
 })
 
 -- Every remote and its kind, in a fixed order.
@@ -62,6 +73,8 @@ Remotes.list = table.freeze({
 	table.freeze({ name = Remotes.names.BuyEgg, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.Equip, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.Unequip, kind = "function" :: Kind }),
+	table.freeze({ name = Remotes.names.EquipBest, kind = "function" :: Kind }),
+	table.freeze({ name = Remotes.names.UnequipAll, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.PayGymFee, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.StartBattle, kind = "function" :: Kind }),
 	table.freeze({ name = Remotes.names.BattleMove, kind = "function" :: Kind }),
@@ -70,6 +83,9 @@ Remotes.list = table.freeze({
 	table.freeze({ name = Remotes.names.ProfileChanged, kind = "event" :: Kind }),
 	table.freeze({ name = Remotes.names.Notice, kind = "event" :: Kind }),
 	table.freeze({ name = Remotes.names.ClickCredited, kind = "event" :: Kind }),
+	table.freeze({ name = Remotes.names.WildAction, kind = "function" :: Kind }),
+	table.freeze({ name = Remotes.names.BuyPrism, kind = "function" :: Kind }),
+	table.freeze({ name = Remotes.names.SkipTutorial, kind = "function" :: Kind }),
 })
 
 -- The kind of a remote, or nil for a name that is not a remote.

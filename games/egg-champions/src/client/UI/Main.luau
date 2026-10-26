@@ -1,22 +1,60 @@
 --!strict
 --[[
-	Main: the screen the player sees most, built to match
-	design/ui/Main.dc.html.
+	Main: the screen the player sees most, in the approved style of
+	design/ui/Main.dc.html (dark flat panels, thin borders, gold accent), but
+	showing as little as possible at once.
 
-	- Top bar (64px): coins, coins per click in gold, the world index and name
-	  centred, rebirth count, and one badge marker per world, filled when won.
-	- Pass chips in the top bar's badge area, one per game pass in config:
-	  gold when owned, and a purchase prompt on press when not. Ownership is
-	  the server's derived "passes" field; the client never checks it.
-	- Left menu: Eggs, Pets, Index, Rebirth, Shop. Each opens its screen
-	  through Screens.
-	- Next-goal panel on the right, picked by shared/ui/NextGoal.
-	- The team bar at the bottom, one slot per constants.team_size.
+	Every rectangle comes from shared/ui/HudLayout, which the specs check for
+	overlaps at 808 x 432, 1092 x 432, 1280 x 720, 1920 x 1080 and a
+	844 x 390 phone, with Roblox's own buttons and chat window as reserved
+	space (read by UI/HudInsets). The layout is redone whenever the screen
+	size, the top-bar inset, the chat window or the number of team slots
+	changes.
 
-	Clicking: there is no click button. A full screen transparent button sits
-	behind every panel and fires Click on press. Panels are Active so they
-	swallow their own presses, and a press over any panel is also ignored by
-	position, so pressing a menu button never earns a coin.
+	- Top bar: coins and coins per click on the left, right of Roblox's own
+	  top bar buttons, the world name centred, the rebirth count small on
+	  the right. Game passes are not here; they live only in the Shop
+	  screen (UI/Shop).
+	- Left menu: compact buttons on the left edge below 45% of the screen
+	  height and below the chat window, only the unlocked ones
+	  (HudLayout.menuShown): Eggs and Pets always, Rebirth once a rebirth is
+	  affordable or a gym is beaten, Shop once the tutorial is done.
+	  The Index is a tab inside the Pets screen.
+	- Next-goal card on the right, picked by shared/ui/NextGoal: a goal line
+	  of up to two lines at HudLayout.GOAL_TEXT pixels (never scaled down)
+	  and one button. When the goal is not reachable yet, a labelled
+	  progress bar takes the button's place ("Coins for your first egg
+	  34 / 50"). Hidden while any menu screen is open (Screens.anyOpen).
+	  While the first-time tutorial runs (shared/rules/Tutorial, step sent by
+	  the server), the card shows the tutorial line instead, with a small
+	  SKIP that sends SkipTutorial, and UI/Pointer outlines the thing to use.
+	  The tutorial's gym step waits while NextGoal has a small goal before
+	  the gym (more pets, a full team, the next egg): the card shows that
+	  goal, and Guide leads to it with Tutorial.heldCard until it is done.
+	  During the tutorial the card provides a direct action alongside the pointer;
+	  OPEN EGGS and OPEN PETS remain reachable. Under a small goal a muted
+	  second line names the gym and its fee (NextGoal.nextLine); tapping it
+	  turns on the beam and edge arrow to the gym, which also turn on by
+	  themselves once the team is full (NextGoal.gymBeam, shown by Guide).
+	  While the goal waits on coins, that line says "Click anywhere to earn
+	  coins" instead (NextGoal.clickHint).
+	- Team bar at the bottom (bottom left on compact screens): hidden until
+	  the player equips a pet, then one slot per equipped pet up to
+	  constants.team_size (HudLayout.teamSlots). Each slot shows the pet's
+	  name and its own click power ("Click +3"); the top bar shows only the
+	  total ("+8 per click").
+	- Gold marks what to do next (HudLayout.goldParts). While the tutorial
+	  runs exactly one thing is gold: its pointer, or the goal card's bar
+	  when nothing is pointed at. SHOP, the goal button, the per click line
+	  and the slot powers take their gold once the tutorial is done.
+
+	Click feedback: every click the server credited pulses the coin counter
+	(Main.pulseCoins, called from Effects.onCredited); Effects draws the
+	"+N" at the cursor above this screen and plays the coin sound.
+
+	World clicks use passive input events, never a full-screen GuiButton.
+	Training rewards arrive from the server; joystick and camera drags stay with
+	Roblox's controls. Processed UI inputs and open screens never earn coins.
 
 	Every number shown comes from the server through ProfileChanged (see
 	State). Coins per click and each pet's click power are derived fields the
@@ -24,44 +62,50 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local MarketplaceService = game:GetService("MarketplaceService")
-local Players = game:GetService("Players")
-local GuiService = game:GetService("GuiService")
+local TweenService = game:GetService("TweenService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local EffectsBudget = require(Shared:WaitForChild("visual"):WaitForChild("EffectsBudget"))
 local PetVisual = require(Shared:WaitForChild("PetVisual"))
 local uiShared = Shared:WaitForChild("ui")
 local Format = require(uiShared:WaitForChild("Format"))
 local NextGoal = require(uiShared:WaitForChild("NextGoal"))
+local HudLayout = require(uiShared:WaitForChild("HudLayout"))
+local Tutorial = require(Shared:WaitForChild("rules"):WaitForChild("Tutorial"))
 
 local Theme = require(script.Parent:WaitForChild("Theme"))
 local Screens = require(script.Parent:WaitForChild("Screens"))
 local State = require(script.Parent:WaitForChild("State"))
+local Guide = require(script.Parent:WaitForChild("Guide"))
+local Pointer = require(script.Parent:WaitForChild("Pointer"))
+local HudInsets = require(script.Parent:WaitForChild("HudInsets"))
 
 local colors = Theme.colors
 local sizes = Theme.sizes
 local textSizes = Theme.textSizes
 
--- Layering inside the ScreenGui. The click layer is lowest.
-local Z_CLICK = 1
+-- Layering inside the ScreenGui; the world has no input-capturing overlay.
 local Z_PANEL = 2
 
-local MENU = table.freeze({
-	{ label = "Eggs", screen = Screens.names.Eggs, accent = false },
-	{ label = "Pets", screen = Screens.names.Pets, accent = false },
-	{ label = "Index", screen = Screens.names.Index, accent = false },
-	{ label = "Rebirth", screen = Screens.names.Rebirth, accent = false },
-	{ label = "Shop", screen = Screens.names.Shop, accent = true },
-})
+-- Width of the tutorial SKIP button on the goal card, and the gap before it.
+-- Display sizes, not game numbers.
+local SKIP_WIDTH = 56
+local SKIP_GAP = 6
 
-local GOAL_ROW_LABEL: { [string]: string } = {
-	egg = "Price",
-	gym = "Fee",
-	rebirth = "Cost",
+-- The screen each HudLayout.MENU entry opens. Shop is the accent button once
+-- the tutorial is done.
+local MENU_SCREEN: { [string]: string } = {
+	Eggs = Screens.names.Eggs,
+	Pets = Screens.names.Pets,
+	Rebirth = Screens.names.Rebirth,
+	Shop = Screens.names.Shop,
 }
+local MENU_ACCENT = "Shop"
 
 local GOAL_ACTION: { [string]: { label: string, screen: string } } = {
+	pets = { label = "Open eggs", screen = Screens.names.Eggs },
+	team = { label = "Open pets", screen = Screens.names.Pets },
 	egg = { label = "Open eggs", screen = Screens.names.Eggs },
 	gym = { label = "To the gym", screen = Screens.names.Battle },
 	rebirth = { label = "Rebirth", screen = Screens.names.Rebirth },
@@ -74,16 +118,36 @@ for _, pet in Config.pets do
 	petsById[pet.id] = pet
 end
 
-export type ClickListener = (position: Vector2) -> ()
-
 local Main = {}
 
-local clickListeners: { ClickListener } = {}
+-- Scales the coin counter for the pulse on each credited click.
+local coinPulse: UIScale? = nil
+local pulseTween: Tween? = nil
 
--- Called with the screen position of every world click, for the coin pop
--- that task 15 adds. The server decides the amount.
-function Main.onWorldClick(listener: ClickListener)
-	table.insert(clickListeners, listener)
+-- Pulses the coin counter once. Called for every click the server credited.
+function Main.pulseCoins()
+	local scale = coinPulse
+	if scale == nil then
+		return
+	end
+	local previous = pulseTween
+	if previous ~= nil then
+		previous:Cancel()
+	end
+	scale.Scale = 1
+	local t = TweenService:Create(
+		scale,
+		TweenInfo.new(
+			EffectsBudget.CLICK.pulseSeconds,
+			Enum.EasingStyle.Quad,
+			Enum.EasingDirection.Out,
+			0,
+			true
+		),
+		{ Scale = EffectsBudget.CLICK.pulseScale }
+	)
+	pulseTween = t
+	t:Play()
 end
 
 local function frame(name: string, parent: Instance?): Frame
@@ -95,38 +159,23 @@ local function frame(name: string, parent: Instance?): Frame
 	return f
 end
 
-local function list(
-	parent: Instance,
-	direction: Enum.FillDirection,
-	padding: number,
-	align: Enum.VerticalAlignment?
-)
+local function list(parent: Instance, direction: Enum.FillDirection, padding: number): UIListLayout
 	local layout = Instance.new("UIListLayout")
 	layout.FillDirection = direction
 	layout.Padding = UDim.new(0, padding)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.VerticalAlignment = align or Enum.VerticalAlignment.Top
 	layout.Parent = parent
 	return layout
 end
 
-local function pad(parent: Instance, all: number)
-	local padding = Instance.new("UIPadding")
-	padding.PaddingTop = UDim.new(0, all)
-	padding.PaddingBottom = UDim.new(0, all)
-	padding.PaddingLeft = UDim.new(0, all)
-	padding.PaddingRight = UDim.new(0, all)
-	padding.Parent = parent
-end
-
 -- A solid, Active panel that swallows presses on it.
-local function panel(name: string, parent: Instance, radius: number?, borderColor: Color3?): Frame
+local function panel(name: string, parent: Instance, radius: number?): Frame
 	local f = frame(name, parent)
 	f.BackgroundTransparency = 0
 	f.BackgroundColor3 = colors.panel
 	f.Active = true
 	f.ZIndex = Z_PANEL
-	Theme.panel(f, radius, borderColor)
+	Theme.panel(f, radius)
 	return f
 end
 
@@ -146,300 +195,202 @@ local function button(name: string, text: string, parent: Instance, accent: bool
 	return b
 end
 
-type TopBar = {
-	coins: TextLabel,
-	perClick: TextLabel,
-	worldIndex: TextLabel,
-	worldName: TextLabel,
-	rebirths: TextLabel,
-	badges: { [string]: Frame },
-	passes: { [string]: TextButton },
-}
-
--- The Roblox id to prompt for each pass, as the server last sent it. 0 or
--- missing means the pass cannot be bought yet.
-local passProducts: { [string]: number } = {}
-local passOwned: { [string]: boolean } = {}
-
-local function promptPass(passId: string)
-	if passOwned[passId] == true then
-		return
-	end
-	local productId = passProducts[passId]
-	if productId == nil or productId <= 0 then
-		return
-	end
-	pcall(function()
-		MarketplaceService:PromptGamePassPurchase(Players.LocalPlayer, productId)
-	end)
+-- A label that shrinks its text to fit its box, never past maxSize.
+local function fitted(props: {
+	name: string,
+	parent: Instance,
+	font: Font?,
+	maxSize: number,
+	color: Color3?,
+	align: Enum.TextXAlignment?,
+}): TextLabel
+	local label = Theme.text({
+		name = props.name,
+		font = props.font,
+		size = props.maxSize,
+		color = props.color,
+		parent = props.parent,
+	})
+	label.AutomaticSize = Enum.AutomaticSize.None
+	label.TextScaled = true
+	label.TextXAlignment = props.align or Enum.TextXAlignment.Left
+	label.TextTruncate = Enum.TextTruncate.AtEnd
+	local limit = Instance.new("UITextSizeConstraint")
+	limit.MaxTextSize = props.maxSize
+	limit.Parent = label
+	return label
 end
 
-local function buildTopBar(parent: Instance): (Frame, TopBar)
+local function place(g: GuiObject, r: HudLayout.Rect)
+	g.Position = UDim2.fromOffset(r.x, r.y)
+	g.Size = UDim2.fromOffset(r.w, r.h)
+end
+
+-- Places g at r, given in screen pixels, inside a parent at origin.
+local function placeIn(g: GuiObject, r: HudLayout.Rect, origin: HudLayout.Rect)
+	g.Position = UDim2.fromOffset(r.x - origin.x, r.y - origin.y)
+	g.Size = UDim2.fromOffset(r.w, r.h)
+end
+
+type TopBar = {
+	bar: Frame,
+	coinsBox: Frame,
+	coin: Frame,
+	coins: TextLabel,
+	perClick: TextLabel,
+	world: TextLabel,
+	rebirths: TextLabel,
+}
+
+local function buildTopBar(parent: Instance): TopBar
 	local bar = panel("TopBar", parent, 0)
-	bar.Size = UDim2.new(1, 0, 0, sizes.topBar)
 	bar.Position = UDim2.fromScale(0, 0)
-	-- Only the bottom border shows in the mockup; a full stroke reads the same
-	-- on a bar that spans the screen.
 
-	local left = frame("Coins", bar)
-	left.AnchorPoint = Vector2.new(0, 0.5)
-	left.Position = UDim2.new(0, sizes.gutter, 0.5, 0)
-	left.AutomaticSize = Enum.AutomaticSize.XY
-	list(left, Enum.FillDirection.Horizontal, 12, Enum.VerticalAlignment.Center)
-
-	local coin = frame("Coin", left)
-	coin.LayoutOrder = 1
+	local coinsBox = frame("Coins", bar)
+	local coin = frame("Coin", coinsBox)
 	coin.BackgroundTransparency = 0
 	coin.BackgroundColor3 = colors.gold
+	coin.AnchorPoint = Vector2.new(0, 0.5)
+	coin.Position = UDim2.fromScale(0, 0.5)
 	coin.Size = UDim2.fromOffset(sizes.coin, sizes.coin)
 	local round = Instance.new("UICorner")
 	round.CornerRadius = UDim.new(0.5, 0)
 	round.Parent = coin
 
-	local coins = Theme.text({
+	local textLeft = sizes.coin + 10
+	local coins = fitted({
 		name = "Total",
-		text = "0",
+		parent = coinsBox,
 		font = Theme.fonts.heading,
-		size = textSizes.coins,
-		parent = left,
+		maxSize = textSizes.coins,
 	})
-	coins.LayoutOrder = 2
-
-	local perClick = Theme.text({
+	coins.Text = "0"
+	coins.Position = UDim2.new(0, textLeft, 0.08, 0)
+	coins.Size = UDim2.new(1, -textLeft, 0.52, 0)
+	local perClick = fitted({
 		name = "PerClick",
+		parent = coinsBox,
 		font = Theme.fonts.label,
+		maxSize = textSizes.small,
 		color = colors.gold,
-		parent = left,
 	})
-	perClick.LayoutOrder = 3
+	perClick.Position = UDim2.new(0, textLeft, 0.6, 0)
+	perClick.Size = UDim2.new(1, -textLeft, 0.3, 0)
 
-	local centre = frame("World", bar)
-	centre.AnchorPoint = Vector2.new(0.5, 0.5)
-	centre.Position = UDim2.fromScale(0.5, 0.5)
-	centre.AutomaticSize = Enum.AutomaticSize.XY
-	local centreList = list(centre, Enum.FillDirection.Vertical, 0)
-	centreList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
-	local worldIndex = Theme.text({
-		name = "Index",
-		font = Theme.fonts.label,
-		size = textSizes.small,
-		color = colors.muted,
-		parent = centre,
-	})
-	worldIndex.LayoutOrder = 1
-	local worldName = Theme.text({
-		name = "Name",
+	local world = fitted({
+		name = "World",
+		parent = bar,
 		font = Theme.fonts.heading,
-		size = textSizes.worldName,
-		parent = centre,
+		maxSize = textSizes.worldName,
+		align = Enum.TextXAlignment.Center,
 	})
-	worldName.LayoutOrder = 2
 
-	local right = frame("Progress", bar)
-	right.AnchorPoint = Vector2.new(1, 0.5)
-	right.Position = UDim2.new(1, -sizes.gutter, 0.5, 0)
-	right.AutomaticSize = Enum.AutomaticSize.XY
-	local rightList = list(right, Enum.FillDirection.Horizontal, 20, Enum.VerticalAlignment.Center)
-	rightList.HorizontalAlignment = Enum.HorizontalAlignment.Right
-
-	local rebirthGroup = frame("Rebirths", right)
-	rebirthGroup.LayoutOrder = 1
-	rebirthGroup.AutomaticSize = Enum.AutomaticSize.XY
-	list(rebirthGroup, Enum.FillDirection.Horizontal, 6, Enum.VerticalAlignment.Center)
-	Theme.text({
-		name = "Label",
-		text = Theme.label("Rebirths"),
+	local rebirths = fitted({
+		name = "Rebirths",
+		parent = bar,
 		font = Theme.fonts.label,
-		parent = rebirthGroup,
-	}).LayoutOrder =
-		1
-	local rebirths = Theme.text({
-		name = "Count",
-		text = "0",
-		font = Theme.fonts.label,
-		color = colors.gold,
-		parent = rebirthGroup,
+		maxSize = textSizes.small,
+		color = colors.muted,
+		align = Enum.TextXAlignment.Right,
 	})
-	rebirths.LayoutOrder = 2
+	rebirths.Text = Theme.label("Rebirths 0")
 
-	local badgeGroup = frame("Badges", right)
-	badgeGroup.LayoutOrder = 2
-	badgeGroup.AutomaticSize = Enum.AutomaticSize.XY
-	list(badgeGroup, Enum.FillDirection.Horizontal, 12, Enum.VerticalAlignment.Center)
-	Theme.text({
-		name = "Label",
-		text = Theme.label("Badges"),
-		font = Theme.fonts.label,
-		parent = badgeGroup,
-	}).LayoutOrder =
-		0
-
-	local worlds = table.clone(Config.worlds)
-	table.sort(worlds, function(a, b)
-		return a.index < b.index
-	end)
-	local badges: { [string]: Frame } = {}
-	for _, world in worlds do
-		-- A rotated square inside a holder, so the layout spaces the holders
-		-- and the rotation never overlaps a neighbour.
-		local holder = frame("Badge" .. world.index, badgeGroup)
-		holder.LayoutOrder = world.index
-		holder.Size = UDim2.fromOffset(sizes.badge, sizes.badge)
-		local diamond = frame("Marker", holder)
-		diamond.AnchorPoint = Vector2.new(0.5, 0.5)
-		diamond.Position = UDim2.fromScale(0.5, 0.5)
-		diamond.Size = UDim2.fromOffset(sizes.badge, sizes.badge)
-		diamond.Rotation = 45
-		diamond.BackgroundColor3 = colors.gold
-		local stroke = Instance.new("UIStroke")
-		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		stroke.Color = colors.badgeEmpty
-		stroke.Thickness = 2
-		stroke.Parent = diamond
-		badges[world.id] = diamond
-	end
-
-	-- One chip per game pass, after the world badges.
-	local passGroup = frame("Passes", right)
-	passGroup.LayoutOrder = 3
-	passGroup.AutomaticSize = Enum.AutomaticSize.XY
-	list(passGroup, Enum.FillDirection.Horizontal, 6, Enum.VerticalAlignment.Center)
-	local passes: { [string]: TextButton } = {}
-	for position, pass in Config.passes do
-		local chip = Instance.new("TextButton")
-		chip.Name = "Pass_" .. pass.id
-		chip.LayoutOrder = position
-		chip.AutoButtonColor = true
-		chip.AutomaticSize = Enum.AutomaticSize.X
-		chip.Size = UDim2.fromOffset(0, sizes.badge + 12)
-		chip.BackgroundColor3 = colors.panel
-		chip.BorderSizePixel = 0
-		chip.FontFace = Theme.fonts.label
-		chip.TextSize = textSizes.small
-		chip.TextColor3 = colors.muted
-		chip.Text = Theme.label("+ " .. pass.name)
-		chip.ZIndex = Z_PANEL
-		chip.Parent = passGroup
-		local chipPad = Instance.new("UIPadding")
-		chipPad.PaddingLeft = UDim.new(0, 6)
-		chipPad.PaddingRight = UDim.new(0, 6)
-		chipPad.Parent = chip
-		Theme.panel(chip, sizes.radius, colors.border)
-		chip.Activated:Connect(function()
-			promptPass(pass.id)
-		end)
-		passes[pass.id] = chip
-	end
-
-	return bar,
-		{
-			coins = coins,
-			perClick = perClick,
-			worldIndex = worldIndex,
-			worldName = worldName,
-			rebirths = rebirths,
-			badges = badges,
-			passes = passes,
-		}
+	return {
+		bar = bar,
+		coinsBox = coinsBox,
+		coin = coin,
+		coins = coins,
+		perClick = perClick,
+		world = world,
+		rebirths = rebirths,
+	}
 end
 
-local function buildMenu(parent: Instance): Frame
+type Menu = {
+	frame: Frame,
+	layout: UIListLayout,
+	buttons: { TextButton },
+}
+
+local function buildMenu(parent: Instance): Menu
 	local menu = frame("Menu", parent)
-	menu.Position = UDim2.fromOffset(sizes.gutter, sizes.topBar + 32)
-	menu.Size = UDim2.fromOffset(sizes.menuWidth, 0)
-	menu.AutomaticSize = Enum.AutomaticSize.Y
 	menu.Active = true
 	menu.ZIndex = Z_PANEL
-	list(menu, Enum.FillDirection.Vertical, 6)
-	for position, entry in MENU do
-		local b = button(entry.label, entry.label, menu, entry.accent)
+	local layout = list(menu, Enum.FillDirection.Vertical, 6)
+	local buttons = {}
+	for position, entry in HudLayout.MENU do
+		local b = button(entry, entry, menu, false)
 		b.LayoutOrder = position
-		b.Size = UDim2.new(1, 0, 0, math.max(sizes.menuButton, sizes.minTap))
-		local screen = entry.screen
+		local screen = MENU_SCREEN[entry]
+		Pointer.register("menu:" .. entry, b)
 		b.Activated:Connect(function()
 			Screens.open(screen)
 		end)
+		table.insert(buttons, b)
 	end
-	return menu
+	return { frame = menu, layout = layout, buttons = buttons }
 end
 
-type GoalPanel = {
-	title: TextLabel,
-	detail: TextLabel,
-	rowLabel: TextLabel,
-	rowValue: TextLabel,
-	fill: Frame,
+type GoalCard = {
+	frame: Frame,
+	line: TextLabel,
+	-- The muted "Next: <world> Gym (fee)" line under a small goal.
+	nextLine: TextButton,
 	action: TextButton,
 	actionStroke: UIStroke,
+	skip: TextButton,
+	bar: Frame,
+	fill: Frame,
+	barLabel: TextLabel,
 }
 
 local goalScreen: string? = nil
+-- Called when the player taps the goal card's "Next" line. Set by mount.
+local onNextTapped: (() -> ())? = nil
 
-local function buildGoal(parent: Instance): (Frame, GoalPanel)
+local function buildGoal(parent: Instance): GoalCard
 	local goal = panel("NextGoal", parent)
-	goal.AnchorPoint = Vector2.new(1, 0)
-	goal.Position = UDim2.new(1, -sizes.gutter, 0, sizes.topBar + 32)
-	goal.Size = UDim2.fromScale(sizes.goalWidth / sizes.designWidth, 0)
-	goal.AutomaticSize = Enum.AutomaticSize.Y
-	local limit = Instance.new("UISizeConstraint")
-	limit.MinSize = Vector2.new(sizes.goalMinWidth, 0)
-	limit.MaxSize = Vector2.new(sizes.goalWidth, math.huge)
-	limit.Parent = goal
-	pad(goal, 16)
-	list(goal, Enum.FillDirection.Vertical, 8)
-
-	Theme.text({
-		name = "Header",
-		text = Theme.label("Next goal"),
+	-- A fixed size, wrapping to two lines; never shrunk to fit.
+	local line = Theme.text({
+		name = "Line",
+		parent = goal,
 		font = Theme.fonts.label,
-		size = textSizes.small,
-		color = colors.muted,
-		parent = goal,
-	}).LayoutOrder =
-		1
-
-	local title = Theme.text({
-		name = "Title",
-		font = Theme.fonts.heading,
-		size = textSizes.heading,
-		parent = goal,
+		size = HudLayout.GOAL_TEXT,
 	})
-	title.LayoutOrder = 2
-	title.AutomaticSize = Enum.AutomaticSize.Y
-	title.Size = UDim2.fromScale(1, 0)
-	title.TextWrapped = true
-	title.TextXAlignment = Enum.TextXAlignment.Left
-
-	local detail = Theme.text({ name = "Detail", color = colors.muted, parent = goal })
-	detail.LayoutOrder = 3
-	detail.AutomaticSize = Enum.AutomaticSize.Y
-	detail.Size = UDim2.fromScale(1, 0)
-	detail.TextWrapped = true
-	detail.TextXAlignment = Enum.TextXAlignment.Left
-
-	local row = frame("Row", goal)
-	row.LayoutOrder = 4
-	row.Size = UDim2.new(1, 0, 0, textSizes.body + 4)
-	local rowLabel = Theme.text({ name = "Label", font = Theme.fonts.label, parent = row })
-	local rowValue = Theme.text({ name = "Value", font = Theme.fonts.label, parent = row })
-	rowValue.AnchorPoint = Vector2.new(1, 0)
-	rowValue.Position = UDim2.fromScale(1, 0)
-
-	local track = frame("Bar", goal)
-	track.LayoutOrder = 5
-	track.BackgroundTransparency = 0
-	track.BackgroundColor3 = colors.border
-	track.Size = UDim2.new(1, 0, 0, sizes.bar)
-	local fill = frame("Fill", track)
-	fill.BackgroundTransparency = 0
-	fill.BackgroundColor3 = colors.gold
-	fill.Size = UDim2.fromScale(0, 1)
-
+	line.AutomaticSize = Enum.AutomaticSize.None
+	line.TextScaled = false
+	line.TextWrapped = true
+	line.TextXAlignment = Enum.TextXAlignment.Left
+	line.TextYAlignment = Enum.TextYAlignment.Center
+	line.TextTruncate = Enum.TextTruncate.AtEnd
+	line.ZIndex = Z_PANEL
+	-- Muted, one line, under the goal line; tapping it shows the way to the
+	-- gym. Hidden while there is no small goal.
+	local nextLine = Instance.new("TextButton")
+	nextLine.Name = "Next"
+	nextLine.AutoButtonColor = false
+	nextLine.BackgroundTransparency = 1
+	nextLine.BorderSizePixel = 0
+	nextLine.FontFace = Theme.fonts.body
+	nextLine.TextSize = textSizes.small + 1
+	nextLine.TextColor3 = colors.muted
+	nextLine.TextXAlignment = Enum.TextXAlignment.Left
+	nextLine.TextYAlignment = Enum.TextYAlignment.Center
+	nextLine.TextTruncate = Enum.TextTruncate.AtEnd
+	nextLine.Text = ""
+	nextLine.Visible = false
+	nextLine.ZIndex = Z_PANEL
+	nextLine.Parent = goal
+	nextLine.Activated:Connect(function()
+		if nextLine:GetAttribute("Link") ~= true then
+			return
+		end
+		local tapped = onNextTapped
+		if tapped ~= nil then
+			tapped()
+		end
+	end)
 	local action = button("Action", "", goal, false)
-	action.LayoutOrder = 6
-	action.Size = UDim2.new(1, 0, 0, sizes.minTap)
-	action.TextSize = textSizes.body - 1
 	local actionStroke = action:FindFirstChildOfClass("UIStroke") :: UIStroke
 	action.Activated:Connect(function()
 		local screen = goalScreen
@@ -447,33 +398,63 @@ local function buildGoal(parent: Instance): (Frame, GoalPanel)
 			Screens.open(screen)
 		end
 	end)
+	local skip = button("Skip", "Skip", goal, false)
+	skip.TextSize = textSizes.small
+	skip.TextColor3 = colors.muted
+	skip.Visible = false
 
-	return goal,
-		{
-			title = title,
-			detail = detail,
-			rowLabel = rowLabel,
-			rowValue = rowValue,
-			fill = fill,
-			action = action,
-			actionStroke = actionStroke,
-		}
+	-- The labelled progress bar, in the button's place while the goal is
+	-- out of reach.
+	local bar = frame("Progress", goal)
+	bar.BackgroundTransparency = 0
+	bar.BackgroundColor3 = colors.raised
+	bar.ClipsDescendants = true
+	bar.ZIndex = Z_PANEL
+	bar.Visible = false
+	Theme.panel(bar, sizes.radius)
+	local fill = frame("Fill", bar)
+	fill.BackgroundTransparency = 0
+	fill.BackgroundColor3 = colors.border
+	fill.Size = UDim2.fromScale(0, 1)
+	fill.ZIndex = Z_PANEL
+	local barLabel = fitted({
+		name = "Label",
+		parent = bar,
+		font = Theme.fonts.label,
+		maxSize = textSizes.button,
+		align = Enum.TextXAlignment.Center,
+	})
+	barLabel.Position = UDim2.fromOffset(6, 0)
+	barLabel.Size = UDim2.new(1, -12, 1, 0)
+	barLabel.ZIndex = Z_PANEL + 1
+	return {
+		frame = goal,
+		line = line,
+		nextLine = nextLine,
+		action = action,
+		actionStroke = actionStroke,
+		skip = skip,
+		bar = bar,
+		fill = fill,
+		barLabel = barLabel,
+	}
 end
 
 type Slot = {
+	frame: Frame,
 	stripe: Frame,
 	block: Frame,
+	info: Frame,
 	name: TextLabel,
 	power: TextLabel,
 }
 
-local function buildTeam(parent: Instance): (Frame, { Slot })
+local function buildTeam(parent: Instance): (Frame, UIListLayout, UIPadding, { Slot })
 	local team = panel("Team", parent)
-	team.AnchorPoint = Vector2.new(0.5, 1)
-	team.Position = UDim2.new(0.5, 0, 1, -20)
-	team.AutomaticSize = Enum.AutomaticSize.XY
-	pad(team, 8)
-	list(team, Enum.FillDirection.Horizontal, 8)
+	team.Visible = false
+	local padding = Instance.new("UIPadding")
+	padding.Parent = team
+	local layout = list(team, Enum.FillDirection.Horizontal, 8)
 
 	local slots: { Slot } = {}
 	for position = 1, Config.constants.team_size do
@@ -481,8 +462,8 @@ local function buildTeam(parent: Instance): (Frame, { Slot })
 		slot.LayoutOrder = position
 		slot.BackgroundTransparency = 0
 		slot.BackgroundColor3 = colors.raised
-		slot.Size = UDim2.fromOffset(sizes.slotWidth, sizes.petBlock + 16)
 		slot.ClipsDescendants = true
+		slot.Visible = false
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, sizes.slotRadius)
 		corner.Parent = slot
@@ -494,55 +475,40 @@ local function buildTeam(parent: Instance): (Frame, { Slot })
 		local block = frame("Pet", slot)
 		block.BackgroundTransparency = 0
 		block.AnchorPoint = Vector2.new(0, 0.5)
-		block.Position = UDim2.new(0, sizes.stripe + 10, 0.5, 0)
-		block.Size = UDim2.fromOffset(sizes.petBlock, sizes.petBlock)
+		block.Position = UDim2.new(0, sizes.stripe + 8, 0.5, 0)
 		local blockCorner = Instance.new("UICorner")
 		blockCorner.CornerRadius = UDim.new(0, sizes.slotRadius)
 		blockCorner.Parent = block
 
 		local info = frame("Info", slot)
-		info.AnchorPoint = Vector2.new(0, 0.5)
-		info.Position = UDim2.new(0, sizes.stripe + 20 + sizes.petBlock, 0.5, 0)
-		info.AutomaticSize = Enum.AutomaticSize.XY
-		list(info, Enum.FillDirection.Vertical, 0)
-		local name = Theme.text({
+		local name = fitted({
 			name = "Name",
-			font = Theme.fonts.label,
-			size = textSizes.petName,
 			parent = info,
+			font = Theme.fonts.label,
+			maxSize = textSizes.petName,
 		})
-		name.LayoutOrder = 1
-		local power = Theme.text({
+		name.Position = UDim2.fromScale(0, 0.1)
+		name.Size = UDim2.fromScale(1, 0.45)
+		local power = fitted({
 			name = "Power",
-			font = Theme.fonts.label,
-			size = textSizes.petPower,
-			color = colors.gold,
 			parent = info,
+			font = Theme.fonts.label,
+			maxSize = textSizes.petPower,
+			color = colors.gold,
 		})
-		power.LayoutOrder = 2
+		power.Position = UDim2.fromScale(0, 0.55)
+		power.Size = UDim2.fromScale(1, 0.35)
 
-		table.insert(slots, { stripe = stripe, block = block, name = name, power = power })
+		table.insert(slots, {
+			frame = slot,
+			stripe = stripe,
+			block = block,
+			info = info,
+			name = name,
+			power = power,
+		})
 	end
-	return team, slots
-end
-
--- True when the point is inside any of the given panels.
-local function overAny(point: Vector2, panels: { GuiObject }): boolean
-	for _, p in panels do
-		if p.Visible then
-			local low = p.AbsolutePosition
-			local high = low + p.AbsoluteSize
-			if
-				point.X >= low.X
-				and point.X <= high.X
-				and point.Y >= low.Y
-				and point.Y <= high.Y
-			then
-				return true
-			end
-		end
-	end
-	return false
+	return team, layout, padding, slots
 end
 
 local function number(value: any): number
@@ -550,50 +516,165 @@ local function number(value: any): number
 end
 
 -- Builds the main screen under playerGui and keeps it in step with State.
-function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
+function Main.mount(
+	playerGui: PlayerGui,
+	_click: RemoteEvent,
+	skipTutorial: RemoteFunction?
+): ScreenGui
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "Main"
 	gui.ResetOnSpawn = false
 	gui.IgnoreGuiInset = true
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-	-- Behind everything: the world view. Pressing it earns coins.
-	local clickLayer = Instance.new("TextButton")
-	clickLayer.Name = "ClickLayer"
-	clickLayer.Text = ""
-	clickLayer.AutoButtonColor = false
-	clickLayer.BackgroundTransparency = 1
-	clickLayer.BorderSizePixel = 0
-	clickLayer.Size = UDim2.fromScale(1, 1)
-	clickLayer.ZIndex = Z_CLICK
-	clickLayer.Selectable = false
-	clickLayer.Parent = gui
-
-	-- Everything else sits below the Roblox top bar.
+	-- Everything else, in full screen pixels. HudLayout keeps it clear of
+	-- Roblox's own buttons and chat window.
 	local content = frame("Content", gui)
 	content.ZIndex = Z_PANEL
-	local function fitInset()
-		local inset = GuiService:GetGuiInset()
-		content.Position = UDim2.fromOffset(0, inset.Y)
-		content.Size = UDim2.new(1, 0, 1, -inset.Y)
-	end
-	fitInset()
+	content.Size = UDim2.fromScale(1, 1)
 
-	local topBar, top = buildTopBar(content)
+	local top = buildTopBar(content)
+	top.rebirths.Active = true
+	top.rebirths.InputBegan:Connect(function(input)
+		if
+			input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+		then
+			Screens.open("Journey")
+		end
+	end)
+	local pulse = Instance.new("UIScale")
+	pulse.Name = "Pulse"
+	pulse.Parent = top.coinsBox
+	coinPulse = pulse
 	local menu = buildMenu(content)
-	local goalFrame, goal = buildGoal(content)
-	local teamFrame, slots = buildTeam(content)
-	local panels: { GuiObject } = { topBar, menu, goalFrame, teamFrame }
+	local goal = buildGoal(content)
+	local teamFrame, teamLayout, teamPadding, slots = buildTeam(content)
 
-	clickLayer.MouseButton1Down:Connect(function(x: number, y: number)
-		local point = Vector2.new(x, y)
-		if overAny(point, panels) then
+	local shownSlots = 0
+	-- How many menu buttons show (HudLayout.menuShown); two on minute one.
+	local shownMenu = 2
+	local goalWanted = true
+	local nextLineWanted = false
+	-- The goal state of the last render, and the world whose "Next" line the
+	-- player tapped, for the gym beam.
+	local lastGoalState: NextGoal.State? = nil
+	local tappedWorld: string? = nil
+	onNextTapped = function()
+		local state = lastGoalState
+		if state == nil then
 			return
 		end
-		click:FireServer()
-		for _, listener in clickListeners do
-			task.spawn(listener, point)
+		tappedWorld = NextGoal.currentWorld(state).id
+		Guide.setGymBeam(NextGoal.gymBeam(state, tappedWorld))
+	end
+	-- The tutorial step the server last sent, and whether a skip is in flight.
+	local tutorialStep: any = nil
+	local skipping = false
+
+	local function applyLayout()
+		local area = content.AbsoluteSize
+		if area.X <= 0 or area.Y <= 0 then
+			return
 		end
+		local layout =
+			HudLayout.compute(area.X, area.Y, shownSlots, HudInsets.read(area), shownMenu)
+		local s = layout.sizes
+
+		local barRect = layout.topBar
+		place(top.bar, barRect)
+		placeIn(top.coinsBox, layout.coins, barRect)
+		placeIn(top.world, layout.world, barRect)
+		local rebirthRect = layout.rebirths
+		top.rebirths.Position =
+			UDim2.fromOffset(rebirthRect.x - barRect.x, rebirthRect.y - barRect.y)
+		top.rebirths.Size = UDim2.fromOffset(rebirthRect.w, rebirthRect.h)
+		top.rebirths.TextWrapped = true
+		local coinSize = math.max(12, math.min(sizes.coin, layout.coins.h - 16))
+		top.coin.Size = UDim2.fromOffset(coinSize, coinSize)
+
+		place(menu.frame, layout.menu)
+		menu.frame.Visible = not Screens.anyOpen()
+		menu.layout.Padding = UDim.new(0, s.menuGap)
+		menu.layout.FillDirection = if layout.horizontalMenu
+			then Enum.FillDirection.Horizontal
+			else Enum.FillDirection.Vertical
+		for _, b in menu.buttons do
+			b.TextSize = if layout.compact then 13 else textSizes.button
+			b.Size = if layout.horizontalMenu
+				then UDim2.fromOffset(s.menuWidth, s.menuButton)
+				else UDim2.new(1, 0, 0, s.menuButton)
+		end
+
+		place(goal.frame, layout.goal)
+		goal.nextLine.Visible = nextLineWanted and not layout.horizontalMenu
+		goal.line.Position = UDim2.fromOffset(s.goalPad, s.goalPad)
+		-- The line has the card's full width; SKIP shares the button row.
+		local skipRoom = if goal.skip.Visible then SKIP_WIDTH + SKIP_GAP else 0
+		local lineHeight = s.goalLine * s.goalLines
+		-- With a "Next" line, the goal line keeps one line and the last line
+		-- of the area holds the muted "Next" line.
+		local titleHeight = if goal.nextLine.Visible then lineHeight - s.goalLine else lineHeight
+		goal.line.Size = UDim2.new(1, -2 * s.goalPad, 0, titleHeight)
+		goal.nextLine.Position = UDim2.fromOffset(s.goalPad, s.goalPad + titleHeight)
+		goal.nextLine.Size = UDim2.new(1, -2 * s.goalPad, 0, s.goalLine)
+		local actionY = s.goalPad + lineHeight + s.goalGap
+		goal.skip.AnchorPoint = Vector2.new(1, 0)
+		goal.skip.Position = UDim2.new(1, -s.goalPad, 0, actionY)
+		goal.skip.Size = UDim2.fromOffset(SKIP_WIDTH, s.goalButton)
+		goal.action.Position = UDim2.fromOffset(s.goalPad, actionY)
+		goal.action.Size = UDim2.new(1, -2 * s.goalPad - skipRoom, 0, s.goalButton)
+		goal.bar.Position = goal.action.Position
+		goal.bar.Size = goal.action.Size
+		goal.frame.Visible = goalWanted and not Screens.anyOpen()
+
+		local teamRect = layout.team
+		teamFrame.Visible = teamRect ~= nil and not Screens.anyOpen()
+		if teamRect ~= nil then
+			place(teamFrame, teamRect)
+			teamPadding.PaddingTop = UDim.new(0, s.teamPad)
+			teamPadding.PaddingBottom = UDim.new(0, s.teamPad)
+			teamPadding.PaddingLeft = UDim.new(0, s.teamPad)
+			teamPadding.PaddingRight = UDim.new(0, s.teamPad)
+			teamLayout.Padding = UDim.new(0, s.slotGap)
+			local block = s.slotHeight - 12
+			for position, slot in slots do
+				slot.frame.Visible = position <= shownSlots
+				slot.frame.Size = UDim2.fromOffset(s.slotWidth, s.slotHeight)
+				slot.block.Size = UDim2.fromOffset(block, block)
+				local infoLeft = sizes.stripe + 16 + block
+				slot.info.Position = UDim2.fromOffset(infoLeft, 0)
+				slot.info.Size = UDim2.new(1, -(infoLeft + 6), 1, 0)
+			end
+		end
+	end
+
+	-- Points at the thing the current tutorial step asks for, inside a
+	-- screen or on the main screen (UI/Guide), or at nothing.
+	local function updatePointer()
+		Guide.setStep(tutorialStep)
+	end
+
+	content:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyLayout)
+	HudInsets.onChange(applyLayout)
+	Screens.onChange(function()
+		applyLayout()
+		updatePointer()
+	end)
+
+	goal.skip.Activated:Connect(function()
+		if skipTutorial == nil or skipping then
+			return
+		end
+		skipping = true
+		-- The server ends the tutorial and pushes the new step.
+		local ok, reply = pcall(function()
+			return skipTutorial:InvokeServer()
+		end)
+		if not ok or type(reply) ~= "table" or reply.ok ~= true then
+			warn("[UI] the tutorial could not be skipped: " .. tostring(reply))
+		end
+		skipping = false
 	end)
 
 	local function render(payload: State.Payload)
@@ -601,7 +682,17 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 		local derived = payload.derived
 		local coins = number(profile.coins)
 		local rebirths = number(profile.rebirths)
+		local petCount = 0
+		if type(profile.pets) == "table" then
+			for _, pet in profile.pets do
+				if type(pet) == "table" and type(pet.uid) == "string" then
+					petCount += 1
+				end
+			end
+		end
 		local goalState: NextGoal.State = {
+			petCount = petCount,
+			teamCount = if type(profile.team) == "table" then #profile.team else 0,
 			coins = coins,
 			rebirths = rebirths,
 			index = if type(profile.index) == "table" then profile.index else {},
@@ -609,66 +700,174 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 			feesPaid = if type(profile.feesPaid) == "table" then profile.feesPaid else {},
 		}
 
+		local onboarding = Tutorial.active(profile.tutorialStep)
+		local beaten = 0
+		for _, won in goalState.gymsBeaten do
+			if won == true then
+				beaten += 1
+			end
+		end
+		local menuShown = HudLayout.menuShown({
+			coins = coins,
+			rebirthCost = number(derived.rebirthCost),
+			gymsBeaten = beaten,
+			tutorialDone = not onboarding,
+		})
+		for _, b in menu.buttons do
+			b.Visible = table.find(menuShown, b.Name) ~= nil
+		end
+		if #menuShown ~= shownMenu then
+			shownMenu = #menuShown
+			applyLayout()
+		end
+
 		top.coins.Text = Format.abbreviate(coins)
 		top.perClick.Text = Theme.label(
-			string.format("+%s per click", Format.abbreviate(number(derived.coinsPerClick)))
+			string.format(
+				"TRAIN +%s / %ss",
+				Format.abbreviate(number(derived.coinsPerTrainingTick)),
+				tostring(Config.constants.training_tick_seconds)
+			)
 		)
 		local world = NextGoal.currentWorld(goalState)
-		top.worldIndex.Text = Theme.label(string.format("World %d", world.index))
-		top.worldName.Text = Theme.label(world.name)
-		top.rebirths.Text = Format.abbreviate(rebirths)
-		local badges = if type(profile.badges) == "table" then profile.badges else {}
-		for worldId, marker in top.badges do
-			marker.BackgroundTransparency = if badges[worldId] == true then 0 else 1
-		end
-
-		local passList = if type(derived.passes) == "table" then derived.passes else {}
-		for _, entry in passList do
-			if type(entry) == "table" and type(entry.id) == "string" then
-				passOwned[entry.id] = entry.owned == true
-				passProducts[entry.id] = if type(entry.productId) == "number"
-					then entry.productId
-					else 0
+		top.world.Text = Theme.label(world.name)
+		local badgeCount = 0
+		for _, w in Config.worlds do
+			if (profile.badges or {})[w.id] == true then
+				badgeCount += 1
 			end
 		end
-		for _, pass in Config.passes do
-			local chip = top.passes[pass.id]
-			local owned = passOwned[pass.id] == true
-			local buyable = (passProducts[pass.id] or 0) > 0
-			chip.Text = Theme.label(if owned then pass.name else "+ " .. pass.name)
-			chip.TextColor3 = if owned
-				then colors.gold
-				elseif buyable then colors.text
-				else colors.muted
-			chip.AutoButtonColor = not owned and buyable
-			local stroke = chip:FindFirstChildOfClass("UIStroke")
-			if stroke ~= nil then
-				stroke.Color = if owned then colors.gold else colors.border
-			end
-		end
+		top.rebirths.Text = string.format(
+			"BADGES %d/%d >\nRebirths %s",
+			badgeCount,
+			#Config.worlds,
+			Format.abbreviate(rebirths)
+		)
 
 		local picked = NextGoal.pick(goalState, number(derived.rebirthCost))
-		goal.title.Text = Theme.label(picked.title)
-		goal.detail.Text = picked.detail
-		goal.rowLabel.Text = GOAL_ROW_LABEL[picked.kind] or ""
-		goal.rowValue.Text =
-			string.format("%s / %s", Format.abbreviate(picked.have), Format.abbreviate(picked.need))
-		goal.fill.Size = UDim2.fromScale(picked.progress, 1)
+		tutorialStep = profile.tutorialStep
+		local holdGym = NextGoal.beforeGym(picked)
+		local closedScreens: Tutorial.Screens = { eggsOpen = false, petsOpen = false }
+		local tutorial = Tutorial.card(tutorialStep, closedScreens)
+		-- The small goal the tutorial's gym step waits on, and the card that
+		-- leads to it meanwhile (Guide shows its pointer and screen bar).
+		local held: Tutorial.Held? = nil
+		local heldCard: Tutorial.Card? = nil
+		if tutorial ~= nil and tutorial.step == Tutorial.steps.gym and holdGym then
+			tutorial = nil
+			local waiting: Tutorial.Held =
+				{ kind = picked.kind, id = picked.id, ready = picked.ready }
+			held = waiting
+			heldCard = Tutorial.heldCard(closedScreens, waiting)
+		end
+		Guide.setHeld(held)
+		local skipWanted = tutorial ~= nil and skipTutorial ~= nil
+		if goal.skip.Visible ~= skipWanted then
+			goal.skip.Visible = skipWanted
+			applyLayout()
+		end
+		updatePointer()
+
 		local action = GOAL_ACTION[picked.kind]
+		local nextText: string? = nil
+		-- The short "Click anywhere to earn coins" line, while the goal waits
+		-- on coins. It takes the second line's place.
+		local hintText: string? = nil
+		-- The labelled bar shown in the button's place, when there is one.
+		local progress: { label: string, have: number, need: number }? = nil
+		if tutorial ~= nil then
+			goal.line.Text = tutorial.text
+			if tutorial.step == Tutorial.steps.click then
+				local price = Tutorial.firstEggPrice()
+				action = nil
+				progress = {
+					label = "Coins for your first egg",
+					have = math.min(coins, price),
+					need = price,
+				}
+			elseif
+				tutorial.step == Tutorial.steps.hatch or tutorial.step == Tutorial.steps.equip
+			then
+				action = if tutorial.step == Tutorial.steps.hatch
+					then GOAL_ACTION.egg
+					else GOAL_ACTION.team
+				picked.ready = true
+			else
+				-- The gym step: the first world's gym fee, or the gym itself
+				-- once the fee is paid.
+				local fee = Config.worldById[Tutorial.gymWorldId].gym.fee
+				local paid = goalState.feesPaid[Tutorial.gymWorldId] == true
+				action = GOAL_ACTION.gym
+				picked.ready = paid or coins >= fee
+				if not picked.ready then
+					hintText = Tutorial.CLICK_LINE
+					progress = {
+						label = "Coins for the gym fee",
+						have = math.min(coins, fee),
+						need = fee,
+					}
+				end
+			end
+		else
+			goal.line.Text = picked.title
+			nextText = NextGoal.nextLine(goalState, picked)
+			hintText = NextGoal.clickHint(goalState, picked)
+			if not picked.ready then
+				local counted = if picked.kind == "pets" or picked.kind == "team"
+					then "Pets"
+					else "Coins"
+				progress = { label = counted, have = picked.have, need = picked.need }
+			end
+		end
+		local secondText = hintText or nextText
+		local nextShown = secondText ~= nil
+		goal.nextLine.Text = secondText or ""
+		goal.nextLine:SetAttribute("Link", hintText == nil and nextText ~= nil)
+		goal.nextLine.TextColor3 = if hintText ~= nil then colors.text else colors.muted
+		if nextLineWanted ~= nextShown then
+			nextLineWanted = nextShown
+			applyLayout()
+		end
+		lastGoalState = goalState
+		Guide.setGymBeam(if hintText == nil then NextGoal.gymBeam(goalState, tappedWorld) else nil)
+		Guide.setTrainingBeam(if hintText ~= nil then world.id else nil)
+
 		if picked.ready and action ~= nil then
 			goalScreen = action.screen
+			goal.action.Visible = true
+			goal.bar.Visible = false
 			goal.action.Text = Theme.label(action.label)
-			goal.action.TextColor3 = colors.gold
 			goal.action.BackgroundColor3 = colors.panel
-			goal.actionStroke.Color = colors.gold
 			goal.action.AutoButtonColor = true
 		else
 			goalScreen = nil
-			goal.action.Text = Theme.label("Not enough coins")
-			goal.action.TextColor3 = colors.muted
-			goal.action.BackgroundColor3 = colors.raised
-			goal.actionStroke.Color = colors.border
-			goal.action.AutoButtonColor = false
+			local shown = progress
+			if shown ~= nil then
+				goal.action.Visible = false
+				goal.bar.Visible = true
+				local share = if shown.need > 0
+					then math.clamp(shown.have / shown.need, 0, 1)
+					else 1
+				goal.fill.Size = UDim2.fromScale(share, 1)
+				goal.barLabel.Text = string.format(
+					"%s %s / %s",
+					shown.label,
+					Format.abbreviate(shown.have),
+					Format.abbreviate(shown.need)
+				)
+			elseif onboarding then
+				-- Keep the instruction visible while awaiting the next state.
+				goal.action.Visible = false
+				goal.bar.Visible = false
+			else
+				goal.action.Visible = true
+				goal.bar.Visible = false
+				goal.action.Text = Theme.label("Not enough coins")
+				goal.action.TextColor3 = colors.muted
+				goal.action.BackgroundColor3 = colors.raised
+				goal.actionStroke.Color = colors.border
+				goal.action.AutoButtonColor = false
+			end
 		end
 
 		local owned: { [string]: any } = {}
@@ -680,11 +879,29 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 			end
 		end
 		local team = if type(profile.team) == "table" then profile.team else {}
+		local equipped = 0
+		for _, uid in team do
+			if owned[uid] ~= nil then
+				equipped += 1
+			end
+		end
+		local slotCount = HudLayout.teamSlots(equipped, Config.constants.team_size)
+		if slotCount ~= shownSlots then
+			shownSlots = slotCount
+			applyLayout()
+		end
+
 		local powers = if type(derived.teamClickPower) == "table"
 			then derived.teamClickPower
 			else {}
+		local equippedUids = {}
+		for _, uid in team do
+			if owned[uid] ~= nil then
+				table.insert(equippedUids, uid)
+			end
+		end
 		for position, slot in slots do
-			local uid = team[position]
+			local uid = equippedUids[position]
 			local pet = if uid ~= nil then owned[uid] else nil
 			local data = if pet ~= nil then petsById[pet.petId] else nil
 			if data ~= nil and uid ~= nil then
@@ -700,7 +917,7 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 				slot.name.TextColor3 = colors.text
 				local power = powers[uid]
 				slot.power.Text = if type(power) == "number"
-					then Theme.label(string.format("+%s click", Format.abbreviate(power)))
+					then string.format("Power +%s", Format.abbreviate(power))
 					else ""
 			else
 				slot.stripe.BackgroundColor3 = colors.border
@@ -710,14 +927,49 @@ function Main.mount(playerGui: PlayerGui, click: RemoteEvent): ScreenGui
 					view:Destroy()
 				end
 				slot.block:SetAttribute("PetKey", nil)
-				slot.name.Text = "Empty"
+				slot.name.Text = ""
 				slot.name.TextColor3 = colors.muted
 				slot.power.Text = ""
 			end
 		end
+
+		-- Gold marks what to do next; while the tutorial runs, one thing only.
+		local goalReady = goal.action.Visible and goalScreen ~= nil
+		local gold = HudLayout.goldParts({
+			onboarding = onboarding,
+			pointer = (tutorial ~= nil and tutorial.target ~= nil)
+				or (heldCard ~= nil and heldCard.target ~= nil),
+			goalBar = goal.bar.Visible,
+			goalReady = goalReady,
+			menu = menuShown,
+			slots = shownSlots,
+		})
+		local function isGold(part: string): boolean
+			return table.find(gold, part) ~= nil
+		end
+		top.perClick.TextColor3 = if isGold("perClick") then colors.gold else colors.text
+		for _, b in menu.buttons do
+			local accent = b.Name == MENU_ACCENT and isGold("menu:" .. MENU_ACCENT)
+			b.TextColor3 = if accent then colors.gold else colors.text
+			local stroke = b:FindFirstChildOfClass("UIStroke")
+			if stroke ~= nil then
+				stroke.Color = if accent then colors.gold else colors.border
+			end
+		end
+		if goalReady then
+			local accent = isGold("goal")
+			goal.action.TextColor3 = if accent then colors.gold else colors.text
+			goal.actionStroke.Color = if accent then colors.gold else colors.text
+		end
+		goal.fill.BackgroundColor3 = if isGold("goalBar") then colors.gold else colors.border
+		local powerColor = if isGold("slotPowers") then colors.gold else colors.text
+		for _, slot in slots do
+			slot.power.TextColor3 = powerColor
+		end
 	end
 
 	gui.Parent = playerGui
+	applyLayout()
 	State.subscribe(render)
 	return gui
 end

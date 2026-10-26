@@ -1,0 +1,239 @@
+{
+  "traversal": [
+    {
+      "world": "green_meadow",
+      "scene": "garden",
+      "up": [
+        43.931,
+        7.398,
+        52.343
+      ],
+      "down": [
+        42.072,
+        2.998,
+        34.688
+      ],
+      "success": true
+    },
+    {
+      "world": "green_meadow",
+      "scene": "vista",
+      "up": [
+        63.965,
+        10.548,
+        -39.15
+      ],
+      "down": [
+        62.103,
+        2.998,
+        -13.697
+      ],
+      "success": true
+    },
+    {
+      "world": "coral_coast",
+      "scene": "garden",
+      "up": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Success"
+          }
+        ],
+        "isError": false
+      },
+      "posUp": {
+        "content": [
+          {
+            "type": "text",
+            "text": "443.9147644042969, 5.498024940490723, 52.19038772583008"
+          }
+        ],
+        "isError": false
+      },
+      "down": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Success"
+          }
+        ],
+        "isError": false
+      },
+      "posDown": {
+        "content": [
+          {
+            "type": "text",
+            "text": "442.0838317871094, 2.9980251789093018, 34.796470642089844"
+          }
+        ],
+        "isError": false
+      }
+    },
+    {
+      "world": "coral_coast",
+      "scene": "vista",
+      "up": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Success"
+          }
+        ],
+        "isError": false
+      },
+      "posUp": {
+        "content": [
+          {
+            "type": "text",
+            "text": "463.9015808105469, 6.64602518081665, -39.21256637573242"
+          }
+        ],
+        "isError": false
+      },
+      "down": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Success"
+          }
+        ],
+        "isError": false
+      },
+      "posDown": {
+        "content": [
+          {
+            "type": "text",
+            "text": "461.7480773925781, 2.9980251789093018, -13.723959922790527"
+          }
+        ],
+        "isError": false
+      }
+    },
+    {
+      "world": "ember_volcano",
+      "scene": "garden",
+      "up": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Success"
+          }
+        ],
+        "isError": false
+      },
+      "posUp": {
+        "content": [
+          {
+            "type": "text",
+            "text": "843.9317016601562, 8.39802360534668, 52.3514289855957"
+          }
+        ],
+        "isError": false
+      },
+      "down": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Success"
+          }
+        ],
+        "isError": false
+      },
+      "posDown": {
+        "content": [
+          {
+            "type": "text",
+            "text": "842.069580078125, 2.9980251789093018, 34.6609992980957"
+          }
+        ],
+        "isError": false
+      }
+    },
+    {
+      "world": "ember_volcano",
+      "scene": "vista",
+      "up": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Success"
+          }
+        ],
+        "isError": false
+      },
+      "posUp": {
+        "content": [
+          {
+            "type": "text",
+            "text": "864.20751953125, 11.79802417755127, -39.286373138427734"
+          }
+        ],
+        "isError": false
+      },
+      "down": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Success"
+          }
+        ],
+        "isError": false
+      },
+      "posDown": {
+        "content": [
+          {
+            "type": "text",
+            "text": "862.1793823242188, 2.9980251789093018, -13.734132766723633"
+          }
+        ],
+        "isError": false
+      }
+    }
+  ],
+  "motion": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"last\":{\"scale\":1,\"t\":12.00773479999043,\"y\":0.011410713195800782,\"x\":-0.01766681671142578,\"rx\":0,\"z\":-0.008427619934082032,\"ry\":0,\"rz\":0,\"bx\":139,\"by\":210},\"count\":692,\"viewport\":\"958, 540\",\"first\":{\"scale\":1,\"t\":0.009548999994876795,\"y\":0.011410713195800782,\"x\":-0.01766681671142578,\"rx\":0,\"z\":-0.008427619934082032,\"ry\":0,\"rz\":0,\"bx\":8,\"by\":341},\"ranges\":{\"scale\":[1,1],\"rz\":[-0.06473860144615174,0.11983006447553635],\"x\":[-0.01766681671142578,-0.01766681671142578],\"bx\":[8,139],\"ry\":[0,0],\"y\":[0.011410713195800782,1.1354453563690186],\"rx\":[-0.25963181257247927,0.07715535908937454],\"z\":[-0.9268689155578613,0.7008851766586304],\"by\":[210,341]},\"turn\":\"TURN 2. YOUR MOVE\"}"
+      }
+    ],
+    "isError": false
+  },
+  "portrait": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"move\":\"179, 58\",\"turn\":\"TURN 2. YOUR MOVE\",\"viewport\":\"390, 844\",\"giveup\":\"366, 44\",\"pet\":\"179, 179\",\"gui\":\"390, 844\"}"
+      }
+    ],
+    "isError": false
+  },
+  "short": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"viewport\":\"720, 239.333328\",\"giveup\":\"80, 44\",\"pet\":\"63, 63\",\"move\":\"306, 44\"}"
+      }
+    ],
+    "isError": false
+  },
+  "smallPortrait": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"move\":\"144, 58\",\"viewport\":\"320, 720\",\"giveup\":\"296, 44\",\"pet\":\"144, 144\",\"turn\":\"TURN 3. YOUR MOVE\"}"
+      }
+    ],
+    "isError": false
+  },
+  "worldCounts": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"World_ember_volcano\":388,\"World_coral_coast\":508,\"World_green_meadow\":573}"
+      }
+    ],
+    "isError": false
+  }
+}

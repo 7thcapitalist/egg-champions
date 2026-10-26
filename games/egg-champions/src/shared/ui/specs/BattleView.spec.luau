@@ -173,6 +173,16 @@ return function()
 	end)
 
 	describe("BattleView moves and panels", function()
+		it("names each enemy as a leader pet with its roster identity", function()
+			local snapshot = recordedBattle()[1].before
+			for index, fighter in snapshot.leader.fighters do
+				local pet = Config.petById[fighter.pet :: string]
+				expect(BattleView.fighterName(snapshot, "leader", index)).toEqual(
+					"Leader's " .. pet.name
+				)
+			end
+		end)
+
 		it("names move 1 after the type and move 2 from config", function()
 			for _, row in Config.types do
 				expect(BattleView.basicMoveName(row.id)).toEqual(row.name .. " Strike")
@@ -212,6 +222,17 @@ return function()
 			expect(prompt.fee).toEqual(world.gym.fee)
 			expect(prompt.paid).toBeFalse()
 			expect(string.find(prompt.body, "free until your next rebirth", 1, true) ~= nil).toBeTrue()
+			expect(
+				string.find(prompt.body, Config.typeById[world.gym.leader_type].name, 1, true)
+					~= nil
+			).toBeTrue()
+			expect(
+				string.find(prompt.body, Config.typeById[world.gym.counter_type].name, 1, true)
+					~= nil
+			).toBeTrue()
+			expect(
+				string.find(prompt.body, tostring(Gym.retrySeconds()) .. "s retry", 1, true) ~= nil
+			).toBeTrue()
 			local paid = BattleView.feePrompt(world.id, {
 				badges = {},
 				gymsBeaten = {},
@@ -219,6 +240,20 @@ return function()
 			})
 			expect(paid.paid).toBeTrue()
 			expect(string.find(paid.body, "free until your next rebirth", 1, true) ~= nil).toBeTrue()
+		end)
+
+		it("names every world's leader type and counter before paying", function()
+			for _, world in Config.worlds do
+				local prompt = BattleView.feePrompt(world.id, empty)
+				expect(
+					string.find(prompt.body, Config.typeById[world.gym.leader_type].name, 1, true)
+						~= nil
+				).toBeTrue()
+				expect(
+					string.find(prompt.body, Config.typeById[world.gym.counter_type].name, 1, true)
+						~= nil
+				).toBeTrue()
+			end
 		end)
 
 		it("picks the first open gym not yet beaten", function()

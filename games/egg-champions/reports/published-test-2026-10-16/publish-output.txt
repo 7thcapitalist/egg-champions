@@ -1,0 +1,13 @@
+19:11:32.903  jvcarvalho70 joined live editing session.  -  Studio
+  19:14:00.867  The current thread cannot read 'Technology' (lacking capability RobloxScript)  -  Edit
+  19:14:00.867  Stack Begin  -  Studio
+  19:14:00.867  Script 'AssistantCommand', Line 1  -  Studio
+  19:14:00.867  Stack End  -  Studio
+  19:20:46.726  Sent message to server to publish.  -  Studio
+  19:20:48.163    -  Studio
+  19:20:48.163  Quick Links:  -  Studio
+  19:20:48.163  → Add publish notes to v54  -  Studio
+  19:20:48.163  → Edit experience details & audience  -  Studio
+  19:20:48.163  → View performance  -  Studio
+  19:20:48.163  → View error reports  -  Studio
+  19:20:48.222  Published new changes in "Egg Champions Test" to Roblox.  -  Studio

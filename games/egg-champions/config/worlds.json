@@ -14,7 +14,8 @@
       "leader_type": "grass",
       "leader_strength": "rare",
       "counter_type": "fire",
-      "target_rebirths": 0
+      "target_rebirths": 0,
+      "cohort_power_factor": 1.0
     }
   },
   {
@@ -32,7 +33,8 @@
       "leader_type": "water",
       "leader_strength": "rare",
       "counter_type": "electric",
-      "target_rebirths": 2
+      "target_rebirths": 2,
+      "cohort_power_factor": 1.0
     }
   },
   {
@@ -50,7 +52,8 @@
       "leader_type": "fire",
       "leader_strength": "epic",
       "counter_type": "water",
-      "target_rebirths": 5
+      "target_rebirths": 5,
+      "cohort_power_factor": 0.8
     }
   }
 ]

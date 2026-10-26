@@ -1,0 +1,55 @@
+{
+  "studio_id": "c25e6b57-54f4-49e2-b086-8f7822647f45",
+  "place_id": 0,
+  "method": "Temporary LocalScript; teleport only to each ramp foot, Humanoid:MoveTo uphill then downhill; 2 stud horizontal tolerance, 7 second deadline. No shipping geometry changes. Top height recorded, not an acceptance assertion.",
+  "results": [
+    {
+      "topY": 7.392477512359619,
+      "ramp": "43, 2.25, 42",
+      "up": true,
+      "expectedTopY": 7.483520984649658,
+      "down": true,
+      "world": "World_green_meadow"
+    },
+    {
+      "topY": 10.52188491821289,
+      "ramp": "63, 3.799999952316284, -26.5",
+      "up": true,
+      "expectedTopY": 10.576738357543945,
+      "down": true,
+      "world": "World_green_meadow"
+    },
+    {
+      "topY": 5.293877124786377,
+      "ramp": "443, 1.25, 42",
+      "up": true,
+      "expectedTopY": 5.446376800537109,
+      "down": true,
+      "world": "World_coral_coast"
+    },
+    {
+      "topY": 6.600456714630127,
+      "ramp": "463, 2.299999952316284, -26.5",
+      "up": true,
+      "expectedTopY": 7.546370506286621,
+      "down": true,
+      "world": "World_coral_coast"
+    },
+    {
+      "topY": 8.309410095214844,
+      "ramp": "843, 2.75, 42",
+      "up": true,
+      "expectedTopY": 8.499780178070068,
+      "down": true,
+      "world": "World_ember_volcano"
+    },
+    {
+      "topY": 11.781560897827148,
+      "ramp": "863, 4.800000190734863, -26.5",
+      "up": true,
+      "expectedTopY": 12.593997955322266,
+      "down": true,
+      "world": "World_ember_volcano"
+    }
+  ]
+}

@@ -25,8 +25,17 @@ planning:
   builds in code, and every one of them needs a task.
 - `<game-dir>/tasks/`: briefs already written, and their ticked state.
 - `CLAUDE.md` at the repo root, for the rules that outrank this file.
+- `factory/VISUAL-QUALITY.md`: include its design artifacts and visual review
+  tasks in the coverage table. Code passing is not art approval. Reserve tasks
+  for in-engine contact sheets, world silhouettes, motion/effects and fresh-user
+  onboarding on desktop and mobile. Record references and evidence separately.
 
 ## Output
+
+When `design/feature-research.json` exists, follow `factory/FEATURE-RESEARCH.md`.
+Use the script to validate evidence and require an indexed brief for every
+approved adopted feature. Deferred ideas are not implementation authorization.
+Do not infer live chart rank, retention or permission to launch the executor.
 - One brief per task at `<game-dir>/tasks/NN-short-name.md`, numbered in
   build order, in the same format as `01-project-skeleton.md`: `## Goal`,
   `## Build`, `## Done when`, `## Out of scope`.

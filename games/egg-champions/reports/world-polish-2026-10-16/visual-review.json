@@ -1,0 +1,56 @@
+{
+  "source_sha256": "4a653acec2cbf09f73a8c440f56014780c305dccf0310b0c71c1663436de18d8",
+  "reviewer": "Codex visual/runtime inspection",
+  "date": "2026-10-17T03:57:00Z",
+  "environment": "Studio",
+  "limitations": "Emulated mobile layout only; no physical touch/FPS benchmark. Composition and movement still need further art polish. Not final release approval.",
+  "viewports": [
+    "desktop",
+    "mobile"
+  ],
+  "categories": {
+    "composition": {
+      "score": 3.5,
+      "observation": "Distinct tree/mill, lighthouse/harbor and sloped caldera/forge; clear center routes. Shared flat hub layout and vegetation remain visually simple.",
+      "evidence": [
+        "reports/world-polish-2026-10-16/meadow-final.jpg",
+        "reports/world-polish-2026-10-16/coast-final.jpg",
+        "reports/world-polish-2026-10-16/volcano-final.jpg"
+      ]
+    },
+    "models": {
+      "score": 4,
+      "observation": "Three hero meshes show distinct silhouettes and correct front direction; nine variants load. Existing 27 pets retained.",
+      "evidence": [
+        "reports/world-polish-2026-10-16/hero-variants.jpg"
+      ]
+    },
+    "animation": {
+      "score": 3.5,
+      "observation": "Windmill motion observed; smoother follower locomotion and limb poses work. Thundrake wings are fused with head; more species-specific movement remains.",
+      "evidence": [
+        "reports/world-polish-2026-10-16/hero-variants.jpg",
+        "reports/world-polish-2026-10-16/REVIEW.md"
+      ]
+    },
+    "feedback": {
+      "score": 4,
+      "observation": "First equip increased +2 to +8 with toast and bounded burst. Hatch reveal and next action observed. Environmental effects are local and distance limited.",
+      "evidence": [
+        "reports/world-polish-2026-10-16/equip-milestone.jpg",
+        "reports/world-polish-2026-10-16/REVIEW.md"
+      ]
+    },
+    "onboarding": {
+      "score": 4,
+      "observation": "Mouse hatch/equip path completed. 320/390 portrait layouts corrected: dedicated egg guide row, stacked inventory/detail, readable scrollable badges.",
+      "evidence": [
+        "reports/world-polish-2026-10-16/pets-320.jpg",
+        "reports/world-polish-2026-10-16/pets-390.jpg",
+        "reports/world-polish-2026-10-16/eggs-320.jpg",
+        "reports/world-polish-2026-10-16/journey-320.jpg",
+        "reports/world-polish-2026-10-16/journey-320-scroll.jpg"
+      ]
+    }
+  }
+}

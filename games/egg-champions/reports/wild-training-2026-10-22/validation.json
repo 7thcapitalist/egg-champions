@@ -1,0 +1,24 @@
+{
+  "source_sha256": "89594018bd053d887acccc6a0dd7f03788415ba81a7fcaca8aef58875c3488fc",
+  "build_sha256": "20fad0cfae7a79df8b1a5c3cf259b021171893e2265f375e9c04ea70b052aa15",
+  "place_id": 101737317546942,
+  "universe_id": 10769019206,
+  "publication_confirmed": false,
+  "live_client_tested": false,
+  "native_desktop_control": false,
+  "luau_tests": 900,
+  "runner_self_tests": 6,
+  "python_tests": 135,
+  "selene_errors": 0,
+  "selene_warnings": 0,
+  "mapped_instances": 182,
+  "sources": 163,
+  "source_changes_from_fast_hatch_candidate": 30,
+  "pending": [
+    "in-engine visual/mobile review",
+    "impaired network",
+    "TEST publication and reopen",
+    "real persistent capture/index save/rejoin",
+    "release gates"
+  ]
+}

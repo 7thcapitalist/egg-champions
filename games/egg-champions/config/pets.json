@@ -63,9 +63,9 @@
     "special": "guard",
     "special_off_type": null,
     "speed": 8,
-    "click_power": 5.0,
-    "hp": 130,
-    "attack": 26
+    "click_power": 40.0,
+    "hp": 260,
+    "attack": 52
   },
   {
     "id": "voltibun",
@@ -80,9 +80,9 @@
     "special": "rush",
     "special_off_type": null,
     "speed": 14,
-    "click_power": 30,
-    "hp": 150,
-    "attack": 30
+    "click_power": 1000,
+    "hp": 500,
+    "attack": 100
   },
   {
     "id": "zapmoth",
@@ -148,9 +148,9 @@
     "special": "drain",
     "special_off_type": null,
     "speed": 11,
-    "click_power": 25.0,
-    "hp": 195,
-    "attack": 39
+    "click_power": 200.0,
+    "hp": 390,
+    "attack": 78
   },
   {
     "id": "brookdeer",
@@ -165,9 +165,9 @@
     "special": "off_type",
     "special_off_type": "grass",
     "speed": 12,
-    "click_power": 150,
-    "hp": 225,
-    "attack": 45
+    "click_power": 5000,
+    "hp": 750,
+    "attack": 150
   },
   {
     "id": "bubblecrab",
@@ -233,9 +233,9 @@
     "special": "guard",
     "special_off_type": null,
     "speed": 11,
-    "click_power": 600.0,
-    "hp": 175,
-    "attack": 35
+    "click_power": 4800.0,
+    "hp": 350,
+    "attack": 70
   },
   {
     "id": "tidewhale",
@@ -250,9 +250,9 @@
     "special": "drain",
     "special_off_type": null,
     "speed": 8,
-    "click_power": 600.0,
-    "hp": 488,
-    "attack": 98
+    "click_power": 20000.0,
+    "hp": 1625,
+    "attack": 325
   },
   {
     "id": "driftgull",
@@ -290,7 +290,7 @@
   },
   {
     "id": "bananao",
-    "name": "Bananão",
+    "name": "BananÃ£o",
     "looks_like": "Stylish banana man in sunglasses with yellow banana skin",
     "edition": "fruit",
     "egg": "storm",
@@ -318,9 +318,9 @@
     "special": "smash",
     "special_off_type": null,
     "speed": 11,
-    "click_power": 1500.0,
-    "hp": 520,
-    "attack": 104
+    "click_power": 12000.0,
+    "hp": 1040,
+    "attack": 208
   },
   {
     "id": "thundrake",
@@ -335,9 +335,9 @@
     "special": "off_type",
     "special_off_type": "water",
     "speed": 13,
-    "click_power": 4500.0,
-    "hp": 780,
-    "attack": 156
+    "click_power": 150000.0,
+    "hp": 2600,
+    "attack": 520
   },
   {
     "id": "coalmole",
@@ -403,9 +403,9 @@
     "special": "rush",
     "special_off_type": null,
     "speed": 14,
-    "click_power": 15000.0,
-    "hp": 845,
-    "attack": 169
+    "click_power": 120000.0,
+    "hp": 1690,
+    "attack": 338
   },
   {
     "id": "thornback",
@@ -420,9 +420,9 @@
     "special": "drain",
     "special_off_type": null,
     "speed": 8,
-    "click_power": 90000,
-    "hp": 975,
-    "attack": 195
+    "click_power": 3000000,
+    "hp": 3250,
+    "attack": 650
   },
   {
     "id": "sootbat",
@@ -488,9 +488,9 @@
     "special": "drain",
     "special_off_type": null,
     "speed": 13,
-    "click_power": 250000,
-    "hp": 1000,
-    "attack": 200
+    "click_power": 2000000,
+    "hp": 2000,
+    "attack": 400
   },
   {
     "id": "magmaroc",
@@ -505,8 +505,8 @@
     "special": "off_type",
     "special_off_type": "electric",
     "speed": 12,
-    "click_power": 375000.0,
-    "hp": 1950,
-    "attack": 390
+    "click_power": 12500000.0,
+    "hp": 6500,
+    "attack": 1300
   }
 ]
