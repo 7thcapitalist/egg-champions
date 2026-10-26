@@ -165,9 +165,9 @@ Three files in `<game-dir>/assets/`:
 The Roblox steps run in GitHub Actions on the owner's repo
 (`.github/workflows/roblox.yml`), with the API key in the repo secret
 `ROBLOX_API_KEY`. The key reaches each step only as an environment variable
-and is never echoed. It runs on `workflow_dispatch` and on a push to `main`
-that touches `games/**` or `factory/**`; a commit whose message contains
-`[skip ci]` does not start it. One run at a time.
+and is never echoed. It runs only by `workflow_dispatch` (started by hand);
+a push to `main` does not start it, so nothing publishes to TEST by itself.
+One run at a time.
 
 Steps, all on `games/egg-champions` and its TEST place only:
 1. Install rojo 7.7.1 (`rojo-7.7.1-linux-x86_64.zip` from the rojo release).
@@ -183,8 +183,9 @@ Steps, all on `games/egg-champions` and its TEST place only:
    build to the test place. It refuses while a texture job is pending,
    because publishing replaces the place content the job reads.
 6. Any change to `manifest.json`, `models.json`, `verify.json` or
-   `state.json` is committed back to `main` by `github-actions[bot]` with a
-   message ending in `[skip ci]`. The run fails if a texture job, the check
+   `state.json` is committed back by `github-actions[bot]` to the branch or ref
+   chosen when the run was started by hand, with a message ending in
+   `[skip ci]`. The run fails if a texture job, the check
    or the gate failed.
 
 Reruns are safe: a saved texture is never uploaded again, a current

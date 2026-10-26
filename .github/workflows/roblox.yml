@@ -3,13 +3,10 @@
 # See "CI" in factory/README.md for what each step does and the key scopes.
 name: roblox
 
+# Manual only. On push to main it republished main over TEST: in 2026-10-24 two notes commits
+# replaced the newer TEST build with main's older code (version 119).
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "games/**"
-      - "factory/**"
 
 permissions:
   contents: write
