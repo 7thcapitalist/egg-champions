@@ -114,7 +114,7 @@ class AgentTests(unittest.TestCase):
             hq=root/'hq', workspaces=root/'workspaces', company='fixture-company')
         patcher = patch.dict(os.environ, {'PAPERCLIP_AGENT_ID': 'fixture-agent'})
         patcher.start(); self.addCleanup(patcher.stop)
-        self.issue = dict(identifier='ROB-5', status='todo', assigneeAgentId='fixture-agent')
+        self.issue = dict(identifier='ROB-5', title='Tarefa 50: fixture', status='todo', assigneeAgentId='fixture-agent')
 
     def test_director_and_analyst_checks_never_dispatch_ai(self):
         self.args.role = 'director'
@@ -160,6 +160,26 @@ class AgentTests(unittest.TestCase):
                 patch.object(agent, 'invoke_worker', return_value={'status':'finished'}) as dispatch:
             self.assertEqual(agent.evaluate(self.args)['task'], '50')
             dispatch.assert_called_once_with(self.args, '50')
+
+    def test_awaiting_windows_dependency_frees_next_code_task(self):
+        tasks=[dict(id='50', status='awaiting_windows', depends_on=[]),
+               dict(id='51', status='pending', depends_on=['50'])]
+        issue = dict(self.issue, identifier='ROB-18', title='Tarefa 51: collection trail')
+        with patch.object(agent, 'issues', return_value=[issue]), \
+                patch.object(agent.gate, 'load_tasks', return_value=(tasks,None)), \
+                patch.object(agent.holding_worker, 'inspect'), \
+                patch.object(agent, 'invoke_worker', return_value={'status':'finished'}) as dispatch:
+            result = agent.evaluate(self.args)
+        self.assertEqual((result['task'], result['issue']), ('51', 'ROB-18'))
+        dispatch.assert_called_once_with(self.args, '51')
+
+    def test_issue_for_another_task_never_dispatches(self):
+        tasks=[dict(id='51', status='pending', depends_on=[])]
+        with patch.object(agent, 'issues', return_value=[self.issue]), \
+                patch.object(agent.gate, 'load_tasks', return_value=(tasks,None)), \
+                patch.object(agent, 'invoke_worker') as dispatch:
+            self.assertEqual(agent.evaluate(self.args)['status'], 'blocked')
+            dispatch.assert_not_called()
 
     def test_model_child_gets_no_bearer_or_paid_api_credentials(self):
         with patch.dict(os.environ, {'PAPERCLIP_API_KEY':'fake', 'OPENAI_API_KEY':'fake',

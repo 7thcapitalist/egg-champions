@@ -313,6 +313,12 @@ def gate_planned(game):
     return ok("%d task(s) planned, task %s done, no dependency cycle" % (len(tasks), first["id"]))
 
 
+# A task whose code is merged but whose Windows-only checks (Studio, TEST place,
+# physical phone) are still open. It satisfies dependencies for code work; the
+# built gate still needs every brief fully ticked.
+CODE_DONE = ("done", "awaiting_windows")
+
+
 def gate_built(game):
     tasks, err = load_tasks(game)
     if err:

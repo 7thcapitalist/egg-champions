@@ -112,7 +112,7 @@ def inspect(game, hq, workspaces, task):
     if any(t['status'] == 'blocked' for t in tasks):
         raise PolicyError('blocked task requires human review, never automatic unblock')
     eligible = next((t for t in tasks if t['status'] == 'pending'
-                     and all(statuses.get(d) == 'done' for d in t['depends_on'])), None)
+                     and all(statuses.get(d) in gate.CODE_DONE for d in t['depends_on'])), None)
     if not eligible or eligible['id'] != task:
         raise PolicyError('requested task is not the next dependency-ready factory task')
     policy = runtime_policy(hq, root)

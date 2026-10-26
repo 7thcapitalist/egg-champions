@@ -4,6 +4,7 @@ import contextlib
 import io
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -87,9 +88,9 @@ def evaluate(args):
     if not agent_id:
         result.update(status='blocked', reason='Paperclip agent identity missing')
         return result
-    assigned = [row for row in issues(args.company) if row.get('assigneeAgentId') == agent_id
-                and row.get('status') in ('todo', 'in_progress') and row.get('identifier') == 'ROB-5']
-    if not assigned:
+    queued = [row for row in issues(args.company) if row.get('assigneeAgentId') == agent_id
+              and row.get('status') in ('todo', 'in_progress')]
+    if not queued:
         result.update(status='blocked', reason='no queued code task assigned; external test tasks are not AI jobs')
         return result
     tasks, error = gate.load_tasks(game)
@@ -100,10 +101,17 @@ def evaluate(args):
         return result
     statuses = {task['id']: task['status'] for task in tasks}
     task = next((task for task in tasks if task['status'] == 'pending'
-                 and all(statuses.get(dep) == 'done' for dep in task['depends_on'])), None)
+                 and all(statuses.get(dep) in gate.CODE_DONE for dep in task['depends_on'])), None)
     if task is None:
         result.update(status='blocked', reason='no dependency-ready code task')
         return result
+    # The Paperclip issue for exactly this factory task ("Tarefa <id>: ...") must be assigned to this agent.
+    assigned = [row for row in queued if re.match(r'Tarefa %s\b' % re.escape(task['id']), row.get('title') or '')]
+    if not assigned:
+        result.update(status='blocked', task=task['id'],
+                      reason='no queued Paperclip issue "Tarefa %s" assigned; external test tasks are not AI jobs' % task['id'])
+        return result
+    result['issue'] = assigned[0].get('identifier')
     # This is read-only and fails before spawning a model/worker if setup is incomplete.
     holding_worker.inspect(args.worker_game, args.hq, args.workspaces, task['id'])
     result['worker'] = invoke_worker(args, task['id'])

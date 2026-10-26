@@ -472,7 +472,7 @@
       "depends_on": [
         "49"
       ],
-      "status": "running"
+      "status": "awaiting_windows"
     },
     {
       "id": "51",
@@ -508,7 +508,7 @@
       "depends_on": [
         "50"
       ],
-      "status": "running"
+      "status": "awaiting_windows"
     },
     {
       "id": "55",
@@ -517,7 +517,7 @@
       "depends_on": [
         "54"
       ],
-      "status": "running"
+      "status": "awaiting_windows"
     },
     {
       "id": "56",
@@ -526,7 +526,7 @@
       "depends_on": [
         "55"
       ],
-      "status": "running"
+      "status": "awaiting_windows"
     },
     {
       "id": "57",
@@ -535,7 +535,7 @@
       "depends_on": [
         "56"
       ],
-      "status": "running"
+      "status": "awaiting_windows"
     }
   ]
 }
