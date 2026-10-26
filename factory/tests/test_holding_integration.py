@@ -46,6 +46,25 @@ class AuthorizationTests(unittest.TestCase):
         with self.assertRaises(PolicyError):
             auth.initialize(self.root, self.policy, self.sample, 'do-not-reset')
 
+    def test_new_window_scales_from_previous_and_archives_old_ledger(self):
+        (self.root / 'budget.json').write_text(json.dumps({'studios': {'roblox': {'codex_weekly_share_pct': 35}}}))
+        first = auth.initialize(self.root, self.policy, self.sample, 'human-authorized-fixture')
+        runtime = self.root / 'studios/roblox/executor-runtime.json'
+        with self.assertRaises(PolicyError):  # above budget.json share
+            auth.initialize(self.root, runtime, self.sample, 'joao', share_pct=36, new_window=True)
+        with patch.object(auth, 'executor_usage', return_value=(3, 25000)):
+            result = auth.initialize(self.root, runtime, self.sample, 'joao: 35%', share_pct=35, new_window=True)
+        # 20000 tokens for 1% -> 700000 for 35%; 10000 tokens per call -> 70 calls; plus what was already used.
+        self.assertEqual(result['authorized_tokens'], 25000 + 700000)
+        self.assertEqual(result['authorized_calls'], 3 + 70)
+        self.assertEqual(result['archived_ledger'], 'quota-%s.jsonl' % first['window'])
+        self.assertTrue((self.root / 'ledger' / result['archived_ledger']).exists())
+        baseline = json.loads((self.root / 'ledger/quota.jsonl').read_text())
+        policy = json.loads(runtime.read_text())
+        self.assertEqual((baseline['share_pct'], policy['holding_window']['share_pct']), (35, 35))
+        self.assertEqual(policy['quota']['minimum_percent'], 15)  # 100 - 50 used - 35 share
+        self.assertEqual(policy['model'], 'gpt-6-luna')
+
     def test_unknown_exhausted_or_reserve_budget_cannot_initialize(self):
         for field, value in (('used_pct', 85), ('paid_credits', None), ('five_hour_pct', 100),
                              ('measured_at', '2000-01-01T00:00:00Z')):

@@ -72,7 +72,7 @@ function weeklyShareUsed(key) {
     const hash = createHash('sha256').update(raw.split('\n')[0]).digest('hex')
     const window = runtime.holding_window
     const stamp = Date.parse(baseline.measured_at)
-    if (!window || window.id !== baseline.runId || window.baseline_sha256 !== hash || baseline.studio !== studio || baseline.provider !== key || baseline.historical_usage_pct !== null || baseline.authorization !== window.authorization || runtime.authorized_calls !== baseline.authorized_calls || runtime.authorized_tokens !== baseline.authorized_tokens || !Number.isFinite(stamp) || stamp > Date.now() || baseline.resets_at !== q[key]?.resets_at || Date.parse(q[key]?.measured_at) < stamp || typeof baseline.used_pct !== 'number' || !Number.isFinite(baseline.used_pct) || baseline.used_pct < 0 || baseline.used_pct > 100 || baseline.share_pct !== window.share_pct || typeof baseline.share_pct !== 'number' || baseline.share_pct <= 0 || baseline.share_pct > 1) throw new Error('baseline sem autorizacao valida para este studio/provedor/janela')
+    if (!window || window.id !== baseline.runId || window.baseline_sha256 !== hash || baseline.studio !== studio || baseline.provider !== key || baseline.historical_usage_pct !== null || baseline.authorization !== window.authorization || runtime.authorized_calls !== baseline.authorized_calls || runtime.authorized_tokens !== baseline.authorized_tokens || !Number.isFinite(stamp) || stamp > Date.now() || baseline.resets_at !== q[key]?.resets_at || Date.parse(q[key]?.measured_at) < stamp || typeof baseline.used_pct !== 'number' || !Number.isFinite(baseline.used_pct) || baseline.used_pct < 0 || baseline.used_pct > 100 || baseline.share_pct !== window.share_pct || typeof baseline.share_pct !== 'number' || baseline.share_pct <= 0 || baseline.share_pct > 100) throw new Error('baseline sem autorizacao valida para este studio/provedor/janela')
     if (q[key].used_pct < baseline.used_pct) throw new Error('quota regrediu desde o baseline')
     const starts = new Map(), ends = new Set()
     for (const row of rows.slice(1)) {
@@ -138,7 +138,8 @@ for (const [k, cap] of shares) {
   usage[k] = window
     ? { used_pct_of_plan: null, historical_usage: 'unknown', window_id: window.id, used_pct_of_window: used, cap_pct_of_window: window.cap }
     : { used_pct_of_plan: used, cap_pct_of_plan: cap }
-  if (used >= (window?.cap ?? cap)) { reasons.push(`${studio}: orcamento de quota esgotado`); verdict = 'STOP' }
+  // A janela autorizada nunca passa do teto do budget.json.
+  if (used >= Math.min(window?.cap ?? cap, cap)) { reasons.push(`${studio}: orcamento de quota esgotado`); verdict = 'STOP' }
 }
 if (studio === 'website') reasons.push('builds de clientes seguem a demanda; o teto acima vale para trabalho de melhoria')
 
