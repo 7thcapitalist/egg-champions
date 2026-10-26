@@ -1,0 +1,87 @@
+{
+  "date": "2026-10-20",
+  "python_suite": {
+    "passed": 109,
+    "failed": 0,
+    "log": "tests-final-109.txt"
+  },
+  "focused_tests": 23,
+  "node_syntax": "passed",
+  "protected_executor_diff": "unchanged",
+  "game_source_hash": "unchanged versus launch-readiness/checks.json",
+  "ai_invocations": 0,
+  "runtime_effective_model": null,
+  "runtime_usage": null,
+  "configured_model": "gpt-6-luna",
+  "configured_effort": "low",
+  "executor_paused": true,
+  "authorized_calls": 0,
+  "authorized_tokens": 0,
+  "holding_agents": "four Roblox agents paused; snapshot paperclip-final.json",
+  "admission": {
+    "exit_code": 3,
+    "result": {
+      "verdict": "UNKNOWN",
+      "studio": "roblox",
+      "provider_scope": [
+        "codex"
+      ],
+      "reasons": [
+        "codex: ledger semanal ausente"
+      ],
+      "usage": {
+        "codex": {
+          "used_pct_of_plan": null,
+          "cap_pct_of_plan": 30
+        }
+      },
+      "quota": {
+        "codex": {
+          "used_pct": 51,
+          "five_hour_pct": null,
+          "resets_at": "2026-10-27T15:31:45.000Z",
+          "measured_at": "2026-10-20T22:30:15.921Z",
+          "age_min": 0,
+          "plan": "prolite",
+          "paid_credits": false,
+          "source": "C:\\Users\\joaov\\.codex\\sessions\\2026\\10\\17\\rollout-2026-10-17T02-25-17-01a14889-4217-7e53-b485-f86fcf4d37b9.jsonl"
+        },
+        "claude": {
+          "used_pct": 16,
+          "five_hour_pct": 27,
+          "resets_at": "2026-10-26T21:00:00.000Z",
+          "measured_at": "2026-10-20T22:30:21.335Z",
+          "age_min": 0,
+          "source": "C:\\Users\\joaov\\.habblaud\\usage\\.claude.json"
+        }
+      }
+    }
+  },
+  "concurrent_changes": "Other actor changed board statuses after our writes; preserved, authorship unknown. ROB-11 done does not certify missing visual evidence.",
+  "sha256": {
+    "factory/holding/guard.mjs": "f40eea0bf916f405cf7a2df0bcc5c10d30b10a1d64a8a28f7836f790f96abf64",
+    "factory/holding/quota.mjs": "71f91cfcadd29798f85bb929f12dc1bd0f1325dc26a9d126b2284f1c1607812d",
+    "factory/holding/README.md": "30cb9fb020083b9648374a9d69023ad7c958bb9713cdb4e4ded94cc1f6f3ec37",
+    "factory/tools/holding_worker.py": "5571d966165ec21fd8ade1ba20bae2c291de4e88f85c245d3bfcd43368cd97dd",
+    "factory/tests/test_holding_guard.py": "ca02c100d53f8f3cc86bb9a68263cc1075c69128087ee2d80810c71105ad03c0",
+    "factory/tests/test_holding_worker.py": "84bca8dd30efec9d016a3ad57658ce6edce4cf7dbb34b66bd3c349fb79581920",
+    "factory/reports/holding-readiness-2026-10-20/01-implementation.md": "0f86bc7aa57b606d30719260ffa615690fe8585c2931590bc9ff568aef5b44cd",
+    "factory/reports/holding-readiness-2026-10-20/02-validation.md": "cd8f9bf783556ed849aa9d811471dba49769ac73987a2e4ed9a846e25a0725b9",
+    "factory/reports/holding-readiness-2026-10-20/agents-after.json": "4ab5adaffc7ee8752d4d9eac68517432f77731b919b574c310d04c62903b3e73",
+    "factory/reports/holding-readiness-2026-10-20/before/guard.mjs": "ccce9c6cac28ed0c5e7a3a20bfc944cc5801376e1de34c201d92e37ea2c888bc",
+    "factory/reports/holding-readiness-2026-10-20/before/quota.mjs": "fa6ec32001678733c8d2ed1ff6815decec6e650a4a8f9e747ba879e073c0ca7f",
+    "factory/reports/holding-readiness-2026-10-20/deployment-final.json": "68f2f01edc46c80c0f83abc038d70d08a1314c073e5e31b7c89ea094a0f4d809",
+    "factory/reports/holding-readiness-2026-10-20/deployment-installed.json": "e22ae7b327c55b7907b7148d94cdbe2118d153f0761ec3c852ec048ff7a91b80",
+    "factory/reports/holding-readiness-2026-10-20/deployment.json": "4cb7bf4b15b704bc2ffb5a5648edae4626b358bcfd546d598dec55d1a694b41c",
+    "factory/reports/holding-readiness-2026-10-20/factory-task-final.json": "0641fb2cdc60fb9232d59b2c54cda80c6eaa926b2e595bfd7d693dbce2d16b71",
+    "factory/reports/holding-readiness-2026-10-20/factory-task.json": "26f09b9b4f031edc0e43423d14cc2827a9c0ea6436ae6f0714363884641830af",
+    "factory/reports/holding-readiness-2026-10-20/live-admission-final.json": "de6f1199b5d2d41c7c390a078f9796495aa73aa2a9e035efe183cdcf6838ee48",
+    "factory/reports/holding-readiness-2026-10-20/live-admission.json": "5bfeb00c90a918606401d37674bd849feec1a8cf455232bb057eb816f1bada7a",
+    "factory/reports/holding-readiness-2026-10-20/paperclip-final.json": "d8b0a4e3aa935442b7bfe1e4df4bc20757cf5e615a272dd4a6862cc3f05493ba",
+    "factory/reports/holding-readiness-2026-10-20/task-updates.json": "5caf592fbf1b8a7e646966f4a941594367c722bb5092f95aea2cbd05132f5d36",
+    "factory/reports/holding-readiness-2026-10-20/tasks-after.json": "3247eb20bfb9a092be55ca7befc9ac59e51c376b76eaf3f7b63336c402b80388",
+    "factory/reports/holding-readiness-2026-10-20/tasks-before.json": "b4ef579a626e334255a37154d615acc8ccbc1da536ea5357003a81772386c2af",
+    "factory/reports/holding-readiness-2026-10-20/tests-final-109.txt": "a6eb370e5b0989635975405eaafcb8f3ac0551220bf78c926c17c6e63230406a",
+    "factory/reports/holding-readiness-2026-10-20/tests-final.txt": "144b5d1930fba335ccadbf20d92994810231e25b1e426076e9734a171cf7a737"
+  }
+}

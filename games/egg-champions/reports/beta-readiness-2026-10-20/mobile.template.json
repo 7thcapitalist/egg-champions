@@ -1,0 +1,117 @@
+{
+  "build_sha256": "67f13be7e32e369968a4f443967a543ed905f9801082bd70348db237e0b0aced",
+  "cases": [
+    {
+      "id": "desktop",
+      "status": "unknown",
+      "requested": [
+        1280,
+        720
+      ],
+      "effective": null,
+      "device": null,
+      "input_verified": false,
+      "physical_touch": false,
+      "text_readable": null,
+      "controls_reachable": null,
+      "actions": {
+        "hatch": "unknown",
+        "equip": "unknown",
+        "journey-target": "unknown",
+        "battle-attack": "unknown",
+        "battle-heal": "unknown",
+        "resize": "unknown"
+      },
+      "evidence": null
+    },
+    {
+      "id": "portrait-small",
+      "status": "unknown",
+      "requested": [
+        320,
+        720
+      ],
+      "effective": null,
+      "device": null,
+      "input_verified": false,
+      "physical_touch": false,
+      "text_readable": null,
+      "controls_reachable": null,
+      "actions": {
+        "hatch": "unknown",
+        "equip": "unknown",
+        "journey-target": "unknown",
+        "battle-attack": "unknown",
+        "battle-heal": "unknown",
+        "resize": "unknown"
+      },
+      "evidence": null
+    },
+    {
+      "id": "portrait-phone",
+      "status": "unknown",
+      "requested": [
+        390,
+        844
+      ],
+      "effective": null,
+      "device": null,
+      "input_verified": false,
+      "physical_touch": false,
+      "text_readable": null,
+      "controls_reachable": null,
+      "actions": {
+        "hatch": "unknown",
+        "equip": "unknown",
+        "journey-target": "unknown",
+        "battle-attack": "unknown",
+        "battle-heal": "unknown",
+        "resize": "unknown"
+      },
+      "evidence": null
+    },
+    {
+      "id": "landscape-short",
+      "status": "unknown",
+      "requested": [
+        568,
+        239
+      ],
+      "effective": null,
+      "device": null,
+      "input_verified": false,
+      "physical_touch": false,
+      "text_readable": null,
+      "controls_reachable": null,
+      "actions": {
+        "hatch": "unknown",
+        "equip": "unknown",
+        "journey-target": "unknown",
+        "battle-attack": "unknown",
+        "battle-heal": "unknown",
+        "resize": "unknown"
+      },
+      "evidence": null
+    },
+    {
+      "id": "physical-phone",
+      "status": "unknown",
+      "requested": null,
+      "effective": null,
+      "device": null,
+      "input_verified": false,
+      "physical_touch": false,
+      "text_readable": null,
+      "controls_reachable": null,
+      "actions": {
+        "hatch": "unknown",
+        "equip": "unknown",
+        "journey-target": "unknown",
+        "battle-attack": "unknown",
+        "battle-heal": "unknown",
+        "resize": "unknown"
+      },
+      "evidence": null
+    }
+  ]
+}

@@ -47,9 +47,11 @@ stages run in order: `spec_parsed`, `economy_tuned`, `planned`, `built`,
     python factory/tools/state.py set <game-dir> <stage> <status> [--note TEXT]
     python factory/tools/state.py next <game-dir>
 
-A gate is the machine check for one stage. It only reads what is already in
-the repo, so a stale generated file fails the gate instead of being quietly
-regenerated. Stages with no check yet print "no gate yet" and exit 1, so
+A gate is the machine check for one stage. It validates existing inputs, so a
+stale generated config fails instead of being quietly regenerated. The built
+and assets gates also rebuild build/game.rbxl; use an isolated checkout when
+preserving a Studio build. Release evidence gates are read-only. Stages with
+no check yet print "no gate yet" and exit 1, so
 "not implemented" can never be mistaken for "passed".
 
     python factory/tools/gate.py <game-dir> <stage>
@@ -60,12 +62,35 @@ regenerated. Stages with no check yet print "no gate yet" and exit 1, so
 | `economy_tuned` | the current tuning report meets every time and configured gym rebirth target |
 | `built` | every brief in the game's task index is ticked, and the Luau suite, rojo, selene and stylua pass |
 | `assets` | every pet and egg has a current entry in `assets/models.json`, the project maps it, `rojo build` passes, and `assets/verify.json` checked this exact `models.json` with every entry ok |
-| the rest | no gate yet |
+| `worlds` | current source/build binding, visual review >=4 and observed routes/arrivals for every configured world |
+| `playtested` | world evidence plus bound mobile, real-client multiplayer and natural free-player gym progression |
+| `published_test` | playtest evidence plus same-version TEST publication/reopen, real DataStore roundtrip and pass purchases |
 
 `gate.py` decides; `state.py` only records what it found. Nothing marks a
 stage passed on its own word.
 
 ## Local Studio QA
+
+For the holding's fail-closed quota guard and the isolated built-task bridge,
+read [holding/README.md](holding/README.md). The bridge inspects by default and
+does not replace the executor's authorization, model selection or usage ledger.
+Paperclip agents use process adapters. On 2026-10-21 the isolated worktree was
+verified with terminal approval. Director, analyst and research are available
+for script checks; the engineer remains paused because the authorized quota
+window is exceeded and required measurement is unavailable inside Paperclip.
+Automatic heartbeats remain disabled. See reports/holding-activation-2026-10-21.
+
+Read [HOLDING-CONTEXT.md](HOLDING-CONTEXT.md) for the observed Paperclip/HQ
+workflow and ownership boundaries. Manager automation must not edit this active
+user workspace or infer a Paperclip pause from the old heartbeat pause file.
+
+The release gates read `release/manifest.json` and never publish, buy passes,
+start Studio or call a model. Missing/stale evidence blocks them. Source-bound
+JSON and hashes do not certify the truth of human observations by themselves.
+
+For isolated beta multiplayer fixtures, read-only save/mobile captures and
+evidence checks, see [BETA-QA.md](BETA-QA.md). Preparation never publishes or
+starts the executor; temporary profiles cannot certify persistence.
 
 For bounded feature proposals based on primary references, see
 [FEATURE-RESEARCH.md](FEATURE-RESEARCH.md). Validation and brief drafting use

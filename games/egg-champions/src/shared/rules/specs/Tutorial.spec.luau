@@ -228,8 +228,8 @@ return function()
 		it("shows the card and pointer for each step", function()
 			local clickCard = Tutorial.card(steps.click, closed)
 			assert(clickCard ~= nil, "expected a card")
-			expect(clickCard.text).toEqual("Click anywhere to earn coins")
-			expect(clickCard.target).toEqual(nil)
+			expect(clickCard.text).toEqual("Train at the practice target")
+			expect(clickCard.target).toEqual("training:" .. Config.worlds[1].id)
 
 			local hatchCard = Tutorial.card(steps.hatch, closed)
 			assert(hatchCard ~= nil, "expected a card")
@@ -355,7 +355,7 @@ return function()
 				expect(held.ready).toEqual(false)
 				local card = Tutorial.heldCard(pets, held)
 				expect(card.screenText).toEqual(
-					"Pet equipped. Close this and click to earn more coins"
+					"Pet equipped. Close this and enter the training ring"
 				)
 				expect(card.target).toEqual(nil)
 				local selected = Tutorial.heldCard(petsPicked, held)
@@ -364,7 +364,7 @@ return function()
 				local main = Tutorial.heldCard(closed, held)
 				expect(main.screenText).toEqual(nil)
 				expect(main.target).toEqual(nil)
-				expect(main.text).toEqual("Click anywhere to earn coins")
+				expect(main.text).toEqual("Train at the practice target")
 				-- In the egg shop the bar says to close it and click.
 				local shop = Tutorial.heldCard(eggs, held)
 				expect(shop.screenText ~= nil).toBeTrue()

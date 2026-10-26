@@ -668,7 +668,6 @@ function PetsView.detail(petId: string, variant: string?, anchor: number?): Deta
 	local variantId = if variantRow ~= nil then variantRow.id else nil
 	local owned = { petId = pet.id, variant = variantId }
 	local clickPower = Coins.clickPowerOf(owned, anchor)
-	local legacy = clickPower > Coins.rawPowerOf(owned)
 	local battleMult = Battle.playerMultiplier(0, variantId)
 	local hp = pet.hp * battleMult
 	local attack = pet.attack * battleMult
@@ -696,7 +695,7 @@ function PetsView.detail(petId: string, variant: string?, anchor: number?): Deta
 		stats = {
 			{
 				label = "Click Power",
-				value = PetsView.number(clickPower) .. (if legacy then " (Legacy)" else ""),
+				value = PetsView.number(clickPower),
 			},
 			{ label = "HP", value = PetsView.whole(hp) },
 			{ label = "Attack", value = PetsView.whole(attack) },

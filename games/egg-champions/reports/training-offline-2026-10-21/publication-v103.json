@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "place_id": 101737317546942,
+  "universe_id": 10769019206,
+  "place_version": 103,
+  "build_sha256": "89f80adf89d8fe0aad5ac1c3442c3c05ab98e38c28582b371d35139e3ad53db7",
+  "sources_reopened_match": true,
+  "verified_source_count": 153,
+  "verified_instance_count": 172,
+  "published_confirmation": "Place published. Eligible players can now play this place in Roblox. Quick Links: Add publish notes to v103. Published new changes in Egg Champions Test to Roblox.",
+  "old_published_version": 100,
+  "old_version_had_click_layer": true,
+  "training_present": true,
+  "offline_present": true,
+  "click_layer_present": false,
+  "observed_controls": {
+    "device": "iPhone 17 Pro preset, proxy for iPhone 17",
+    "orientation": "LandscapeLeft",
+    "effective_viewport": [
+      750,
+      381
+    ],
+    "movement_before": {
+      "camera": [
+        0,
+        -0.2588190734386444,
+        -0.965925931930542
+      ],
+      "position": [
+        1.6304512023925781,
+        2.9980251789093018,
+        -0.4921107292175293
+      ]
+    },
+    "movement_after": {
+      "camera": [
+        0.47478899359703064,
+        -0.2588188350200653,
+        0.8411826491355896
+      ],
+      "position": [
+        8.287542343139648,
+        2.9980251789093018,
+        21.979454040527344
+      ]
+    },
+    "camera_after": {
+      "camera": [
+        -0.9044113159179688,
+        -0.2588188350200653,
+        -0.33919471502304077
+      ],
+      "position": [
+        8.287542343139648,
+        2.9980251789093018,
+        21.979454040527344
+      ]
+    },
+    "input": "mouse-driven simulated touch",
+    "physical_touch_verified": false
+  },
+  "storage_test": "Studio temporary profile; real offline credit/rejoin not certified",
+  "cleanup": "Play stopped; simulator reset; transient transfer object removed; HTTP setting restored to false before publication"
+}

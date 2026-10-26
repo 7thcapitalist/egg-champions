@@ -31,6 +31,8 @@ return function()
 				"ProfileChanged",
 				"Notice",
 				"ClickCredited",
+				"WildAction",
+				"BuyPrism",
 				"SkipTutorial",
 			}
 			local names = {}

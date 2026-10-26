@@ -5,6 +5,7 @@ Usage: python factory/tools/validate_config.py <game-dir>/config
 Exits with code 1 if any check fails. Standard library only.
 """
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -83,6 +84,9 @@ def validate(folder):
     last_price, last_fee, last_rebirths = 0, 0, -1
     for w in worlds:
         gym = w["gym"]
+        factor = gym.get("cohort_power_factor", 1)
+        check(type(factor) in (int, float) and 0 < factor <= 1,
+              f"cohort power in '{w['name']}' must be finite and in (0, 1]")
         for egg_id in w["eggs"]:
             price = egg_by_id[egg_id].get("price", 0)
             check(price > last_price, f"egg '{egg_by_id[egg_id]['name']}' is not more expensive than the egg before it")
@@ -99,6 +103,35 @@ def validate(folder):
             check(counter["strong_against"] == leader["id"], f"counter type in '{w['name']}' is not strong against the leader's type")
         reachable = {egg_id for earlier in worlds if earlier["index"] <= w["index"] for egg_id in earlier["eggs"]}
         check(any(p["type"] == gym["counter_type"] and p["egg"] in reachable for p in pets), f"no pet of the counter type can be hatched before the gym in '{w['name']}'")
+
+    if (folder / "prisms.json").exists():
+        prisms = load(folder, "prisms")
+        wild_rarities, wild_areas = load(folder, "wild_rarities"), load(folder, "wild_areas")
+        prism_ids = {p["id"] for p in prisms}
+        check(len(prism_ids) == len(prisms), "prism IDs must be unique")
+        products = [p["test_product"] for p in prisms]
+        check(len(set(products)) == len(products), "prism product IDs must be unique")
+        def finite(value):
+            return type(value) in (int, float) and math.isfinite(value)
+        for p in prisms:
+            check(finite(p["multiplier"]) and p["multiplier"] > 0, "prism multiplier must be positive")
+            for key in ("coin_price", "starter", "pack", "test_product", "base_robux"):
+                value = p[key]
+                check(type(value) is int and value >= (1 if key in ("pack", "test_product", "base_robux") else 0),
+                      f"prism {p['id']} {key} must be a valid integer")
+        check({r["id"] for r in wild_rarities} == rarity_ids, "wild rarities must cover every rarity")
+        for r in wild_rarities:
+            check(finite(r["strength"]) and r["strength"] > 0, "wild strength must be positive")
+            check(finite(r["capture_chance"]) and 0 < r["capture_chance"] <= 1, "invalid wild capture chance")
+        check({a["id"] for a in wild_areas} == {w["id"] for w in worlds}, "wild areas must cover every world")
+        for area in wild_areas:
+            for field, ids in (("rarities", rarity_ids), ("drops", prism_ids)):
+                weights = area[field]
+                check(set(weights) == ids, f"wild area {area['id']} has incomplete {field}")
+                check(all(finite(v) and 0 <= v <= 1 for v in weights.values()), "invalid wild weights")
+                check(abs(sum(weights.values()) - 1) < 1e-6, "wild weights must sum to 100%")
+        for key in ("wild_visitor_chance", "wild_prism_drop_chance", "wild_capture_cap"):
+            check(finite(c.get(key)) and 0 <= c[key] <= 1, f"invalid {key}")
 
     return errors
 

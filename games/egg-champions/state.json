@@ -5,15 +5,15 @@
       "id": "spec_parsed",
       "status": "passed",
       "attempts": 1,
-      "note": "Current spec hash and generated config validated for task 46.",
-      "updated": "2026-10-17T04:04:39Z"
+      "note": "Gate passed for task57 prism/area tables and current spec hash.",
+      "updated": "2026-10-22T18:20:46Z"
     },
     {
       "id": "economy_tuned",
       "status": "failed",
       "attempts": 1,
-      "note": "Revised gate requires all configured rebirth targets. Current report: gym3 median 7 vs target 5; time targets pass. No tuning numbers changed.",
-      "updated": "2026-10-17T05:07:22Z"
+      "note": "Canonical 300-player seed1 forecast still misses gym pacing and gym2/3 rebirth targets. Tiered prisms and active wild wins are excluded from passive baseline.",
+      "updated": "2026-10-22T18:20:47Z"
     },
     {
       "id": "planned",
@@ -25,9 +25,9 @@
     {
       "id": "built",
       "status": "running",
-      "attempts": 23,
-      "note": "Task 50 has 876 Luau tests plus six self-tests, Selene/StyLua/Rojo passed. Final brief checkbox remains open pending TEST publication/reopen; v95 is last confirmed.",
-      "updated": "2026-10-17T05:39:30Z"
+      "attempts": 29,
+      "note": "Task57 normal candidate e810e558; 909 rules, 6 runner, 137 Python, lint/build passed. Final Studio Edit matches all 170 source hashes, no QA helpers. iPhone landscape simulated joystick/camera and real ordinary-remote buy/hatch/win/capture/replay flow passed with temporary profile. Manual TEST publication and real saves still pending; native desktop control remains off.",
+      "updated": "2026-10-22T18:35:05Z"
     },
     {
       "id": "assets",
@@ -54,8 +54,8 @@
       "id": "published_test",
       "status": "pending",
       "attempts": 0,
-      "note": "",
-      "updated": null
+      "note": "Latest task56 wild-training-2026-10-22 candidate is local and unpublished. Historical v103 source/publication evidence belongs to the old training build. Native control remains stopped; do not infer publication from tests or hashes.",
+      "updated": "2026-10-22T17:38:10Z"
     }
   ]
 }

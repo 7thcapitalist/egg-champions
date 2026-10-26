@@ -86,14 +86,22 @@ end
 
 -- Small corner radius and a thin border, the look of every panel.
 function Theme.panel(frame: GuiObject, radius: number?, borderColor: Color3?)
+	local isButton = frame:IsA("GuiButton")
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, radius or Theme.sizes.radius)
+	corner.CornerRadius = UDim.new(0, if isButton then 8 else radius or Theme.sizes.radius)
 	corner.Parent = frame
 	local stroke = Instance.new("UIStroke")
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	stroke.Color = borderColor or Theme.colors.border
-	stroke.Thickness = Theme.sizes.border
+	stroke.Thickness = if isButton then 1 else Theme.sizes.border
+	stroke.Transparency = if isButton then 0.2 else 0
 	stroke.Parent = frame
+	if isButton then
+		local gradient = Instance.new("UIGradient")
+		gradient.Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(0.86, 0.89, 0.94))
+		gradient.Rotation = 90
+		gradient.Parent = frame
+	end
 end
 
 -- A text label with the theme's defaults and no background.

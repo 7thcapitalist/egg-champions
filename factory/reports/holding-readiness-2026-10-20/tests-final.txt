@@ -1,0 +1,19 @@
+Local QA only: C:\Users\joaov\Documents\Codex\2026-10-15\roblox-factory\tmpffc6wnzi\build\beta\beta-local.rbxl
+Requires fresh temporary profiles. Do not publish this fixture place.
+OK: 1 task(s) planned, task 1 done, no dependency cycle
+FAIL: feature research: unsupported research version
+BLOCKED: production paused in factory/executor.json
+[2026-10-20T22:28:00Z] task 001: coder start (attempt 1 of 2: fixture)
+[2026-10-20T22:28:00Z] task 001: coder failed (failed)
+[2026-10-20T22:28:00Z] task 001: checks failed 
+[2026-10-20T22:28:00Z] task 001: coder start (attempt 2 of 2: fixture)
+[2026-10-20T22:28:00Z] task 001: passed (attempt 2)
+[2026-10-20T22:28:00Z] task 001: committed (local-commit)
+[2026-10-20T22:28:16Z] task 001: coder start (attempt 2 of 2: fixture)
+[2026-10-20T22:28:16Z] task 001: passed (attempt 2)
+[2026-10-20T22:28:16Z] task 001: committed (mock)
+[2026-10-20T22:28:20Z] check fixture: pass (python fixture.py)
+----------------------------------------------------------------------
+Ran 108 tests in 44.769s
+
+OK

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "7a1aeefa-461c-427e-9b1c-97f31f4b00f0",
+    "identifier": "ROB-2",
+    "title": "Plano do checklist de lançamento (8 itens)",
+    "description": "Transforme o checklist de lançamento (studios/roblox/GOAL.md no holding-hq) em tarefas atribuídas, em ordem de risco. Itens que exigem o Studio aberto ou celular físico: marque como blocked com o que precisa do João.\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nChecklist segue com oito criterios reais, incluindo testes externos. Prioridade atual definida pelo Joao: funcionamento confiavel da fabrica acima de produzir conteudo. Paperclip usava CLIs diretos fora do executor protegido; quatro agentes Roblox pausados para corrigir admission sem gasto real. Nenhum dos testes externos foi promovido a done.",
+    "status": "done",
+    "updatedAt": "2026-10-20T22:19:33.628Z"
+  },
+  {
+    "id": "9253a042-bc30-4ce2-ba9d-97e9adb27b6d",
+    "identifier": "ROB-1",
+    "title": "Gate economy_tuned: gym 3 com mediana de 7 rebirths (meta 5)",
+    "description": "O gate economy_tuned falha: no gym 3 a mediana é 7 rebirths contra a meta de 5. Diagnostique na simulação de economia do repo e proponha ajuste com números antes/depois. Pronto quando: diagnóstico + proposta comentados; se a mudança for clara, crie sub-tarefa para o Engenheiro de Gameplay.\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nEconomia IMPLEMENTADA localmente: spec Cohort power 100/100/80%, config gerada, gym3 HP 1059/ATK 212. Seed1 com 300 jogadores/taxa passa seis metas: gym3 mediana 5 rebirths e final 6.83h. Seeds2/3 gym3=5; seed2 gym2=3 vs meta2 permanece risco. Nao e prova de progressao real. Evidencia em C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions/reports/beta-readiness-2026-10-20/README.md",
+    "status": "done",
+    "updatedAt": "2026-10-20T22:19:31.464Z"
+  },
+  {
+    "id": "e96338ae-278b-4927-86bc-63d324c06aba",
+    "identifier": "ROB-4",
+    "title": "Gates worlds, playtested, published_test existindo e passando",
+    "description": "Rodar python factory/tools/gate.py games/egg-champions <stage> para cada um; criar/ajustar o que faltar em state.json via state.py. Clone próprio de 7thcapitalist/egg-champions a partir de codex/task-50-wip, PR para a branch. Evidência: saída dos gates.\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nGates IMPLEMENTADOS e testados em factory/tools/release_readiness.py + gate.py, com source/build/hash, visual>=4, matrizes, rede lenta fisica, progressao natural, save real, compras e versao TEST. Manifesto tem null; os tres gates BLOQUEIAM, exit1. Nao marcar passed no state sem evidencia. Comando sem IA: python -B factory/tools/release_readiness.py games/egg-champions. Evidencia em C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions/reports/launch-readiness-2026-10-20/gates.json",
+    "status": "blocked",
+    "updatedAt": "2026-10-20T22:19:29.305Z"
+  },
+  {
+    "id": "318e9279-7ab4-400a-8b5d-d149eea97c71",
+    "identifier": "ROB-11",
+    "title": "Studio: validar batalha em paisagem curta (Tarefa 50)",
+    "description": "Subtarefa bloqueada até João abrir Roblox Studio no place TEST. Validar novamente no viewport de paisagem curta (aprox. 720x239): painéis laterais, nomes/HP legíveis, executar um ataque e redimensionar o viewport entre paisagem curta e retrato. Capturar evidências atuais e registrar resultados. Não publicar.\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nQA OBSERVADO em sessao local separada: paisagem curta, ataque, cura, troca e resize constam em task50-resume-2026-10-20/REVIEW.md. Retrato pequeno solicitado320x720/efetivo320x624 confirmou ataque gym3 turno2, HP1059->690. Equipe semeada/perfil temporario, nao TEST persistente. Capturas inline nao arquivadas; revisao visual/vinculacao pendentes; nao declarar aprovado. Evidencia em C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions/reports/launch-readiness-2026-10-20/README.md",
+    "status": "in_review",
+    "updatedAt": "2026-10-20T22:19:27.179Z"
+  },
+  {
+    "id": "cb342e70-618f-449b-a0ab-6c0aa155ef32",
+    "identifier": "ROB-5",
+    "title": "Tarefa 50: elevação e legibilidade da batalha (parte de código)",
+    "description": "Concluir a tarefa 50 em codex/task-50-wip (7767637). Rodar testes Luau, selene, stylua. Evidência de layout em paisagem curta exige Studio: separar em subtarefa blocked para o João.\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nPR1 integrado: HEAD bedc503 branch codex/task-50-wip. Codigo e QA locais preservados, 882 testes Luau +6 autotestes, Selene/StyLua aprovados. Tarefas50/51/52 continuam abertas: falta evidencia visual vinculada e TEST/reopen sob autorizacao. Nao rodar executor na pasta ativa/dirty do Joao. Evidencia em C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions/reports/launch-readiness-2026-10-20/README.md",
+    "status": "blocked",
+    "updatedAt": "2026-10-20T22:19:24.752Z"
+  },
+  {
+    "id": "36828686-2f0a-4a31-838d-dfaffd9b4159",
+    "identifier": "ROB-12",
+    "title": "Manter o Painel do negócio atualizado (data/roblox.json)",
+    "description": "O João acompanha o estúdio pelo \"Painel do negócio\" no Paperclip, que lê `C:Usersjoaovdevholding-hqdata\roblox.json` (formato em `data/SCHEMA.md`). Jogadores/visitas vêm sozinhos da API pública do Roblox.\n\nMantenha atualizado: status de cada jogo, gênero, checklist de lançamento (done/total com evidência), destaques do que foi feito, próximo jogo (nome, gênero, fase, por quê). Receita/NPV: null até existir fonte (Creator Dashboard precisa de chave do João — peça como blocked em tarefa separada).\n\nPronto quando: arquivo atualizado e comentário aqui. Depois, atualize a cada mudança relevante.\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nPainel/STATE anteriores podem estar desatualizados. STATE recebeu reconciliacao e LOCAL-RELEASE.md; data/roblox.json nao foi atualizado nesta conversa. Nao afirmar lancamento, receita ou checklist aprovado. Referencia atual: Evidencia em C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions/reports/launch-readiness-2026-10-20/checks.json",
+    "status": "in_review",
+    "updatedAt": "2026-10-20T22:19:22.5Z"
+  },
+  {
+    "id": "349fb3b0-388d-4519-9f0c-4cc0ca75cd38",
+    "identifier": "ROB-8",
+    "title": "Compra de passes verificada no TESTE",
+    "description": "Precisa do João: cliente Roblox logado no TESTE para executar a compra de cada passe. Preparar roteiro e conferir handlers (ProcessReceipt/PromptGamePassPurchase) antes.\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nPENDENTE compra real de todos os passes no TEST e efeitos na mesma versao revisada. Gate rejeita unknown/mocks. Nao executar compras, publicar ou alterar monetizacao nesta rodada. Evidencia em C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions/reports/launch-readiness-2026-10-20/README.md",
+    "status": "blocked",
+    "updatedAt": "2026-10-20T22:19:44.407Z"
+  },
+  {
+    "id": "fddad35d-167b-4f4e-8469-f710038a120f",
+    "identifier": "ROB-7",
+    "title": "Save/rejoin com DataStore real no TESTE",
+    "description": "Precisa do João: Studio/cliente Roblox aberto no place de TESTE para entrar, comprar/ganhar coisas, sair e reentrar. Preparar roteiro passo a passo e conferir o código de save antes.\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nPREPARADO: persistenceMode e save-result opt-in; snapshot somente leitura; comparador de todos12campos schema5, lock/release/sessoes/versao/hash. Cinco testes Profiles/SaveOrder com DataStore mock passaram. Nenhuma evidencia DataStore real; nao concluir por perfil temporario. Publicacao segue proibida. Roteiro factory/BETA-QA.md. Evidencia em C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions/reports/beta-readiness-2026-10-20/README.md",
+    "status": "blocked",
+    "updatedAt": "2026-10-20T22:19:42.237Z"
+  },
+  {
+    "id": "28fc5d56-0279-4203-abad-1a20e6aa2fd8",
+    "identifier": "ROB-9",
+    "title": "Teste em celular físico e rede lenta",
+    "description": "Precisa do João: celular físico com Roblox. Time prepara roteiro e lista de verificações (UI, toque, FPS, rede lenta).\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nPREPARADO roteiro/matriz mobile e capturador somente leitura. Retrato simulado320x624 e ataque gym3 observados, sem cobertura completa. Celular fisico, toque e rede lenta continuam PENDENTES. Novo gate exige impairment observado e hatch/battle/reconnect; simulacao nao substitui telefone. Evidencia em C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions/reports/launch-readiness-2026-10-20/README.md",
+    "status": "blocked",
+    "updatedAt": "2026-10-20T22:19:40.102Z"
+  },
+  {
+    "id": "d2b058cf-7650-4a81-97e7-28824e9f4514",
+    "identifier": "ROB-6",
+    "title": "Revisão de composição/animação >= 4/5 (hoje 3,75)",
+    "description": "Listar os itens que puxam a nota para baixo (fonte: notas de revisão em games/egg-champions/notes), propor correções e abrir PR. Nota nova exige revisão com Studio aberto.\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nRevisao continua PENDENTE. Nao elevar nota3.75 por contagem de testes. Retrato pequeno mostrou legenda secundaria truncada; algumas linhas do log indicaram TextFits=false apesar de wrap/AutoSize. Exige observacao e capturas arquivadas, composicao/animacao>=4. Evidencia em C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions/reports/launch-readiness-2026-10-20/README.md",
+    "status": "in_review",
+    "updatedAt": "2026-10-20T22:19:37.915Z"
+  },
+  {
+    "id": "03b769bc-6c36-4ec3-84c5-3ca9f76d637d",
+    "identifier": "ROB-10",
+    "title": "Gyms 2 e 3 jogados de forma natural até o fim",
+    "description": "Depende de ROB-1 (economia gym 3) e de sessão real no Studio/cliente. Precisa do João jogar, ou liberar playtest automatizado.\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nPENDENTE progressao natural gyms2/3. Simulacao e batalha semeada local nao satisfazem. Exigir free-player sem passes, sem seeded, tempo observado e mesmo TEST/version/hash. Sem publicacao autorizada. Evidencia em C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/games/egg-champions/reports/launch-readiness-2026-10-20/README.md",
+    "status": "blocked",
+    "updatedAt": "2026-10-20T22:19:35.751Z"
+  },
+  {
+    "id": "e86f274d-a70f-4663-a341-6c5d5c0b7bfc",
+    "identifier": "ROB-3",
+    "title": "Tendências Roblox: 5 gêneros/mecânicas em alta agora",
+    "description": "Liste 5 gêneros/mecânicas em alta no Roblox neste mês com fontes, e o que o Egg Champions poderia adotar já no lançamento (thumbnail, evento, loop).\n\n## Atualizacao Codex 2026-10-20 (evidencia local)\n\nPesquisa PARCIAL em design/feature-research.json; fontes primarias foram registradas, mas charts atuais nao estavam acessiveis. Nao ha comprovacao de cinco tendencias mensais atuais. Collection trail implementado localmente/tarefa51 pendente; daily/co-op/offline/eventos adiados, nao funcionalidades entregues.",
+    "status": "blocked",
+    "updatedAt": "2026-10-20T22:19:46.544Z"
+  }
+]

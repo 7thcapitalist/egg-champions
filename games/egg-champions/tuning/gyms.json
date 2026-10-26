@@ -3,6 +3,7 @@
   "seed": 1,
   "target_win_rate": 0.8,
   "leader_speed": 11,
+  "target_win_rate_applies_to": "reference_power before the configured cohort factor",
   "gyms": [
     {
       "world": "green_meadow",
@@ -10,6 +11,8 @@
       "fee": 50000,
       "target_rebirths": 0,
       "power": 1.302,
+      "reference_power": 1.302,
+      "cohort_power_factor": 1.0,
       "leader_base_egg": "forest",
       "leader_strength": "rare",
       "leader_team": [
@@ -74,6 +77,8 @@
       "fee": 5000000,
       "target_rebirths": 2,
       "power": 1.948,
+      "reference_power": 1.948,
+      "cohort_power_factor": 1.0,
       "leader_base_egg": "storm",
       "leader_strength": "rare",
       "leader_team": [
@@ -139,28 +144,30 @@
       "world_name": "Ember Volcano",
       "fee": 10000000000,
       "target_rebirths": 5,
-      "power": 1.324,
+      "power": 0.53,
+      "reference_power": 0.662,
+      "cohort_power_factor": 0.8,
       "leader_base_egg": "magma",
       "leader_strength": "epic",
       "leader_team": [
         {
           "type": "fire",
-          "hp": 1324,
-          "attack": 265,
+          "hp": 1060,
+          "attack": 212,
           "speed": 11,
           "special": "smash"
         },
         {
           "type": "fire",
-          "hp": 1324,
-          "attack": 265,
+          "hp": 1060,
+          "attack": 212,
           "speed": 11,
           "special": "smash"
         },
         {
           "type": "fire",
-          "hp": 1324,
-          "attack": 265,
+          "hp": 1060,
+          "attack": 212,
           "speed": 11,
           "special": "smash"
         }
@@ -191,14 +198,14 @@
           "special": "smash"
         }
       ],
-      "reference_win_rate_at_target": 0.793,
+      "reference_win_rate_at_target": 1.0,
       "reference_win_rate_by_rebirths": {
         "0": 0.0,
         "1": 0.0,
-        "2": 0.0,
-        "3": 0.0,
-        "4": 0.004,
-        "5": 0.793,
+        "2": 0.026,
+        "3": 0.988,
+        "4": 1.0,
+        "5": 1.0,
         "6": 1.0,
         "7": 1.0
       }
@@ -211,6 +218,8 @@
       "fee": 50000,
       "target_rebirths": 0,
       "power": 1.302,
+      "reference_power": 1.302,
+      "cohort_power_factor": 1.0,
       "leader_base_egg": "forest",
       "leader_strength": "rare",
       "leader_team": [
@@ -275,6 +284,8 @@
       "fee": 5000000,
       "target_rebirths": 2,
       "power": 1.948,
+      "reference_power": 1.948,
+      "cohort_power_factor": 1.0,
       "leader_base_egg": "storm",
       "leader_strength": "rare",
       "leader_team": [
@@ -340,28 +351,30 @@
       "world_name": "Ember Volcano",
       "fee": 10000000000,
       "target_rebirths": 5,
-      "power": 1.324,
+      "power": 0.53,
+      "reference_power": 0.662,
+      "cohort_power_factor": 0.8,
       "leader_base_egg": "magma",
       "leader_strength": "epic",
       "leader_team": [
         {
           "type": "fire",
-          "hp": 1324,
-          "attack": 265,
+          "hp": 1060,
+          "attack": 212,
           "speed": 11,
           "special": "smash"
         },
         {
           "type": "fire",
-          "hp": 1324,
-          "attack": 265,
+          "hp": 1060,
+          "attack": 212,
           "speed": 11,
           "special": "smash"
         },
         {
           "type": "fire",
-          "hp": 1324,
-          "attack": 265,
+          "hp": 1060,
+          "attack": 212,
           "speed": 11,
           "special": "smash"
         }
@@ -392,14 +405,14 @@
           "special": "smash"
         }
       ],
-      "reference_win_rate_at_target": 0.793,
+      "reference_win_rate_at_target": 1.0,
       "reference_win_rate_by_rebirths": {
         "0": 0.0,
         "1": 0.0,
-        "2": 0.0,
-        "3": 0.0,
-        "4": 0.004,
-        "5": 0.793,
+        "2": 0.026,
+        "3": 0.988,
+        "4": 1.0,
+        "5": 1.0,
         "6": 1.0,
         "7": 1.0
       }

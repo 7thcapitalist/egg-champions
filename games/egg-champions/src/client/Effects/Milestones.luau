@@ -6,6 +6,7 @@ local UI = script.Parent.Parent.UI
 local State = require(UI.State)
 local Theme = require(UI.Theme)
 local Config = require(ReplicatedStorage.Shared.Config)
+local CollectionRewards = require(ReplicatedStorage.Shared.rules.CollectionRewards)
 local Tutorial = require(ReplicatedStorage.Shared.rules.Tutorial)
 local Milestones = {}
 function Milestones.mount(parent: PlayerGui)
@@ -74,6 +75,17 @@ function Milestones.mount(parent: PlayerGui)
 	State.subscribe(function(payload)
 		local profile = payload.profile
 		if previous then
+			local before = CollectionRewards.summary(previous.index or {})
+			local after = CollectionRewards.summary(profile.index or {})
+			if
+				after.eggs > before.eggs
+				or after.worlds > before.worlds
+				or (after.full and not before.full)
+			then
+				celebrate(
+					string.format("INDEX BONUS! +%.0f%% permanent training", after.bonusPercent)
+				)
+			end
 			for _, w in Config.worlds do
 				if (profile.badges or {})[w.id] and not (previous.badges or {})[w.id] then
 					celebrate(w.name .. " BADGE EARNED!")

@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-20",
+  "checks": {
+    "luau_tests": 882,
+    "runner_self_tests": 6,
+    "python_tests": 58,
+    "new_python_research_tests": 9,
+    "selene_errors": 0,
+    "selene_warnings": 0,
+    "stylua": "passed",
+    "rojo": "passed",
+    "research_check": "passed",
+    "planned": "passed",
+    "economy_tuned": "failed: gym 3 rebirth target missed by 2"
+  },
+  "studio": {
+    "id": "c25e6b57-54f4-49e2-b086-8f7822647f45",
+    "place_id": 0,
+    "final_mode": "Edit",
+    "profile": "temporary, DataStore unavailable per console",
+    "engine_visual_validation": "partial; see REVIEW.md",
+    "screenshots": "conversation only; file archival rejected by tool size auto-review",
+    "effective_viewports": [
+      "720x239.333",
+      "568x239",
+      "958x540",
+      "390x748"
+    ],
+    "simulation": "stopped",
+    "orientation": "LandscapeSensor"
+  },
+  "factory": "paused; no real executor/model run; controls unchanged by this work",
+  "publication": "not attempted; v95 last historically confirmed",
+  "game_sha256": {
+    "src/shared/ui/BattleLayout.luau": "794b91d05b2dd87399703890ce5fa5e25ea57769a96192b87abb7b72702cef32",
+    "src/shared/ui/specs/BattleLayout.spec.luau": "7b11f7dd5df3c55804cd0d7d471d5c246c75ef9bbce09a27852b6adaff24e694",
+    "src/client/UI/Battle.luau": "4371d4ef0c7c1786b69b5f5f8dae4fb4974dd16fda60ff68bd6ddfaf391b2a74",
+    "src/client/UI/Journey.luau": "e09f576fbdd093577106c36a0471000207b7e4aa22dde8de931a63249bc595ee",
+    "src/shared/ui/CollectionGoals.luau": "eeb974f0ab2ad6ed3647b90b8e1b70cbdd6c231210d6efe36c439b1b5c294dc9",
+    "src/shared/ui/specs/CollectionGoals.spec.luau": "feb035a9ca779ce78e92a4ca23abf95323b662872447652e712dc7b5a01b496c",
+    "src/shared/testing/specs.luau": "27aeb61ae124217bea3c9b83a364ef2ae33faf3a04c227e316cb456f56c1050c",
+    "design/feature-research.json": "23fa18ce7eef6b41866ea29eade3b1ddb35254526d9d85e550dccc76d2b1883a",
+    "tasks/51-collection-trail.md": "1614ffe25cc4837c7ac81cbbb0807486f48972ddb87ae5b67a2c12db7d708286",
+    "build/task50-resume-2026-10-20.rbxl": "940a03ef31350899bca34de60dbfdf8e6b37356e01b99be0a9d5be6387d1e4b3",
+    "build/task50-collection-review-2026-10-20.rbxl": "4af5d896615ee6652e5ef6bf3db13e81ab5065b380e0883a39b67f1e9136ac58",
+    "build/task50-studio-recovery.rbxl": "ad283d3af33f30eba3bda24a6af67f77a39cb21e3cbc2d71bfb2955485b79de0",
+    "reports/task50-resume-2026-10-20/REVIEW.md": "6a9603d6bfcb1e67f191643669276017ab72bca18b43915725cf2a786d996c61",
+    "reports/task50-resume-2026-10-20/FACTORY-CAPABILITIES.md": "123e20cf8e5acd515df8fe32f65ae0e281d9176e95dec60612b179dcd376d40b",
+    "reports/task50-resume-2026-10-20/ramp-traversal.json": "b414d21749754c628899b6452a4a4669284fc1a2ad4009dcfbd4b1dc70b877fc"
+  },
+  "factory_sha256": {
+    "factory/tools/feature_research.py": "e711a5ef29c04290a8b025661829ef041d14ea0ceaa148f2e43f85c2034c9072",
+    "factory/tests/test_feature_research.py": "93568f4c0db14ab8da121b0ad568a6dc3af462372a3898c810c9709755df1dd7",
+    "factory/tools/gate.py": "fd769967a0d6c3d52d53354946b57f864a827d465fcca6eb4c035d8280da019e",
+    "factory/FEATURE-RESEARCH.md": "97826f292d4ceb1204386f010a0cff2e1a949e15409a813c578e818d1e47c57b",
+    "factory/README.md": "94ecfca6535e8e9f0f4ef36aca1849ed798fbd0b959a4d6e36402b39e8a8804d",
+    ".claude/agents/planner.md": "4c2d77e74be7e9387cb741173e7c8598e8f7b4dd2c646fcded0a5393721d96b9"
+  }
+}

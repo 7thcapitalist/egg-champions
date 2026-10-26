@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "scope": "partial-local-studio-observations",
+  "physical_device": false,
+  "seeded": true,
+  "final_landscape_battle": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"log\":\"733, 48\",\"move\":\"190, 48\",\"viewport\":\"749, 381\",\"rows\":{\"1\":{\"text\":\"The battle begins. Pick a move.\",\"fits\":true,\"size\":\"693, 18\"},\"3\":{\"text\":\"Golden Puddlet took 64 damage, 29 / 92 HP left.\",\"fits\":true,\"size\":\"693, 18\"},\"2\":{\"text\":\"Leader's Leafpup used Smash.\",\"fits\":true,\"size\":\"693, 18\"},\"5\":{\"text\":\"Leader's Leafpup took 19 damage, 128 / 146 HP left.\",\"fits\":true,\"size\":\"693, 18\"},\"4\":{\"text\":\"Golden Puddlet used Water Strike.\",\"fits\":true,\"size\":\"693, 18\"},\"7\":{\"text\":\"Golden Puddlet took 30 damage, 0 / 92 HP left.\",\"fits\":true,\"size\":\"693, 18\"},\"6\":{\"text\":\"Leader's Leafpup used Grass Strike.\",\"fits\":true,\"size\":\"693, 18\"},\"9\":{\"text\":\"You sent in Emberkit.\",\"fits\":true,\"size\":\"693, 18\"},\"8\":{\"text\":\"Golden Puddlet fainted.\",\"fits\":true,\"size\":\"693, 18\"}},\"pet\":\"173, 173\",\"turn\":\"TURN 3. YOUR MOVE\"}"
+      }
+    ],
+    "isError": false
+  },
+  "earlier_compact_portrait": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"log\":\"295, 72\",\"move\":\"143, 48\",\"viewport\":\"319, 719\",\"rows\":{\"1\":{\"text\":\"The battle begins. Pick a move.\",\"fits\":true,\"size\":\"255, 18\"},\"8\":{\"text\":\"Golden Puddlet healed 28 HP with Heal, now 35 / 92 HP.\",\"fits\":true,\"size\":\"255, 34\"},\"3\":{\"text\":\"Golden Puddlet took 56 damage, 36 / 92 HP left.\",\"fits\":true,\"size\":\"255, 34\"},\"2\":{\"text\":\"Leader's Leafpup used Smash.\",\"fits\":true,\"size\":\"255, 18\"},\"5\":{\"text\":\"Leader's Leafpup took 17 damage, 130 / 146 HP left.\",\"fits\":true,\"size\":\"255, 34\"},\"4\":{\"text\":\"Golden Puddlet used Water Strike.\",\"fits\":true,\"size\":\"255, 18\"},\"7\":{\"text\":\"Golden Puddlet took 29 damage, 7 / 92 HP left.\",\"fits\":true,\"size\":\"255, 34\"},\"6\":{\"text\":\"Leader's Leafpup used Grass Strike.\",\"fits\":true,\"size\":\"255, 18\"}},\"giveUp\":\"100, 44\",\"turn\":\"TURN 3. YOUR MOVE\"}"
+      }
+    ],
+    "isError": false
+  },
+  "earlier_normal_source_comparison": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"placeVersion\":0,\"checked\":145,\"errors\":[],\"placeId\":0,\"fixtures\":false}"
+      }
+    ],
+    "isError": false
+  },
+  "limitations": [
+    "Latest full action matrix remains incomplete.",
+    "Physical iPhone 17 and impaired-network checks remain pending.",
+    "Final landscape attack run reached turn 3 and observed fainting/switch; the requested heal was pre-empted by a faint.",
+    "Successful nonzero healing was observed on the preceding layout revision.",
+    "Publication remained unconfirmed; no DataStore roundtrip evidence."
+  ]
+}

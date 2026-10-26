@@ -1,0 +1,233 @@
+{
+  "capture": [
+    {
+      "capture": {
+        "ok": true,
+        "phase": "escaped",
+        "petId": "leafpup",
+        "rewardCoins": 0,
+        "result": "escaped"
+      },
+      "id": "5ffec83c-1735-47d5-b9ed-a42339552810",
+      "winCoins": 200,
+      "trial": 1,
+      "afterPets": 0,
+      "replay": {
+        "ok": false,
+        "reason": "capture_unavailable"
+      },
+      "afterPulses": 1425,
+      "beforePets": 0,
+      "beforePulses": 1401,
+      "petId": "leafpup"
+    },
+    {
+      "capture": {
+        "ok": true,
+        "phase": "captured",
+        "petId": "emberkit",
+        "rewardCoins": 0,
+        "result": "captured"
+      },
+      "id": "b5717831-d6be-4679-b227-b9190377fabd",
+      "winCoins": 600,
+      "trial": 2,
+      "afterPets": 1,
+      "replay": {
+        "ok": false,
+        "reason": "capture_unavailable"
+      },
+      "afterPulses": 1581,
+      "beforePets": 0,
+      "beforePulses": 1507,
+      "petId": "emberkit"
+    }
+  ],
+  "win": {
+    "attacks": [
+      {
+        "ok": true,
+        "phase": "fighting",
+        "petId": "puddlet",
+        "rewardCoins": 0,
+        "result": "perfect"
+      },
+      {
+        "ok": true,
+        "phase": "fighting",
+        "petId": "puddlet",
+        "rewardCoins": 0,
+        "result": "perfect"
+      },
+      {
+        "ok": true,
+        "phase": "fighting",
+        "petId": "puddlet",
+        "rewardCoins": 0,
+        "result": "perfect"
+      },
+      {
+        "ok": true,
+        "phase": "fighting",
+        "petId": "puddlet",
+        "rewardCoins": 0,
+        "result": "perfect"
+      },
+      {
+        "ok": true,
+        "phase": "fighting",
+        "petId": "puddlet",
+        "rewardCoins": 0,
+        "result": "perfect"
+      },
+      {
+        "ok": true,
+        "phase": "fighting",
+        "petId": "puddlet",
+        "rewardCoins": 0,
+        "result": "perfect"
+      },
+      {
+        "ok": true,
+        "phase": "fighting",
+        "petId": "puddlet",
+        "rewardCoins": 0,
+        "result": "perfect"
+      },
+      {
+        "ok": true,
+        "phase": "defeated",
+        "petId": "puddlet",
+        "rewardCoins": 400,
+        "result": "perfect"
+      }
+    ],
+    "afterCoins": 9445,
+    "encounter": {
+      "id": "be81ba97-b1f0-49c3-aa10-b1ab306f9283",
+      "phase": "defeated",
+      "hp": 0,
+      "lastStrike": 1792691488.591573,
+      "misses": 0,
+      "worldId": "green_meadow",
+      "startedAt": 1792691476.551763,
+      "maxHp": 200,
+      "strength": 2,
+      "petId": "puddlet",
+      "rewardCoins": 400,
+      "expiresAt": 1792691521.551763
+    },
+    "pulsesAfter": 807,
+    "beforeCoins": 8560,
+    "pulsesBefore": 758
+  },
+  "position": {
+    "1": -25.34914207458496,
+    "2": 3.1230251789093018,
+    "3": 1.814538836479187
+  },
+  "snapshot": {
+    "profileCoins": 24420,
+    "training": 10,
+    "index": {
+      "emberkit": {
+        "normal": true
+      }
+    },
+    "petCount": 1,
+    "wild": {
+      "encounter": {
+        "id": "35a5e0a3-be42-4b0e-9352-5f870a3f8219",
+        "phase": "fighting",
+        "hp": 100,
+        "lastStrike": 1792691728.2236052,
+        "misses": 0,
+        "worldId": "green_meadow",
+        "startedAt": 1792691728.773605,
+        "maxHp": 100,
+        "strength": 1,
+        "petId": "leafpup",
+        "rewardCoins": 200,
+        "expiresAt": 1792691773.773605
+      },
+      "nextAt": 1792691728.734867,
+      "boostUntil": 1792691742.108356,
+      "bonus": 0.5
+    }
+  },
+  "controls": {
+    "1": {
+      "visible": true,
+      "path": "Players.jvcarvalho70.PlayerGui.TouchGui.TouchControlFrame.JumpButton",
+      "size": "70, 70",
+      "position": "655, 233"
+    },
+    "2": {
+      "visible": true,
+      "path": "Players.jvcarvalho70.PlayerGui.TouchGui.TouchControlFrame.DynamicThumbstickFrame",
+      "size": "400, 315.333344",
+      "position": "-100, 107.666672"
+    },
+    "3": {
+      "visible": true,
+      "path": "Players.jvcarvalho70.PlayerGui.TouchGui.TouchControlFrame.DynamicThumbstickFrame.ThumbstickStart",
+      "size": "74, 74",
+      "position": "29, 230"
+    },
+    "4": {
+      "visible": true,
+      "path": "Players.jvcarvalho70.PlayerGui.TouchGui.TouchControlFrame.DynamicThumbstickFrame.ThumbstickEnd",
+      "size": "36, 36",
+      "position": "48, 249"
+    },
+    "5": {
+      "visible": false,
+      "path": "Players.jvcarvalho70.PlayerGui.TouchGui.TouchControlFrame.DynamicThumbstickFrame.ThumbstickMiddle",
+      "size": "0, 0",
+      "position": "-100, 107.666672"
+    },
+    "6": {
+      "visible": false,
+      "path": "Players.jvcarvalho70.PlayerGui.TouchGui.TouchControlFrame.DynamicThumbstickFrame.ThumbstickMiddle",
+      "size": "0, 0",
+      "position": "-100, 107.666672"
+    },
+    "7": {
+      "visible": false,
+      "path": "Players.jvcarvalho70.PlayerGui.TouchGui.TouchControlFrame.DynamicThumbstickFrame.ThumbstickMiddle",
+      "size": "0, 0",
+      "position": "-100, 107.666672"
+    },
+    "8": {
+      "visible": false,
+      "path": "Players.jvcarvalho70.PlayerGui.TouchGui.TouchControlFrame.DynamicThumbstickFrame.ThumbstickMiddle",
+      "size": "0, 0",
+      "position": "-100, 107.666672"
+    },
+    "9": {
+      "visible": false,
+      "path": "Players.jvcarvalho70.PlayerGui.TouchGui.TouchControlFrame.DynamicThumbstickFrame.ThumbstickMiddle",
+      "size": "0, 0",
+      "position": "-100, 107.666672"
+    },
+    "10": {
+      "visible": false,
+      "path": "Players.jvcarvalho70.PlayerGui.TouchGui.TouchControlFrame.DynamicThumbstickFrame.ThumbstickMiddle",
+      "size": "0, 0",
+      "position": "-100, 107.666672"
+    },
+    "11": {
+      "visible": false,
+      "path": "Players.jvcarvalho70.PlayerGui.TouchGui.TouchControlFrame.DynamicThumbstickFrame.ThumbstickMiddle",
+      "size": "0, 0",
+      "position": "-100, 107.666672"
+    }
+  },
+  "look": {
+    "1": -0.6968352198600769,
+    "2": -0.25881901383399963,
+    "3": -0.6689046621322632
+  },
+  "scope": "Task56 candidate before owner requested tiered prisms/biome spawn changes",
+  "build_sha256": "20fad0cfae7a79df8b1a5c3cf259b021171893e2265f375e9c04ea70b052aa15"
+}

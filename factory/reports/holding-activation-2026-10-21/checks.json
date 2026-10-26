@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-21",
+  "worktree": {
+    "path": "C:/Users/joaov/dev/_workspaces/roblox-protected",
+    "approved_terminal_check": true,
+    "clean": true,
+    "branch": "hq/roblox-protected",
+    "common_git": "C:/Users/joaov/Documents/Codex/2026-10-15/roblox-factory/.git"
+  },
+  "baseline": {
+    "schema": 2,
+    "phase": "baseline",
+    "studio": "roblox",
+    "provider": "codex",
+    "runId": "roblox-8bb9df3e8a604b42a8d4c7263a48cdbf",
+    "at": "2026-10-21T02:39:17.019520+00:00",
+    "measured_at": "2026-10-21T02:39:08.739Z",
+    "used_pct": 67,
+    "resets_at": "2026-10-27T15:31:45.000Z",
+    "share_pct": 1,
+    "historical_usage_pct": null,
+    "authorized_calls": 2,
+    "authorized_tokens": 20000,
+    "authorization": "Usuario autorizou em 2026-10-20: Janela pequena daqui para frente; historico desconhecido"
+  },
+  "baseline_sha256_matches": true,
+  "quota_ledger_rows": 1,
+  "guard_exit": 3,
+  "guard_reasons": [
+    "codex: baseline sem autorizacao valida para este studio/provedor/janela"
+  ],
+  "current_account_used_pct": 75,
+  "observed_account_delta_pp": 8,
+  "account_delta_attribution": "unknown; other account activity is included conservatively",
+  "authorized_calls": 2,
+  "authorized_tokens": 20000,
+  "authorized_share_pp": 1,
+  "executor_ledger_rows": 0,
+  "executor_model_launches": 0,
+  "effective_model": null,
+  "input_tokens": null,
+  "cached_input_tokens": null,
+  "output_tokens": null,
+  "provider_call_count": null,
+  "production_generation": "blocked",
+  "publication": "none",
+  "scripts": [
+    {
+      "run_id": "ddad6614-e2c2-48ae-9e4e-10ca2ed9d22c",
+      "status": "succeeded",
+      "duration_seconds": 20.558,
+      "result": {
+        "role": "director",
+        "model_calls_requested": 0,
+        "publication": "disabled",
+        "status": "checked",
+        "release_errors": {
+          "worlds": [
+            "release manifest missing/current source binding invalid"
+          ],
+          "playtested": [
+            "release manifest missing/current source binding invalid"
+          ],
+          "published_test": [
+            "release manifest missing/current source binding invalid"
+          ]
+        },
+        "worker_setup": {
+          "directory_exists": true,
+          "note": "missing/dirty/worktree/task state blocks generation; no clone fallback"
+        },
+        "admission": {
+          "status": "blocked",
+          "reason": "holding budget blocked: ['codex: sem medi\u00c3\u00a7\u00c3\u00a3o', 'codex: reset semanal desconhecido']"
+        }
+      }
+    },
+    {
+      "run_id": "3ff787e1-862d-46a2-b372-3406202187f4",
+      "status": "succeeded",
+      "duration_seconds": 14.172,
+      "result": {
+        "role": "analyst",
+        "model_calls_requested": 0,
+        "publication": "disabled",
+        "status": "checked",
+        "economy_gate_exit": 0,
+        "summary": "OK: all 6 time and rebirth targets met\n"
+      }
+    },
+    {
+      "run_id": "96f94eae-3dcd-4ed9-aa20-439ffef5a222",
+      "status": "succeeded",
+      "duration_seconds": 2.559,
+      "result": {
+        "role": "research",
+        "model_calls_requested": 0,
+        "publication": "disabled",
+        "status": "checked",
+        "errors": [],
+        "scope": "existing evidence validation",
+        "current_trends": "unknown; no new research performed"
+      }
+    }
+  ]
+}

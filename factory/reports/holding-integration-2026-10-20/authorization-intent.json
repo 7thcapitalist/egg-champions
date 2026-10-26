@@ -1,0 +1,13 @@
+{
+  "user_date": "2026-10-20",
+  "timezone": "America/New_York",
+  "recorded_at": "2026-10-21T02:29:18.689020+00:00",
+  "authorization": "Janela pequena daqui para frente; historico desconhecido",
+  "authorized_calls": 2,
+  "authorized_reported_tokens": 20000,
+  "authorized_quota_percentage_points": 1,
+  "account_reserve_percent": 15,
+  "historical_usage_pct": null,
+  "installed": false,
+  "reason": "Windows denied runtime directory creation (WinError 5); no retry or alternative location"
+}

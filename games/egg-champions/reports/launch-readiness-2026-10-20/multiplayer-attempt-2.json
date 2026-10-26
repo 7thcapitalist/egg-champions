@@ -1,0 +1,60 @@
+{
+  "observed_via": "Roblox Studio MCP / StudioTestService.ExecuteMultiplayerTestAsync(2)",
+  "studio_id": "2efe64de-b818-48d3-bcfb-499ec8fc77a4",
+  "place_id": 0,
+  "edit_after_test": true,
+  "fixture_notes": "Separate QA build; fixture patched in memory, completion and 120s watchdog scripts added only to QA. Shipping sources unchanged. Declared build hash identifies the shipping candidate under test, not the modified QA binary.",
+  "ok": true,
+  "result": {
+    "subjects": [
+      "qa-a",
+      "qa-b"
+    ],
+    "build_sha256": "67f13be7e32e369968a4f443967a543ed905f9801082bd70348db237e0b0aced",
+    "environment": "local-studio",
+    "status": "fixture-passed-beta-pending",
+    "mode": "real-clients",
+    "cases": [
+      {
+        "id": "fee-once",
+        "status": "passed"
+      },
+      {
+        "id": "profile-isolation",
+        "status": "passed"
+      },
+      {
+        "id": "duplicate-start",
+        "status": "passed"
+      },
+      {
+        "id": "foreign-pet",
+        "status": "passed"
+      },
+      {
+        "id": "parallel-battles",
+        "status": "passed"
+      },
+      {
+        "id": "remote-transport",
+        "status": "passed"
+      },
+      {
+        "id": "foreign-session",
+        "status": "passed"
+      },
+      {
+        "id": "retry-isolation",
+        "status": "passed"
+      },
+      {
+        "id": "rate-limit-isolation",
+        "status": "passed"
+      },
+      {
+        "id": "disconnect-rejoin",
+        "status": "unknown"
+      }
+    ]
+  }
+}

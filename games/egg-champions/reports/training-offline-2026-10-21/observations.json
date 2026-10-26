@@ -1,0 +1,87 @@
+{
+  "place": "local unpublished candidate",
+  "persistence": "temporary",
+  "device": "iPhone 17 Pro preset (proxy for owner iPhone 17)",
+  "orientation": "LandscapeLeft",
+  "effective_viewport": [
+    750,
+    381
+  ],
+  "observations": {
+    "training_tick": {
+      "coins_delta": 8,
+      "seconds": 2.3,
+      "passed": true
+    },
+    "training_exit": {
+      "coins_delta": 0,
+      "seconds": 1.5,
+      "passed": true
+    },
+    "joystick": {
+      "before": [
+        -0.8245,
+        2.998,
+        0.0603
+      ],
+      "after": [
+        -13.1187,
+        2.998,
+        17.3873
+      ],
+      "input": "mouse-driven simulated touch",
+      "physical_touch": false
+    },
+    "camera_drag": {
+      "look_before": [
+        -0.23386,
+        -0.25882,
+        0.93719
+      ],
+      "look_after": [
+        -0.42326,
+        -0.25882,
+        -0.86825
+      ],
+      "position_unchanged": true
+    },
+    "pet_attack": {
+      "pet": "emberkit",
+      "moved": true
+    },
+    "avatar_punch": {
+      "joint": "AnimationConstraint",
+      "transform_changed": true
+    },
+    "offline_card": {
+      "coins": 1234,
+      "visual_fixture_only": true,
+      "credited_to_profile": false,
+      "readable": true
+    },
+    "hatch": {
+      "coins_before": 148,
+      "coins_after": 98,
+      "pet_created": true
+    },
+    "equip": {
+      "mode": "actual EquipBest remote invocation",
+      "success": true,
+      "touch_button_verified": false
+    }
+  },
+  "published_test": "pending",
+  "real_rejoin": "pending",
+  "physical_iphone": "pending",
+  "slow_network": "pending",
+  "reset": "Play stopped; simulator reset to default; temporary QA scripts discarded",
+  "observed_candidate_sha256": "2f141bcb938f1bc06bcbf20d35e4e0a8452de7ff7cfa2a18ec7ec4020f9c7276",
+  "final_candidate_sha256": "89f80adf89d8fe0aad5ac1c3442c3c05ab98e38c28582b371d35139e3ad53db7",
+  "final_change": "Pass cache uses weak keys to retain ownership during a yielding final save; headless runtime regression passed. Live observations predate this isolated server change.",
+  "publication_attempt": {
+    "destination": "Egg Champions Test existing place",
+    "result": "Upload in progress did not confirm completion; dialog dismissed with Escape",
+    "confirmed_version": null,
+    "studio_place_id_after_attempt": 0
+  }
+}

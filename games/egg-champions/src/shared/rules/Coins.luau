@@ -64,13 +64,9 @@ function Coins.legacyAnchor(owned: { OwnedPet }): number
 	return strongest
 end
 
-function Coins.clickPowerOf(pet: OwnedPet, anchor: number?): number
-	local rarity = Config.petById[pet.petId].rarity
-	local fraction = if rarity == "epic"
-		then Config.constants.legacy_epic_floor
-		elseif rarity == "legendary" then Config.constants.legacy_legendary_floor
-		else 0
-	return math.max(Coins.rawPowerOf(pet), (anchor or 0) * fraction)
+-- The optional old anchor parameter is retained for callers, but never changes power.
+function Coins.clickPowerOf(pet: OwnedPet, _anchor: number?): number
+	return Coins.rawPowerOf(pet)
 end
 
 function Coins.teamClickPower(team: { OwnedPet }, anchor: number?): number

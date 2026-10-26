@@ -1,0 +1,32 @@
+{
+  "source_sha256": "62ca705316f294085612e7abfd946643764aab7949809f20b34640d8a346acc0",
+  "build": {
+    "file": "build/prisms-2026-10-22.rbxl",
+    "sha256": "e810e558c52fd8b3567dab2bb9d5dc52b6878cf5ca34279bbd89acd5be3aba50"
+  },
+  "universe_id": 10769019206,
+  "place_id": 101737317546942,
+  "published": false,
+  "base_place_version": 105,
+  "mapped_instances": 189,
+  "sources": 170,
+  "luau_tests": 909,
+  "runner_self_tests": 6,
+  "python_tests": 137,
+  "selene_errors": 0,
+  "selene_warnings": 0,
+  "studio_storage": "temporary",
+  "physical_iphone_tested": false,
+  "real_receipt_purchase_tested": false,
+  "native_desktop_control": false,
+  "pending": [
+    "TEST publish/reopen",
+    "real save and reentry",
+    "physical iPhone and slow network",
+    "economy and release gates"
+  ],
+  "studio_final_hashes_verified": true,
+  "studio_edit_helpers_present": false,
+  "studio_mode": "Edit",
+  "device_simulator_stopped": true
+}

@@ -1,0 +1,12 @@
+{
+  "guard.mjs": {
+    "before_sha256": "ccce9c6cac28ed0c5e7a3a20bfc944cc5801376e1de34c201d92e37ea2c888bc",
+    "after_sha256": "f40eea0bf916f405cf7a2df0bcc5c10d30b10a1d64a8a28f7836f790f96abf64",
+    "deployed_to": "C:\\Users\\joaov\\dev\\holding-hq\\scripts\\guard.mjs"
+  },
+  "quota.mjs": {
+    "before_sha256": "fa6ec32001678733c8d2ed1ff6815decec6e650a4a8f9e747ba879e073c0ca7f",
+    "after_sha256": "71f91cfcadd29798f85bb929f12dc1bd0f1325dc26a9d126b2284f1c1607812d",
+    "deployed_to": "C:\\Users\\joaov\\dev\\holding-hq\\scripts\\quota.mjs"
+  }
+}

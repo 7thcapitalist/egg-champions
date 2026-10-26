@@ -268,7 +268,7 @@ function PetsLayout.compute(
 	options: Options?
 ): Layout
 	local screenHeight = height
-	local scrollBody = width >= 600 and height < 360
+	local scrollBody = width > height and height < 360
 	if scrollBody then
 		-- Keep readable controls and scroll the body under a fixed header.
 		height = math.max(height, top + 420)

@@ -176,7 +176,7 @@ end
 function EggShopLayout.compute(width: number, height: number, top: number): Layout
 	local compact = EggShopLayout.isCompact(width, height)
 	local s: Sizes = if compact then EggShopLayout.SIZES.compact else EggShopLayout.SIZES.normal
-	if width >= 600 and height < 360 then
+	if width > height and height < 360 then
 		s = table.clone(s)
 		s.header = 40
 		s.footer = 0

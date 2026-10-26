@@ -137,7 +137,7 @@ end
 
 local function rebirthDetail(): string
 	local percent = math.floor(Config.constants.rebirth_coin_bonus * 100 + 0.5)
-	return string.format("Rebirth for +%d%% coins per click. Pets and badges stay.", percent)
+	return string.format("Rebirth for +%d%% training coins. Pets and badges stay.", percent)
 end
 
 -- The cheapest egg of a world.
@@ -241,7 +241,7 @@ function NextGoal.pick(state: State, rebirthCost: number): Goal
 			world.id,
 			world,
 			string.format("Fill your team of %d", teamSize),
-			"Equip pets in PETS. Every team pet adds to each click.",
+			"Equip pets in PETS. Every team pet adds training power.",
 			teamCount,
 			teamSize,
 			true
@@ -283,7 +283,7 @@ function NextGoal.nextLine(state: State, goal: Goal): string?
 	return string.format("Next: %s Gym (%s)", world.name, Format.abbreviate(world.gym.fee))
 end
 
-NextGoal.CLICK_HINT = "Click anywhere to earn coins"
+NextGoal.CLICK_HINT = "Train at the practice target"
 
 -- True when the goal waits on coins the player does not have yet: an egg,
 -- a gym fee or a rebirth short of its price, or more pets to hatch while the
@@ -300,7 +300,7 @@ function NextGoal.needsCoins(state: State, goal: Goal): boolean
 	return not goal.ready and state.coins < goal.need
 end
 
--- The short "Click anywhere to earn coins" line the goal card keeps while
+-- The short "Train at the practice target" line the goal card keeps while
 -- the goal waits on coins (needsCoins), or nil.
 function NextGoal.clickHint(state: State, goal: Goal): string?
 	return if NextGoal.needsCoins(state, goal) then NextGoal.CLICK_HINT else nil

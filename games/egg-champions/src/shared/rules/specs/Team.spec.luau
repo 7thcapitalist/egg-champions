@@ -127,9 +127,9 @@ return function()
 
 		it("breaks equal battle strength by Speed then inventory order", function()
 			local pets: { Team.OwnedPet } = {
-				{ uid = "slow", petId = "thornback" },
-				{ uid = "fast", petId = "voltscorp" },
-				{ uid = "fast-again", petId = "voltscorp" },
+				{ uid = "slow", petId = "cinderhog" },
+				{ uid = "fast", petId = "bananao" },
+				{ uid = "fast-again", petId = "bananao" },
 			}
 			expect(Team.bestForBattle(pets, 2)).toEqual({ "fast", "fast-again", "slow" })
 		end)

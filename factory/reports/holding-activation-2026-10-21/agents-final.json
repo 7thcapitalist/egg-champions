@@ -1,0 +1,51 @@
+[
+  {
+    "id": "92aae222-2961-4a9e-898f-f7752bcd4d5b",
+    "name": "Diretor do Estúdio",
+    "status": "idle",
+    "adapterType": "process",
+    "runtimeConfig": {
+      "heartbeat": {
+        "enabled": false,
+        "intervalSec": 7200,
+        "maxConcurrentRuns": 1
+      }
+    }
+  },
+  {
+    "id": "bb9be172-4482-49a7-9153-f79b37adb1e8",
+    "name": "Engenheiro de Gameplay",
+    "status": "paused",
+    "adapterType": "process",
+    "runtimeConfig": {
+      "heartbeat": {
+        "enabled": false,
+        "maxConcurrentRuns": 1
+      }
+    }
+  },
+  {
+    "id": "9da0ae5f-063f-482a-adfc-f73ff0800046",
+    "name": "Pesquisa de Tendências",
+    "status": "idle",
+    "adapterType": "process",
+    "runtimeConfig": {
+      "heartbeat": {
+        "enabled": false,
+        "maxConcurrentRuns": 1
+      }
+    }
+  },
+  {
+    "id": "d0ee5f1f-c3b1-45a1-a5db-64e66e760e8f",
+    "name": "Analista de Jogo",
+    "status": "idle",
+    "adapterType": "process",
+    "runtimeConfig": {
+      "heartbeat": {
+        "enabled": false,
+        "maxConcurrentRuns": 1
+      }
+    }
+  }
+]

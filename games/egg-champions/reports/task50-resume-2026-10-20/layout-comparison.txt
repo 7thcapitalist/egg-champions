@@ -1,0 +1,5 @@
+720x239 inset 58: pet 63.0 -> 117.0; move 44.0; sidePanels true
+720x239 inset 36: pet 85.0 -> 139.0; move 44.0; sidePanels true
+568x239 inset 58: pet 63.0 -> 117.0; move 44.0; sidePanels true
+390x844 inset 36: pet 179.0 -> 179.0; move 58.0; sidePanels false
+958x540 inset 36: pet 222.0 -> 222.0; move 58.0; sidePanels false

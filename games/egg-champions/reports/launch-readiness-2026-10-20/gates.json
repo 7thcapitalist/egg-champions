@@ -1,0 +1,19 @@
+{
+  "status": "blocked",
+  "source_sha256": "e8398dad19f35dc4a7ab7d1102602f334dd569de28c7d1b46b7a921307a4ff72",
+  "build": {
+    "file": "build/beta-candidate-2026-10-20.rbxl",
+    "sha256": "67f13be7e32e369968a4f443967a543ed905f9801082bd70348db237e0b0aced"
+  },
+  "errors": {
+    "worlds": [
+      "evidence reference unavailable"
+    ],
+    "playtested": [
+      "evidence reference unavailable"
+    ],
+    "published_test": [
+      "evidence reference unavailable"
+    ]
+  }
+}

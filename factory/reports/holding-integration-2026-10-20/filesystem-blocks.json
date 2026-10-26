@@ -1,0 +1,12 @@
+{
+  "paths_exist": {
+    "holding_runtime": false,
+    "holding_ledger": false,
+    "holding_authorization": false,
+    "isolated_worktree": false
+  },
+  "git_failure": "cannot lock ref refs/heads/hq/roblox-protected: unable to create directory",
+  "installation_failure": "WinError 5 Access is denied: C:/Users/joaov/dev/holding-hq/runtime",
+  "folder_permissions_granted_but_effective_write_failed": true,
+  "retried_or_bypassed": false
+}

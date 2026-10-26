@@ -67,9 +67,10 @@ Effects.mount(
 )
 Progress.mount(player:WaitForChild("PlayerGui") :: PlayerGui)
 Followers.mount()
+require(script.Effects.Training).mount()
+require(UI.OfflineReward).mount(player:WaitForChild("PlayerGui") :: PlayerGui)
 WorldLighting.mount()
 require(script.Effects.Ambience).mount()
-Main.onWorldClick(Effects.clicked)
 Effects.onCredited(function()
 	Main.pulseCoins()
 end)
@@ -104,6 +105,16 @@ Rebirth.mount(
 )
 
 Shop.mount(player:WaitForChild("PlayerGui") :: PlayerGui)
+require(UI.PrismShop).mount(
+	player:WaitForChild("PlayerGui") :: PlayerGui,
+	remotes:WaitForChild(Remotes.names.BuyPrism) :: RemoteFunction
+)
+require(script.Effects.WildVisitor).mount()
+require(UI.WildEncounter).mount(
+	player:WaitForChild("PlayerGui") :: PlayerGui,
+	remotes:WaitForChild(Remotes.names.WildAction) :: RemoteFunction
+)
+require(UI.PassDiscovery).mount(player:WaitForChild("PlayerGui") :: PlayerGui)
 Journey.mount(player:WaitForChild("PlayerGui") :: PlayerGui)
 require(script.Effects.Milestones).mount(player:WaitForChild("PlayerGui") :: PlayerGui)
 
