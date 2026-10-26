@@ -19,6 +19,9 @@ Read these before writing code:
 - `CLAUDE.md` at the repo root, for the rules that outrank this file.
 - `<game-dir>/spec.md`, for what the game is.
 - `<game-dir>/config/`, for every game number.
+- `factory/VISUAL-QUALITY.md` for art/UI/effect tasks. Preserve the approved
+  silhouette, palette and feedback hierarchy. Report missing visual evidence;
+  never infer that art is finished because tests pass or an asset loads.
 
 ## Output
 Game code under `<game-dir>/src/`, the brief's checklist ticked, and one

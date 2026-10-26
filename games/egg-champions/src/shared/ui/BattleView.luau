@@ -146,10 +146,13 @@ end
 
 function BattleView.fighterName(snapshot: Snapshot, side: string, index: number): string
 	local fighter = sideView(snapshot, side).fighters[index]
-	if side == "leader" or fighter == nil or fighter.pet == nil then
-		return string.format("Leader's pet %d", index)
+	if fighter == nil or fighter.pet == nil then
+		return if side == "leader" then string.format("Leader's pet %d", index) else "Your pet"
 	end
 	local name = Config.petById[fighter.pet :: string].name
+	if side == "leader" then
+		return "Leader's " .. name
+	end
 	if fighter.variant ~= nil then
 		return Config.variantById[fighter.variant :: string].name .. " " .. name
 	end
@@ -379,12 +382,19 @@ function BattleView.feePrompt(worldId: string, state: GymState): FeePrompt
 	local world = Config.worldById[worldId]
 	local fee = Gym.fee(worldId)
 	local paid = state.feesPaid[worldId] == true
-	local body = if paid
+	local cost = if paid
 		then "Fee paid. Attempts are free until your next rebirth."
 		else string.format(
 			"The gym fee is %s coins. Once paid, attempts are free until your next rebirth.",
 			Format.commas(fee)
 		)
+	local body = string.format(
+		"Leader's pets are %s. %s moves are strong against them. %s A loss or giving up starts a %ds retry wait.",
+		BattleView.typeName(world.gym.leader_type),
+		BattleView.typeName(world.gym.counter_type),
+		cost,
+		Gym.retrySeconds()
+	)
 	return {
 		title = world.name .. " Gym",
 		body = body,

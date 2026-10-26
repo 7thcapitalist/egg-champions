@@ -1,0 +1,649 @@
+{
+  "universeId": 10769019206,
+  "version": 54,
+  "scripts": {
+    "ReplicatedStorage.Shared.ui.specs.EdgeArrow.spec": {
+      "hash": 2161052726,
+      "class": "ModuleScript",
+      "length": 3688
+    },
+    "ReplicatedStorage.Shared.analytics.specs.Events.spec": {
+      "hash": 3676826931,
+      "class": "ModuleScript",
+      "length": 14801
+    },
+    "ReplicatedStorage.Shared.rules.Progression": {
+      "hash": 2065803361,
+      "class": "ModuleScript",
+      "length": 3165
+    },
+    "ReplicatedStorage.Shared.net.specs.Requests.spec": {
+      "hash": 1397611412,
+      "class": "ModuleScript",
+      "length": 6562
+    },
+    "ReplicatedStorage.Shared.visual.Pool": {
+      "hash": 2410181297,
+      "class": "ModuleScript",
+      "length": 2857
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.State": {
+      "hash": 810344827,
+      "class": "ModuleScript",
+      "length": 1185
+    },
+    "ReplicatedStorage.Shared.visual.EffectsBudget": {
+      "hash": 3712810019,
+      "class": "ModuleScript",
+      "length": 15244
+    },
+    "ReplicatedStorage.Shared.rules.Gym": {
+      "hash": 1096075474,
+      "class": "ModuleScript",
+      "length": 6285
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.Pets": {
+      "hash": 1539946577,
+      "class": "ModuleScript",
+      "length": 38704
+    },
+    "ReplicatedStorage.Shared.ui.Format": {
+      "hash": 746167900,
+      "class": "ModuleScript",
+      "length": 2214
+    },
+    "ReplicatedStorage.Shared.visual.VariantFx": {
+      "hash": 2475261354,
+      "class": "ModuleScript",
+      "length": 6234
+    },
+    "ReplicatedStorage.Shared.ui.specs.Format.spec": {
+      "hash": 658784257,
+      "class": "ModuleScript",
+      "length": 2229
+    },
+    "ReplicatedStorage.Shared.visual.specs.Followers.spec": {
+      "hash": 480592908,
+      "class": "ModuleScript",
+      "length": 3660
+    },
+    "ReplicatedStorage.Shared.rules.specs.Tutorial.spec": {
+      "hash": 2072105611,
+      "class": "ModuleScript",
+      "length": 15945
+    },
+    "ReplicatedStorage.Shared.testing.Runner.spec": {
+      "hash": 2589132779,
+      "class": "ModuleScript",
+      "length": 1725
+    },
+    "ReplicatedStorage.GameConfig.types": {
+      "hash": 679512821,
+      "class": "ModuleScript",
+      "length": 371
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.Screens": {
+      "hash": 434832353,
+      "class": "ModuleScript",
+      "length": 2227
+    },
+    "ReplicatedStorage.Shared.ui.EdgeArrow": {
+      "hash": 1660277413,
+      "class": "ModuleScript",
+      "length": 2925
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.Reveal": {
+      "hash": 410855674,
+      "class": "ModuleScript",
+      "length": 6245
+    },
+    "ReplicatedStorage.Shared.rules.specs.Hatch.spec": {
+      "hash": 2238332603,
+      "class": "ModuleScript",
+      "length": 7487
+    },
+    "ServerScriptService.Server.ModelLibrary": {
+      "hash": 456007636,
+      "class": "ModuleScript",
+      "length": 5665
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.Effects.Followers": {
+      "hash": 974829112,
+      "class": "ModuleScript",
+      "length": 5220
+    },
+    "ReplicatedStorage.Shared.rules.specs.SaveOrder.spec": {
+      "hash": 3677200259,
+      "class": "ModuleScript",
+      "length": 1539
+    },
+    "ReplicatedStorage.Shared.ui.HudLayout": {
+      "hash": 3417293435,
+      "class": "ModuleScript",
+      "length": 16584
+    },
+    "ReplicatedStorage.Shared.rules.specs.Battle.spec": {
+      "hash": 381023951,
+      "class": "ModuleScript",
+      "length": 21789
+    },
+    "ReplicatedStorage.Shared.ui.PetsView": {
+      "hash": 3992044874,
+      "class": "ModuleScript",
+      "length": 20312
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.Effects.WorldLighting": {
+      "hash": 1731194460,
+      "class": "ModuleScript",
+      "length": 4485
+    },
+    "ReplicatedStorage.Shared.rules.specs.Rebirth.spec": {
+      "hash": 577420519,
+      "class": "ModuleScript",
+      "length": 4356
+    },
+    "ReplicatedStorage.Shared.visual.specs.Effects.spec": {
+      "hash": 2077826841,
+      "class": "ModuleScript",
+      "length": 4196
+    },
+    "ReplicatedStorage.GameConfig.gyms": {
+      "hash": 1894569939,
+      "class": "ModuleScript",
+      "length": 6148
+    },
+    "ReplicatedStorage.Shared.visual.ProgressEffects": {
+      "hash": 1365617153,
+      "class": "ModuleScript",
+      "length": 8015
+    },
+    "ReplicatedStorage.Shared.rules.Tutorial": {
+      "hash": 1749904133,
+      "class": "ModuleScript",
+      "length": 10812
+    },
+    "ReplicatedStorage.GameConfig.eggs": {
+      "hash": 3614022035,
+      "class": "ModuleScript",
+      "length": 864
+    },
+    "ServerScriptService.Server.World.Portals": {
+      "hash": 2397557745,
+      "class": "ModuleScript",
+      "length": 2674
+    },
+    "ReplicatedStorage.Shared.ui.NextGoal": {
+      "hash": 3240124249,
+      "class": "ModuleScript",
+      "length": 9458
+    },
+    "ReplicatedStorage.Shared.ui.specs.EggShopLayout.spec": {
+      "hash": 3257515134,
+      "class": "ModuleScript",
+      "length": 7176
+    },
+    "ServerScriptService.Server.Services.TutorialService": {
+      "hash": 2797704561,
+      "class": "ModuleScript",
+      "length": 1767
+    },
+    "ServerScriptService.Server.Passes": {
+      "hash": 2394763521,
+      "class": "ModuleScript",
+      "length": 1096
+    },
+    "ReplicatedStorage.Shared.ui.HatchReveal": {
+      "hash": 2075381684,
+      "class": "ModuleScript",
+      "length": 2697
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.Main": {
+      "hash": 806333371,
+      "class": "ModuleScript",
+      "length": 33126
+    },
+    "ReplicatedStorage.GameConfig.rarities": {
+      "hash": 4180615575,
+      "class": "ModuleScript",
+      "length": 555
+    },
+    "ReplicatedStorage.Shared.visual.PetLook": {
+      "hash": 2386764895,
+      "class": "ModuleScript",
+      "length": 6706
+    },
+    "ReplicatedStorage.Shared.rules.Battle": {
+      "hash": 712634456,
+      "class": "ModuleScript",
+      "length": 13778
+    },
+    "ReplicatedStorage.GameConfig.specials": {
+      "hash": 547563043,
+      "class": "ModuleScript",
+      "length": 843
+    },
+    "ReplicatedStorage.Shared.visual.ModelTemplates": {
+      "hash": 1884650751,
+      "class": "ModuleScript",
+      "length": 5275
+    },
+    "ServerScriptService.Server.Analytics": {
+      "hash": 2449623750,
+      "class": "ModuleScript",
+      "length": 7131
+    },
+    "ReplicatedStorage.Shared.ui.ThemeColors": {
+      "hash": 554941155,
+      "class": "ModuleScript",
+      "length": 1156
+    },
+    "ReplicatedStorage.GameConfig.variants": {
+      "hash": 850339957,
+      "class": "ModuleScript",
+      "length": 287
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.EggShop": {
+      "hash": 1762072037,
+      "class": "ModuleScript",
+      "length": 32472
+    },
+    "ReplicatedStorage.Shared.rules.specs.Coins.spec": {
+      "hash": 2056409458,
+      "class": "ModuleScript",
+      "length": 5782
+    },
+    "ReplicatedStorage.Shared.Config": {
+      "hash": 2088608170,
+      "class": "ModuleScript",
+      "length": 9666
+    },
+    "ReplicatedStorage.GameConfig.passes": {
+      "hash": 2228672175,
+      "class": "ModuleScript",
+      "length": 351
+    },
+    "ServerScriptService.Server.World.Terrain": {
+      "hash": 784114584,
+      "class": "ModuleScript",
+      "length": 5309
+    },
+    "ServerScriptService.Server.World.Kit": {
+      "hash": 271867270,
+      "class": "ModuleScript",
+      "length": 25224
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.Theme": {
+      "hash": 830495662,
+      "class": "ModuleScript",
+      "length": 3611
+    },
+    "ReplicatedStorage.Shared.rules.specs.PassEffects.spec": {
+      "hash": 4013361482,
+      "class": "ModuleScript",
+      "length": 5933
+    },
+    "ReplicatedStorage.Shared.net.Requests": {
+      "hash": 187246569,
+      "class": "ModuleScript",
+      "length": 4854
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.Pointer": {
+      "hash": 3885908212,
+      "class": "ModuleScript",
+      "length": 12037
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.Effects.Effects": {
+      "hash": 1792968671,
+      "class": "ModuleScript",
+      "length": 28360
+    },
+    "ServerScriptService.Server.World.Builder": {
+      "hash": 1531938249,
+      "class": "ModuleScript",
+      "length": 13071
+    },
+    "ReplicatedStorage.Shared.rules.Coins": {
+      "hash": 2951247612,
+      "class": "ModuleScript",
+      "length": 2919
+    },
+    "ServerScriptService.Server.Services.GymService": {
+      "hash": 3022122746,
+      "class": "ModuleScript",
+      "length": 10980
+    },
+    "ReplicatedStorage.Shared.testing.Runner": {
+      "hash": 434180202,
+      "class": "ModuleScript",
+      "length": 4968
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.Effects.Progress": {
+      "hash": 3121652578,
+      "class": "ModuleScript",
+      "length": 12635
+    },
+    "ReplicatedStorage.Shared.ui.specs.HudLayout.spec": {
+      "hash": 2343359605,
+      "class": "ModuleScript",
+      "length": 12962
+    },
+    "ReplicatedStorage.Shared.ui.EggShopView": {
+      "hash": 1072999123,
+      "class": "ModuleScript",
+      "length": 12154
+    },
+    "ReplicatedStorage.Shared.ui.specs.EggShopView.spec": {
+      "hash": 2255991160,
+      "class": "ModuleScript",
+      "length": 12622
+    },
+    "ReplicatedStorage.Shared.rules.Rebirth": {
+      "hash": 2321939691,
+      "class": "ModuleScript",
+      "length": 1849
+    },
+    "ReplicatedStorage.Shared.ui.specs.BattleView.spec": {
+      "hash": 324204744,
+      "class": "ModuleScript",
+      "length": 10685
+    },
+    "ReplicatedStorage.Shared.visual.specs.PetLook.spec": {
+      "hash": 3712399248,
+      "class": "ModuleScript",
+      "length": 3809
+    },
+    "ReplicatedStorage.Shared.visual.BattleEffects": {
+      "hash": 1634803451,
+      "class": "ModuleScript",
+      "length": 7751
+    },
+    "ReplicatedStorage.Shared.PetVisual": {
+      "hash": 3881560592,
+      "class": "ModuleScript",
+      "length": 15155
+    },
+    "ServerScriptService.Server.Services.ClickService": {
+      "hash": 577680065,
+      "class": "ModuleScript",
+      "length": 4119
+    },
+    "ReplicatedStorage.Shared.ui.EggShopLayout": {
+      "hash": 2795513442,
+      "class": "ModuleScript",
+      "length": 8220
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.HudInsets": {
+      "hash": 1567619775,
+      "class": "ModuleScript",
+      "length": 3230
+    },
+    "ReplicatedStorage.Shared.rules.PetIndex": {
+      "hash": 1928015915,
+      "class": "ModuleScript",
+      "length": 2494
+    },
+    "ServerScriptService.Server.Profiles": {
+      "hash": 3599702526,
+      "class": "ModuleScript",
+      "length": 13728
+    },
+    "ReplicatedStorage.Shared.rules.specs.PetIndex.spec": {
+      "hash": 3406977644,
+      "class": "ModuleScript",
+      "length": 3885
+    },
+    "ReplicatedStorage.GameConfig.pets": {
+      "hash": 2731877538,
+      "class": "ModuleScript",
+      "length": 8897
+    },
+    "ReplicatedStorage.Shared.rules.specs.Gym.spec": {
+      "hash": 1236613342,
+      "class": "ModuleScript",
+      "length": 6438
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.Shop": {
+      "hash": 3632730709,
+      "class": "ModuleScript",
+      "length": 7612
+    },
+    "ReplicatedStorage.Shared.Remotes": {
+      "hash": 4096635577,
+      "class": "ModuleScript",
+      "length": 3407
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.Battle": {
+      "hash": 1705236518,
+      "class": "ModuleScript",
+      "length": 30440
+    },
+    "ServerScriptService.Server": {
+      "hash": 1189013672,
+      "class": "Script",
+      "length": 2703
+    },
+    "ReplicatedStorage.Shared.rules.specs.Progression.spec": {
+      "hash": 3878451166,
+      "class": "ModuleScript",
+      "length": 4295
+    },
+    "ReplicatedStorage.Shared.rules.Profile": {
+      "hash": 527471033,
+      "class": "ModuleScript",
+      "length": 9889
+    },
+    "ServerScriptService.Server.Guard": {
+      "hash": 3117694996,
+      "class": "ModuleScript",
+      "length": 8627
+    },
+    "ReplicatedStorage.Shared.rules.SaveOrder": {
+      "hash": 2260622701,
+      "class": "ModuleScript",
+      "length": 826
+    },
+    "ReplicatedStorage.Shared.world.WorldLook": {
+      "hash": 2008530011,
+      "class": "ModuleScript",
+      "length": 8197
+    },
+    "ReplicatedStorage.Shared.ui.specs.NextGoal.spec": {
+      "hash": 2096020233,
+      "class": "ModuleScript",
+      "length": 12897
+    },
+    "ReplicatedStorage.Shared.world.specs.Scenery.spec": {
+      "hash": 3179549678,
+      "class": "ModuleScript",
+      "length": 16707
+    },
+    "ReplicatedStorage.Shared.world.specs.Layout.spec": {
+      "hash": 4064477286,
+      "class": "ModuleScript",
+      "length": 9430
+    },
+    "ReplicatedStorage.Shared.world.Layout": {
+      "hash": 1367739577,
+      "class": "ModuleScript",
+      "length": 9679
+    },
+    "ReplicatedStorage.GameConfig.worlds": {
+      "hash": 842854121,
+      "class": "ModuleScript",
+      "length": 881
+    },
+    "ReplicatedStorage.Shared.visual.specs.ModelTemplates.spec": {
+      "hash": 3465504810,
+      "class": "ModuleScript",
+      "length": 7015
+    },
+    "ServerScriptService.Server.Services.RebirthService": {
+      "hash": 2830872500,
+      "class": "ModuleScript",
+      "length": 1756
+    },
+    "StarterPlayer.StarterPlayerScripts.Client": {
+      "hash": 2005072465,
+      "class": "LocalScript",
+      "length": 7515
+    },
+    "ReplicatedStorage.Shared.world.Names": {
+      "hash": 220270512,
+      "class": "ModuleScript",
+      "length": 643
+    },
+    "ReplicatedStorage.GameConfig.roles": {
+      "hash": 2430717123,
+      "class": "ModuleScript",
+      "length": 243
+    },
+    "ReplicatedStorage.Shared.visual.Followers": {
+      "hash": 2521556973,
+      "class": "ModuleScript",
+      "length": 4643
+    },
+    "ServerScriptService.Server.Services.ShopService": {
+      "hash": 3392435407,
+      "class": "ModuleScript",
+      "length": 4448
+    },
+    "ReplicatedStorage.Shared.rules.specs.Team.spec": {
+      "hash": 2977248193,
+      "class": "ModuleScript",
+      "length": 4927
+    },
+    "ReplicatedStorage.Shared.rules.specs.Profile.spec": {
+      "hash": 4273667146,
+      "class": "ModuleScript",
+      "length": 8498
+    },
+    "ReplicatedStorage.Shared.rules.Hatch": {
+      "hash": 2799803687,
+      "class": "ModuleScript",
+      "length": 7269
+    },
+    "ReplicatedStorage.Shared.visual.specs.VariantView.spec": {
+      "hash": 3826121459,
+      "class": "ModuleScript",
+      "length": 10869
+    },
+    "ReplicatedStorage.Shared.analytics.Events": {
+      "hash": 2119005893,
+      "class": "ModuleScript",
+      "length": 11455
+    },
+    "ReplicatedStorage.Shared.world.WorldPalette": {
+      "hash": 3821420677,
+      "class": "ModuleScript",
+      "length": 4277
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.Rebirth": {
+      "hash": 3508151069,
+      "class": "ModuleScript",
+      "length": 5892
+    },
+    "ReplicatedStorage.Shared.rules.PassEffects": {
+      "hash": 3723755430,
+      "class": "ModuleScript",
+      "length": 3929
+    },
+    "ReplicatedStorage.Shared.ui.BattleView": {
+      "hash": 3338191905,
+      "class": "ModuleScript",
+      "length": 14089
+    },
+    "ReplicatedStorage.Shared.ui.specs.HatchReveal.spec": {
+      "hash": 3211655043,
+      "class": "ModuleScript",
+      "length": 3392
+    },
+    "ReplicatedStorage.Shared.visual.specs.Progress.spec": {
+      "hash": 3638886094,
+      "class": "ModuleScript",
+      "length": 6603
+    },
+    "ServerScriptService.Server.Services.TeamService": {
+      "hash": 3784432829,
+      "class": "ModuleScript",
+      "length": 3892
+    },
+    "ReplicatedStorage.Shared.rules.Team": {
+      "hash": 626416874,
+      "class": "ModuleScript",
+      "length": 4289
+    },
+    "ReplicatedStorage.Shared.visual.PetPortrait": {
+      "hash": 1279402386,
+      "class": "ModuleScript",
+      "length": 1716
+    },
+    "ReplicatedStorage.Shared.testing.specs": {
+      "hash": 2436102307,
+      "class": "ModuleScript",
+      "length": 1616
+    },
+    "ReplicatedStorage.GameConfig.constants": {
+      "hash": 2351250948,
+      "class": "ModuleScript",
+      "length": 644
+    },
+    "ReplicatedStorage.Shared.visual.specs.BattleEffects.spec": {
+      "hash": 130598550,
+      "class": "ModuleScript",
+      "length": 12587
+    },
+    "ReplicatedStorage.Shared.ui.PetsLayout": {
+      "hash": 4078987135,
+      "class": "ModuleScript",
+      "length": 12800
+    },
+    "ReplicatedStorage.GameConfig.manifest": {
+      "hash": 4082612276,
+      "class": "ModuleScript",
+      "length": 293
+    },
+    "ReplicatedStorage.Shared.visual.specs.PetPortrait.spec": {
+      "hash": 1164782890,
+      "class": "ModuleScript",
+      "length": 1558
+    },
+    "ServerScriptService.Server.Services.PassService": {
+      "hash": 1322734247,
+      "class": "ModuleScript",
+      "length": 7816
+    },
+    "ReplicatedStorage.GameConfig.models": {
+      "hash": 4112513822,
+      "class": "ModuleScript",
+      "length": 4273
+    },
+    "StarterPlayer.StarterPlayerScripts.Client.UI.Guide": {
+      "hash": 3239264318,
+      "class": "ModuleScript",
+      "length": 7035
+    },
+    "ReplicatedStorage.Shared.ui.specs.PetsView.spec": {
+      "hash": 2099646937,
+      "class": "ModuleScript",
+      "length": 15862
+    },
+    "ReplicatedStorage.Shared.world.Scenery": {
+      "hash": 1944129736,
+      "class": "ModuleScript",
+      "length": 22485
+    },
+    "ReplicatedStorage.Shared.ui.specs.PetsLayout.spec": {
+      "hash": 1715185671,
+      "class": "ModuleScript",
+      "length": 14767
+    },
+    "ReplicatedStorage.Shared.analytics.Queue": {
+      "hash": 3485304536,
+      "class": "ModuleScript",
+      "length": 1747
+    }
+  },
+  "fixture": false,
+  "placeId": 101737317546942,
+  "serverAttributes": []
+}

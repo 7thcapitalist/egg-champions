@@ -43,32 +43,50 @@ local HttpService = game:GetService("HttpService")
 local entries = HttpService:JSONDecode([==[%s]==])
 local results = {}
 for _, entry in entries do
-	local result = { id = entry.id }
-	local ok, part = pcall(function()
-		return AssetService:CreateMeshPartAsync("rbxassetid://" .. entry.mesh)
-	end)
-	if ok and part ~= nil then
-		result.mesh_ok = true
-		result.mesh_size = { part.MeshSize.X, part.MeshSize.Y, part.MeshSize.Z }
-		part:Destroy()
-	else
-		result.mesh_ok = false
-		result.error = tostring(part)
-	end
-	local status = "None"
-	local loaded, err = pcall(function()
-		ContentProvider:PreloadAsync({ "rbxassetid://" .. entry.texture }, function(_, fetch)
-			status = fetch.Name
-		end)
-	end)
-	result.texture_status = if loaded then status else ("error: " .. tostring(err))
-	table.insert(results, result)
+    local result = { id = entry.id, parts = {} }
+    for _, piece in entry.parts do
+        local item = { name = piece.name, mesh_id = piece.mesh_id, texture_id = piece.texture_id }
+        local ok, part = pcall(function()
+            return AssetService:CreateMeshPartAsync("rbxassetid://" .. piece.mesh_id)
+        end)
+        item.mesh_ok = ok and part ~= nil
+        if item.mesh_ok then
+            item.mesh_size = {part.MeshSize.X, part.MeshSize.Y, part.MeshSize.Z}
+            part.TextureID = "rbxassetid://" .. piece.texture_id
+            part.Anchored = true
+            part.CanCollide = false
+            part.Transparency = 1
+            part.Parent = workspace
+        else item.error = tostring(part) end
+        local status = "None"
+        local loaded, err = pcall(function()
+            -- Resolve dependencies through the actual MeshPart. A bare image
+            -- URI in Edit can report Failure despite the textured part loading.
+            ContentProvider:PreloadAsync({if item.mesh_ok then part else "rbxassetid://" .. piece.texture_id}, function(asset, fetch)
+                if asset == "rbxassetid://" .. piece.texture_id then
+                    status = fetch.Name
+                end
+            end)
+        end)
+        if item.mesh_ok then part:Destroy() end
+        item.texture_status = if loaded then status else ("error: " .. tostring(err))
+        table.insert(result.parts, item)
+    end
+    table.insert(results, result)
+    task.wait()
 end
 return { results = results }
 """
 
 
 def judge(result):
+    if "parts" in result:
+        pieces = [judge(piece) for piece in result["parts"]]
+        result["mesh_ok"] = bool(pieces) and all(p["mesh_ok"] for p in pieces)
+        result["texture_loaded"] = bool(pieces) and all(p["texture_loaded"] for p in pieces)
+        result["texture_status"] = "Success" if result["texture_loaded"] else "Failure"
+        result["ok"] = bool(pieces) and all(p["ok"] for p in pieces)
+        return result
     size = result.get("mesh_size") or []
     mesh = bool(result.get("mesh_ok")) and len(size) == 3 and all(
         isinstance(n, (int, float)) and n > 0 for n in size
@@ -77,6 +95,28 @@ def judge(result):
     result["texture_loaded"] = texture
     result["ok"] = mesh and texture
     return result
+
+
+def payload_for(table):
+    return [{"id": e["id"], "parts": [
+        {"name": p["name"], "mesh_id": str(p["mesh_id"]), "texture_id": str(p["texture_id"])}
+        for p in e.get("parts", [{"name": "Mesh", "mesh_id": e["mesh_id"], "texture_id": e["texture_id"]}])
+    ]} for e in table["entries"]]
+
+
+def checked_results(table, returned):
+    by_id = {r.get("id"): r for r in returned}
+    results = []
+    for expected in payload_for(table):
+        result = by_id.get(expected["id"], {"id": expected["id"], "parts": []})
+        actual = [{"name": p.get("name"), "mesh_id": str(p.get("mesh_id")), "texture_id": str(p.get("texture_id"))}
+                  for p in result.get("parts", [])]
+        judge(result)
+        if actual != expected["parts"]:
+            result["ok"] = False
+            result["error"] = "returned mesh pieces do not match the current model table"
+        results.append(result)
+    return results
 
 
 def current_and_ok(game, models_path):
@@ -98,6 +138,7 @@ def main(argv=None):
     parser.add_argument("game_dir")
     parser.add_argument("--wait", type=float, default=290)
     parser.add_argument("--if-stale", action="store_true")
+    parser.add_argument("--studio-results", help="import recorded Studio verification with digest and target IDs")
     args = parser.parse_args(argv)
     game = Path(args.game_dir)
     models_path = game / "assets" / "models.json"
@@ -110,45 +151,51 @@ def main(argv=None):
         raw = models_path.read_bytes()
         table = json.loads(raw.decode("utf-8"))
         universe, place, secret = opencloud.test_place(game)
-        key = opencloud.api_key(secret)
+        key = opencloud.api_key(secret) if not args.studio_results else None
     except (OSError, ValueError, KeyError, opencloud.CloudError) as err:
         print("verify_assets: %s" % err)
         return 1
 
     digest = hashlib.sha256(raw).hexdigest()
-    payload = [
-        {"id": e["id"], "mesh": str(e["mesh_id"]), "texture": str(e["texture_id"])}
-        for e in table["entries"]
-    ]
-    script = SCRIPT % json.dumps(payload)
-    try:
-        task = opencloud.run(
-            game / "build" / "verify-task.json", digest, universe, place, key, script, args.wait
-        )
-    except opencloud.CloudError as err:
-        print("verify_assets: %s" % err)
-        return 1
-    if task is None:
-        return 2
-    if task.get("state") != "COMPLETE":
-        print("verify_assets: task ended %s: %s" % (task.get("state"), json.dumps(task.get("error"))))
-        for line in opencloud.task_logs(task["path"], key)[-10:]:
-            print("  log: %s" % line)
-        return 1
-
-    value = opencloud.returned(task) or {}
-    results = [judge(r) for r in value.get("results") or []]
-    returned_ids = [r.get("id") for r in results]
-    for e in table["entries"]:
-        if e["id"] not in returned_ids:
-            results.append({"id": e["id"], "ok": False, "error": "no result returned"})
+    payload = payload_for(table)
+    if args.studio_results:
+        try:
+            recorded = json.loads(Path(args.studio_results).read_text(encoding="utf-8"))
+            if (recorded.get("models_sha256") != digest
+                    or recorded.get("place_id") != place
+                    or recorded.get("universe_id") != universe):
+                raise ValueError("Studio evidence hash or TEST target does not match")
+            results = checked_results(table, recorded["results"])
+            task_path = "studio:" + recorded["studio_id"]
+        except (OSError, ValueError, KeyError, TypeError) as err:
+            print("verify_assets: %s" % err)
+            return 1
+    else:
+        script = SCRIPT % json.dumps(payload)
+        try:
+            task = opencloud.run(
+                game / "build" / "verify-task.json", digest, universe, place, key, script, args.wait
+            )
+        except opencloud.CloudError as err:
+            print("verify_assets: %s" % err)
+            return 1
+        if task is None:
+            return 2
+        if task.get("state") != "COMPLETE":
+            print("verify_assets: task ended %s: %s" % (task.get("state"), json.dumps(task.get("error"))))
+            for line in opencloud.task_logs(task["path"], key)[-10:]:
+                print("  log: %s" % line)
+            return 1
+        value = opencloud.returned(task) or {}
+        results = checked_results(table, value.get("results") or [])
+        task_path = task["path"]
 
     report = {
         "checked": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "models_sha256": digest,
         "universe_id": universe,
         "place_id": place,
-        "task": task["path"],
+        "task": task_path,
         "ok": sum(1 for r in results if r["ok"]),
         "total": len(results),
         "entries": results,

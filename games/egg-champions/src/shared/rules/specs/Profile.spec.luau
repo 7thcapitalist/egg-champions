@@ -101,7 +101,7 @@ return function()
 			save.feesPaid = {}
 			save.gymRetryAt = { [Config.worlds[1].id] = 100 }
 			local migrated = Profile.migrate(save)
-			expect(migrated.version).toEqual(4)
+			expect(migrated.version).toEqual(Profile.version)
 			expect(migrated.playSeconds).toEqual(0)
 			expect(migrated.gymRetryAt).toEqual({ [Config.worlds[1].id] = 100 })
 			expect(save.playSeconds).toEqual(nil)
@@ -229,6 +229,14 @@ return function()
 			profile.coins = -5
 			local _, remaining = Profile.repair(profile)
 			expect(kindsOf(remaining)).toEqual({ Profile.problems.negativeCoins })
+		end)
+
+		it("knows the save store errors that mean Studio has no API access", function()
+			expect(Profile.isNoAccessError("StudioAccessToApisNotAllowed: no")).toBeTrue()
+			expect(Profile.isNoAccessError("Error: API access is not enabled for this place")).toBeTrue()
+			expect(Profile.isNoAccessError("403: Forbidden")).toBeTrue()
+			expect(Profile.isNoAccessError("502: API Services rejected request")).toBeFalse()
+			expect(Profile.isNoAccessError("error 403: later in the text")).toBeFalse()
 		end)
 	end)
 end

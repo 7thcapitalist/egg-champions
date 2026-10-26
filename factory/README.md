@@ -19,8 +19,8 @@ arguments.
 | 7 | Playtester | Published test place | Bug report | Not built |
 | 8 | Publisher | A passing build | Live game, icon, thumbnails | Not built |
 
-Agents are Claude Code subagents. Each one's instructions are the body of its
-file in `.claude/agents/`, which is the only copy of that text:
+The local orchestrator starts fresh `codex exec` runs. It loads each role's
+instruction body from the historical `.claude/agents/` files:
 
 | Agent | File |
 | --- | --- |
@@ -47,9 +47,11 @@ stages run in order: `spec_parsed`, `economy_tuned`, `planned`, `built`,
     python factory/tools/state.py set <game-dir> <stage> <status> [--note TEXT]
     python factory/tools/state.py next <game-dir>
 
-A gate is the machine check for one stage. It only reads what is already in
-the repo, so a stale generated file fails the gate instead of being quietly
-regenerated. Stages with no check yet print "no gate yet" and exit 1, so
+A gate is the machine check for one stage. It validates existing inputs, so a
+stale generated config fails instead of being quietly regenerated. The built
+and assets gates also rebuild build/game.rbxl; use an isolated checkout when
+preserving a Studio build. Release evidence gates are read-only. Stages with
+no check yet print "no gate yet" and exit 1, so
 "not implemented" can never be mistaken for "passed".
 
     python factory/tools/gate.py <game-dir> <stage>
@@ -57,13 +59,62 @@ regenerated. Stages with no check yet print "no gate yet" and exit 1, so
 | Stage | Gate today |
 | --- | --- |
 | `spec_parsed` | the validator passes and `manifest.json` matches the spec's current hash |
-| `economy_tuned` | the tuning report shows the time pacing targets met |
-| `built` | every brief in the game's task index is ticked, and rojo, selene and stylua pass |
+| `economy_tuned` | the current tuning report meets every time and configured gym rebirth target |
+| `built` | every brief in the game's task index is ticked, and the Luau suite, rojo, selene and stylua pass |
 | `assets` | every pet and egg has a current entry in `assets/models.json`, the project maps it, `rojo build` passes, and `assets/verify.json` checked this exact `models.json` with every entry ok |
-| the rest | no gate yet |
+| `worlds` | current source/build binding, visual review >=4 and observed routes/arrivals for every configured world |
+| `playtested` | world evidence plus bound mobile, real-client multiplayer and natural free-player gym progression |
+| `published_test` | playtest evidence plus same-version TEST publication/reopen, real DataStore roundtrip and pass purchases |
 
 `gate.py` decides; `state.py` only records what it found. Nothing marks a
 stage passed on its own word.
+
+## Local Studio QA
+
+For the holding's fail-closed quota guard and the isolated built-task bridge,
+read [holding/README.md](holding/README.md). The bridge inspects by default and
+does not replace the executor's authorization, model selection or usage ledger.
+Paperclip agents use process adapters. On 2026-10-21 the isolated worktree was
+verified with terminal approval. Director, analyst and research are available
+for script checks; the engineer remains paused because the authorized quota
+window is exceeded and required measurement is unavailable inside Paperclip.
+Automatic heartbeats remain disabled. See reports/holding-activation-2026-10-21.
+
+Read [HOLDING-CONTEXT.md](HOLDING-CONTEXT.md) for the observed Paperclip/HQ
+workflow and ownership boundaries. Manager automation must not edit this active
+user workspace or infer a Paperclip pause from the old heartbeat pause file.
+
+The release gates read `release/manifest.json` and never publish, buy passes,
+start Studio or call a model. Missing/stale evidence blocks them. Source-bound
+JSON and hashes do not certify the truth of human observations by themselves.
+
+For isolated beta multiplayer fixtures, read-only save/mobile captures and
+evidence checks, see [BETA-QA.md](BETA-QA.md). Preparation never publishes or
+starts the executor; temporary profiles cannot certify persistence.
+
+For bounded feature proposals based on primary references, see
+[FEATURE-RESEARCH.md](FEATURE-RESEARCH.md). Validation and brief drafting use
+scripts without model calls and do not start the executor.
+
+Before art/UI planning read [VISUAL-QUALITY.md](VISUAL-QUALITY.md). Plans must
+include map composition, asset contact sheets, animation/effect budgets,
+onboarding and collection-value review. Validate review evidence with
+`python factory/tools/quality_review.py <game-dir> <review.json>`. It checks
+freshness and completeness; it does not replace visual inspection or stage gates.
+
+Reviews bind each evidence file to its SHA-256 and record requested and effective
+viewport dimensions. See [PUBLISHED-QA.md](PUBLISHED-QA.md) for save/rejoin, pass
+and natural progression evidence. A temporary Studio profile or a successful
+upload never substitutes for a published gameplay test.
+
+`python -B factory/tools/build_playtest.py <game-dir> <scenario>` builds a
+separate unpublished QA place under `<game-dir>/build/playtest/` without
+changing the shipping project. Scenarios are `beginner`, `collection`,
+`gym1`, `gym2`, `gym3` and `portals`. Gym fixtures read the tuning reference
+team; `portals` physically crosses the generated trigger parts and asserts
+refusal or the target arrival. Open the file in Studio and read Output.
+Fixtures assert Studio and PlaceId zero. Do not publish them. Temporary
+profiles do not validate DataStore persistence or cross-server locking.
 
 ## Run agent 1
 
@@ -95,6 +146,19 @@ Three files in `<game-dir>/assets/`:
       python factory/tools/verify_assets.py <game-dir> [--wait SECONDS]
 
   Exit 2 means the task is still running; run it again to resume it.
+
+  Segmented pets may record up to eight named pieces in `parts`, each with
+  `mesh_id`, `texture_id`, `size` and a 12-number local `cframe`. The builder
+  validates and preserves the poses. Verification checks every piece.
+
+  Studio MCP can run the same verification script on TEST. Save the returned
+  `results` with `models_sha256`, `universe_id`, `place_id` and `studio_id`, then
+  import that evidence without an Open Cloud key:
+
+      python factory/tools/verify_assets.py <game-dir> --studio-results <record.json>
+
+  Import rejects mismatched target IDs, model hashes or piece IDs. It records
+  `studio:<studio_id>` as its source, distinct from an Open Cloud task.
 
 ## CI
 
@@ -150,76 +214,118 @@ since their addresses change from run to run.
 
 ## Run the factory
 
-One command builds a game from where its `state.json` says it is, with nobody
-typing:
+Production is paused in `factory/executor.json`. Do not resume until the owner
+reviews both reports under `factory/reports/`. No live AI or publishing is
+needed for validation:
 
-    python factory/tools/run_factory.py <game-dir>
+    python -B factory/tools/run_factory.py games/egg-champions --executor-status
+    python -B -m unittest discover -s factory/tests -p 'test_*.py' -v
 
-or, inside Claude Code, `/build-game <game-dir>`, which runs the same command
-and then summarizes the report. Start from a clean working tree; the
-orchestrator refuses otherwise, so a revert can never take a person's work.
+The policy is project-local and centralizes model, effort, timeouts and budgets.
+Default: `gpt-6-luna`, effort `low`, only that model allowed, at most two total
+attempts, one task per run, 300 seconds per invocation, 600 seconds per task.
+`--attempts` and `--task-minutes` can tighten limits but cannot loosen policy.
+There is no alternate executor or automatic model fallback. Push is disabled.
+Changing model requires explicit allowlist authorization; an unavailable model
+fails instead of selecting a more expensive model. Availability is not probed
+with a paid request. The local model cache listed the default on 2026-10-17.
 
-What it does, in order:
-- Works on the first stage that has not passed. A stage whose gate already
-  passes is recorded and skipped. `spec_parsed`, `economy_tuned` and
-  `planned` run their agent, then the gate, up to 3 tries.
-- `built` walks `<game-dir>/tasks/index.json` in dependency order. Each task
-  gets a fresh headless `claude -p --agent coder` run on its one brief. The
-  coder does not commit. The orchestrator then checks the work itself:
-  - only allowed paths changed: `<game-dir>/src/`, `<game-dir>/tasks/`, test
-    files (`*.spec.luau`, `factory/tools/run_tests*`), and files the brief
-    names. A change to the spec, `config/`, `tuning/`, `state.json`, the task
-    index, `factory/`, `.claude/` or `.env` rejects the attempt and reverts
-    all of it;
-  - every Done-when box is ticked, and no changed file has an em dash;
-  - the brief's Done-when commands pass (`python`, `rojo`, `selene`,
-    `stylua`, and `grep ... finds no` checks are rerun; experiment items such
-    as "a deliberately broken ..." rely on the coder's tick);
-  - the test entry point, `rojo build`, `selene` and `stylua --check` pass.
-- Pass: the task is marked done, committed, and pushed. Fail: the coder gets
-  the failing output and tries again, up to 3 tries in all. Still failing:
-  the work is saved to `<game-dir>/reports/blocked/task-<id>.patch`,
-  reverted, the task is marked blocked, and the run stops.
-- A stage with no agent yet (today `assets` onward) stops the run.
+Parsing and economy simulation use existing deterministic Python scripts.
+Planner/coder receive fresh prompts with just their role and assignment,
+bounded feedback (2,000 characters) and an initial prompt cap (14,000 characters).
+Instructions limit reads to named files and relevant spec/config sections.
+The orchestrator runs checks/status/gates through scripts, not a second AI
+review. Command checklist items are ticked after scripts pass. Experiments
+still require separate evidence; they are not silently marked passed.
+Child invocation options disable multi-agent, goals and memories, limit tool
+output and request a smaller context window. These runtime settings are not a
+hard ceiling on all context or all model requests (compaction can use AI).
 
-Limits: `--max-tasks` (default 5) tasks per run, `--task-minutes` (default 60)
-per task across its attempts, `--attempts` (default 3), and an optional
-`--budget-usd` spend cap per agent run. Agents run with
-`--permission-mode dontAsk`, so anything not allowed is denied rather than
-asked, plus deny rules for `.env`, git writes and `rojo upload`. Nothing in
-the loop publishes; publishing is a later stage. `--no-push` keeps commits
-local, for scratch branches.
+### Admission and measurement
 
-Every step adds a line to `<game-dir>/reports/run-log.md`. Every run ends by
-rewriting `<game-dir>/reports/latest.md`: what was done, what failed, the
-state now, and what to do next. Each agent's final report is kept in
-`<game-dir>/reports/agents/`.
+Production remains paused, with `authorized_calls=0`, `authorized_tokens=0`
+and unknown subscription quota. The reported approximate 7% is not a budget
+authorization. No dollars or API-price estimates are used.
 
-### Resume after a blocked task
+After explicit owner approval, a project policy would need positive cumulative
+call/token authorizations and a quota snapshot with `remaining_percent`, Unix
+UTC `measured_at`, and a truthful `source`. A snapshot must be at most 300 seconds
+old, not future-dated, and above the configured floor (default 5%). There is no
+live subscription quota reader in this executor. A manual snapshot is an owner
+attestation, not independently verified telemetry. If it is unavailable or stale,
+admission is blocked. Do not fabricate measurements or automatically refresh
+timestamps. Budgets are cumulative across games in this Git repository; increasing
+them is new authorization, not a periodic reset.
 
-1. Read `<game-dir>/reports/latest.md`, then the coder reports and the saved
-   patch it names.
-2. Fix the cause. Usually that is the brief (a wrong premise, or a check no
-   machine can run), sometimes the code or a tool. To keep the coder's last
-   try, `git apply <game-dir>/reports/blocked/task-<id>.patch` and finish it.
-   Commit the fix.
-3. Run again with the task set back to pending:
+Policy is reloaded before every invocation and checked again after preparation;
+changed policy aborts that launch. Before each invocation, admission checks
+pause, quota, local budgets, ledger
+integrity, unfinished calls, unknown usage, model mismatch, duplicate completed
+tasks and persistent attempts. The CLI launch itself consumes a call even if it
+fails. Two attempts are total per game/task label across executor restarts, not
+two per new process. Reusing a task ID never resets authorization automatically.
 
-       python factory/tools/run_factory.py <game-dir> --unblock <id>
+### Durable ledger and exclusion
 
-A blocked stage other than `built` resumes the same way, after
-`python factory/tools/state.py set <game-dir> <stage> pending`.
+`git rev-parse --git-common-dir` locates `factory-executor/calls.jsonl` and
+`executor.lock`, shared by worktrees. A separate `ledger-head.json` records
+the row count and SHA-256 of the journal. Missing, truncated, changed or
+inconsistent journal/head blocks admission; a crash while updating these files
+also blocks. Legacy journals without a head require explicit review, not
+automatic migration or reset. The atomic lock covers the whole run and
+`--finish`; a second executor is rejected. A stale lock is never removed
+automatically. This metadata survives normal task rollback and is outside the
+agent change set. It is not part of commits: archive the ledger with review
+records before intentionally removing a checkout. Independent clones/machines
+have separate ledgers and locks; do not run them against the same authorization.
 
-`--agent-cmd CMD` swaps `claude` for another command, which gets the prompt
-on stdin. It exists only to test the orchestrator itself without spending
-agent runs.
+Each invocation writes a durable started record before spawning and a finished
+record with task, role, persistent attempt, requested model/effort, duration,
+status, reported effective models and usage. Completed task markers follow
+script verification and require the latest invocation to be successful and
+measured. `--finish` cannot finalize an unrecorded or already completed task.
+Start/finish identities, sequential attempt numbers and usage totals are
+validated on every ledger read. Each completed-turn usage record is preserved and summed
+per invocation. `input_tokens` already includes `cached_input_tokens`;
+`total_tokens = input_tokens + output_tokens`. Cache is never added again.
+Absent/malformed metrics and absent effective model/provider request count are
+JSON `null` (unknown), not zero. Interrupted, timed-out and nonzero-exit calls
+are conservatively unknown even if an earlier turn reported usage. A later
+unclosed turn, failure/error event or conflicting duplicate turn also makes
+the total unknown. Known earlier turns are preserved without pretending the
+whole invocation was measured. All these cases stop further admission. Reported model divergence also blocks
+further calls. Missing effective model alone remains explicitly unknown.
 
-`--finish ID` is for agents whose shell calls are cut short (for example a
-45 second limit). The agent builds task ID in the working tree and ticks its
-Done-when boxes, then runs
-`python factory/tools/run_factory.py <game-dir> --no-push --finish ID`.
-It applies the same path guard and checks as a normal attempt (the checks
-run side by side), then marks the task done and commits it. It skips the
-stage gates and the run report, and it never reverts: on failure it prints
-what failed and the agent fixes it and runs it again. Only the next runnable
-task can be finished.
+The CLI JSONL interface does not enumerate every internal provider request or
+its effective model. This ledger is per CLI invocation with reported turns,
+not invented per-request telemetry. CLI internal retries, server routing and
+already consumed subscription quota cannot be guaranteed by this wrapper.
+The two-attempt cap applies to executor launches. Runtime retry settings for
+built-in providers are not assumed to be enforceable. The token threshold is
+an admission check on already reported usage, not a mid-call output ceiling:
+one admitted call can exceed it before the CLI reports totals. The quota
+snapshot is also not a reservation against other chats using the same account.
+
+Timeouts stop the child process tree. The task deadline is shared across
+invocations and survives restart with the original deadline, including a
+shorter CLI task limit. Restart cannot reset the prompt/report attempt number
+or the task deadline. Backwards clock movement blocks admission. Script checks
+have their own timeout (600 seconds per command), and teardown/reporting can
+add time. No claim is made that the entire pipeline always exits within the
+model-call deadline. A governance stop preserves partial working changes for
+review and does not commit them as a successful task.
+
+These are local orchestration controls, not a security boundary against an
+agent deliberately running a nested CLI or editing Git metadata. The hash
+anchor is not signed: removing both journal and head, or deliberately rewriting
+both, cannot be distinguished from a fresh repository or valid history. Prompt rules
+forbid those actions; OS/runtime restrictions remain authoritative. No global
+config, credentials, permissions or billing are changed. The default CLI flags
+were checked using local help before this work; the denied temporary path was
+not retried. Runtime options also reference the
+[official configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+No live invocation was used to certify this installation's behavior.
+
+The existing dirty-tree preflight and path guard remain in force. This imported
+copy contains user files: do not stash, clean or reset it to make a run pass.
+No copying or runtime switching is a remedy for a security denial.

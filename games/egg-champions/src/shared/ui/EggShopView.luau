@@ -12,6 +12,8 @@
 	  reports) the card shows the boosted table the server then rolls.
 	- A locked egg (Progression.eggUnlocked) says what unlocks it: beating the
 	  gym of the world before.
+	- The shop lists only eggs of unlocked worlds plus the next locked egg as
+	  a teaser (shownCards).
 	- An egg the player cannot afford is marked so the screen can mute it. It
 	  is only a hint; the server decides every purchase.
 
@@ -22,6 +24,7 @@ local Config = require(script.Parent.Parent.Config)
 local Hatch = require(script.Parent.Parent.rules.Hatch)
 local Progression = require(script.Parent.Parent.rules.Progression)
 local Format = require(script.Parent.Format)
+local Tutorial = require(script.Parent.Parent.rules.Tutorial)
 
 export type State = {
 	coins: number,
@@ -30,6 +33,13 @@ export type State = {
 
 export type Options = {
 	luckyEggs: boolean?,
+}
+
+export type AutoState = {
+	eggId: string?,
+	active: boolean,
+	inFlight: boolean,
+	token: number,
 }
 
 export type PetLine = {
@@ -54,6 +64,9 @@ export type Card = {
 	affordable: boolean,
 	-- Coins still needed for one egg, 0 when affordable.
 	short: number,
+	-- True for the one locked egg the shop shows as a preview of what comes
+	-- next (see shownCards).
+	teaser: boolean,
 }
 
 export type HatchLine = {
@@ -64,9 +77,47 @@ export type HatchLine = {
 	variant: string?,
 	variantName: string?,
 	newInIndex: boolean,
+	-- The pet's Click Power as the server sent it, or nil when it did not.
+	clickPower: number?,
 }
 
 local EggShopView = {}
+
+-- Pure transitions for the client loop. The token invalidates a reply after
+-- Stop, close, or a menu switch; inFlight prevents overlapping BuyEgg calls.
+function EggShopView.newAutoState(): AutoState
+	return { eggId = nil, active = false, inFlight = false, token = 0 }
+end
+
+function EggShopView.startAuto(state: AutoState, eggId: string): AutoState?
+	if state.inFlight then
+		return nil
+	end
+	return { eggId = eggId, active = true, inFlight = false, token = state.token + 1 }
+end
+
+function EggShopView.stopAuto(state: AutoState): AutoState
+	return { eggId = nil, active = false, inFlight = state.inFlight, token = state.token + 1 }
+end
+
+function EggShopView.beginAuto(state: AutoState, eggId: string, eligible: boolean): AutoState?
+	if not state.active or state.inFlight or state.eggId ~= eggId or not eligible then
+		return nil
+	end
+	return { eggId = eggId, active = true, inFlight = true, token = state.token }
+end
+
+function EggShopView.finishAuto(
+	state: AutoState,
+	token: number,
+	success: boolean,
+	eligible: boolean
+): AutoState
+	if state.token ~= token or not state.active or not success or not eligible then
+		return { eggId = nil, active = false, inFlight = false, token = state.token + 1 }
+	end
+	return { eggId = state.eggId, active = true, inFlight = false, token = state.token }
+end
 
 -- How many eggs one Hatch x3 opens. Names the Triple Hatch pass's effect, the
 -- same count the server checks (Hatch.TRIPLE_COUNT).
@@ -167,9 +218,100 @@ function EggShopView.cards(state: State, options: Options?): { Card }
 			unlockText = if locked then EggShopView.unlockText(egg.id) else nil,
 			affordable = short == 0,
 			short = short,
+			teaser = false,
 		})
 	end
 	return cards
+end
+
+-- The cards the shop lists: every egg of an unlocked world, in config order,
+-- plus the first locked egg as one teaser card. The rest stay hidden so the
+-- list never fills with eggs the player cannot use yet.
+function EggShopView.shownCards(state: State, options: Options?): { Card }
+	local shown: { Card } = {}
+	local teased = false
+	for _, card in EggShopView.cards(state, options) do
+		if not card.locked then
+			table.insert(shown, card)
+		elseif not teased then
+			teased = true
+			card.teaser = true
+			table.insert(shown, card)
+		end
+	end
+	return shown
+end
+
+-- How HATCH X3 looks on a card: gold ("accent") only when the player owns
+-- the Triple Hatch pass, the egg is open and three are affordable, and
+-- never while the tutorial runs (tutorialStep as the server sent it), so
+-- the first minutes show no pass button in gold.
+function EggShopView.tripleLook(
+	tutorialStep: any,
+	ownsTriple: boolean,
+	locked: boolean,
+	affordableThree: boolean
+): "accent" | "muted"
+	if Tutorial.active(tutorialStep) then
+		return "muted"
+	end
+	return if ownsTriple and not locked and affordableThree then "accent" else "muted"
+end
+
+-- True when a card shows HATCH X3 at all: only when the player owns the
+-- Triple Hatch pass (as the server reports it), the tutorial is done, and the
+-- egg is open. Never on a locked card. Hidden, HATCH takes the whole row.
+function EggShopView.showsTriple(tutorialStep: any, ownsTriple: boolean, locked: boolean): boolean
+	return ownsTriple and not locked and not Tutorial.active(tutorialStep)
+end
+
+-- True when a server reply is shown on the card itself. A hatch is shown by
+-- the reveal over the screen, so the card keeps its egg and name; only a
+-- refusal (or no answer) is written on the card.
+function EggShopView.resultOnCard(replyOk: boolean): boolean
+	return not replyOk
+end
+
+-- What a card's egg view shows: the real egg model ("model") when PetModels
+-- holds a Model for the egg whose copy has at least one part and a size the
+-- camera can frame, else the coloured egg shape ("shape"). Never nothing.
+function EggShopView.eggSource(
+	found: boolean,
+	isModel: boolean,
+	partCount: number,
+	cameraDistance: number
+): "model" | "shape"
+	if found and isModel and partCount > 0 and cameraDistance > 0 then
+		return "model"
+	end
+	return "shape"
+end
+
+-- How far the card camera sits from the centre of a model whose bounding box
+-- is sizeX by sizeY by sizeZ studs, so the whole box fits a camera of fov
+-- degrees with `room` times the space around it. 0 when the box or the
+-- camera cannot frame anything (empty, not finite).
+function EggShopView.eggCameraDistance(
+	sizeX: number,
+	sizeY: number,
+	sizeZ: number,
+	fov: number,
+	room: number
+): number
+	local radius = math.sqrt(sizeX * sizeX + sizeY * sizeY + sizeZ * sizeZ) / 2
+	if not (radius > 0 and radius < math.huge) then
+		return 0
+	end
+	if not (fov > 0 and fov < 180 and room > 0) then
+		return 0
+	end
+	return radius / math.tan(math.rad(fov / 2)) * room
+end
+
+-- True when the note under the cards (variants and the pass) shows: not
+-- while the tutorial runs.
+function EggShopView.showsNote(tutorialStep: any): boolean
+	return not Tutorial.active(tutorialStep)
 end
 
 -- The note under the cards: the variant odds and multipliers, from config.
@@ -224,6 +366,10 @@ function EggShopView.hatchLines(reply: any): { HatchLine }
 					variant = variantId,
 					variantName = variantName,
 					newInIndex = hatched.newInIndex == true,
+					clickPower = if type(hatched.clickPower) == "number"
+							and hatched.clickPower == hatched.clickPower
+						then hatched.clickPower
+						else nil,
 				})
 			end
 		end

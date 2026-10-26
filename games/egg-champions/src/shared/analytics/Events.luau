@@ -15,8 +15,8 @@
 		value: the number field sent as the custom event value, if any
 		dimensions: up to two slots, sent as custom fields 02 and 03. A slot
 			is a list of fields; a slot with several fields is sent as their
-			values joined by ", " ("2, win"), and a list field as its items
-			joined by "," ("pet_a,pet_b"). Roblox allows three custom fields
+			values joined by " | " ("2 | win"), and a list field as its items
+			joined by "|" ("pet_a|pet_b"). Roblox allows three custom fields
 			per event and field 01 is the stage, so this is how a field that
 			matters still reaches Roblox.
 		economy: for an economy event, which fields hold the amount, the
@@ -29,6 +29,10 @@
 	Every field of every event is sent (as the value, in a dimension slot, or
 	as an economy amount, balance or item); Events.sentFields lists them, and
 	a test checks that list against the event's fields and the notes table.
+
+	No custom field value ever holds a comma or a quote: Roblox reads them as
+	separators, so Events.clean replaces commas with ";" and strips quotes
+	from every value before it is sent.
 
 	Play time: totalPlaySeconds is the player's play time over every session
 	(saved in the profile), and secondsSinceJoin the time in this session.
@@ -298,27 +302,38 @@ function Events.build(name: string, fields: { [string]: any }, context: Context)
 	return { name = name, fields = copy, rebirths = context.rebirths, world = context.world }
 end
 
+-- Joins the fields of one dimension slot, and the items of a list field.
+Events.SLOT_SEPARATOR = " | "
+Events.LIST_SEPARATOR = "|"
+
+-- Text safe for a custom field: commas become ";" and quotes are removed.
+function Events.clean(text: string): string
+	local out = string.gsub(text, ",", ";")
+	out = string.gsub(out, "[\"'`]", "")
+	return out
+end
+
 -- The stage string sent in custom field 01.
 function Events.stage(record: Record): string
-	return string.format("rebirths %d, world %d", record.rebirths, record.world)
+	return string.format("rebirths %d | world %d", record.rebirths, record.world)
 end
 
 local function fieldText(value: any): string
 	if type(value) == "table" then
 		local parts = {}
 		for _, item in value do
-			table.insert(parts, tostring(item))
+			table.insert(parts, Events.clean(tostring(item)))
 		end
-		return table.concat(parts, ",")
+		return table.concat(parts, Events.LIST_SEPARATOR)
 	end
-	return tostring(value)
+	return Events.clean(tostring(value))
 end
 
 -- The custom fields sent with a record: 01 the stage, 02 and 03 the event's
 -- dimension slots. Keys are the AnalyticsCustomFieldKeys names.
 function Events.customFields(record: Record): { [string]: string }
 	local event = Events.get(record.name)
-	local custom: { [string]: string } = { CustomField01 = Events.stage(record) }
+	local custom: { [string]: string } = { CustomField01 = Events.clean(Events.stage(record)) }
 	local keys = { "CustomField02", "CustomField03" }
 	for i, slot in event.dimensions do
 		if keys[i] ~= nil then
@@ -326,7 +341,7 @@ function Events.customFields(record: Record): { [string]: string }
 			for _, field in slot do
 				table.insert(parts, fieldText(record.fields[field]))
 			end
-			custom[keys[i]] = table.concat(parts, ", ")
+			custom[keys[i]] = Events.clean(table.concat(parts, Events.SLOT_SEPARATOR))
 		end
 	end
 	return custom

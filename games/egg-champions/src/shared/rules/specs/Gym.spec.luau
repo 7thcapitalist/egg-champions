@@ -9,11 +9,26 @@ local expect = Runner.expect
 
 return function()
 	describe("Gym", function()
-		it("reads every leader team from tuning/gyms.json as it is", function()
+		it("keeps tuned combat fields while assigning matching world pet looks", function()
 			for _, gym in Config.gyms do
+				local world = Config.worldById[gym.world]
 				local team = Gym.leaderTeam(gym.world, gym.target_rebirths)
 				expect(#team).toEqual(#gym.leader_team)
 				for i, leader in gym.leader_team do
+					local looks = {}
+					for _, pet in Config.pets do
+						if
+							pet.world == world.id
+							and pet.type == leader.type
+							and table.find(world.eggs, pet.egg) ~= nil
+						then
+							table.insert(looks, pet.id)
+						end
+					end
+					expect(#looks > 0).toBeTrue()
+					expect(team[i].pet).toEqual(looks[(i - 1) % #looks + 1])
+					expect(team[i].variant).toEqual(nil)
+					expect(team[i].offType).toEqual(nil)
 					expect(team[i].type).toEqual(leader.type)
 					expect(team[i].hp).toEqual(leader.hp)
 					expect(team[i].attack).toEqual(leader.attack)

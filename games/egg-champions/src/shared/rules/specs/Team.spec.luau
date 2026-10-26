@@ -100,5 +100,45 @@ return function()
 			expect(nextTeam).toEqual(nil)
 			expect(reason).toEqual(Team.reasons.notEquipped)
 		end)
+
+		it("equips the strongest owned variants for coins with stable ties", function()
+			local id = Config.pets[1].id
+			local pets: { Team.OwnedPet } = {
+				{ uid = "normal-a", petId = id },
+				{ uid = "shiny", petId = id, variant = "shiny" },
+				{ uid = "normal-b", petId = id },
+				{ uid = "golden", petId = id, variant = "golden" },
+			}
+			local before = table.clone(pets)
+			expect(Team.bestForCoins(pets)).toEqual({ "golden", "shiny", "normal-a" })
+			expect(pets).toEqual(before)
+		end)
+
+		it("chooses a different team for battle than for coins", function()
+			local pets: { Team.OwnedPet } = {
+				{ uid = "worker", petId = "puddlet" },
+				{ uid = "fighter", petId = "emberkit" },
+				{ uid = "balanced", petId = "leafpup" },
+				{ uid = "shiny-worker", petId = "puddlet", variant = "shiny" },
+			}
+			expect(Team.bestForCoins(pets)).toEqual({ "shiny-worker", "worker", "fighter" })
+			expect(Team.bestForBattle(pets, 0)).toEqual({ "fighter", "balanced", "shiny-worker" })
+		end)
+
+		it("breaks equal battle strength by Speed then inventory order", function()
+			local pets: { Team.OwnedPet } = {
+				{ uid = "slow", petId = "cinderhog" },
+				{ uid = "fast", petId = "bananao" },
+				{ uid = "fast-again", petId = "bananao" },
+			}
+			expect(Team.bestForBattle(pets, 2)).toEqual({ "fast", "fast-again", "slow" })
+		end)
+
+		it("returns a new empty team for unequip all", function()
+			local current = { "pet1", "pet2" }
+			expect(Team.unequipAll()).toEqual({})
+			expect(current).toEqual({ "pet1", "pet2" })
+			expect(Team.bestForCoins({})).toEqual({})
+		end)
 	end)
 end

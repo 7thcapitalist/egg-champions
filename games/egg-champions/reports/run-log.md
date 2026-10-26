@@ -231,3 +231,102 @@ One line per step, newest last. Written by `factory/tools/run_factory.py`.
 | 2026-10-14T18:20:14Z | check 25 | pass | stylua --check games/egg-champions/src |
 | 2026-10-14T18:20:14Z | check 25 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
 | 2026-10-14T18:20:15Z | task 25 | passed | checked with --finish |
+| 2026-10-14T23:10:41Z | check 26 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-14T23:10:41Z | check 26 | pass | selene games/egg-champions/src |
+| 2026-10-14T23:10:41Z | check 26 | pass | stylua --check games/egg-champions/src |
+| 2026-10-14T23:10:41Z | check 26 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-14T23:10:41Z | task 26 | passed | checked with --finish |
+| 2026-10-14T23:10:46Z | task 26 | committed | de1f08f |
+| 2026-10-14T23:14:06Z | check 27 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-14T23:14:06Z | check 27 | pass | selene games/egg-champions/src |
+| 2026-10-14T23:14:06Z | check 27 | pass | stylua --check games/egg-champions/src |
+| 2026-10-14T23:14:06Z | check 27 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-14T23:14:06Z | task 27 | passed | checked with --finish |
+| 2026-10-14T23:14:12Z | task 27 | committed | 73859ad |
+| 2026-10-14T23:21:52Z | check 28 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-14T23:21:52Z | check 28 | pass | selene games/egg-champions/src |
+| 2026-10-14T23:21:52Z | check 28 | pass | stylua --check games/egg-champions/src |
+| 2026-10-14T23:21:52Z | check 28 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-14T23:21:52Z | task 28 | passed | checked with --finish |
+| 2026-10-14T23:21:58Z | task 28 | committed | 9f1f7b1 |
+| 2026-10-15T02:50:22Z | check 29 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T02:50:22Z | check 29 | pass | selene games/egg-champions/src |
+| 2026-10-15T02:50:22Z | check 29 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T02:50:22Z | check 29 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T02:50:22Z | task 29 | passed | checked with --finish |
+| 2026-10-15T02:50:30Z | task 29 | committed | dcb3607 |
+| 2026-10-15T03:01:12Z | check 30 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T03:01:12Z | check 30 | pass | selene games/egg-champions/src |
+| 2026-10-15T03:01:12Z | check 30 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T03:01:12Z | check 30 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T03:01:12Z | task 30 | passed | checked with --finish |
+| 2026-10-15T03:01:19Z | task 30 | committed | dd00d50 |
+| 2026-10-15T03:09:14Z | check 31 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T03:09:14Z | check 31 | pass | selene games/egg-champions/src |
+| 2026-10-15T03:09:14Z | check 31 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T03:09:14Z | check 31 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T03:09:14Z | task 31 | passed | checked with --finish |
+| 2026-10-15T03:09:29Z | task 31 | committed | 31b1c83 |
+| 2026-10-15T03:17:36Z | check 32 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T03:17:36Z | check 32 | pass | selene games/egg-champions/src |
+| 2026-10-15T03:17:36Z | check 32 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T03:17:36Z | check 32 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T03:17:36Z | task 32 | passed | checked with --finish |
+| 2026-10-15T03:17:49Z | task 32 | committed | 9f0621f |
+| 2026-10-15T03:24:32Z | check 33 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T03:24:32Z | check 33 | pass | selene games/egg-champions/src |
+| 2026-10-15T03:24:33Z | check 33 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T03:24:33Z | check 33 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T03:24:33Z | task 33 | passed | checked with --finish |
+| 2026-10-15T03:24:46Z | task 33 | committed | 514fa1f |
+| 2026-10-15T03:40:10Z | check 34 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T03:40:10Z | check 34 | pass | selene games/egg-champions/src |
+| 2026-10-15T03:40:10Z | check 34 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T03:40:10Z | check 34 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T03:40:10Z | task 34 | passed | checked with --finish |
+| 2026-10-15T03:40:15Z | task 34 | committed | 524c9d8 |
+| 2026-10-15T13:23:20Z | check 35 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T13:23:20Z | check 35 | pass | selene games/egg-champions/src |
+| 2026-10-15T13:23:20Z | check 35 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T13:23:20Z | check 35 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T13:23:20Z | task 35 | passed | checked with --finish |
+| 2026-10-15T13:29:08Z | check 36 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T13:29:08Z | check 36 | pass | selene games/egg-champions/src |
+| 2026-10-15T13:29:08Z | check 36 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T13:29:08Z | check 36 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T13:29:09Z | task 36 | passed | checked with --finish |
+| 2026-10-15T13:35:18Z | check 37 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T13:35:18Z | check 37 | pass | selene games/egg-champions/src |
+| 2026-10-15T13:35:18Z | check 37 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T13:35:18Z | check 37 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T13:35:18Z | task 37 | passed | checked with --finish |
+| 2026-10-15T13:37:22Z | check 38 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T13:37:22Z | check 38 | pass | selene games/egg-champions/src |
+| 2026-10-15T13:37:22Z | check 38 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T13:37:22Z | check 38 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T13:37:22Z | task 38 | passed | checked with --finish |
+| 2026-10-15T14:02:48Z | check 39 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T14:02:48Z | check 39 | pass | selene games/egg-champions/src |
+| 2026-10-15T14:02:48Z | check 39 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T14:02:48Z | check 39 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T14:02:48Z | task 39 | passed | checked with --finish |
+| 2026-10-15T14:06:56Z | check 40 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T14:06:56Z | check 40 | pass | selene games/egg-champions/src |
+| 2026-10-15T14:06:56Z | check 40 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T14:06:56Z | check 40 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T14:06:56Z | task 40 | passed | checked with --finish |
+| 2026-10-15T14:15:20Z | check 41 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T14:15:20Z | check 41 | pass | selene games/egg-champions/src |
+| 2026-10-15T14:15:20Z | check 41 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T14:15:20Z | check 41 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T14:15:20Z | task 41 | passed | checked with --finish |
+| 2026-10-15T14:21:04Z | check 42 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T14:21:04Z | check 42 | pass | selene games/egg-champions/src |
+| 2026-10-15T14:21:04Z | check 42 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T14:21:04Z | check 42 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T14:21:04Z | task 42 | passed | checked with --finish |
+| 2026-10-15T14:25:45Z | check 43 | pass | python factory/tools/run_tests.py games/egg-champions |
+| 2026-10-15T14:25:45Z | check 43 | pass | selene games/egg-champions/src |
+| 2026-10-15T14:25:45Z | check 43 | pass | stylua --check games/egg-champions/src |
+| 2026-10-15T14:25:45Z | check 43 | pass | rojo build games/egg-champions -o games/egg-champions/build/game.rbxl |
+| 2026-10-15T14:25:45Z | task 43 | passed | checked with --finish |

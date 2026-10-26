@@ -1,0 +1,18 @@
+05:51:05.888  [Profiles] save store unavailable in Studio; temporary profiles will not be saved: You must publish this place to the web to access DataStore.  -  Server - Profiles:75
+  05:51:05.916  Egg Champions server ready: 30 pets, 6 eggs, 3 worlds  -  Server - Server:33
+  05:51:05.951  worlds built: 6 egg stands, 3 gyms, 3 portals  -  Server - Server:44
+  05:51:05.959  [Playtest] local QA fixture active: portals  -  Server - PlaytestScenario:195
+  05:51:06.181  [Profiles] user 11750959877: save store unreachable in Studio; playing on a temporary profile that is not saved  -  Server - Profiles:111
+  05:51:06.427  client ready  -  Client - Client:161
+  05:51:06.516  [Playtest] portals ready for jvcarvalho70; coins=0 pets=0 rebirths=0  -  Server - PlaytestScenario:161
+  05:51:06.516  [Playtest portals] locked green_meadow -> coral_coast: crossing trigger  -  Server - PlaytestScenario:107
+  05:51:08.922   ▶ [Roblox][CorePackages.Packages._Index.UIBlox.UIBlox.Logger] [UIBlox - Warning] - FoundationProvider not found. Please ensure that the FoundationProvider is present in the component tree. CorePackages.Packages._Index.UIBlox.UIBlox.App.Style.AppStyleProvider:178 function AppStyleProvider CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberHooks.new:3196 function renderWithHooks CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberBeginWork.new:209 function renderWithHooks CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberBeginWork.new:1577 function mountIndeterminateComponent CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberBeginWork.new:3485 function beginWork CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:255 CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:1977 CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:1953 CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:1896 CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:915 CorePackages.Packages._Index.ReactReconciler.ReactReconciler.ReactFiberWorkLoop.new:860 CorePackages.Packages._Index.Scheduler.Scheduler.Scheduler:320 CorePackages.Packages._Index.Scheduler.Scheduler.Scheduler:268 CorePackages.Packages._Index.Scheduler.Scheduler.forks.SchedulerHostConfig.default:260 function doWork CorePackages.Packages._Index.Scheduler.Scheduler.forks.SchedulerHostConfig.default:296 function performWorkUntilDeadline  (x5)  -  Client
+
+
+
+
+  05:51:11.644  ModelLibrary: 36 of 36 models loaded, 0 left as placeholders  -  Server - ModelLibrary:174
+  05:51:13.793  [Playtest portals] PASS locked first portal touched, no transport  -  Server - PlaytestScenario:113
+  05:51:13.794  [Playtest portals] unlocked prior gyms; testing next-world portals  -  Server - PlaytestScenario:118
+  05:51:24.075  [Playtest portals] FAIL ServerScriptService.PlaytestScenario:81: portal Trigger was not physically touched: green_meadow  -  Server - PlaytestScenario:175
+  05:51:24.075  [Playtest portals] finished; character returned to spawn  -  Server - PlaytestScenario:184

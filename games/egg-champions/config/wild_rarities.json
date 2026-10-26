@@ -1,0 +1,27 @@
+[
+  {
+    "id": "common",
+    "strength": 1,
+    "capture_chance": 0.75
+  },
+  {
+    "id": "uncommon",
+    "strength": 2,
+    "capture_chance": 0.45
+  },
+  {
+    "id": "rare",
+    "strength": 3,
+    "capture_chance": 0.2
+  },
+  {
+    "id": "epic",
+    "strength": 4,
+    "capture_chance": 0.05
+  },
+  {
+    "id": "legendary",
+    "strength": 5,
+    "capture_chance": 0.01
+  }
+]

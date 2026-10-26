@@ -15,9 +15,11 @@
 	  retried every RETRY_SECONDS. A failure never overwrites an owned pass
 	  with false, so a flaky service cannot take a pass away mid session.
 
-	Auto Click: the server clicks for every player who owns it, once every
-	AUTO_CLICK_SECONDS, through the callback start() is given. The client
-	has no say in the rate.
+	TrainingService applies the Auto Click pass bonus only inside a training ring.
+
+	Playtest mode: in Studio only, when ServerScriptService has the attribute
+	PlaytestNoPasses = true, every pass counts as not owned, so a test plays
+	like a new player. Outside Studio the attribute is ignored.
 
 	Nothing here touches battle. PassEffects says what each pass does.
 ]]
@@ -25,6 +27,8 @@
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
@@ -33,7 +37,6 @@ local Profile = require(Shared:WaitForChild("rules"):WaitForChild("Profile"))
 
 local server = script.Parent.Parent
 local Guard = require(server:WaitForChild("Guard"))
-local Profiles = require(server:WaitForChild("Profiles"))
 local Analytics = require(server:WaitForChild("Analytics"))
 
 type Profile = Profile.Profile
@@ -49,10 +52,7 @@ local PRODUCT_IDS: { [string]: number } = {
 
 -- How often a failed ownership check is tried again.
 local RETRY_SECONDS = 15
-
--- How often the server clicks for an Auto Click owner. Not a spec number:
--- the spec only says the pass clicks automatically.
-local AUTO_CLICK_SECONDS = 1
+local localStudio = RunService:IsStudio() and game.PlaceId == 0
 
 -- Load time check: one product id entry per handled pass, no more.
 do
@@ -72,21 +72,23 @@ end
 
 type PlayerPasses = {
 	owned: PassEffects.Owned,
+	checked: { [string]: boolean },
 	-- Pass ids whose last check errored, to try again.
 	retry: { [string]: boolean },
 }
 
 local PassService = {}
 
-PassService.AUTO_CLICK_SECONDS = AUTO_CLICK_SECONDS
 PassService.RETRY_SECONDS = RETRY_SECONDS
 
-local byPlayer: { [Player]: PlayerPasses } = {}
+-- Keep entitlements available to a yielding final save. Weak keys release
+-- the entry once no save or other service retains the departing Player.
+local byPlayer: { [Player]: PlayerPasses } = setmetatable({}, { __mode = "k" }) :: any
 
 local function entryFor(player: Player): PlayerPasses
 	local entry = byPlayer[player]
 	if entry == nil then
-		entry = { owned = {}, retry = {} }
+		entry = { owned = {}, checked = {}, retry = {} }
 		byPlayer[player] = entry
 	end
 	return entry
@@ -103,6 +105,9 @@ end
 
 -- Checks one pass. Returns true when the owned set changed.
 local function check(player: Player, passId: string): boolean
+	if localStudio then
+		return false
+	end
 	local productId = PRODUCT_IDS[passId]
 	if productId == nil or productId == 0 then
 		return false
@@ -124,11 +129,13 @@ local function check(player: Player, passId: string): boolean
 		return false
 	end
 	entry.retry[passId] = nil
+	local firstCheck = not entry.checked[passId]
+	entry.checked[passId] = true
 	if result == true and entry.owned[passId] ~= true then
 		entry.owned[passId] = true
 		return true
 	end
-	return false
+	return firstCheck
 end
 
 local function checkAll(player: Player)
@@ -146,16 +153,28 @@ local function checkAll(player: Player)
 	end
 end
 
--- True when the player owns the pass with this config id.
-function PassService.owns(player: Player, passId: string): boolean
-	local entry = byPlayer[player]
-	return entry ~= nil and entry.owned[passId] == true
+-- True in Studio when ServerScriptService has PlaytestNoPasses = true.
+-- Always false outside Studio.
+function PassService.playtestNoPasses(): boolean
+	return PassEffects.playtestNoPasses(
+		RunService:IsStudio(),
+		ServerScriptService:GetAttribute("PlaytestNoPasses")
+	)
 end
 
--- A copy of the player's owned set, keyed by config pass id.
+-- A copy of the player's owned set, keyed by config pass id. Empty in
+-- playtest mode.
 function PassService.owned(player: Player): PassEffects.Owned
 	local entry = byPlayer[player]
-	return if entry ~= nil then table.clone(entry.owned) else {}
+	return PassEffects.effective(
+		if entry ~= nil then entry.owned else nil,
+		PassService.playtestNoPasses()
+	)
+end
+
+-- True when the player owns the pass with this config id.
+function PassService.owns(player: Player, passId: string): boolean
+	return PassService.owned(player)[passId] == true
 end
 
 -- What the main screen shows: each pass, whether it is owned, and the
@@ -168,7 +187,8 @@ local function passesView(player: Player, _profile: Profile): any
 			name = pass.name,
 			effect = pass.effect,
 			owned = PassService.owns(player, pass.id),
-			productId = PRODUCT_IDS[pass.id] or 0,
+			known = entryFor(player).checked[pass.id] == true,
+			productId = if localStudio then 0 else PRODUCT_IDS[pass.id] or 0,
 		})
 	end
 	return list
@@ -176,9 +196,8 @@ end
 
 local started = false
 
--- Hooks joins, purchases, the retry loop and the Auto Click loop. onAutoClick
--- is called once per interval for each Auto Click owner with a loaded profile.
-function PassService.start(onAutoClick: (Player, Profile) -> ())
+-- Hooks joins, purchases and the ownership retry loop.
+function PassService.start()
 	if started then
 		return
 	end
@@ -195,7 +214,10 @@ function PassService.start(onAutoClick: (Player, Profile) -> ())
 		task.spawn(checkAll, player)
 	end
 	Players.PlayerRemoving:Connect(function(player: Player)
-		byPlayer[player] = nil
+		local entry = byPlayer[player]
+		if entry ~= nil then
+			entry.retry = {}
+		end
 	end)
 
 	MarketplaceService.PromptGamePassPurchaseFinished:Connect(
@@ -206,6 +228,7 @@ function PassService.start(onAutoClick: (Player, Profile) -> ())
 			end
 			if purchased then
 				entryFor(player).owned[passId] = true
+				entryFor(player).checked[passId] = true
 				Analytics.track(player, "pass_purchased", { passId = passId })
 			end
 			check(player, passId)
@@ -217,7 +240,7 @@ function PassService.start(onAutoClick: (Player, Profile) -> ())
 		while true do
 			task.wait(RETRY_SECONDS)
 			for player, entry in byPlayer do
-				if next(entry.retry) ~= nil then
+				if player.Parent ~= nil and next(entry.retry) ~= nil then
 					local changed = false
 					for passId in table.clone(entry.retry) do
 						if check(player, passId) then
@@ -226,20 +249,6 @@ function PassService.start(onAutoClick: (Player, Profile) -> ())
 					end
 					if changed then
 						Guard.push(player)
-					end
-				end
-			end
-		end
-	end)
-
-	task.spawn(function()
-		while true do
-			task.wait(AUTO_CLICK_SECONDS)
-			for player, entry in byPlayer do
-				if PassEffects.autoClick(entry.owned) then
-					local profile = Profiles.get(player)
-					if profile ~= nil and player.Parent ~= nil then
-						task.spawn(onAutoClick, player, profile)
 					end
 				end
 			end

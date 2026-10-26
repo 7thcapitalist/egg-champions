@@ -34,9 +34,8 @@ STAGES = [
     "published_test",
 ]
 
-# The pacing targets that are about time. The report also scores rebirths per
-# gym, but that is a design question rather than a pacing one, so a miss
-# there does not hold up the build. See the economy_tuned gate in the brief.
+# Time and configured gym rebirth targets both count toward economy readiness.
+# A successful build does not waive a progression miss.
 TIME_TARGETS = ("First hatch", "Gym 1 beaten", "Final gym beaten")
 
 
@@ -134,7 +133,18 @@ def gate_economy_tuned(game):
     if not targets:
         return fail("%s has no results table. Rerun agent 2." % report.as_posix())
 
-    unscored = [t for t in TIME_TARGETS if t not in targets]
+    worlds, error = read_json(game / "config" / "worlds.json")
+    if error:
+        return fail(error)
+    if (not isinstance(worlds, list) or not worlds or
+            any(not isinstance(w, dict) or type(w.get("index")) is not int
+                or w["index"] < 1 for w in worlds)):
+        return fail("world config must contain positive integer gym indexes")
+    indexes = [w["index"] for w in worlds]
+    if len(set(indexes)) != len(indexes):
+        return fail("world config contains duplicate gym indexes")
+    required = TIME_TARGETS + tuple("Rebirths at gym %d" % i for i in sorted(indexes))
+    unscored = [t for t in required if t not in targets]
     if unscored:
         return fail(
             "%s does not score: %s. The report format changed; update this gate."
@@ -142,12 +152,12 @@ def gate_economy_tuned(game):
         )
 
     missed = [
-        "%s is %s" % (t, targets[t]) for t in TIME_TARGETS if not targets[t].startswith("MET")
+        "%s is %s" % (t, targets[t]) for t in required if targets[t] != "MET"
     ]
     if missed:
-        return fail("time pacing missed: " + "; ".join(missed))
+        return fail("economy targets missed: " + "; ".join(missed))
 
-    return ok("all %d time pacing targets met" % len(TIME_TARGETS))
+    return ok("all %d time and rebirth targets met" % len(required))
 
 
 # --------------------------------------------------------------------- built
@@ -290,6 +300,16 @@ def gate_planned(game):
     if first["status"] != "done":
         return fail("task %s is '%s', expected 'done'" % (first["id"], first["status"]))
 
+    research_path = game / "design/feature-research.json"
+    if research_path.exists():
+        import feature_research
+        research, err = read_json(research_path)
+        if err:
+            return fail(err)
+        errors = feature_research.check(game, research)
+        if errors:
+            return fail("feature research: " + errors[0])
+
     return ok("%d task(s) planned, task %s done, no dependency cycle" % (len(tasks), first["id"]))
 
 
@@ -319,23 +339,27 @@ def gate_built(game):
         return fail("cannot create %s: %s" % (out.as_posix(), mk_err))
 
     checks = [
-        ["rojo", "build", game.as_posix(), "-o", (out / "game.rbxl").as_posix()],
-        ["selene", (game / "src").as_posix()],
-        ["stylua", "--check", (game / "src").as_posix()],
+        ("run_tests", [sys.executable, "-B", str(Path(__file__).with_name("run_tests.py")), game.as_posix()]),
+        ("rojo", ["rojo", "build", game.as_posix(), "-o", (out / "game.rbxl").as_posix()]),
+        ("selene", ["selene", (game / "src").as_posix()]),
+        ("stylua", ["stylua", "--check", (game / "src").as_posix()]),
     ]
-    for cmd in checks:
-        exe = shutil.which(cmd[0])
+    for name, cmd in checks:
+        exe = cmd[0] if name == "run_tests" else shutil.which(cmd[0])
         if exe is None:
-            return fail("%s is not on PATH" % cmd[0])
+            return fail("%s is not on PATH" % name)
         done = subprocess.run([exe] + cmd[1:], capture_output=True, text=True)
         if done.returncode != 0:
-            lines = (done.stderr or done.stdout or "").strip().splitlines()
+            lines = (done.stdout + "\n" + done.stderr).strip().splitlines()
+            reason = next((line for line in lines if line.startswith("FAIL")), None)
+            if reason is None:
+                reason = next((line for line in lines if line.startswith("run_tests:")), None)
             return fail(
                 "%s failed: %s"
-                % (cmd[0], lines[0] if lines else "exit code %d" % done.returncode)
+                % (name, reason or (lines[-1] if lines else "exit code %d" % done.returncode))
             )
 
-    return ok("%d task(s) done, and rojo, selene and stylua all pass" % len(tasks))
+    return ok("%d task(s) done, and run_tests, rojo, selene and stylua all pass" % len(tasks))
 
 
 # --------------------------------------------------------------------- assets
@@ -356,6 +380,24 @@ def positive_size(size):
         and len(size) == 3
         and all(isinstance(n, (int, float)) and not isinstance(n, bool) and n > 0 for n in size)
     )
+
+
+def verified_model(result, model):
+    if not result.get("ok"):
+        return False
+    if "parts" not in result:
+        return "parts" not in model and positive_size(result.get("mesh_size"))
+    expected = model.get("parts", [{"name": "Mesh", "mesh_id": model["mesh_id"],
+                                    "texture_id": model["texture_id"]}])
+    actual = result["parts"]
+    return (isinstance(actual, list) and len(actual) == len(expected) and len(actual) > 0
+            and all(isinstance(got, dict) and got.get("ok") and got.get("mesh_ok")
+                    and positive_size(got.get("mesh_size"))
+                    and got.get("texture_status") == "Success"
+                    and got.get("name") == want["name"]
+                    and str(got.get("mesh_id")) == str(want["mesh_id"])
+                    and str(got.get("texture_id")) == str(want["texture_id"])
+                    for got, want in zip(actual, expected)))
 
 
 def gate_assets(game):
@@ -417,7 +459,8 @@ def gate_assets(game):
         result = results.get(item_id)
         if result is None:
             return fail("%s has no result for %s" % (verify_path.as_posix(), item_id))
-        if not result.get("ok") or not positive_size(result.get("mesh_size")):
+        model = next(e for e in models["entries"] if e["id"] == item_id)
+        if not verified_model(result, model):
             return fail(
                 "%s: %s is not ok (%s)"
                 % (verify_path.as_posix(), item_id, result.get("error") or result.get("texture_status"))
@@ -442,12 +485,22 @@ def gate_assets(game):
 
 # ---------------------------------------------------------------------- main
 
+def gate_release(game, stage):
+    import release_readiness
+    errors = release_readiness.check(game, stage)
+    if errors:
+        return fail("%s: %s" % (stage, errors[0]))
+    return ok("%s: current build has bound review evidence; no publication performed" % stage)
+
 GATES = {
     "spec_parsed": gate_spec_parsed,
     "economy_tuned": gate_economy_tuned,
     "planned": gate_planned,
     "built": gate_built,
     "assets": gate_assets,
+    "worlds": lambda game: gate_release(game, "worlds"),
+    "playtested": lambda game: gate_release(game, "playtested"),
+    "published_test": lambda game: gate_release(game, "published_test"),
 }
 
 

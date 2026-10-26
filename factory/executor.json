@@ -1,0 +1,19 @@
+{
+  "paused": true,
+  "model": "gpt-6-luna",
+  "effort": "low",
+  "allowed_models": ["gpt-6-luna"],
+  "attempts": 2,
+  "call_timeout_seconds": 300,
+  "task_timeout_seconds": 600,
+  "prompt_max_chars": 14000,
+  "authorized_calls": 0,
+  "authorized_tokens": 0,
+  "quota": {
+    "remaining_percent": null,
+    "measured_at": null,
+    "source": null,
+    "max_age_seconds": 300,
+    "minimum_percent": 5
+  }
+}

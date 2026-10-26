@@ -16,7 +16,8 @@
 	- Detail: a pet's stats with its variant multipliers applied the way the
 	  rule modules apply them (Coins.clickPowerOf for Click Power,
 	  Battle.playerMultiplier with no rebirths for HP and Attack), its type,
-	  rarity and role, and both moves with the special's effect from config.
+	  rarity and role, and both moves with their real numbers from config
+	  (specialText).
 
 	Nothing here decides an equip. The server does, and reasonText only turns
 	its refusal into words. Nothing here changes the state it is given.
@@ -40,6 +41,7 @@ export type Filter = {
 	rarity: string?,
 	type: string?,
 	egg: string?,
+	query: string?,
 }
 
 export type Tile = {
@@ -148,6 +150,7 @@ local REASONS: { [string]: string } = {
 	no_profile = "Your save is still loading. Try again in a moment.",
 	server_error = "Something went wrong on the server. Try again.",
 	bad_choice = "The server did not understand that request.",
+	in_battle = "Finish your battle before changing the team.",
 }
 
 function PetsView.reasonText(reason: any): string
@@ -166,6 +169,132 @@ function PetsView.number(value: number): string
 	local text = string.format("%.2f", hundredths / 100)
 	text = string.gsub(text, "0$", "")
 	return text
+end
+
+-- A whole number, rounded, with thousands separators: 37.5 -> "38".
+function PetsView.whole(value: number): string
+	return Format.commas(math.floor(value + 0.5))
+end
+
+-- Below this many owned pets the screen stays simple: no sort and filter
+-- row, and no Index or Fruit Edition tabs. A size of the interface, not a
+-- game number.
+PetsView.FULL_SCREEN_PETS = 4
+
+-- The parts of the pets screen a player with petCount pets sees: the sort
+-- and filter row, and the tabs in order.
+function PetsView.screenParts(petCount: number): { filters: boolean, tabs: { string } }
+	if petCount < PetsView.FULL_SCREEN_PETS then
+		return { filters = false, tabs = { "pets", "index", "fruit" } }
+	end
+	return { filters = true, tabs = { "pets", "index", "fruit" } }
+end
+
+-- True when the pets screen shows its beginner detail: while the tutorial
+-- runs or while the player owns fewer than FULL_SCREEN_PETS pets.
+function PetsView.beginner(petCount: number, tutorialActive: boolean): boolean
+	return tutorialActive or petCount < PetsView.FULL_SCREEN_PETS
+end
+
+-- The label of the toggle that shows or hides battle stats and moves.
+PetsView.BATTLE_TOGGLE = table.freeze({ closed = "Battle stats", open = "Hide battle stats" })
+
+export type DetailParts = {
+	-- The second line under the name.
+	typeLine: string,
+	stats: { { label: string, value: string } },
+	moves: boolean,
+	-- The toggle label, or nil when there is no toggle.
+	toggle: string?,
+}
+
+-- What the detail panel shows of info. A beginner sees name, rarity, type
+-- and Click Power, with battle stats and moves behind the toggle
+-- (battleOpen). Everyone else sees everything and no toggle.
+function PetsView.detailParts(info: Detail, beginner: boolean, battleOpen: boolean): DetailParts
+	if not beginner then
+		local editionName = info.editionName
+		return {
+			typeLine = info.typeName .. "  " .. info.roleName .. (if editionName ~= nil
+				then "  " .. editionName
+				else ""),
+			stats = info.stats,
+			moves = true,
+			toggle = nil,
+		}
+	end
+	local stats = {}
+	for _, stat in info.stats do
+		if battleOpen or stat.label == "Click Power" then
+			table.insert(stats, stat)
+		end
+	end
+	return {
+		typeLine = info.typeName,
+		stats = stats,
+		moves = battleOpen,
+		toggle = if battleOpen then PetsView.BATTLE_TOGGLE.open else PetsView.BATTLE_TOGGLE.closed,
+	}
+end
+
+-- A tile's Click Power line: "Click +3".
+function PetsView.clickText(power: number): string
+	return "Click +" .. PetsView.number(power)
+end
+
+-- A fraction as a whole-number-ish percent: 0.3 -> "30%".
+local function percent(fraction: number): string
+	return PetsView.number(fraction * 100) .. "%"
+end
+
+-- What a special move does, with its real numbers from config/specials.json
+-- (and the basic move power and cooldown from constants), worded the way
+-- shared/rules/Battle applies them. offTypeName is the pet's off-type name
+-- for an off-type move.
+function PetsView.specialText(
+	special: Config.Special,
+	typeName: string,
+	offTypeName: string?
+): string
+	local basic = Config.constants.basic_move_power
+	local text: string
+	if special.kind == "attack" then
+		text = string.format(
+			"%s attack with %s power (basic is %s)",
+			typeName,
+			PetsView.number(special.power),
+			PetsView.number(basic)
+		)
+	elseif special.kind == "drain" then
+		text = string.format(
+			"%s attack with %s power that heals %s of the damage dealt",
+			typeName,
+			PetsView.number(special.power),
+			percent(special.value)
+		)
+	elseif special.kind == "heal" then
+		text = string.format("restores %s of max HP", percent(special.value))
+	elseif special.kind == "guard" then
+		text = string.format("the next hit taken does %s of its damage", percent(special.value))
+	elseif special.kind == "speed" then
+		text = string.format(
+			"raises own Speed by %s for the rest of the battle",
+			percent(special.value)
+		)
+	elseif special.kind == "offtype" then
+		text = string.format(
+			"%s attack with %s power",
+			offTypeName or "Off-type",
+			PetsView.number(special.power)
+		)
+	else
+		text = special.effect
+	end
+	return string.format(
+		"%s. Ready again after %d turns",
+		text,
+		Config.constants.special_cooldown_turns
+	)
 end
 
 local function knownPet(petId: any): Config.Pet?
@@ -189,7 +318,24 @@ local function knownVariant(variant: any): Config.Variant?
 end
 
 -- One tile per owned pet the client recognises, in profile order.
+function PetsView.anchor(pets: any): number
+	local valid = {}
+	if type(pets) == "table" then
+		for _, owned in pets do
+			if type(owned) == "table" and knownPet(owned.petId) ~= nil then
+				local variant = knownVariant(owned.variant)
+				table.insert(
+					valid,
+					{ petId = owned.petId, variant = if variant then variant.id else nil }
+				)
+			end
+		end
+	end
+	return Coins.legacyAnchor(valid)
+end
+
 function PetsView.tiles(pets: any, team: any): { Tile }
+	local anchor = PetsView.anchor(pets)
 	local equipped: { [string]: boolean } = {}
 	if type(team) == "table" then
 		for _, uid in team do
@@ -210,7 +356,7 @@ function PetsView.tiles(pets: any, team: any): { Tile }
 				local power = Coins.clickPowerOf({
 					petId = pet.id,
 					variant = if variant ~= nil then variant.id else nil,
-				})
+				}, anchor)
 				table.insert(tiles, {
 					uid = owned.uid,
 					petId = pet.id,
@@ -223,7 +369,7 @@ function PetsView.tiles(pets: any, team: any): { Tile }
 					variant = if variant ~= nil then variant.id else nil,
 					variantName = if variant ~= nil then variant.name else nil,
 					clickPower = power,
-					clickPowerText = PetsView.number(power),
+					clickPowerText = PetsView.clickText(power),
 					equipped = equipped[owned.uid] == true,
 				})
 			end
@@ -263,6 +409,9 @@ end
 function PetsView.arrange(tiles: { Tile }, sortKey: SortKey?, filter: Filter?): { Tile }
 	local key = sortKey or PetsView.DEFAULT_SORT
 	local kept: { Tile } = {}
+	local query = if filter ~= nil and filter.query ~= nil
+		then string.lower((string.gsub(filter.query, "^%s*(.-)%s*$", "%1")))
+		else ""
 	for _, tile in tiles do
 		local keep = filter == nil
 			or (
@@ -270,6 +419,16 @@ function PetsView.arrange(tiles: { Tile }, sortKey: SortKey?, filter: Filter?): 
 				and (filter.type == nil or tile.type == filter.type)
 				and (filter.egg == nil or tile.egg == filter.egg)
 			)
+		if keep and query ~= "" then
+			local searchable = string.lower(table.concat({
+				tile.name,
+				tile.rarityName,
+				tile.typeName,
+				Config.eggById[tile.egg].name,
+				tile.variantName or "normal",
+			}, " "))
+			keep = string.find(searchable, query, 1, true) ~= nil
+		end
 		if keep then
 			table.insert(kept, tile)
 		end
@@ -307,6 +466,36 @@ function PetsView.arrange(tiles: { Tile }, sortKey: SortKey?, filter: Filter?): 
 		return tieBreak(a, b)
 	end)
 	return kept
+end
+
+-- Only fields that change the inventory presentation. Coin/autoclick and
+-- playtime pushes must not rebuild every model preview while browsing.
+function PetsView.signature(profile: any): string
+	if type(profile) ~= "table" then
+		return "loading"
+	end
+	local values = { tostring(profile.tutorialStep) }
+	for _, pet in if type(profile.pets) == "table" then profile.pets else {} do
+		table.insert(
+			values,
+			tostring(pet.uid) .. ":" .. tostring(pet.petId) .. ":" .. tostring(pet.variant)
+		)
+	end
+	table.insert(values, "team")
+	for _, uid in if type(profile.team) == "table" then profile.team else {} do
+		table.insert(values, tostring(uid))
+	end
+	local index = if type(profile.index) == "table" then profile.index else {}
+	for _, pet in Config.pets do
+		for _, variant in { "normal", "shiny", "golden" } do
+			local entry = index[pet.id]
+			table.insert(
+				values,
+				if type(entry) == "table" and entry[variant] == true then "1" else "0"
+			)
+		end
+	end
+	return table.concat(values, "|")
 end
 
 -- The next sort in the cycle.
@@ -473,21 +662,23 @@ function PetsView.tabCounts(
 end
 
 -- The detail panel of one pet, with its variant's multipliers applied.
-function PetsView.detail(petId: string, variant: string?): Detail
+function PetsView.detail(petId: string, variant: string?, anchor: number?): Detail
 	local pet = Config.petById[petId]
 	local variantRow = if variant ~= nil then Config.variantById[variant] else nil
 	local variantId = if variantRow ~= nil then variantRow.id else nil
-	local clickPower = Coins.clickPowerOf({ petId = pet.id, variant = variantId })
+	local owned = { petId = pet.id, variant = variantId }
+	local clickPower = Coins.clickPowerOf(owned, anchor)
 	local battleMult = Battle.playerMultiplier(0, variantId)
 	local hp = pet.hp * battleMult
 	local attack = pet.attack * battleMult
 	local petType = Config.typeById[pet.type]
 	local special = Config.specialById[pet.special]
-	local specialText = special.effect
 	local offType = pet.special_off_type
-	if offType ~= nil then
-		specialText = string.format("%s: %s", specialText, Config.typeById[offType].name)
-	end
+	local specialText = PetsView.specialText(
+		special,
+		petType.name,
+		if offType ~= nil then Config.typeById[offType].name else nil
+	)
 	return {
 		petId = pet.id,
 		name = pet.name,
@@ -502,16 +693,23 @@ function PetsView.detail(petId: string, variant: string?): Detail
 		attack = attack,
 		speed = pet.speed,
 		stats = {
-			{ label = "Click Power", value = PetsView.number(clickPower) },
-			{ label = "HP", value = PetsView.number(hp) },
-			{ label = "Attack", value = PetsView.number(attack) },
+			{
+				label = "Click Power",
+				value = PetsView.number(clickPower),
+			},
+			{ label = "HP", value = PetsView.whole(hp) },
+			{ label = "Attack", value = PetsView.whole(attack) },
 			{ label = "Speed", value = PetsView.number(pet.speed) },
 		},
 		moves = {
 			{
 				name = petType.name .. " Strike",
 				kind = "basic",
-				text = string.format("Basic %s attack, every turn", petType.name),
+				text = string.format(
+					"basic %s attack with %s power, every turn",
+					petType.name,
+					PetsView.number(Config.constants.basic_move_power)
+				),
 			},
 			{
 				name = special.name,

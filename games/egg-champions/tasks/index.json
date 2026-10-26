@@ -248,6 +248,294 @@
         "22"
       ],
       "status": "done"
+    },
+    {
+      "id": "26",
+      "title": "A clean main screen",
+      "file": "26-clean-main-screen.md",
+      "depends_on": [
+        "25"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "27",
+      "title": "Egg stands you can read",
+      "file": "27-egg-stands-readable.md",
+      "depends_on": [
+        "25"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "28",
+      "title": "First-time tutorial",
+      "file": "28-first-time-tutorial.md",
+      "depends_on": [
+        "26"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "29",
+      "title": "Egg shop you can use without scrolling",
+      "file": "29-egg-shop-usable.md",
+      "depends_on": [
+        "28"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "30",
+      "title": "Pets screen fits, and the tutorial guides inside screens",
+      "file": "30-pets-screen-and-in-screen-guidance.md",
+      "depends_on": [
+        "29"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "31",
+      "title": "The first minutes have a next step, and the gym is easy to find",
+      "file": "31-first-minutes-pacing.md",
+      "depends_on": [
+        "30"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "32",
+      "title": "Clear HUD priorities, team bar, and pets that follow you",
+      "file": "32-hud-hierarchy-team-and-followers.md",
+      "depends_on": [
+        "31"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "33",
+      "title": "Small fixes from the playtest and review",
+      "file": "33-small-fixes-from-playtest.md",
+      "depends_on": [
+        "32"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "34",
+      "title": "Worlds that look good",
+      "file": "34-world-art-pass.md",
+      "depends_on": [
+        "33"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "35",
+      "title": "HUD clear of Roblox's own buttons and chat, with click feedback",
+      "file": "35-hud-clear-of-roblox-ui.md",
+      "depends_on": [
+        "34"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "36",
+      "title": "A hatch you can see, and a gym you know about",
+      "file": "36-hatch-reveal-and-gym-goal.md",
+      "depends_on": [
+        "35"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "37",
+      "title": "Less on screen in the first minute",
+      "file": "37-first-minute-declutter.md",
+      "depends_on": [
+        "36"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "38",
+      "title": "Studio save bug, analytics funnel, and a playtest mode",
+      "file": "38-bugs-and-playtest-mode.md",
+      "depends_on": [
+        "34"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "39",
+      "title": "Follower pets beside you, not in front of the camera",
+      "file": "39-followers-off-camera-line.md",
+      "depends_on": [
+        "38"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "40",
+      "title": "The egg shop shows its eggs, and less clutter",
+      "file": "40-egg-shop-eggs-and-clutter.md",
+      "depends_on": [
+        "39"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "41",
+      "title": "Signs that read cleanly from spawn",
+      "file": "41-signs-and-spawn-view.md",
+      "depends_on": [
+        "40"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "42",
+      "title": "Guidance never stops, and the pointer is unmistakable",
+      "file": "42-guidance-after-equip-and-pointer.md",
+      "depends_on": [
+        "41"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "43",
+      "title": "A Pets screen made for a beginner",
+      "file": "43-pets-screen-for-beginners.md",
+      "depends_on": [
+        "42"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "44",
+      "title": "Launch quality and inventory usability",
+      "file": "44-launch-quality.md",
+      "depends_on": [
+        "43"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "45",
+      "title": "Original Roblox visual direction",
+      "file": "45-visual-rework.md",
+      "depends_on": [
+        "44"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "46",
+      "title": "World identity, feedback and lasting pet value",
+      "file": "46-worlds-and-pet-value.md",
+      "depends_on": [
+        "45"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "47",
+      "title": "Composition, locomotion and pacing review",
+      "file": "47-composition-and-locomotion.md",
+      "depends_on": [
+        "46"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "48",
+      "title": "Reachable actions in short viewports",
+      "file": "48-short-viewport.md",
+      "depends_on": [
+        "47"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "49",
+      "title": "Authored scenes and creature battle motion",
+      "file": "49-authored-scenes-and-battle-motion.md",
+      "depends_on": [
+        "48"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "50",
+      "title": "Elevation and battle readability",
+      "file": "50-elevation-and-battle-readability.md",
+      "depends_on": [
+        "49"
+      ],
+      "status": "running"
+    },
+    {
+      "id": "51",
+      "title": "Collection trail using existing egg bonuses",
+      "file": "51-collection-trail.md",
+      "depends_on": [
+        "50"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "52",
+      "title": "Beta economy and validation",
+      "file": "52-beta-economy-and-validation.md",
+      "depends_on": [
+        "51"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "53",
+      "title": "Launch presentation",
+      "file": "53-launch-presentation.md",
+      "depends_on": [
+        "50"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "54",
+      "title": "Mobile log and TEST roundtrip",
+      "file": "54-mobile-log-and-test-roundtrip.md",
+      "depends_on": [
+        "50"
+      ],
+      "status": "running"
+    },
+    {
+      "id": "55",
+      "title": "Training grounds and offline pet income",
+      "file": "55-training-and-offline.md",
+      "depends_on": [
+        "54"
+      ],
+      "status": "running"
+    },
+    {
+      "id": "56",
+      "title": "Wild focus battles, capture prisms, collection rewards and pass discovery",
+      "file": "56-wild-encounters-and-rewards.md",
+      "depends_on": [
+        "55"
+      ],
+      "status": "running"
+    },
+    {
+      "id": "57",
+      "title": "Saved tiered prisms and biome wild encounters",
+      "file": "57-tiered-prisms-and-wild-areas.md",
+      "depends_on": [
+        "56"
+      ],
+      "status": "running"
     }
   ]
 }

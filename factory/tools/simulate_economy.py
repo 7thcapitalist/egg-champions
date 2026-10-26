@@ -36,6 +36,7 @@ SIM = {
 }
 
 ASSUMPTIONS = [
+    "Leader tuning first calibrates the reference team to the baseline win-rate target, then multiplies that power by the spec's cohort_power_factor (default 1). Reported reference win rates measure the final adjusted leaders, not the baseline. Cohort pacing and rebirth targets remain unchanged.",
     "Leader pets: base HP and Attack of the world's most expensive egg, times the strength rarity battle multiplier, times the tuned power. HP and Attack are rounded.",
     "Leader pets have Speed {leader_speed} (midpoint of speed_min and speed_max) and the Smash special. All pets of a leader team are identical. Leaders get no rebirth or variant bonus.",
     "Every special is ready on turn 1. After use it is locked for special_cooldown_turns turns, so it comes back on the third turn after.",
@@ -45,10 +46,10 @@ ASSUMPTIONS = [
     "Off-type uses the listed type for the type bonus. Same type against same type is neutral (1.0).",
     "Player battle policy: use an attack special (Smash, Drain) when ready. Use Off-type when it beats the basic move after type bonus. Use Heal when ready and HP is under {heal_pct}%. Use Guard on the turn before the leader's Smash lands. Use Rush once, only when slower than the active leader pet. Otherwise basic attack. Team order is strongest matchup first.",
     "Reference team: the 3 distinct Rare pets hatchable by that world with the best matchup score (HP x Attack x own type bonus / leader type bonus). If fewer than 3 distinct Rare pets exist, copies of the best one fill the team. No variants.",
-    "Clicks are continuous: coins arrive at clicks per second x coins per click. The index bonus multiplies coins per click: x (1 + index_egg_bonus x completed eggs). An egg is complete when all 5 normal pets were hatched. The index survives rebirth.",
+    "Clicks are continuous: coins arrive at clicks per second x coins per click. The index bonus multiplies coins per click: x (1 + index_egg_bonus x completed eggs). An egg is complete when all 5 normal pets were hatched. World/full normal collection factors are included when configured. The index survives rebirth. Optional wild focus wins, their coin rewards/temporary boosts and captures are excluded: this is a passive-training baseline, not a forecast for active minigame players.",
     "Shiny and Golden are exclusive rolls on each hatch. Their click and battle multipliers apply on top of rarity and role.",
-    "Hatching takes {hatch_seconds} s and a battle takes {turn_seconds} s per turn. The player does not click during either. The player clicks during the gym retry wait.",
-    "No game passes. No storage: the player owns exactly one team of team_size pets. A new hatch either replaces the worst team member or is discarded.",
+    "Hatching takes {hatch_seconds} s and a battle takes {turn_seconds} s per turn. Legacy clicking pauses during both. Configured training with no hatch pause continues earning during the reveal, using the equipped team before that hatch, and excludes hatch opportunity cost from purchase decisions. Battles still pause income. Gym retry waits earn normally.",
+    "No game passes. Inventory retains up to team_size copies of each pet/variant (extra identical copies cannot improve a team). Inventory-relative power floors are retired (zero in current config); all pet powers are fixed by pet and variant. Farm teams reselect the best effective coin pets after hatches. Battle training still uses a greedy replacement policy.",
     "Greedy player policy, farm mode: buy the unlocked egg with the best expected click gain per coin, as long as the expected gain pays back the price plus the coins lost while hatching within {payback_seconds} s, or within the time it would take to save the gym fee if that is longer. A hatch replaces the lowest Click Power pet if it is better.",
     "Greedy player policy, gym: when no egg is worth buying, save for the gym fee, pay it, and fight. After {losses_before_stuck} losses in a row the player is stuck.",
     "Greedy player policy, stuck: rebirth if affordable. Otherwise buy the egg with the best expected battle gain per coin and replace the weakest battler. Each team change gives {losses_before_stuck} more gym tries. After {train_hatch_cap} such hatches in one stuck spell, or if that egg costs as much as the rebirth, save for the rebirth instead. Players only rebirth when stuck.",
@@ -289,10 +290,13 @@ def win_rate(game, team, leaders, rebirths, n, seed):
 
 
 def tune_gyms(game, seed):
-    """Find the power per gym that gives the reference team the target win rate."""
+    """Calibrate reference power, then apply the spec's cohort margin."""
     out = []
     for wi, w in enumerate(game.worlds):
         g = w["gym"]
+        factor = g.get("cohort_power_factor", 1)
+        if type(factor) not in (int, float) or not 0 < factor <= 1:
+            raise ValueError("cohort_power_factor must be finite and in (0, 1]")
         ref = game.reference_team(w)
         lo, hi = 0.02, 50.0
         for _ in range(26):
@@ -302,7 +306,8 @@ def tune_gyms(game, seed):
                 lo = mid
             else:
                 hi = mid
-        power = round(lo, 3)
+        reference_power = round(lo, 3)
+        power = round(reference_power * factor, 3)
         leaders, egg_id = game.leader_team(w, power)
         rates = {}
         for r in range(0, g["target_rebirths"] + 3):
@@ -310,6 +315,7 @@ def tune_gyms(game, seed):
         out.append({
             "world": w["id"], "world_name": w["name"], "fee": g["fee"],
             "target_rebirths": g["target_rebirths"], "power": power,
+            "reference_power": reference_power, "cohort_power_factor": factor,
             "leader_base_egg": egg_id, "leader_strength": g["leader_strength"],
             "leader_team": [{"type": l["type"], "hp": l["hp"], "attack": l["attack"], "speed": l["speed"],
                              "special": l["special"]} for l in leaders],
@@ -323,7 +329,7 @@ def tune_gyms(game, seed):
 
 # ---------------------------------------------------------------- progression
 
-def simulate_player(game, gyms, cps, rng, max_seconds):
+def simulate_player(game, gyms, cps, rng, max_seconds, reuse_calculations=True):
     C = game.C
     nw = len(game.worlds)
     leaders = [game.leader_team(w, gyms[i]["power"])[0] for i, w in enumerate(game.worlds)]
@@ -339,10 +345,22 @@ def simulate_player(game, gyms, cps, rng, max_seconds):
     train_hatches = 0
     seen = {e: set() for e in game.eggs}
     done_eggs = 0
+    owned = {}
+    legacy_anchor = 0.0
+    farm_gain_cache = {}
+    farm_team_valid = False
     res = {"first_hatch": None, "gym": [None] * nw, "gym_rebirths": [None] * nw, "rebirths": [], "hatches": 0, "battles": 0}
 
+    def effective_click(inst):
+        rarity = game.pets[inst["pet"]]["rarity"]
+        floor = C.get("legacy_" + rarity + "_floor", 0)
+        return max(inst["click"], legacy_anchor * floor)
+
     def rate():
-        return (1 + sum(i["click"] for i in team)) * (1 + C["rebirth_coin_bonus"] * r) * (1 + C["index_egg_bonus"] * done_eggs) * cps
+        completed_worlds = sum(all(len(seen[eid]) == C["pets_per_egg"] for eid in w["eggs"]) for w in game.worlds)
+        full = done_eggs == len(game.eggs)
+        extra = 1 + completed_worlds * C.get("index_world_bonus", 0) + (C.get("index_full_bonus", 0) if full else 0)
+        return (1 + sum(effective_click(i) for i in team)) * (1 + C["rebirth_coin_bonus"] * r) * (1 + C["index_egg_bonus"] * done_eggs) * extra * cps
 
     def roll(egg_id):
         x = rng.random()
@@ -371,18 +389,23 @@ def simulate_player(game, gyms, cps, rng, max_seconds):
 
     def choose_farm():
         """Best gain per coin among eggs that pay back in time."""
-        floor = 0.0 if len(team) < size else min(i["click"] for i in team)
+        floor = 0.0 if len(team) < size else min(effective_click(i) for i in team)
         income = rate()
-        mult = income / (1 + sum(i["click"] for i in team))
+        mult = income / (1 + sum(effective_click(i) for i in team))
         horizon = SIM["payback_seconds"]
         if not fee_paid:
             horizon = max(horizon, (game.worlds[beaten]["gym"]["fee"] - coins) / income)
         best = None
         for w in game.worlds[:min(beaten, nw - 1) + 1]:
             for eid in w["eggs"]:
-                gain = sum(pr * max(0.0, inst["click"] - floor) for pr, inst in game.outcomes[eid])
-                # full cost of a hatch: the price plus the coins not earned while it hatches
-                price = game.eggs[eid]["price"] + income * SIM["hatch_seconds"]
+                cache_key = (eid, floor, legacy_anchor)
+                gain = farm_gain_cache.get(cache_key) if reuse_calculations else None
+                if gain is None:
+                    gain = sum(pr * max(0.0, effective_click(inst) - floor) for pr, inst in game.outcomes[eid])
+                    if reuse_calculations:
+                        farm_gain_cache[cache_key] = gain
+                # Legacy clicking stops during the reveal; training keeps earning.
+                price = game.eggs[eid]["price"] + (0 if training_during_hatch(game) else income * SIM["hatch_seconds"])
                 if gain * mult * horizon >= price and (best is None or gain / price > best[1] / best[2]):
                     best = (eid, gain, price)
         return best
@@ -394,7 +417,7 @@ def simulate_player(game, gyms, cps, rng, max_seconds):
         key = None
         if not train:
             pick = choose_farm()
-            key = lambda i: i["click"]
+            key = effective_click
         elif stuck:
             cost = game.rebirth_cost(r)
             if coins < cost and train_hatches < SIM["train_hatch_cap"]:
@@ -410,6 +433,7 @@ def simulate_player(game, gyms, cps, rng, max_seconds):
                 r += 1
                 res["rebirths"].append(t)
                 coins, beaten, fee_paid, losses, train = 0.0, 0, False, 0, False
+                farm_team_valid = False
                 continue
         if pick is not None:
             eid = pick[0]
@@ -418,8 +442,17 @@ def simulate_player(game, gyms, cps, rng, max_seconds):
                 t += (price - coins) / rate()
                 coins = price
             coins -= price
+            if training_during_hatch(game):
+                coins += rate() * SIM["hatch_seconds"]
             t += SIM["hatch_seconds"]
             inst = roll(eid)
+            prior_anchor = legacy_anchor
+            legacy_anchor = max(legacy_anchor, inst["click"])
+            inventory_key = (inst["pet"], inst["variant"])
+            copies = owned.setdefault(inventory_key, [])
+            new_copy = len(copies) < size
+            if new_copy:
+                copies.append(inst)
             res["hatches"] += 1
             if res["first_hatch"] is None:
                 res["first_hatch"] = t
@@ -436,7 +469,11 @@ def simulate_player(game, gyms, cps, rng, max_seconds):
                 if key(inst) > key(team[j]):
                     team[j] = inst
                     changed = True
+            if not train and (not reuse_calculations or not farm_team_valid or new_copy or changed or legacy_anchor != prior_anchor):
+                team = sorted((p for copies in owned.values() for p in copies), key=effective_click, reverse=True)[:size]
+                farm_team_valid = True
             if train:
+                farm_team_valid = False
                 train_hatches += 1
                 if changed:
                     losses = 0
@@ -502,10 +539,23 @@ def summarize(vals, n, pad=True):
     return {"p10": q(0.1), "p50": q(0.5), "p90": q(0.9), "share": share}
 
 
+def training_during_hatch(game):
+    return ("training_tick_seconds" in game.C
+            and game.C.get("training_hatch_pause_seconds", 0) == 0)
+
+
+def training_rates(game):
+    constants = game.C
+    if "training_hits_per_tick" in constants:
+        rate = constants["training_hits_per_tick"] / constants["training_tick_seconds"]
+        return [rate, rate / 2]
+    return list(SIM["click_rates"])
+
+
 def run_progression(game, gyms, players, seed, max_hours):
     runs = {}
     nw = len(game.worlds)
-    for cps in SIM["click_rates"]:
+    for cps in training_rates(game):
         rng = random.Random(seed * 1000003 + cps)
         rs = [simulate_player(game, gyms, cps, rng, max_hours * 3600) for _ in range(players)]
         max_r = max(len(x["rebirths"]) for x in rs)
@@ -591,7 +641,7 @@ def table(head, rows):
 
 
 def section_results(game, gyms, runs, players, max_hours):
-    main = SIM["click_rates"][0]
+    main = training_rates(game)[0]
     L = []
     L += table(["Target", "Wanted", "Median at %d cps" % main, "Verdict"], verdicts(game, runs[main]))
     L.append("")
@@ -626,6 +676,9 @@ def section_results(game, gyms, runs, players, max_hours):
                      ", ".join(p["pet"] for p in g["reference_team"]),
                      " ".join("%s:%.0f%%" % (k, 100 * v) for k, v in g["reference_win_rate_by_rebirths"].items())])
     L += table(["Gym", "Tuned power", "Leader team", "Reference team", "Reference win rate by rebirths"], rows)
+    L += table(["Gym", "Reference baseline power", "Spec cohort factor", "Final power"],
+               [[g["world_name"], g["reference_power"], g["cohort_power_factor"], g["power"]]
+                for g in gyms])
     return L
 
 
@@ -652,7 +705,7 @@ def gaps(game, gyms):
 
 
 def write_report(path, game, gyms, runs, players, seed, max_hours, prop, prop_rows, game2, gyms2, runs2):
-    main = SIM["click_rates"][0]
+    main = training_rates(game)[0]
     L = ["# Economy tuning report: %s" % game.C["game_name"], "",
          "Generated by `factory/tools/simulate_economy.py`. Seed %d. Do not edit by hand." % seed, "",
          "## Current numbers against the targets", ""]
@@ -714,12 +767,17 @@ def main(argv=None):
             prop = json.load(f)
         cfg2 = apply_proposal(cfg, prop)
         prop_rows = diff_rows(cfg, cfg2)
-        game2 = Game(cfg2)
-        gyms2 = tune_gyms(game2, a.seed)
-        runs2 = run_progression(game2, gyms2, a.players, a.seed, a.max_hours)
+        if cfg2 == cfg:
+            # A notes-only proposal has exactly the same seeded results.
+            game2, gyms2, runs2 = game, gyms, runs
+        else:
+            game2 = Game(cfg2)
+            gyms2 = tune_gyms(game2, a.seed)
+            runs2 = run_progression(game2, gyms2, a.players, a.seed, a.max_hours)
 
     out = {"generated_by": "factory/tools/simulate_economy.py", "seed": a.seed,
            "target_win_rate": SIM["tune_target_win_rate"], "leader_speed": game.leader_speed,
+           "target_win_rate_applies_to": "reference_power before the configured cohort factor",
            "gyms": gyms}
     if gyms2:
         out["gyms_with_proposal"] = gyms2
@@ -729,7 +787,7 @@ def main(argv=None):
     write_report(os.path.join(a.out, "report.md"), game, gyms, runs, a.players, a.seed, a.max_hours,
                  prop, prop_rows, game2, gyms2, runs2)
 
-    main_cps = SIM["click_rates"][0]
+    main_cps = training_rates(game)[0]
     for label, g, gy, ru in (("current", game, gyms, runs), ("proposed", game2, gyms2, runs2)):
         if not g:
             continue
@@ -737,6 +795,9 @@ def main(argv=None):
         for row in verdicts(g, ru[main_cps]):
             print("[%s] %-20s wanted %-22s got %-10s %s" % ((label,) + row))
     print("Wrote %s and %s" % (os.path.join(a.out, "gyms.json"), os.path.join(a.out, "report.md")))
+    if "training_hits_per_tick" in cfg["constants"]:
+        with open(os.path.join(a.out, "report.md"), "a", encoding="utf-8") as report:
+            report.write("\nTraining uses configured hits/tick for the main cohort and 50% uptime for the slower cohort. Historical clicks/sec labels mean training hits/sec. Travel, idle time and offline income are excluded from this active-session baseline.\n")
     return 0
 
 

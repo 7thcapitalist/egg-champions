@@ -1,442 +1,2630 @@
 {
-  "checked": "2026-10-14T22:37:20Z",
-  "models_sha256": "b857334b2f21395380089aa17a63983aee7910f523b17db447ffb413e91dba59",
+  "checked": "2026-10-17T03:36:05Z",
+  "models_sha256": "02966e561e378daed30de67f1ac08e688e31bc97c1772bdad60e1dd2498d9e38",
   "universe_id": 10769019206,
   "place_id": 101737317546942,
-  "task": "universes/10769019206/places/101737317546942/versions/33/luau-execution-sessions/1c445dfd-6168-40d7-86de-cb852c964d41/tasks/1c445dfd-6168-40d7-86de-cb852c964d41",
+  "task": "studio:a4058259-4bb8-436f-bcc7-5b481b24edca",
   "ok": 36,
   "total": 36,
   "entries": [
     {
-      "mesh_size": [
-        2.170212745666504,
-        5,
-        5.375436782836914
-      ],
       "id": "leafpup",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "112525563637319",
+          "mesh_size": [
+            1.2934620380401611,
+            1.4515904188156128,
+            2.478475570678711
+          ],
+          "name": "body",
+          "texture_id": "118431376368317",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "122774116451991",
+          "mesh_size": [
+            2.9146690368652344,
+            3.0939226150512695,
+            2.217318534851074
+          ],
+          "name": "head",
+          "texture_id": "121284436882021",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "91565247526047",
+          "mesh_size": [
+            0.4653661847114563,
+            0.7836618423461914,
+            0.6252176761627197
+          ],
+          "name": "front left leg",
+          "texture_id": "87357890840603",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "121199009105794",
+          "mesh_size": [
+            0.46665918827056885,
+            0.786292314529419,
+            0.6300637722015381
+          ],
+          "name": "front right leg",
+          "texture_id": "110657806283057",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "139453992879359",
+          "mesh_size": [
+            0.4704369008541107,
+            0.7768464088439941,
+            0.6710460186004639
+          ],
+          "name": "rear left leg",
+          "texture_id": "80314597330482",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "99643637932394",
+          "mesh_size": [
+            0.4637751281261444,
+            0.776089072227478,
+            0.6633702516555786
+          ],
+          "name": "rear right leg",
+          "texture_id": "139990602450843",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "101849448143698",
+          "mesh_size": [
+            1.8778079748153687,
+            1.1330472230911255,
+            1.0645465850830078
+          ],
+          "name": "tail",
+          "texture_id": "114182148403875",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        2.4012818336486816,
-        3,
-        3.8862123489379883
-      ],
       "id": "puddlet",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "131463040245202",
+          "mesh_size": [
+            1.708345890045166,
+            2.7697792053222656,
+            1.977694034576416
+          ],
+          "name": "body",
+          "texture_id": "82008082861434",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "88657375137873",
+          "mesh_size": [
+            2.0846731662750244,
+            1.2896939516067505,
+            0.8049180507659912
+          ],
+          "name": "front legs",
+          "texture_id": "103843359120601",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "123582971325098",
+          "mesh_size": [
+            2.175281524658203,
+            1.9496326446533203,
+            1.6546294689178467
+          ],
+          "name": "tail",
+          "texture_id": "139759745784860",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        1.946789026260376,
-        5,
-        5.059051990509033
-      ],
       "id": "emberkit",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "75676765873871",
+          "mesh_size": [
+            3.9971561431884766,
+            3.0226659774780273,
+            2.8629050254821777
+          ],
+          "name": "body",
+          "texture_id": "72819423947950",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "111682602072913",
+          "mesh_size": [
+            3.997802257537842,
+            2.062999963760376,
+            1.6940768957138062
+          ],
+          "name": "head",
+          "texture_id": "96286728226417",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "73113123911926",
+          "mesh_size": [
+            0.7144701480865479,
+            1.4333367347717285,
+            0.9654755592346191
+          ],
+          "name": "front left leg",
+          "texture_id": "138910129844593",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "123489306095160",
+          "mesh_size": [
+            0.8050901889801025,
+            1.4362878799438477,
+            0.9547078013420105
+          ],
+          "name": "front right leg",
+          "texture_id": "77146755245464",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "116465213875982",
+          "mesh_size": [
+            0.7266438007354736,
+            1.466133713722229,
+            1.0491306781768799
+          ],
+          "name": "rear left leg",
+          "texture_id": "131515139305728",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "89455289678028",
+          "mesh_size": [
+            0.7247066497802734,
+            1.468355655670166,
+            1.047364354133606
+          ],
+          "name": "rear right leg",
+          "texture_id": "110377800070195",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "134846827138982",
+          "mesh_size": [
+            1.9577116966247559,
+            1.6580705642700195,
+            0.7978785634040833
+          ],
+          "name": "tail",
+          "texture_id": "132215280383125",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        5.525705337524414,
-        8,
-        2.890536308288574
-      ],
       "id": "abacatudo",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "71813176356241",
+          "mesh_size": [
+            2.3034162521362305,
+            2.0291690826416016,
+            2.1109328269958496
+          ],
+          "name": "head",
+          "texture_id": "86687770011972",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "102414124846624",
+          "mesh_size": [
+            2.7574901580810547,
+            2.2128286361694336,
+            3
+          ],
+          "name": "body",
+          "texture_id": "119027453616292",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "117884534039831",
+          "mesh_size": [
+            3.6495609283447266,
+            2.3712005615234375,
+            1.1642704010009766
+          ],
+          "name": "limbs",
+          "texture_id": "117633192655876",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        4,
-        5.524606227874756,
-        4.561195373535156
-      ],
       "id": "voltibun",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "81385369102029",
+          "mesh_size": [
+            1.280335783958435,
+            1.8387908935546875,
+            3.009030818939209
+          ],
+          "name": "body",
+          "texture_id": "89907325421139",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "109098094317089",
+          "mesh_size": [
+            1.8263636827468872,
+            2.50515079498291,
+            1.4978559017181396
+          ],
+          "name": "head",
+          "texture_id": "103614229626675",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "139957729866674",
+          "mesh_size": [
+            0.7288662195205688,
+            1.2914390563964844,
+            0.9855196475982666
+          ],
+          "name": "front left leg",
+          "texture_id": "88857139557273",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "83595012800869",
+          "mesh_size": [
+            0.7297652363777161,
+            1.286844253540039,
+            0.986051082611084
+          ],
+          "name": "front right leg",
+          "texture_id": "73160526038628",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "78192099937299",
+          "mesh_size": [
+            0.7681127190589905,
+            1.0739659070968628,
+            1.0399086475372314
+          ],
+          "name": "rear left leg",
+          "texture_id": "120653174939223",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "132168767167574",
+          "mesh_size": [
+            0.7764567136764526,
+            1.1650111675262451,
+            1.037434697151184
+          ],
+          "name": "rear right leg",
+          "texture_id": "92638995706152",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "119572312197291",
+          "mesh_size": [
+            0.8008167743682861,
+            0.872391939163208,
+            0.9067951440811157
+          ],
+          "name": "tail",
+          "texture_id": "97704200973503",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        4.633696556091309,
-        4,
-        0.8738820552825928
-      ],
       "id": "zapmoth",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "105118756279447",
+          "mesh_size": [
+            5.31397819519043,
+            3,
+            0.7242938280105591
+          ],
+          "name": "wings",
+          "texture_id": "111564428933774",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "108590903942684",
+          "mesh_size": [
+            1.1649284362792969,
+            1.523447036743164,
+            0.9653804302215576
+          ],
+          "name": "body",
+          "texture_id": "110807917518264",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "98980186743069",
+          "mesh_size": [
+            1.5137401819229126,
+            0.9385680556297302,
+            0.25547707080841064
+          ],
+          "name": "antennae",
+          "texture_id": "104678701163159",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        3.043936252593994,
-        4,
-        4.304635047912598
-      ],
       "id": "mossnail",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "86786781280571",
+          "mesh_size": [
+            1.555943250656128,
+            1.3797684907913208,
+            4.975803375244141
+          ],
+          "name": "body",
+          "texture_id": "125494334737819",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "128633007039229",
+          "mesh_size": [
+            2.883604049682617,
+            2.374988317489624,
+            3.343372344970703
+          ],
+          "name": "shell",
+          "texture_id": "74273317182128",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "87675593390330",
+          "mesh_size": [
+            1.769454002380371,
+            1.205055832862854,
+            0.5403987169265747
+          ],
+          "name": "eyestalks",
+          "texture_id": "85450963308923",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        2.2840042114257812,
-        4,
-        5.112260818481445
-      ],
       "id": "sparkit",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "122458264352946",
+          "mesh_size": [
+            1.696556568145752,
+            1.961883544921875,
+            3.051577568054199
+          ],
+          "name": "body",
+          "texture_id": "127951320123348",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "108309637712763",
+          "mesh_size": [
+            2.689714193344116,
+            1.8292651176452637,
+            1.2723411321640015
+          ],
+          "name": "head",
+          "texture_id": "132585373570699",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "107044975251811",
+          "mesh_size": [
+            0.6115018725395203,
+            1.1317371129989624,
+            1.1762584447860718
+          ],
+          "name": "front left leg",
+          "texture_id": "130935125359756",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "77364040025370",
+          "mesh_size": [
+            0.6153660416603088,
+            1.1343950033187866,
+            1.1787320375442505
+          ],
+          "name": "front right leg",
+          "texture_id": "139827699744292",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "123979560848301",
+          "mesh_size": [
+            0.5645454525947571,
+            0.995719313621521,
+            1.07893705368042
+          ],
+          "name": "rear left leg",
+          "texture_id": "111190786194436",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "78490918603255",
+          "mesh_size": [
+            0.5653305053710938,
+            1.0085673332214355,
+            1.0810528993606567
+          ],
+          "name": "rear right leg",
+          "texture_id": "137476387478825",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "115893174144476",
+          "mesh_size": [
+            0.49958011507987976,
+            2.4648289680480957,
+            1.3477520942687988
+          ],
+          "name": "tail",
+          "texture_id": "135007465460403",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        4.332049369812012,
-        5,
-        5.3675031661987305
-      ],
       "id": "cinderhog",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "121651018989709",
+          "mesh_size": [
+            3.961561441421509,
+            3.847731113433838,
+            4.551380157470703
+          ],
+          "name": "body",
+          "texture_id": "94557350852787",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "85845650817889",
+          "mesh_size": [
+            2.3477206230163574,
+            1.7667210102081299,
+            1.7027407884597778
+          ],
+          "name": "head",
+          "texture_id": "124075223018908",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "77815094307209",
+          "mesh_size": [
+            0.9955964684486389,
+            0.8495075702667236,
+            0.9845859408378601
+          ],
+          "name": "front left leg",
+          "texture_id": "102471693765685",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "118051871956218",
+          "mesh_size": [
+            0.9809809327125549,
+            0.8438359498977661,
+            0.9935903549194336
+          ],
+          "name": "front right leg",
+          "texture_id": "88452698762708",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "126626704931550",
+          "mesh_size": [
+            1.1178185939788818,
+            0.853811502456665,
+            1.1426901817321777
+          ],
+          "name": "rear left leg",
+          "texture_id": "113301503964104",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "84777952867948",
+          "mesh_size": [
+            1.1287400722503662,
+            0.852348804473877,
+            1.1405508518218994
+          ],
+          "name": "rear right leg",
+          "texture_id": "77129873812358",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "85298452458297",
+          "mesh_size": [
+            0.43759608268737793,
+            0.6004657745361328,
+            0.5891001224517822
+          ],
+          "name": "tail",
+          "texture_id": "107872186133344",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        2.389878034591675,
-        6.5,
-        4.388115406036377
-      ],
       "id": "brookdeer",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "123031995918913",
+          "mesh_size": [
+            1.5751851797103882,
+            2.4020137786865234,
+            3.519519090652466
+          ],
+          "name": "body",
+          "texture_id": "81235939385509",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "118075746018177",
+          "mesh_size": [
+            3.812300682067871,
+            3.011697769165039,
+            1.9770504236221313
+          ],
+          "name": "head",
+          "texture_id": "102399410259857",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "96273892616384",
+          "mesh_size": [
+            0.8325678110122681,
+            2.5047740936279297,
+            1.1817238330841064
+          ],
+          "name": "front left leg",
+          "texture_id": "99729954061384",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "83030420396277",
+          "mesh_size": [
+            0.8163124918937683,
+            2.4979476928710938,
+            1.1771693229675293
+          ],
+          "name": "front right leg",
+          "texture_id": "89382949728760",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "109224238019548",
+          "mesh_size": [
+            0.793433666229248,
+            2.6458497047424316,
+            1.3784971237182617
+          ],
+          "name": "rear left leg",
+          "texture_id": "114026394082241",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "132632583884250",
+          "mesh_size": [
+            0.7913346290588379,
+            2.6563353538513184,
+            1.3776772022247314
+          ],
+          "name": "rear right leg",
+          "texture_id": "83596059392172",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "98812558160996",
+          "mesh_size": [
+            0.38965898752212524,
+            0.7161697149276733,
+            0.9182745218276978
+          ],
+          "name": "tail",
+          "texture_id": "93403073376171",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        4.717447280883789,
-        4,
-        3.6658339500427246
-      ],
       "id": "bubblecrab",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "96139941015564",
+          "mesh_size": [
+            4.0563530921936035,
+            1.915748953819275,
+            0.9323376417160034
+          ],
+          "name": "tail",
+          "texture_id": "82542803564331",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "118251238769349",
+          "mesh_size": [
+            3.473848819732666,
+            1.920173168182373,
+            2.593928575515747
+          ],
+          "name": "body",
+          "texture_id": "98573429359233",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "87270033233565",
+          "mesh_size": [
+            1.2838159799575806,
+            1.1630094051361084,
+            0.6220635771751404
+          ],
+          "name": "head",
+          "texture_id": "90865029235694",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        1.5626320838928223,
-        6,
-        2.5816054344177246
-      ],
       "id": "kelpony",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "96078725344809",
+          "mesh_size": [
+            0.7189574837684631,
+            0.9025959968566895,
+            1.4409353733062744
+          ],
+          "name": "tail",
+          "texture_id": "116716890106274",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "86317133381396",
+          "mesh_size": [
+            2.24922513961792,
+            2.2736194133758545,
+            1.5281126499176025
+          ],
+          "name": "body",
+          "texture_id": "103612058856477",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "107844032034382",
+          "mesh_size": [
+            1.968756079673767,
+            2.1649560928344727,
+            2.90228271484375
+          ],
+          "name": "head",
+          "texture_id": "79677048373812",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        4.9750213623046875,
-        4.633609771728516,
-        5
-      ],
       "id": "zapeel",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "135654415057190",
+          "mesh_size": [
+            1.7025871276855469,
+            2.1190624237060547,
+            1.968942403793335
+          ],
+          "name": "head",
+          "texture_id": "79830307720728",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "85462747616091",
+          "mesh_size": [
+            2.4037699699401855,
+            2.9719574451446533,
+            4.351770877838135
+          ],
+          "name": "body",
+          "texture_id": "136382692800310",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "120437393502308",
+          "mesh_size": [
+            1.4281728267669678,
+            1.6395584344863892,
+            1.0028256177902222
+          ],
+          "name": "tail",
+          "texture_id": "111358609532663",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        3.5,
-        5.581670761108398,
-        3.3560566902160645
-      ],
       "id": "pearlotter",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "100705052644141",
+          "mesh_size": [
+            2.639371871948242,
+            3.245053291320801,
+            2.590298652648926
+          ],
+          "name": "body",
+          "texture_id": "81163842823190",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "120457171996405",
+          "mesh_size": [
+            2.5792644023895264,
+            1.8271362781524658,
+            2.6395134925842285
+          ],
+          "name": "head",
+          "texture_id": "99502939506136",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "98269768211398",
+          "mesh_size": [
+            0.5661452412605286,
+            1.7839627265930176,
+            1.036668062210083
+          ],
+          "name": "front left leg",
+          "texture_id": "97772430805705",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "95354057265180",
+          "mesh_size": [
+            0.5615024566650391,
+            1.7784523963928223,
+            1.0188665390014648
+          ],
+          "name": "front right leg",
+          "texture_id": "127756940126107",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "115551151499905",
+          "mesh_size": [
+            1.116072177886963,
+            1.2975618839263916,
+            2.328925609588623
+          ],
+          "name": "rear left leg",
+          "texture_id": "105254864963451",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "113382916026069",
+          "mesh_size": [
+            1.116828441619873,
+            1.2928435802459717,
+            2.31162691116333
+          ],
+          "name": "rear right leg",
+          "texture_id": "106233003195860",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "137714243608691",
+          "mesh_size": [
+            0.8165121078491211,
+            1.0000267028808594,
+            0.8793715238571167
+          ],
+          "name": "tail",
+          "texture_id": "80599219148322",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        6.20927095413208,
-        7,
-        6.501920700073242
-      ],
       "id": "tidewhale",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "110011027024000",
+          "mesh_size": [
+            4.799786567687988,
+            4.855253219604492,
+            7.3271894454956055
+          ],
+          "name": "body",
+          "texture_id": "135875500283243",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "117807289876034",
+          "mesh_size": [
+            6.325446605682373,
+            1.6781697273254395,
+            1.245346188545227
+          ],
+          "name": "flippers",
+          "texture_id": "136106329527483",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "104469330010614",
+          "mesh_size": [
+            3.624741554260254,
+            1.2344720363616943,
+            0.8874011039733887
+          ],
+          "name": "tail",
+          "texture_id": "84640398487183",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        7.488297462463379,
-        2.477766990661621,
-        5
-      ],
       "id": "driftgull",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "118727696556832",
+          "mesh_size": [
+            1.6922686100006104,
+            2.489558219909668,
+            3.4725747108459473
+          ],
+          "name": "body",
+          "texture_id": "135582770627451",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "122085162453507",
+          "mesh_size": [
+            1.2359724044799805,
+            1.6711938381195068,
+            1.7838555574417114
+          ],
+          "name": "head",
+          "texture_id": "109626345087593",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "128007078371164",
+          "mesh_size": [
+            2.125080108642578,
+            2.3358376026153564,
+            0.8774976134300232
+          ],
+          "name": "left wing",
+          "texture_id": "95594296856894",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "84238289199332",
+          "mesh_size": [
+            2.1318130493164062,
+            2.334756374359131,
+            0.8777620792388916
+          ],
+          "name": "right wing",
+          "texture_id": "113933723967984",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "123762800655849",
+          "mesh_size": [
+            0.2804989814758301,
+            0.5008327960968018,
+            0.397901326417923
+          ],
+          "name": "left leg",
+          "texture_id": "138912783291609",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "86849284188708",
+          "mesh_size": [
+            0.2718684673309326,
+            0.506520688533783,
+            0.38815197348594666
+          ],
+          "name": "right leg",
+          "texture_id": "101135831308272",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        5,
-        4.513006210327148,
-        5.068647861480713
-      ],
       "id": "fuzzbolt",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "72903306577254",
+          "mesh_size": [
+            2.434725284576416,
+            3.2402544021606445,
+            4.536324501037598
+          ],
+          "name": "body",
+          "texture_id": "122775225262184",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "122259298043443",
+          "mesh_size": [
+            4.429706573486328,
+            2.821519374847412,
+            2.11822247505188
+          ],
+          "name": "head",
+          "texture_id": "104044908031414",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "81963381469361",
+          "mesh_size": [
+            0.7938094139099121,
+            2.194761276245117,
+            0.8096634149551392
+          ],
+          "name": "front left leg",
+          "texture_id": "93404667987415",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "104135495131439",
+          "mesh_size": [
+            0.791944682598114,
+            2.194552421569824,
+            0.812328577041626
+          ],
+          "name": "front right leg",
+          "texture_id": "82792986408386",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "83540009480265",
+          "mesh_size": [
+            0.9366552829742432,
+            2.1585798263549805,
+            1.1536788940429688
+          ],
+          "name": "rear left leg",
+          "texture_id": "128202699057305",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "76076034980973",
+          "mesh_size": [
+            0.9647119045257568,
+            2.1580467224121094,
+            1.207336664199829
+          ],
+          "name": "rear right leg",
+          "texture_id": "83713982519194",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "96476362666084",
+          "mesh_size": [
+            1.6676206588745117,
+            0.8229472637176514,
+            1.049896240234375
+          ],
+          "name": "tail",
+          "texture_id": "106995419313361",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        3.7968873977661133,
-        8,
-        2.313189744949341
-      ],
       "id": "bananao",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "105803145495753",
+          "mesh_size": [
+            1.8274800777435303,
+            2.6125006675720215,
+            2.116934299468994
+          ],
+          "name": "head",
+          "texture_id": "98520317268735",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "102650011932580",
+          "mesh_size": [
+            1.768118143081665,
+            2.737003803253174,
+            2.083498477935791
+          ],
+          "name": "body",
+          "texture_id": "125617926209000",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "77276966511854",
+          "mesh_size": [
+            2.906270980834961,
+            3.3254079818725586,
+            1.2242162227630615
+          ],
+          "name": "limbs",
+          "texture_id": "73014942683400",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        4.835545539855957,
-        6,
-        4.829759120941162
-      ],
       "id": "reefwyrm",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "108657972328779",
+          "mesh_size": [
+            3.401782512664795,
+            5,
+            3.8640060424804688
+          ],
+          "name": "body",
+          "texture_id": "76212823722432",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "91620008366354",
+          "mesh_size": [
+            0.9053510427474976,
+            0.6121567487716675,
+            1.1676348447799683
+          ],
+          "name": "head",
+          "texture_id": "122459108706362",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        8,
-        5.701056480407715,
-        7.360118865966797
-      ],
       "id": "thundrake",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "133110443710301",
+          "mesh_size": [
+            2.216141939163208,
+            2.955437183380127,
+            2.494983434677124
+          ],
+          "name": "body",
+          "texture_id": "107552066370011",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "139883799079536",
+          "mesh_size": [
+            7.188584804534912,
+            3.5963940620422363,
+            2.8664395809173584
+          ],
+          "name": "head",
+          "texture_id": "80466621787107",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "81668897088476",
+          "mesh_size": [
+            1.0346088409423828,
+            1.391512393951416,
+            0.9278555512428284
+          ],
+          "name": "front left leg",
+          "texture_id": "97510551216708",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "80487145661774",
+          "mesh_size": [
+            1.1428515911102295,
+            2.661715030670166,
+            1.106270670890808
+          ],
+          "name": "front right leg",
+          "texture_id": "117747738415283",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "95245888887966",
+          "mesh_size": [
+            1.4082322120666504,
+            1.8923420906066895,
+            1.90409517288208
+          ],
+          "name": "rear left leg",
+          "texture_id": "132633954693257",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "96518314761242",
+          "mesh_size": [
+            1.4021296501159668,
+            1.8878216743469238,
+            1.7331184148788452
+          ],
+          "name": "rear right leg",
+          "texture_id": "113946280068135",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "81657419146905",
+          "mesh_size": [
+            2.2988035678863525,
+            2.1880764961242676,
+            3.4465274810791016
+          ],
+          "name": "tail",
+          "texture_id": "122019725537183",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        3.5363082885742188,
-        4,
-        5.469318389892578
-      ],
       "id": "coalmole",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "132817085526765",
+          "mesh_size": [
+            3.1628401279449463,
+            3.3618955612182617,
+            5
+          ],
+          "name": "body",
+          "texture_id": "101226480326745",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "120163190123820",
+          "mesh_size": [
+            2.7906301021575928,
+            1.5977250337600708,
+            1.4227750301361084
+          ],
+          "name": "head",
+          "texture_id": "80327985188465",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "123997621076380",
+          "mesh_size": [
+            1.1548762321472168,
+            1.6965961456298828,
+            1.425593614578247
+          ],
+          "name": "front left leg",
+          "texture_id": "92124962445276",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "102476740322984",
+          "mesh_size": [
+            1.1283156871795654,
+            1.5517842769622803,
+            1.4376397132873535
+          ],
+          "name": "front right leg",
+          "texture_id": "121496715525108",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "117379878952551",
+          "mesh_size": [
+            1.30049467086792,
+            2.2236320972442627,
+            1.9537971019744873
+          ],
+          "name": "rear left leg",
+          "texture_id": "132009749238872",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "106441207235655",
+          "mesh_size": [
+            1.327364206314087,
+            2.2957980632781982,
+            1.8829923868179321
+          ],
+          "name": "rear right leg",
+          "texture_id": "135082255354166",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "122145861272477",
+          "mesh_size": [
+            0.20852437615394592,
+            0.2429293543100357,
+            0.24698495864868164
+          ],
+          "name": "tail",
+          "texture_id": "129373164623722",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        4.674850940704346,
-        5,
-        5.219522953033447
-      ],
       "id": "steamtoad",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "140665354533429",
+          "mesh_size": [
+            3.148888111114502,
+            2.888619899749756,
+            5
+          ],
+          "name": "body",
+          "texture_id": "101995630367142",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "84972408411301",
+          "mesh_size": [
+            4.003806114196777,
+            1.3682670593261719,
+            1.9683500528335571
+          ],
+          "name": "head",
+          "texture_id": "124759581122161",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "119278738648244",
+          "mesh_size": [
+            0.8531948328018188,
+            1.4549472332000732,
+            1.5772277116775513
+          ],
+          "name": "front left leg",
+          "texture_id": "132276482172177",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "73457637316987",
+          "mesh_size": [
+            0.8685011863708496,
+            1.4472423791885376,
+            1.571226954460144
+          ],
+          "name": "front right leg",
+          "texture_id": "101476598043000",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "130627891418964",
+          "mesh_size": [
+            1.26725435256958,
+            1.734618902206421,
+            1.686371088027954
+          ],
+          "name": "rear left leg",
+          "texture_id": "126315309842149",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "101661668009680",
+          "mesh_size": [
+            1.2648444175720215,
+            1.7298345565795898,
+            1.6851085424423218
+          ],
+          "name": "rear right leg",
+          "texture_id": "99933855567898",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "72300575071750",
+          "mesh_size": [
+            0.3280221223831177,
+            0.5240061283111572,
+            0.42381298542022705
+          ],
+          "name": "tail",
+          "texture_id": "95919549907962",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        3.650838613510132,
-        7.561704635620117,
-        3
-      ],
       "id": "moranguete",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "106360921977073",
+          "mesh_size": [
+            2.4529566764831543,
+            2.5557851791381836,
+            2.082113742828369
+          ],
+          "name": "torso",
+          "texture_id": "89148443608298",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "85131298453897",
+          "mesh_size": [
+            2.957294225692749,
+            3.195425033569336,
+            3
+          ],
+          "name": "head",
+          "texture_id": "75371147837615",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "128056020077664",
+          "mesh_size": [
+            1.570401906967163,
+            2.0056185722351074,
+            1.3366563320159912
+          ],
+          "name": "left arm",
+          "texture_id": "130948970920575",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "106568522315388",
+          "mesh_size": [
+            1.1421300172805786,
+            1.3652417659759521,
+            0.9837197065353394
+          ],
+          "name": "right arm",
+          "texture_id": "99578930057213",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "139928999960052",
+          "mesh_size": [
+            1.2330265045166016,
+            0.615915060043335,
+            1.2172212600708008
+          ],
+          "name": "left leg",
+          "texture_id": "89225082250452",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "99776303012080",
+          "mesh_size": [
+            1.1715967655181885,
+            0.6135179996490479,
+            1.2053824663162231
+          ],
+          "name": "right leg",
+          "texture_id": "117744206383508",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        3.6451592445373535,
-        5,
-        6.465433597564697
-      ],
       "id": "ashwolf",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "120482875875726",
+          "mesh_size": [
+            1.8187611103057861,
+            2.9109654426574707,
+            4.09651517868042
+          ],
+          "name": "body",
+          "texture_id": "94389188785669",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "74966490731301",
+          "mesh_size": [
+            1.460876226425171,
+            1.7217518091201782,
+            1.4530996084213257
+          ],
+          "name": "head",
+          "texture_id": "84831822139953",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "135913271786005",
+          "mesh_size": [
+            0.5035209655761719,
+            1.6613178253173828,
+            1.0274631977081299
+          ],
+          "name": "front left leg",
+          "texture_id": "91077260027007",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "72748449864655",
+          "mesh_size": [
+            0.5109542608261108,
+            1.6573801040649414,
+            1.037358045578003
+          ],
+          "name": "front right leg",
+          "texture_id": "112917997266736",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "128662054442320",
+          "mesh_size": [
+            1.0643280744552612,
+            2.613069534301758,
+            1.698011875152588
+          ],
+          "name": "rear left leg",
+          "texture_id": "128577088639517",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "125241181494211",
+          "mesh_size": [
+            0.7800683975219727,
+            1.9082231521606445,
+            1.2894418239593506
+          ],
+          "name": "rear right leg",
+          "texture_id": "125236841092841",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "139212800380798",
+          "mesh_size": [
+            1.0969104766845703,
+            1.498666524887085,
+            0.932039737701416
+          ],
+          "name": "tail",
+          "texture_id": "118505172859550",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        4.053889751434326,
-        5,
-        5.718480110168457
-      ],
       "id": "thornback",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "137732670921068",
+          "mesh_size": [
+            3.347022533416748,
+            4.125510215759277,
+            3.8934426307678223
+          ],
+          "name": "body",
+          "texture_id": "114446943527821",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "122003948092877",
+          "mesh_size": [
+            1.9229090213775635,
+            2.3986105918884277,
+            1.5750014781951904
+          ],
+          "name": "head",
+          "texture_id": "86711774994635",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "74614413066290",
+          "mesh_size": [
+            1.276108980178833,
+            1.3547642230987549,
+            0.946601390838623
+          ],
+          "name": "front left leg",
+          "texture_id": "92658596070720",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "102879029546515",
+          "mesh_size": [
+            1.3881933689117432,
+            1.4673893451690674,
+            1.2176365852355957
+          ],
+          "name": "front right leg",
+          "texture_id": "112446070712306",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "120928574286621",
+          "mesh_size": [
+            1.2511630058288574,
+            1.3470711708068848,
+            0.9568562507629395
+          ],
+          "name": "rear left leg",
+          "texture_id": "105841699094418",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "138581071668547",
+          "mesh_size": [
+            1.3977216482162476,
+            1.4534339904785156,
+            1.207777738571167
+          ],
+          "name": "rear right leg",
+          "texture_id": "90531612569749",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "109698832265656",
+          "mesh_size": [
+            0.9333611726760864,
+            1.292334794998169,
+            2.019052743911743
+          ],
+          "name": "tail",
+          "texture_id": "131064234755888",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        4.808735370635986,
-        2.8746628761291504,
-        3
-      ],
       "id": "sootbat",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "100626881023139",
+          "mesh_size": [
+            5,
+            1.6341736316680908,
+            0.5708074569702148
+          ],
+          "name": "wings",
+          "texture_id": "91149315385114",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "94280084422810",
+          "mesh_size": [
+            1.2373991012573242,
+            1.5536386966705322,
+            1.7242660522460938
+          ],
+          "name": "body",
+          "texture_id": "121148800234981",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "87384266869393",
+          "mesh_size": [
+            1.672532081604004,
+            1.9429211616516113,
+            1.2455360889434814
+          ],
+          "name": "head",
+          "texture_id": "87309712274812",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        3.551287889480591,
-        5,
-        5.971697807312012
-      ],
       "id": "geyserpup",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "78071019836909",
+          "mesh_size": [
+            2.0569000244140625,
+            4.624568462371826,
+            3.67708683013916
+          ],
+          "name": "body",
+          "texture_id": "110301684715821",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "134202856900780",
+          "mesh_size": [
+            2.0387954711914062,
+            1.4290587902069092,
+            1.8168201446533203
+          ],
+          "name": "head",
+          "texture_id": "126927189747597",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "80258788750401",
+          "mesh_size": [
+            0.7852954268455505,
+            0.7640508413314819,
+            0.8554774522781372
+          ],
+          "name": "front left leg",
+          "texture_id": "129202891138436",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "87878492168900",
+          "mesh_size": [
+            0.791272759437561,
+            0.7617454528808594,
+            0.8654738664627075
+          ],
+          "name": "front right leg",
+          "texture_id": "128608453970525",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "87350467473837",
+          "mesh_size": [
+            0.757980227470398,
+            0.7266756296157837,
+            0.8355883359909058
+          ],
+          "name": "rear left leg",
+          "texture_id": "130622248608651",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "105394612980138",
+          "mesh_size": [
+            0.6977556943893433,
+            0.7388476133346558,
+            0.8294257521629333
+          ],
+          "name": "rear right leg",
+          "texture_id": "123466663530207",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "126525817019083",
+          "mesh_size": [
+            1.6589479446411133,
+            1.5446252822875977,
+            1.3708218336105347
+          ],
+          "name": "tail",
+          "texture_id": "85198031247525",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        4.694736480712891,
-        3.7159879207611084,
-        6
-      ],
       "id": "voltscorp",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "87943769998830",
+          "mesh_size": [
+            3.4035096168518066,
+            1.0802243947982788,
+            1.9726436138153076
+          ],
+          "name": "pincers",
+          "texture_id": "88265323540718",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "129495575347185",
+          "mesh_size": [
+            1.0278325080871582,
+            0.47255468368530273,
+            0.47375786304473877
+          ],
+          "name": "tail",
+          "texture_id": "106203506072435",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "127852719372032",
+          "mesh_size": [
+            3.6055407524108887,
+            3.1862826347351074,
+            3.7968814373016357
+          ],
+          "name": "body",
+          "texture_id": "75613193454760",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        2.8282041549682617,
-        4,
-        4.715418338775635
-      ],
       "id": "lavalynx",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "72648595657122",
+          "mesh_size": [
+            1.1698354482650757,
+            1.4767367839813232,
+            3.6218719482421875
+          ],
+          "name": "body",
+          "texture_id": "78150554527993",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "106864895180512",
+          "mesh_size": [
+            2.426873207092285,
+            2.491299629211426,
+            2.18588924407959
+          ],
+          "name": "head",
+          "texture_id": "113777116395747",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "125468546816396",
+          "mesh_size": [
+            0.7157243490219116,
+            2.183732271194458,
+            1.1675020456314087
+          ],
+          "name": "front left leg",
+          "texture_id": "103534824094046",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "80519568638975",
+          "mesh_size": [
+            0.7228758931159973,
+            2.1884467601776123,
+            1.1627724170684814
+          ],
+          "name": "front right leg",
+          "texture_id": "122084916573168",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "85577279181237",
+          "mesh_size": [
+            0.8122380971908569,
+            2.3495736122131348,
+            1.9306321144104004
+          ],
+          "name": "rear left leg",
+          "texture_id": "104748655735623",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "128274036394263",
+          "mesh_size": [
+            0.794253408908844,
+            2.3492140769958496,
+            1.953622817993164
+          ],
+          "name": "rear right leg",
+          "texture_id": "122494153663112",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "98774327922301",
+          "mesh_size": [
+            0.4273777902126312,
+            0.40120112895965576,
+            0.331226110458374
+          ],
+          "name": "tail",
+          "texture_id": "94403351614906",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        6.946871280670166,
-        7,
-        1.611809253692627
-      ],
       "id": "magmaroc",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "130906470854199",
+          "mesh_size": [
+            2.000460624694824,
+            3.8808634281158447,
+            3.9341440200805664
+          ],
+          "name": "body",
+          "texture_id": "87942234617197",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "124938237921575",
+          "mesh_size": [
+            0.9992389678955078,
+            1.2674338817596436,
+            1.5355639457702637
+          ],
+          "name": "head",
+          "texture_id": "77938206305381",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "91798818734287",
+          "mesh_size": [
+            2.675276279449463,
+            3.3996670246124268,
+            0.9820531606674194
+          ],
+          "name": "left wing",
+          "texture_id": "102772275669452",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "93231200196177",
+          "mesh_size": [
+            2.678799629211426,
+            3.3988802433013916,
+            0.9789789915084839
+          ],
+          "name": "right wing",
+          "texture_id": "125837401998421",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "81708944255864",
+          "mesh_size": [
+            0.4404531717300415,
+            0.9755557775497437,
+            0.9623944163322449
+          ],
+          "name": "left leg",
+          "texture_id": "116122244983603",
+          "texture_loaded": true,
+          "ok": true
+        },
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "134265011322589",
+          "mesh_size": [
+            0.4512476325035095,
+            0.9751309156417847,
+            0.9178410172462463
+          ],
+          "name": "right leg",
+          "texture_id": "110097599579586",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        2.6854634284973145,
-        4,
-        2.7082321643829346
-      ],
       "id": "meadow",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "136013679702071",
+          "mesh_size": [
+            2.6854634284973145,
+            4,
+            2.7082321643829346
+          ],
+          "name": "Mesh",
+          "texture_id": "77671766462502",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        3,
-        3.059762954711914,
-        2.4833498001098633
-      ],
       "id": "forest",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "136875195353143",
+          "mesh_size": [
+            3,
+            3.059762954711914,
+            2.4833498001098633
+          ],
+          "name": "Mesh",
+          "texture_id": "115896911943731",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        2.325213670730591,
-        4,
-        2.334157943725586
-      ],
       "id": "shell",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "133131747151786",
+          "mesh_size": [
+            2.325213670730591,
+            4,
+            2.334157943725586
+          ],
+          "name": "Mesh",
+          "texture_id": "126621865710777",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        2.9393205642700195,
-        3.999999761581421,
-        2.9480834007263184
-      ],
       "id": "storm",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "131526106741314",
+          "mesh_size": [
+            2.9393205642700195,
+            3.999999761581421,
+            2.9480834007263184
+          ],
+          "name": "Mesh",
+          "texture_id": "100488589450550",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        2.944401741027832,
-        4,
-        2.982762336730957
-      ],
       "id": "ember",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "137183210307587",
+          "mesh_size": [
+            2.944401741027832,
+            4,
+            2.982762336730957
+          ],
+          "name": "Mesh",
+          "texture_id": "131962562598879",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     },
     {
-      "mesh_size": [
-        2.6431126594543457,
-        4,
-        2.7167391777038574
-      ],
       "id": "magma",
-      "texture_status": "Success",
+      "parts": [
+        {
+          "mesh_ok": true,
+          "texture_status": "Success",
+          "mesh_id": "90051632512905",
+          "mesh_size": [
+            2.6431126594543457,
+            4,
+            2.7167391777038574
+          ],
+          "name": "Mesh",
+          "texture_id": "86989204447291",
+          "texture_loaded": true,
+          "ok": true
+        }
+      ],
       "mesh_ok": true,
       "texture_loaded": true,
+      "texture_status": "Success",
       "ok": true
     }
   ]

@@ -18,28 +18,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PetLook = require(Shared:WaitForChild("visual"):WaitForChild("PetLook"))
+local ThemeColors = require(Shared:WaitForChild("ui"):WaitForChild("ThemeColors"))
 
 local Theme = {}
 
-Theme.colors = table.freeze({
-	panel = Color3.fromRGB(18, 22, 31),
-	raised = Color3.fromRGB(30, 37, 50),
-	border = Color3.fromRGB(42, 50, 66),
-	text = Color3.fromRGB(242, 244, 248),
-	muted = Color3.fromRGB(155, 166, 186),
-	gold = Color3.fromRGB(232, 179, 58),
-	badgeEmpty = Color3.fromRGB(90, 100, 120),
-	-- The egg shop's Hatch button and the dim behind a full screen panel.
-	hatch = Color3.fromRGB(31, 122, 69),
-	white = Color3.fromRGB(255, 255, 255),
-	backdrop = Color3.fromRGB(0, 0, 0),
-	-- The gym battle (Battle.dc.html): arena ground, healthy HP and team
-	-- markers, and a fainted team marker. Low HP uses gold.
-	arena = Color3.fromRGB(51, 80, 62),
-	arenaFloor = Color3.fromRGB(38, 61, 47),
-	healthy = Color3.fromRGB(76, 191, 115),
-	fainted = Color3.fromRGB(74, 84, 104),
-})
+-- The colors live in shared/ui/ThemeColors, so the server's world signs
+-- use the same ones.
+Theme.colors = ThemeColors
 
 -- Type and rarity colors come from PetLook, so the UI and the 3D pets agree.
 local function color(c: PetLook.RGB): Color3
@@ -56,10 +41,12 @@ function Theme.typeColor(typeId: string): Color3
 	return if c ~= nil then color(c) else Theme.colors.muted
 end
 
+-- Rounded, chunky type like the top pet simulators: Fredoka for anything a
+-- player reads at a glance, Gotham bold for longer lines.
 Theme.fonts = table.freeze({
-	body = Font.new("rbxasset://fonts/families/Roboto.json", Enum.FontWeight.Medium),
-	label = Font.new("rbxasset://fonts/families/Roboto.json", Enum.FontWeight.SemiBold),
-	heading = Font.new("rbxasset://fonts/families/RobotoCondensed.json", Enum.FontWeight.Bold),
+	body = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold),
+	label = Font.fromEnum(Enum.Font.FredokaOne),
+	heading = Font.fromEnum(Enum.Font.FredokaOne),
 })
 
 Theme.sizes = table.freeze({
@@ -67,9 +54,9 @@ Theme.sizes = table.freeze({
 	designWidth = 1280,
 	topBar = 64,
 	gutter = 24,
-	radius = 6,
-	slotRadius = 4,
-	border = 1,
+	radius = 12,
+	slotRadius = 8,
+	border = 2,
 	minTap = 44,
 	menuWidth = 132,
 	menuButton = 46,
@@ -99,16 +86,47 @@ function Theme.label(text: string): string
 	return string.upper(text)
 end
 
--- Small corner radius and a thin border, the look of every panel.
+-- Dark outline on a label's letters, so text reads over the bright world.
+function Theme.outlineText(label: GuiObject, thickness: number?)
+	if label:FindFirstChild("TextOutline") then
+		return
+	end
+	local stroke = Instance.new("UIStroke")
+	stroke.Name = "TextOutline"
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+	stroke.Color = Theme.colors.outline
+	-- Thin on small text so it stays readable, thicker on big numbers.
+	local size = if label:IsA("TextLabel") or label:IsA("TextButton") then label.TextSize else 15
+	stroke.Thickness = thickness or math.clamp(size / 14, 1, 2.5)
+	stroke.LineJoinMode = Enum.LineJoinMode.Round
+	stroke.Parent = label
+end
+
+-- Rounded corners, a thick dark outline and a soft top light: the toy-like
+-- look of every panel. Buttons get a stronger light and outlined text.
+-- borderColor, when given, is an accent ring just inside the dark outline.
 function Theme.panel(frame: GuiObject, radius: number?, borderColor: Color3?)
+	local isButton = frame:IsA("GuiButton")
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, radius or Theme.sizes.radius)
+	corner.CornerRadius = UDim.new(0, if isButton then 12 else (radius or Theme.sizes.radius) + 4)
 	corner.Parent = frame
 	local stroke = Instance.new("UIStroke")
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	stroke.Color = borderColor or Theme.colors.border
-	stroke.Thickness = Theme.sizes.border
+	stroke.Color = if borderColor ~= nil and borderColor ~= Theme.colors.border
+		then borderColor
+		else Theme.colors.outline
+	stroke.Thickness = if isButton then 2.5 else 3
+	stroke.LineJoinMode = Enum.LineJoinMode.Round
 	stroke.Parent = frame
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = if isButton
+		then ColorSequence.new(Color3.new(1, 1, 1), Color3.new(0.72, 0.76, 0.86))
+		else ColorSequence.new(Color3.new(1, 1, 1), Color3.new(0.82, 0.85, 0.92))
+	gradient.Rotation = 90
+	gradient.Parent = frame
+	if isButton and (frame:IsA("TextButton")) then
+		Theme.outlineText(frame)
+	end
 end
 
 -- A text label with the theme's defaults and no background.
@@ -130,6 +148,10 @@ function Theme.text(props: {
 	label.Text = props.text or ""
 	label.AutomaticSize = Enum.AutomaticSize.XY
 	label.Size = UDim2.fromOffset(0, 0)
+	-- Rounded display type always carries the dark outline.
+	if label.FontFace.Family == Theme.fonts.heading.Family then
+		Theme.outlineText(label)
+	end
 	label.Parent = props.parent
 	return label
 end

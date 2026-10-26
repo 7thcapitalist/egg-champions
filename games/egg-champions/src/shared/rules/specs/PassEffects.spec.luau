@@ -150,5 +150,26 @@ return function()
 				end
 			end
 		end)
+
+		it("playtest mode is on only in Studio with the flag set", function()
+			expect(PassEffects.playtestNoPasses(true, true)).toBeTrue()
+			expect(PassEffects.playtestNoPasses(true, nil)).toBeFalse()
+			expect(PassEffects.playtestNoPasses(true, false)).toBeFalse()
+			expect(PassEffects.playtestNoPasses(true, "true")).toBeFalse()
+		end)
+
+		it("ignores the playtest flag when not in Studio", function()
+			expect(PassEffects.playtestNoPasses(false, true)).toBeFalse()
+			local owned =
+				PassEffects.effective(PassEffects.all(), PassEffects.playtestNoPasses(false, true))
+			expect(owned).toEqual(PassEffects.all())
+		end)
+
+		it("playtest mode treats every pass as not owned", function()
+			local owned = PassEffects.effective(PassEffects.all(), true)
+			expect(owned).toEqual({})
+			expect(PassEffects.coinMultiplier(owned)).toEqual(PassEffects.coinMultiplier({}))
+			expect(PassEffects.autoClick(owned)).toBeFalse()
+		end)
 	end)
 end

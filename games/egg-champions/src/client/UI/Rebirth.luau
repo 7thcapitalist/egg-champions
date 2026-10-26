@@ -131,8 +131,9 @@ function Rebirth.mount(playerGui: PlayerGui, rebirthRemote: RemoteFunction)
 	confirm.LayoutOrder = 1
 	confirm.Size = UDim2.new(0.6, -5, 1, 0)
 	confirm.Text = Theme.label("Rebirth")
-	confirm.TextColor3 = colors.gold
-	confirmStroke.Color = colors.gold
+	confirm.BackgroundColor3 = colors.rebirth
+	confirm.TextColor3 = colors.white
+	confirmStroke.Color = colors.outline
 	local cancel = button("Cancel", row)
 	cancel.LayoutOrder = 2
 	cancel.Size = UDim2.new(0.4, -5, 1, 0)
@@ -182,6 +183,7 @@ function Rebirth.mount(playerGui: PlayerGui, rebirthRemote: RemoteFunction)
 		end
 	end)
 
+	Screens.track(gui)
 	Screens.register(Screens.names.Rebirth, open)
 end
 

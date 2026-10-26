@@ -47,12 +47,12 @@ local WorldPalette = {}
 
 WorldPalette.ROWS = table.freeze({
 	green_meadow = table.freeze({
-		ground = rgb(106, 170, 78),
+		ground = rgb(96, 200, 71),
 		groundMaterial = "Grass",
-		cliff = rgb(122, 96, 70),
+		cliff = rgb(117, 133, 166),
 		water = rgb(80, 150, 210),
 		trunk = rgb(110, 76, 48),
-		leaf = rgb(62, 140, 64),
+		leaf = rgb(58, 162, 73),
 		rock = rgb(140, 140, 132),
 		accent = rgb(250, 214, 92),
 		trim = rgb(236, 230, 214),
@@ -61,9 +61,9 @@ WorldPalette.ROWS = table.freeze({
 		swirl = rgb(110, 220, 110),
 	}),
 	coral_coast = table.freeze({
-		ground = rgb(236, 214, 158),
+		ground = rgb(255, 224, 150),
 		groundMaterial = "Sand",
-		cliff = rgb(196, 160, 118),
+		cliff = rgb(93, 167, 190),
 		water = rgb(40, 170, 200),
 		trunk = rgb(150, 112, 70),
 		leaf = rgb(70, 170, 120),
@@ -75,9 +75,9 @@ WorldPalette.ROWS = table.freeze({
 		swirl = rgb(60, 190, 230),
 	}),
 	ember_volcano = table.freeze({
-		ground = rgb(70, 62, 62),
+		ground = rgb(105, 88, 132),
 		groundMaterial = "Basalt",
-		cliff = rgb(48, 42, 42),
+		cliff = rgb(65, 62, 99),
 		water = rgb(240, 100, 30),
 		trunk = rgb(60, 50, 46),
 		leaf = rgb(110, 90, 80),
@@ -102,22 +102,28 @@ WorldPalette.KEYWORDS = table.freeze({
 
 WorldPalette.DEFAULT_ROW = "green_meadow"
 
--- The row for a world: its own, else one picked by environment keywords,
--- else the default.
-function WorldPalette.forWorld(worldId: string, environment: string): Palette
-	local own = WorldPalette.ROWS[worldId]
-	if own ~= nil then
-		return own
+-- The key of a world's row: its own id when it has a row, else one picked by
+-- environment keywords, else the default. The world look (WorldLook) is keyed
+-- the same way, so a world's colors and its terrain and lighting agree.
+function WorldPalette.rowKey(worldId: string, environment: string): string
+	if WorldPalette.ROWS[worldId] ~= nil then
+		return worldId
 	end
 	local text = string.lower(environment)
 	for _, entry in WorldPalette.KEYWORDS do
 		for _, word in entry.words do
 			if string.find(text, word, 1, true) ~= nil then
-				return WorldPalette.ROWS[entry.row]
+				return entry.row
 			end
 		end
 	end
-	return WorldPalette.ROWS[WorldPalette.DEFAULT_ROW]
+	return WorldPalette.DEFAULT_ROW
+end
+
+-- The row for a world: its own, else one picked by environment keywords,
+-- else the default.
+function WorldPalette.forWorld(worldId: string, environment: string): Palette
+	return WorldPalette.ROWS[WorldPalette.rowKey(worldId, environment)]
 end
 
 -- The swirl color a world's portal shows when the world opens.
