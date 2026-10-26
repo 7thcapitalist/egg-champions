@@ -1,8 +1,8 @@
 # Holding bridge and admission
 
 Versioned sources of the HQ guard/quota scripts live here. Their current copies
-are installed at C:/Users/joaov/dev/holding-hq/scripts with explicit scoped
-filesystem authorization. Tests copy these sources only into temporary fixtures,
+are installed in holding-hq/scripts (mini PC: ~/dev/holding-hq/scripts; Windows:
+C:/Users/joaov/dev/holding-hq/scripts) with explicit scoped filesystem authorization. Tests copy these sources only into temporary fixtures,
 never over the live executor or its authorization/ledger.
 
 ## Budget guard
@@ -124,3 +124,17 @@ game's running tasks are preserved and prevent duplicate generation.
 Other companies, credentials, global settings, billing, Dot controls and
 factory/executor.json were not changed. The holding quota ledger contains only
 the explicitly authorized baseline; the executor call journal has no launches.
+
+## Mini PC (Linux)
+
+The Roblox agents run on the mini PC; Roblox Studio stays on the Windows PC.
+
+- Control checkout (agent `cwd`, `--game`): `~/dev/_workspaces/roblox-factory`.
+- Protected worker (`--worker-game`): a clean worktree of that clone at
+  `~/dev/_workspaces/roblox-protected` on branch `hq/roblox-protected`, so both share
+  the same Git common dir (the executor ledger) as the code requires.
+- Python: `/usr/bin/python3` (3.12+). Tests: `python3 -m pytest factory` in a local `.venv/`.
+- Toolchain: `rokit install` (luau, rojo, selene, StyLua from `rokit.toml`).
+- `codex` comes from PATH and its quota from `~/.codex/sessions` via `quota.mjs`.
+- Steps that need Roblox Studio go through the "[Windows]" gate in
+  holding-hq (`scripts/windows-gate.mjs`, see `studios/roblox/playbook.md`).
