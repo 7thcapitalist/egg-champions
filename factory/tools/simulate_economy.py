@@ -51,7 +51,7 @@ ASSUMPTIONS = [
     "Hatching takes {hatch_seconds} s and a battle takes {turn_seconds} s per turn. Legacy clicking pauses during both. Configured training with no hatch pause continues earning during the reveal, using the equipped team before that hatch, and excludes hatch opportunity cost from purchase decisions. Battles still pause income. Gym retry waits earn normally.",
     "No game passes. Inventory retains up to team_size copies of each pet/variant (extra identical copies cannot improve a team). Inventory-relative power floors are retired (zero in current config); all pet powers are fixed by pet and variant. Farm teams reselect the best effective coin pets after hatches. Battle training still uses a greedy replacement policy.",
     "Greedy player policy, farm mode: buy the unlocked egg with the best expected click gain per coin, as long as the expected gain pays back the price plus the coins lost while hatching within {payback_seconds} s, or within the time it would take to save the gym fee if that is longer. A hatch replaces the lowest Click Power pet if it is better.",
-    "Greedy player policy, gym: when no egg is worth buying, save for the gym fee, pay it, and fight. After {losses_before_stuck} losses in a row the player is stuck.",
+    "Greedy player policy, gym: as soon as the coins cover the gym fee the player pays it and fights, without hatching more first. A fee already paid (after a lost fight) means the next try starts at once, with no return to farming. If the fee is out of reach and no egg is worth buying, the player saves for it. After {losses_before_stuck} losses in a row the player is stuck.",
     "Greedy player policy, stuck: rebirth if affordable. Otherwise buy the egg with the best expected battle gain per coin and replace the weakest battler. Each team change gives {losses_before_stuck} more gym tries. After {train_hatch_cap} such hatches in one stuck spell, or if that egg costs as much as the rebirth, save for the rebirth instead. Players only rebirth when stuck.",
     "Rebirth k costs rebirth_first_cost x rebirth_cost_growth^(k-1). It resets coins, gym progress and paid fees. Pets and the index stay. Eggs of locked worlds cannot be bought.",
     "Target check for 'rebirths at gym' uses the median player. Pacing checks use the median at {main_cps} clicks per second.",
@@ -329,6 +329,11 @@ def tune_gyms(game, seed):
 
 # ---------------------------------------------------------------- progression
 
+def wants_farm(fee_paid, coins, fee):
+    """Hatch only while the gym fee is unpaid and not yet affordable."""
+    return not fee_paid and coins < fee
+
+
 def simulate_player(game, gyms, cps, rng, max_seconds, reuse_calculations=True):
     C = game.C
     nw = len(game.worlds)
@@ -416,7 +421,10 @@ def simulate_player(game, gyms, cps, rng, max_seconds, reuse_calculations=True):
         pick = None
         key = None
         if not train:
-            pick = choose_farm()
+            # A player who already paid the fee, or can pay it now, fights
+            # instead of hatching more.
+            if wants_farm(fee_paid, coins, game.worlds[beaten]["gym"]["fee"]):
+                pick = choose_farm()
             key = effective_click
         elif stuck:
             cost = game.rebirth_cost(r)
