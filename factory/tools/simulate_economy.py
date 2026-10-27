@@ -416,7 +416,10 @@ def simulate_player(game, gyms, cps, rng, max_seconds, reuse_calculations=True):
         pick = None
         key = None
         if not train:
-            pick = choose_farm()
+            # A player who can pay the fee goes and fights; they do not keep
+            # hatching until no egg pays back any more.
+            if fee_paid or coins < game.worlds[beaten]["gym"]["fee"]:
+                pick = choose_farm()
             key = effective_click
         elif stuck:
             cost = game.rebirth_cost(r)
